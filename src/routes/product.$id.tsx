@@ -1,0 +1,68 @@
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { Header } from "@/components/Header";
+import { useCart, useCatalog } from "@/lib/store";
+import { formatINR } from "@/lib/data";
+import { Plus, Minus, ShoppingBag } from "lucide-react";
+
+export const Route = createFileRoute("/product/$id")({
+  component: ProductPage,
+  notFoundComponent: () => <div className="p-10 text-center">Product not found.</div>,
+  errorComponent: ({ error }) => <div className="p-10 text-center text-destructive">{error.message}</div>,
+});
+
+function ProductPage() {
+  const { id } = Route.useParams();
+  const { products } = useCatalog();
+  const p = products.find(x => x.id === id);
+  const { add, items, setQty } = useCart();
+  if (!p) throw notFound();
+  const inCart = items.find(i => i.productId === p.id);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="mx-auto max-w-5xl px-4 py-8 md:px-6">
+        <nav className="mb-4 text-sm text-muted-foreground">
+          <Link to="/" className="hover:text-primary">Home</Link> /{" "}
+          <Link to="/category/$slug" params={{ slug: p.category }} className="hover:text-primary">{p.category}</Link> /{" "}
+          <span className="text-foreground">{p.name}</span>
+        </nav>
+        <div className="grid gap-8 md:grid-cols-2">
+          <div className="grid aspect-square place-items-center rounded-3xl border border-border bg-cream bg-grain text-[12rem]">
+            {p.emoji}
+          </div>
+          <div className="flex flex-col">
+            <h1 className="font-display text-3xl font-bold leading-tight md:text-4xl">{p.name}</h1>
+            <div className="mt-1 text-sm text-muted-foreground">{p.unit}</div>
+            <div className="mt-4 flex items-end gap-3">
+              <div className="font-display text-3xl font-bold">{formatINR(p.price)}</div>
+              {p.mrp && p.mrp > p.price && <div className="text-muted-foreground line-through">{formatINR(p.mrp)}</div>}
+              {p.mrp && p.mrp > p.price && <div className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">{Math.round((1 - p.price / p.mrp) * 100)}% OFF</div>}
+            </div>
+            <p className="mt-4 text-muted-foreground">{p.description}</p>
+            <div className="mt-6">
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">Stock</div>
+              <div className={`text-sm font-semibold ${p.stock > 5 ? "text-primary" : p.stock > 0 ? "text-saffron-foreground" : "text-destructive"}`}>
+                {p.stock > 0 ? `${p.stock} in stock` : "Out of stock"}
+              </div>
+            </div>
+            <div className="mt-6 flex items-center gap-3">
+              {inCart ? (
+                <div className="flex items-center gap-2 rounded-xl border border-primary p-1">
+                  <button onClick={() => setQty(p.id, inCart.qty - 1)} className="grid h-9 w-9 place-items-center rounded-lg text-primary hover:bg-primary/10"><Minus className="h-4 w-4" /></button>
+                  <span className="min-w-8 text-center font-bold">{inCart.qty}</span>
+                  <button onClick={() => setQty(p.id, inCart.qty + 1)} className="grid h-9 w-9 place-items-center rounded-lg text-primary hover:bg-primary/10"><Plus className="h-4 w-4" /></button>
+                </div>
+              ) : (
+                <button disabled={p.stock <= 0} onClick={() => add(p.id)} className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground">
+                  <ShoppingBag className="h-4 w-4" /> Add to cart
+                </button>
+              )}
+              <Link to="/cart" className="rounded-xl border border-border px-6 py-3 font-bold hover:bg-secondary">Go to cart</Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

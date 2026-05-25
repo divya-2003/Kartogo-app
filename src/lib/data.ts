@@ -1,0 +1,61 @@
+export type Category = {
+  slug: string;
+  name: string;
+  emoji: string;
+  tint: string; // tailwind bg class
+};
+
+export type Product = {
+  id: string;
+  name: string;
+  category: string;
+  price: number; // INR
+  mrp?: number;
+  unit: string;
+  stock: number;
+  emoji: string;
+  description: string;
+  tags?: string[];
+};
+
+export const CATEGORIES: Category[] = [
+  { slug: "snacks", name: "Snacks", emoji: "🍿", tint: "bg-saffron/20" },
+  { slug: "instant-food", name: "Instant Food", emoji: "🍜", tint: "bg-primary/15" },
+  { slug: "stationery", name: "Stationery", emoji: "✏️", tint: "bg-leaf/15" },
+  { slug: "grooming", name: "Grooming", emoji: "🧴", tint: "bg-saffron/15" },
+  { slug: "pickles", name: "Pickles", emoji: "🥒", tint: "bg-primary/15" },
+  { slug: "spice-powders", name: "Spice Powders", emoji: "🌶️", tint: "bg-saffron/25" },
+  { slug: "local-snacks", name: "Local Snacks", emoji: "🥟", tint: "bg-leaf/15" },
+  { slug: "pooja", name: "Pooja Items", emoji: "🪔", tint: "bg-saffron/25" },
+  { slug: "tiffin-batter", name: "Tiffin Batter", emoji: "🥞", tint: "bg-primary/15" },
+];
+
+export const PRODUCTS: Product[] = [
+  { id: "p1", name: "Andhra Avakaya Pickle", category: "pickles", price: 180, mrp: 220, unit: "250g jar", stock: 32, emoji: "🥭", description: "Traditional mango pickle from Ongole homes — fiery, oil-rich, ready to pair with curd rice." },
+  { id: "p2", name: "Guntur Red Chilli Powder", category: "spice-powders", price: 140, mrp: 160, unit: "200g pack", stock: 60, emoji: "🌶️", description: "Stone-ground Guntur chillies. Bright red, sharp heat." },
+  { id: "p3", name: "Sambar Powder", category: "spice-powders", price: 95, unit: "200g pack", stock: 44, emoji: "🍲", description: "House-roasted dal and spice blend." },
+  { id: "p4", name: "Murukku (Hot)", category: "local-snacks", price: 60, unit: "200g", stock: 25, emoji: "🥨", description: "Crunchy rice-flour murukku, fresh batch daily." },
+  { id: "p5", name: "Mixture Namkeen", category: "snacks", price: 80, unit: "250g", stock: 50, emoji: "🥜", description: "Spicy South Indian mixture with peanuts and curry leaves." },
+  { id: "p6", name: "Maggi 2-Min Noodles", category: "instant-food", price: 14, unit: "70g pack", stock: 120, emoji: "🍜", description: "Classic masala noodles." },
+  { id: "p7", name: "Yippee Magic Masala", category: "instant-food", price: 14, unit: "70g pack", stock: 100, emoji: "🍝", description: "Non-sticky long noodles." },
+  { id: "p8", name: "Classmate Notebook 200pg", category: "stationery", price: 75, unit: "1 unit", stock: 40, emoji: "📒", description: "Single-line ruled notebook." },
+  { id: "p9", name: "Reynolds Ball Pen (Blue)", category: "stationery", price: 10, unit: "1 unit", stock: 200, emoji: "🖊️", description: "Smooth writing classic." },
+  { id: "p10", name: "Park Avenue Soap", category: "grooming", price: 55, unit: "125g", stock: 35, emoji: "🧼", description: "Refreshing daily-use soap." },
+  { id: "p11", name: "Gillette Razor", category: "grooming", price: 45, unit: "1 unit", stock: 28, emoji: "🪒", description: "Disposable twin-blade razor." },
+  { id: "p12", name: "Idli Dosa Batter", category: "tiffin-batter", price: 60, unit: "1 kg pouch", stock: 18, emoji: "🥞", description: "Freshly ground rice and urad dal batter — same-day delivery only." },
+  { id: "p13", name: "Ragi Dosa Batter", category: "tiffin-batter", price: 75, unit: "1 kg pouch", stock: 12, emoji: "🌾", description: "Wholesome ragi-based batter." },
+  { id: "p14", name: "Camphor Cubes", category: "pooja", price: 35, unit: "50g box", stock: 70, emoji: "🪔", description: "Pure camphor for daily aarti." },
+  { id: "p15", name: "Agarbatti — Sandalwood", category: "pooja", price: 40, unit: "20 sticks", stock: 90, emoji: "🕉️", description: "Long-lasting sandal fragrance." },
+  { id: "p16", name: "Lemon Pickle", category: "pickles", price: 150, unit: "250g jar", stock: 22, emoji: "🍋", description: "Tangy lemon pickle, less oil." },
+  { id: "p17", name: "Banana Chips", category: "local-snacks", price: 70, unit: "200g", stock: 38, emoji: "🍌", description: "Coconut-oil fried Kerala-style chips." },
+  { id: "p18", name: "Lays Classic Salted", category: "snacks", price: 20, unit: "52g", stock: 80, emoji: "🥔", description: "Crispy salted potato chips." },
+];
+
+export const DELIVERY_BOYS = [
+  { id: "d1", name: "Ravi Kumar", phone: "9876500001", active: true },
+  { id: "d2", name: "Suresh M.", phone: "9876500002", active: true },
+  { id: "d3", name: "Naveen P.", phone: "9876500003", active: false },
+];
+
+export const formatINR = (n: number) =>
+  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
