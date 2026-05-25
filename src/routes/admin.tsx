@@ -4,15 +4,10 @@ import { LayoutDashboard, Package2, Boxes, ClipboardList, Bike, ArrowLeft } from
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: () => {
-    if (typeof window !== "undefined") {
-      try {
-        const u = JSON.parse(localStorage.getItem("qk_user") || "null");
-        if (!u || u.role !== "admin") throw redirect({ to: "/login" });
-      } catch (e) {
-        // re-throw redirects
-        if ((e as { isRedirect?: boolean })?.isRedirect) throw e;
-      }
-    }
+    if (typeof window === "undefined") return;
+    let u: { role?: string } | null = null;
+    try { u = JSON.parse(localStorage.getItem("qk_user") || "null"); } catch { u = null; }
+    if (!u || u.role !== "admin") throw redirect({ to: "/login" });
   },
   component: AdminLayout,
   head: () => ({ meta: [{ title: "Admin — QuickKart" }] }),
