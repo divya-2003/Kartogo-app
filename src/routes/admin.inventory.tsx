@@ -1,0 +1,40 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useCatalog } from "@/lib/store";
+import { CATEGORIES, formatINR } from "@/lib/data";
+import { toast } from "sonner";
+
+export const Route = createFileRoute("/admin/inventory")({ component: InventoryAdmin });
+
+function InventoryAdmin() {
+  const { products, setPrice, setStock } = useCatalog();
+  return (
+    <div className="space-y-5">
+      <div>
+        <h1 className="font-display text-3xl font-bold">Inventory & prices</h1>
+        <p className="text-sm text-muted-foreground">Quick edit — changes save instantly.</p>
+      </div>
+      <div className="overflow-hidden rounded-2xl border border-border bg-card">
+        <table className="w-full text-sm">
+          <thead className="bg-secondary text-left text-xs uppercase tracking-wider text-muted-foreground">
+            <tr><th className="p-3">Product</th><th className="p-3">Category</th><th className="p-3 w-32">Price (₹)</th><th className="p-3 w-32">Stock</th><th className="p-3">Status</th></tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {products.map(p => (
+              <tr key={p.id} className="hover:bg-secondary/50">
+                <td className="p-3"><div className="flex items-center gap-2"><span className="text-xl">{p.emoji}</span><div><div className="font-semibold">{p.name}</div><div className="text-xs text-muted-foreground">{p.unit}</div></div></div></td>
+                <td className="p-3 text-xs">{CATEGORIES.find(c => c.slug === p.category)?.name ?? p.category}</td>
+                <td className="p-3">
+                  <input type="number" defaultValue={p.price} onBlur={(e) => { const v = Number(e.target.value); if (v !== p.price) { setPrice(p.id, v); toast.success(`${p.name} → ${formatINR(v)}`); } }} className="w-24 rounded-md border border-input bg-background px-2 py-1 outline-none focus:ring-2 focus:ring-ring" />
+                </td>
+                <td className="p-3">
+                  <input type="number" defaultValue={p.stock} onBlur={(e) => { const v = Number(e.target.value); if (v !== p.stock) { setStock(p.id, v); toast.success(`${p.name} stock → ${v}`); } }} className="w-24 rounded-md border border-input bg-background px-2 py-1 outline-none focus:ring-2 focus:ring-ring" />
+                </td>
+                <td className="p-3"><span className={`rounded-md px-2 py-0.5 text-xs font-bold ${p.stock === 0 ? "bg-destructive/15 text-destructive" : p.stock <= 5 ? "bg-saffron/30" : "bg-primary/10 text-primary"}`}>{p.stock === 0 ? "Out" : p.stock <= 5 ? "Low" : "OK"}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
