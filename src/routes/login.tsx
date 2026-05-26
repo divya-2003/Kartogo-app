@@ -69,7 +69,7 @@ function LoginPage() {
                 {loading ? "Sending..." : "Send OTP"}
               </button>
               <p className="text-center text-xs text-muted-foreground">
-                Tip: use <span className="font-mono font-semibold">9999999999</span> to login as admin.
+                Admin access is restricted to authorized numbers only.
               </p>
             </form>
           ) : (
