@@ -1,30 +1,39 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ShoppingBag, Search, MapPin, User2, LayoutDashboard } from "lucide-react";
+import { ShoppingBag, Search, MapPin, User2, LayoutDashboard, LogOut, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { useCart, useAuth } from "@/lib/store";
+import { toast } from "sonner";
 
 export function Header() {
   const { count } = useCart();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const nav = useNavigate();
   const [q, setQ] = useState("");
   const location = useRouterState({ select: s => s.location.pathname });
-  const isAdmin = location.startsWith("/admin");
+  const isAdminArea = location.startsWith("/admin");
+  const isAdmin = user?.role === "admin";
+
+  const handleLogout = () => {
+    const wasAdmin = isAdmin;
+    logout();
+    toast.success("Signed out");
+    nav({ to: wasAdmin ? "/admin-login" : "/login" });
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 md:px-6">
-        <Link to="/" className="flex items-center gap-2">
+        <Link to={isAdmin && isAdminArea ? "/admin" : "/"} className="flex items-center gap-2">
           <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground font-display text-lg font-bold">Q</div>
           <div className="leading-tight">
-            <div className="font-display text-lg font-bold tracking-tight">QuickKart</div>
+            <div className="font-display text-lg font-bold tracking-tight">QuickKart{isAdminArea && <span className="ml-1 text-xs font-semibold text-primary">· Admin</span>}</div>
             <div className="hidden text-[11px] text-muted-foreground md:flex items-center gap-1">
               <MapPin className="h-3 w-3" /> Ongole, AP · 15 min
             </div>
           </div>
         </Link>
 
-        {!isAdmin && (
+        {!isAdminArea && (
           <form
             onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q } }); }}
             className="ml-2 hidden flex-1 md:block"
@@ -42,16 +51,30 @@ export function Header() {
         )}
 
         <div className="ml-auto flex items-center gap-2">
-          {user?.role === "admin" && !isAdmin && (
+          {/* Admin shortcut visible only to admins */}
+          {isAdmin && !isAdminArea && (
             <Link to="/admin" className="hidden items-center gap-1 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium hover:bg-secondary md:inline-flex">
               <LayoutDashboard className="h-4 w-4" /> Admin
             </Link>
           )}
-          <Link to={user ? "/orders" : "/login"} className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium hover:bg-secondary">
-            <User2 className="h-4 w-4" />
-            <span className="hidden sm:inline">{user ? (user.name || user.phone) : "Login"}</span>
-          </Link>
-          {!isAdmin && (
+
+          {/* Customer-only links */}
+          {!isAdminArea && !isAdmin && (
+            <Link to={user ? "/orders" : "/login"} className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium hover:bg-secondary">
+              <User2 className="h-4 w-4" />
+              <span className="hidden sm:inline">{user ? (user.name || user.phone) : "Login"}</span>
+            </Link>
+          )}
+
+          {/* Admin badge when in admin area */}
+          {isAdminArea && isAdmin && (
+            <span className="hidden items-center gap-1 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary sm:inline-flex">
+              <ShieldCheck className="h-4 w-4" /> {user?.phone}
+            </span>
+          )}
+
+          {/* Cart — customers only */}
+          {!isAdminArea && !isAdmin && (
             <Link to="/cart" className="relative inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
               <ShoppingBag className="h-4 w-4" />
               <span className="hidden sm:inline">Cart</span>
@@ -62,10 +85,18 @@ export function Header() {
               )}
             </Link>
           )}
+
+          {/* Logout */}
+          {user && (
+            <button onClick={handleLogout} title="Sign out" className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium hover:bg-secondary">
+              <LogOut className="h-4 w-4" />
+              <span className="hidden md:inline">Logout</span>
+            </button>
+          )}
         </div>
       </div>
 
-      {!isAdmin && (
+      {!isAdminArea && (
         <form onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q } }); }} className="px-4 pb-3 md:hidden">
           <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
             <Search className="h-4 w-4 text-muted-foreground" />
