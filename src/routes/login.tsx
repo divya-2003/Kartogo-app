@@ -69,7 +69,7 @@ function LoginPage() {
                 {loading ? "Sending..." : "Send OTP"}
               </button>
               <p className="text-center text-xs text-muted-foreground">
-                Admin access is restricted to authorized numbers only.
+                Admin? <Link to="/admin-login" className="font-semibold text-primary">Sign in via admin portal</Link>
               </p>
             </form>
           ) : (
