@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     verifyOtp: async (phone, otp) => {
       const expected = pendingOtp[phone] ?? "1234";
       if (otp !== expected) throw new Error("Incorrect OTP");
-      const role = phone === "9999999999" ? "admin" : "customer";
+      const role = phone === "9110310034" ? "admin" : "customer";
       const u: User = { phone, role };
       setUser(u);
       return u;
