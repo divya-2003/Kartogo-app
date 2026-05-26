@@ -36,7 +36,7 @@ function CartPage() {
                 if (!p) return null;
                 return (
                   <div key={i.productId} className="flex items-center gap-3 p-4">
-                    <div className="grid h-16 w-16 place-items-center rounded-xl bg-cream bg-grain text-3xl">{p.emoji}</div>
+                    <div className="grid h-16 w-16 place-items-center overflow-hidden rounded-xl bg-cream bg-grain text-3xl">{p.image ? <img src={p.image} alt={p.name} loading="lazy" className="h-full w-full object-cover" /> : p.emoji}</div>
                     <div className="flex-1">
                       <div className="font-semibold leading-tight">{p.name}</div>
                       <div className="text-xs text-muted-foreground">{p.unit} · {formatINR(p.price)}</div>
