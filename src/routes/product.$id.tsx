@@ -28,8 +28,12 @@ function ProductPage() {
           <span className="text-foreground">{p.name}</span>
         </nav>
         <div className="grid gap-8 md:grid-cols-2">
-          <div className="grid aspect-square place-items-center rounded-3xl border border-border bg-cream bg-grain text-[12rem]">
-            {p.emoji}
+          <div className="grid aspect-square place-items-center overflow-hidden rounded-3xl border border-border bg-cream bg-grain">
+            {p.image ? (
+              <img src={p.image} alt={p.name} width={768} height={768} className="h-full w-full object-cover" />
+            ) : (
+              <div className="text-[12rem]">{p.emoji}</div>
+            )}
           </div>
           <div className="flex flex-col">
             <h1 className="font-display text-3xl font-bold leading-tight md:text-4xl">{p.name}</h1>

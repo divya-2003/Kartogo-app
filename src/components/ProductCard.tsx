@@ -11,8 +11,12 @@ export function ProductCard({ p }: { p: Product }) {
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:shadow-pop">
-      <Link to="/product/$id" params={{ id: p.id }} className="relative grid aspect-square place-items-center bg-cream bg-grain">
-        <div className="text-6xl transition group-hover:scale-110">{p.emoji}</div>
+      <Link to="/product/$id" params={{ id: p.id }} className="relative grid aspect-square place-items-center overflow-hidden bg-cream bg-grain">
+        {p.image ? (
+          <img src={p.image} alt={p.name} loading="lazy" width={768} height={768} className="h-full w-full object-cover transition group-hover:scale-105" />
+        ) : (
+          <div className="text-6xl transition group-hover:scale-110">{p.emoji}</div>
+        )}
         {p.mrp && p.mrp > p.price && (
           <span className="absolute left-2 top-2 rounded-md bg-primary px-2 py-0.5 text-[11px] font-bold text-primary-foreground">
             {Math.round((1 - p.price / p.mrp) * 100)}% OFF
