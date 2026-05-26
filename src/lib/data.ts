@@ -52,7 +52,7 @@ export const CATEGORIES: Category[] = [
   { slug: "tiffin-batter", name: "Tiffin Batter", emoji: "🥞", tint: "bg-primary/15" },
 ];
 
-export const PRODUCTS: Product[] = [
+const RAW_PRODUCTS: Product[] = [
   { id: "p1", name: "Andhra Avakaya Pickle", category: "pickles", price: 180, mrp: 220, unit: "250g jar", stock: 32, emoji: "🥭", description: "Traditional mango pickle from Ongole homes — fiery, oil-rich, ready to pair with curd rice." },
   { id: "p2", name: "Guntur Red Chilli Powder", category: "spice-powders", price: 140, mrp: 160, unit: "200g pack", stock: 60, emoji: "🌶️", description: "Stone-ground Guntur chillies. Bright red, sharp heat." },
   { id: "p3", name: "Sambar Powder", category: "spice-powders", price: 95, unit: "200g pack", stock: 44, emoji: "🍲", description: "House-roasted dal and spice blend." },
@@ -72,6 +72,8 @@ export const PRODUCTS: Product[] = [
   { id: "p17", name: "Banana Chips", category: "local-snacks", price: 70, unit: "200g", stock: 38, emoji: "🍌", description: "Coconut-oil fried Kerala-style chips." },
   { id: "p18", name: "Lays Classic Salted", category: "snacks", price: 20, unit: "52g", stock: 80, emoji: "🥔", description: "Crispy salted potato chips." },
 ];
+
+export const PRODUCTS: Product[] = RAW_PRODUCTS.map(p => ({ ...p, image: IMG[p.id] }));
 
 export const DELIVERY_BOYS = [
   { id: "d1", name: "Ravi Kumar", phone: "9876500001", active: true },
