@@ -8,6 +8,7 @@ export const Route = createFileRoute("/admin/")({ component: Dashboard });
 function Dashboard() {
   const { products } = useCatalog();
   const { orders } = useOrders();
+  const { adminAudit } = useAuth();
   const today = new Date(); today.setHours(0,0,0,0);
   const todays = orders.filter(o => o.createdAt >= today.getTime());
   const revenue = todays.reduce((s, o) => s + o.total, 0);
@@ -70,6 +71,25 @@ function Dashboard() {
           )}
         </section>
       </div>
+
+      <section className="rounded-2xl border border-border bg-card p-5">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-display text-lg font-bold flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" /> Admin login audit</h2>
+          <span className="text-xs text-muted-foreground">{adminAudit.length} entries</span>
+        </div>
+        {adminAudit.length === 0 ? (
+          <div className="text-sm text-muted-foreground">No admin logins recorded yet.</div>
+        ) : (
+          <ul className="divide-y divide-border">
+            {adminAudit.slice(0, 8).map((e, i) => (
+              <li key={i} className="flex items-center justify-between py-2 text-sm">
+                <span className="font-mono font-semibold">+91 {e.phone}</span>
+                <span className="text-muted-foreground">{new Date(e.at).toLocaleString("en-IN")}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }
