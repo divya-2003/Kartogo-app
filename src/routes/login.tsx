@@ -68,9 +68,6 @@ function LoginPage() {
               <button disabled={loading} className="w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
                 {loading ? "Sending..." : "Send OTP"}
               </button>
-              <p className="text-center text-xs text-muted-foreground">
-                Admin? <Link to="/admin-login" className="font-semibold text-primary">Sign in via admin portal</Link>
-              </p>
             </form>
           ) : (
             <form onSubmit={handleVerify} className="mt-6 space-y-4">
