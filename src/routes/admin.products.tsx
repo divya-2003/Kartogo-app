@@ -47,7 +47,7 @@ function ProductsAdmin() {
           <tbody className="divide-y divide-border">
             {list.map(p => (
               <tr key={p.id} className="hover:bg-secondary/50">
-                <td className="p-3"><div className="flex items-center gap-2"><span className="text-xl">{p.emoji}</span><div><div className="font-semibold">{p.name}</div><div className="text-xs text-muted-foreground">{p.unit}</div></div></div></td>
+                <td className="p-3"><div className="flex items-center gap-3">{p.image ? <img src={p.image} alt={p.name} loading="lazy" className="h-12 w-12 rounded-lg object-cover" /> : <span className="grid h-12 w-12 place-items-center rounded-lg bg-secondary text-xl">{p.emoji}</span>}<div><div className="font-semibold">{p.name}</div><div className="text-xs text-muted-foreground">{p.unit}</div></div></div></td>
                 <td className="p-3">{CATEGORIES.find(c => c.slug === p.category)?.name ?? p.category}</td>
                 <td className="p-3 font-display font-bold">{formatINR(p.price)}</td>
                 <td className="p-3"><span className={`rounded-md px-2 py-0.5 text-xs font-bold ${p.stock === 0 ? "bg-destructive/15 text-destructive" : p.stock <= 5 ? "bg-saffron/30" : "bg-primary/10 text-primary"}`}>{p.stock}</span></td>
