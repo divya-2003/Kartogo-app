@@ -168,7 +168,13 @@ function useProductsValue(): Product[] {
 
 export function CatalogProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>(PRODUCTS);
-  useEffect(() => { setProducts(read<Product[]>("qk_products", PRODUCTS)); }, []);
+  useEffect(() => {
+    const stored = read<Product[]>("qk_products", PRODUCTS);
+    // Always overlay the latest bundled image URLs — localStorage may hold
+    // stale Vite-hashed asset paths from a previous build.
+    const imgById = new Map(PRODUCTS.map(p => [p.id, p.image]));
+    setProducts(stored.map(p => ({ ...p, image: imgById.get(p.id) ?? p.image })));
+  }, []);
   useEffect(() => { write("qk_products", products); }, [products]);
 
   const value: CatalogCtx = {
