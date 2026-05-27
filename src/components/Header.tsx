@@ -14,10 +14,9 @@ export function Header() {
   const isAdmin = user?.role === "admin";
 
   const handleLogout = () => {
-    const wasAdmin = isAdmin;
     logout();
     toast.success("Signed out");
-    nav({ to: wasAdmin ? "/admin-login" : "/login" });
+    nav({ to: "/login" });
   };
 
   return (

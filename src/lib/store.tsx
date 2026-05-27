@@ -112,13 +112,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     verifyOtp: async (phone, otp) => {
       checkOtp(phone, otp);
-      if (isAdminPhone(phone)) {
-        // Admin numbers must use the dedicated admin login portal.
-        throw new Error("This number is reserved for admin login. Please use the admin portal.");
-      }
-      const u: User = { phone, role: roleFor(phone) };
+      const role = roleFor(phone);
+      const u: User = { phone, role };
       setUser(u);
       setPendingOtp(p => { const { [phone]: _, ...rest } = p; return rest; });
+      if (role === "admin") {
+        setAdminAudit(prev => [{ phone, at: Date.now() }, ...prev].slice(0, 100));
+      }
       return u;
     },
     verifyAdminOtp: async (phone, otp) => {
@@ -129,7 +129,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const u: User = { phone, role: "admin" };
       setUser(u);
       setPendingOtp(p => { const { [phone]: _, ...rest } = p; return rest; });
-      // Audit log — record every successful admin authentication.
       setAdminAudit(prev => [{ phone, at: Date.now() }, ...prev].slice(0, 100));
       return u;
     },

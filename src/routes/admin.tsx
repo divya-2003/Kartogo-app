@@ -7,7 +7,7 @@ export const Route = createFileRoute("/admin")({
     if (typeof window === "undefined") return;
     let u: { role?: string } | null = null;
     try { u = JSON.parse(localStorage.getItem("qk_user") || "null"); } catch { u = null; }
-    if (!u || u.role !== "admin") throw redirect({ to: "/admin-login" });
+    if (!u || u.role !== "admin") throw redirect({ to: "/login" });
   },
   component: AdminLayout,
   head: () => ({ meta: [{ title: "Admin — QuickKart" }] }),
