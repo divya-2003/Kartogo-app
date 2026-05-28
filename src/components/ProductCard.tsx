@@ -4,7 +4,7 @@ import type { Product } from "@/lib/data";
 import { formatINR } from "@/lib/data";
 import { useCart } from "@/lib/store";
 
-export function ProductCard({ p }: { p: Product }) {
+export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolean }) {
   const { items, add, setQty } = useCart();
   const inCart = items.find(i => i.productId === p.id);
   const out = p.stock <= 0;
@@ -17,10 +17,19 @@ export function ProductCard({ p }: { p: Product }) {
         ) : (
           <div className="text-6xl transition group-hover:scale-110">{p.emoji}</div>
         )}
-        {p.mrp && p.mrp > p.price && (
-          <span className="absolute left-2 top-2 rounded-md bg-primary px-2 py-0.5 text-[11px] font-bold text-primary-foreground">
-            {Math.round((1 - p.price / p.mrp) * 100)}% OFF
-          </span>
+        {(bestseller || (p.mrp && p.mrp > p.price)) && (
+          <div className="absolute left-2 top-2 flex flex-col gap-1">
+            {bestseller && (
+              <span className="rounded-md bg-saffron px-2 py-0.5 text-[11px] font-bold text-foreground shadow-pop">
+                BESTSELLER
+              </span>
+            )}
+            {p.mrp && p.mrp > p.price && (
+              <span className="w-fit rounded-md bg-primary px-2 py-0.5 text-[11px] font-bold text-primary-foreground">
+                {Math.round((1 - p.price / p.mrp) * 100)}% OFF
+              </span>
+            )}
+          </div>
         )}
         {out && <span className="absolute right-2 top-2 rounded-md bg-destructive px-2 py-0.5 text-[11px] font-bold text-destructive-foreground">Out</span>}
       </Link>
