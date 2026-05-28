@@ -63,9 +63,9 @@ function Index() {
         <div className="mb-5 flex items-end justify-between">
           <h2 className="font-display text-2xl font-bold md:text-3xl">Shop by category</h2>
         </div>
-        <div className="grid grid-cols-3 gap-3 md:grid-cols-6 lg:grid-cols-9">
+        <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-4 pb-2 [scrollbar-width:thin] md:-mx-6 md:px-6">
           {CATEGORIES.map(c => (
-            <Link key={c.slug} to="/category/$slug" params={{ slug: c.slug }} className="group flex flex-col items-center gap-2">
+            <Link key={c.slug} to="/category/$slug" params={{ slug: c.slug }} className="group flex w-24 shrink-0 snap-start flex-col items-center gap-2 md:w-28">
               <div className={`grid aspect-square w-full place-items-center rounded-2xl border border-border ${c.tint} text-4xl transition group-hover:-translate-y-1 group-hover:shadow-pop`}>
                 {c.emoji}
               </div>
