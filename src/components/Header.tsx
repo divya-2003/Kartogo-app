@@ -59,11 +59,34 @@ export function Header() {
           )}
 
           {/* Customer-only links */}
-          {!isAdminArea && !isAdmin && (
-            <Link to={user ? "/orders" : "/login"} className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium hover:bg-secondary">
+          {!isAdminArea && !isAdmin && !user && (
+            <Link to="/login" className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-medium hover:bg-secondary">
               <User2 className="h-4 w-4" />
-              <span className="hidden sm:inline">{user ? (user.name || user.phone) : "Login"}</span>
+              <span className="hidden sm:inline">Login</span>
             </Link>
+          )}
+
+          {!isAdminArea && !isAdmin && user && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-medium hover:bg-secondary">
+                  <User2 className="h-4 w-4" />
+                  <span>{user.phone}</span>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-56 p-1">
+                <Link to="/orders" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-secondary">
+                  <Package className="h-4 w-4" /> My orders
+                </Link>
+                <Link to="/account" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-secondary">
+                  <UserCog className="h-4 w-4" /> My account details
+                </Link>
+                <div className="my-1 h-px bg-border" />
+                <button onClick={handleLogout} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-destructive hover:bg-secondary">
+                  <LogOut className="h-4 w-4" /> Logout
+                </button>
+              </PopoverContent>
+            </Popover>
           )}
 
           {/* Admin badge when in admin area */}
@@ -86,8 +109,8 @@ export function Header() {
             </Link>
           )}
 
-          {/* Logout */}
-          {user && (
+          {/* Admin logout */}
+          {user && isAdmin && (
             <button onClick={handleLogout} title="Sign out" className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium hover:bg-secondary">
               <LogOut className="h-4 w-4" />
               <span className="hidden md:inline">Logout</span>
