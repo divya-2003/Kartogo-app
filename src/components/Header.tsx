@@ -4,8 +4,6 @@ import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useCart, useAuth } from "@/lib/store";
 import { toast } from "sonner";
-import { useCart, useAuth } from "@/lib/store";
-import { toast } from "sonner";
 
 export function Header() {
   const { count } = useCart();
