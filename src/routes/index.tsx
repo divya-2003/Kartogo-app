@@ -59,19 +59,16 @@ function Index() {
       </section>
 
       {/* Categories */}
-      <section className="mx-auto max-w-7xl px-4 py-10 md:px-6">
-        <div className="mb-5 flex items-end justify-between">
-          <h2 className="font-display text-2xl font-bold md:text-3xl">Shop by category</h2>
-        </div>
-        <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-4 pb-2 [scrollbar-width:thin] md:-mx-6 md:px-6">
-          {CATEGORIES.map(c => (
-            <Link key={c.slug} to="/category/$slug" params={{ slug: c.slug }} className="group flex w-24 shrink-0 snap-start flex-col items-center gap-2 md:w-28">
-              <div className={`grid aspect-square w-full place-items-center rounded-2xl border border-border ${c.tint} text-4xl transition group-hover:-translate-y-1 group-hover:shadow-pop`}>
-                {c.emoji}
-              </div>
-              <div className="text-center text-xs font-semibold leading-tight">{c.name}</div>
-            </Link>
-          ))}
+      <section className="bg-[#0f6b7a]">
+        <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
+          <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {CATEGORIES.map(c => (
+              <Link key={c.slug} to="/category/$slug" params={{ slug: c.slug }} className="group flex w-24 shrink-0 snap-start flex-col items-center gap-2 md:w-28">
+                <div className="text-5xl md:text-6xl transition group-hover:-translate-y-1">{c.emoji}</div>
+                <div className="text-center text-sm font-bold leading-tight text-white">{c.name}</div>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
