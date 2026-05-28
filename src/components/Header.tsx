@@ -1,6 +1,9 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ShoppingBag, Search, MapPin, User2, LayoutDashboard, LogOut, ShieldCheck } from "lucide-react";
+import { ShoppingBag, Search, MapPin, User2, LayoutDashboard, LogOut, ShieldCheck, Package, UserCog } from "lucide-react";
 import { useState } from "react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useCart, useAuth } from "@/lib/store";
+import { toast } from "sonner";
 import { useCart, useAuth } from "@/lib/store";
 import { toast } from "sonner";
 
