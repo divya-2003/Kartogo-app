@@ -134,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return u;
     },
     setName: (name) => setUser(u => u ? { ...u, name } : u),
+    updateProfile: (patch) => setUser(u => u ? { ...u, ...patch } : u),
     logout: () => {
       setUser(null);
       if (typeof window !== "undefined") {
