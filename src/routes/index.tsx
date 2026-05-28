@@ -84,17 +84,10 @@ function Index() {
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-4">
-          {local.map(p => <ProductCard key={p.id} p={p} />)}
+          {local.map(p => <ProductCard key={p.id} p={p} bestseller={bestsellerIds.has(p.id)} />)}
         </div>
       </section>
 
-      {/* Featured */}
-      <section className="mx-auto max-w-7xl px-4 py-10 md:px-6">
-        <h2 className="mb-4 font-display text-2xl font-bold md:text-3xl">Bestsellers</h2>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5">
-          {featured.map(p => <ProductCard key={p.id} p={p} />)}
-        </div>
-      </section>
 
       <footer className="mt-12 border-t border-border bg-cream">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-sm text-muted-foreground md:px-6">
