@@ -60,12 +60,12 @@ function Index() {
 
       {/* Categories */}
       <section className="bg-[#0f6b7a]">
-        <div className="mx-auto max-w-7xl px-4 py-6 md:px-6">
-          <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="mx-auto max-w-7xl px-4 py-3 md:px-6">
+          <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {CATEGORIES.map(c => (
-              <Link key={c.slug} to="/category/$slug" params={{ slug: c.slug }} className="group flex w-24 shrink-0 snap-start flex-col items-center gap-2 md:w-28">
-                <div className="text-5xl md:text-6xl transition group-hover:-translate-y-1">{c.emoji}</div>
-                <div className="text-center text-sm font-bold leading-tight text-white">{c.name}</div>
+              <Link key={c.slug} to="/category/$slug" params={{ slug: c.slug }} className="group flex w-16 shrink-0 snap-start flex-col items-center gap-1 md:w-20">
+                <div className="text-3xl md:text-4xl transition group-hover:-translate-y-1">{c.emoji}</div>
+                <div className="text-center text-[11px] font-bold leading-tight text-white">{c.name}</div>
               </Link>
             ))}
           </div>
