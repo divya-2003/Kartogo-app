@@ -17,7 +17,7 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const { products } = useCatalog();
-  const featured = products.slice(0, 10);
+  const bestsellerIds = new Set(products.slice(0, 10).map(p => p.id));
   const local = products.filter(p => ["pickles", "local-snacks", "tiffin-batter", "spice-powders"].includes(p.category)).slice(0, 8);
 
   return (
