@@ -4,7 +4,7 @@ import type { Product } from "@/lib/data";
 import { formatINR } from "@/lib/data";
 import { useCart } from "@/lib/store";
 
-export function ProductCard({ p }: { p: Product }) {
+export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolean }) {
   const { items, add, setQty } = useCart();
   const inCart = items.find(i => i.productId === p.id);
   const out = p.stock <= 0;
