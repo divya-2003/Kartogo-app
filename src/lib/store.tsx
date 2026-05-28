@@ -65,7 +65,7 @@ export const useCart = () => {
 };
 
 // ---------------- Auth (mock OTP) ----------------
-type User = { phone: string; name?: string; role: "customer" | "admin" };
+type User = { phone: string; name?: string; email?: string; address?: string; password?: string; role: "customer" | "admin" };
 export type AdminAuditEntry = { phone: string; at: number };
 
 type AuthCtx = {
@@ -76,6 +76,7 @@ type AuthCtx = {
   /** Verify OTP for the admin portal. Rejects any phone not on the allow list. */
   verifyAdminOtp: (phone: string, otp: string) => Promise<User>;
   setName: (name: string) => void;
+  updateProfile: (patch: Partial<Pick<User, "name" | "email" | "address" | "password">>) => void;
   logout: () => void;
   adminAudit: AdminAuditEntry[];
 };
@@ -133,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return u;
     },
     setName: (name) => setUser(u => u ? { ...u, name } : u),
+    updateProfile: (patch) => setUser(u => u ? { ...u, ...patch } : u),
     logout: () => {
       setUser(null);
       if (typeof window !== "undefined") {
