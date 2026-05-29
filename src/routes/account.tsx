@@ -12,7 +12,7 @@ export const Route = createFileRoute("/account")({
 
 function AccountPage() {
   const { user, updateProfile } = useAuth();
-  const nav = useNavigate();
+  
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
