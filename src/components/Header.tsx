@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ShoppingBag, Search, MapPin, User2, LayoutDashboard, LogOut, ShieldCheck, Package, UserCog, X } from "lucide-react";
+import { ShoppingBag, Search, MapPin, User2, LayoutDashboard, LogOut, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { useCart, useAuth } from "@/lib/store";
 import { toast } from "sonner";
@@ -9,7 +9,6 @@ export function Header() {
   const { user, logout } = useAuth();
   const nav = useNavigate();
   const [q, setQ] = useState("");
-  const [menuOpen, setMenuOpen] = useState(false);
   const location = useRouterState({ select: s => s.location.pathname });
   const isAdminArea = location.startsWith("/admin");
   const isAdmin = user?.role === "admin";
@@ -67,14 +66,15 @@ export function Header() {
           )}
 
           {!isAdminArea && !isAdmin && user && (
-            <button
-              onClick={() => setMenuOpen(true)}
+            <Link
+              to="/menu"
               aria-label="Account menu"
               className="inline-flex items-center justify-center rounded-full border border-border bg-card p-2 hover:bg-secondary"
             >
               <User2 className="h-4 w-4" />
-            </button>
+            </Link>
           )}
+
 
 
           {/* Admin badge when in admin area */}
@@ -115,46 +115,8 @@ export function Header() {
           </div>
         </form>
       )}
-
-      {/* Full-screen account menu */}
-      {menuOpen && user && !isAdmin && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-background">
-          <div className="flex items-center justify-between border-b border-border px-4 py-4">
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-full bg-primary/10 text-primary">
-                <User2 className="h-5 w-5" />
-              </div>
-              <div className="font-display text-lg font-bold">Account</div>
-            </div>
-            <button onClick={() => setMenuOpen(false)} aria-label="Close" className="rounded-full p-2 hover:bg-secondary">
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-          <nav className="flex-1 p-4">
-            <Link
-              to="/orders"
-              onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-4 text-base font-semibold hover:bg-secondary"
-            >
-              <Package className="h-5 w-5" /> My orders
-            </Link>
-            <Link
-              to="/account"
-              onClick={() => setMenuOpen(false)}
-              className="mt-3 flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-4 text-base font-semibold hover:bg-secondary"
-            >
-              <UserCog className="h-5 w-5" /> Account details
-            </Link>
-            <button
-              onClick={() => { setMenuOpen(false); handleLogout(); }}
-              className="mt-3 flex w-full items-center gap-3 rounded-xl border border-border bg-card px-4 py-4 text-left text-base font-semibold text-destructive hover:bg-secondary"
-            >
-              <LogOut className="h-5 w-5" /> Logout
-            </button>
-          </nav>
-        </div>
-      )}
     </header>
   );
 }
+
 
