@@ -111,9 +111,6 @@ function AccountPage() {
           </button>
         </form>
 
-        <button onClick={() => nav({ to: "/orders" })} className="mt-6 w-full rounded-xl border border-border bg-card py-3 font-semibold hover:bg-secondary">
-          View my orders
-        </button>
       </div>
     </div>
   );
