@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { useAuth } from "@/lib/store";
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/account")({
 
 function AccountPage() {
   const { user, updateProfile } = useAuth();
-  const nav = useNavigate();
+  
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -63,10 +63,11 @@ function AccountPage() {
             <User2 className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="font-display text-2xl font-bold">My account</h1>
+            <h1 className="font-display text-2xl font-bold">Account details</h1>
             <p className="text-sm text-muted-foreground">Manage your personal details and password</p>
           </div>
         </div>
+
 
         <form onSubmit={saveProfile} className="rounded-2xl border border-border bg-card p-5 shadow-pop">
           <h2 className="mb-4 font-display text-lg font-bold">Account details</h2>
@@ -110,9 +111,6 @@ function AccountPage() {
           </button>
         </form>
 
-        <button onClick={() => nav({ to: "/orders" })} className="mt-6 w-full rounded-xl border border-border bg-card py-3 font-semibold hover:bg-secondary">
-          View my orders
-        </button>
       </div>
     </div>
   );

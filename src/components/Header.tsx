@@ -1,7 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ShoppingBag, Search, MapPin, User2, LayoutDashboard, LogOut, ShieldCheck, Package, UserCog } from "lucide-react";
+import { ShoppingBag, Search, MapPin, User2, LayoutDashboard, LogOut, ShieldCheck, Package, UserCog, X } from "lucide-react";
 import { useState } from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useCart, useAuth } from "@/lib/store";
 import { toast } from "sonner";
 
@@ -10,6 +9,7 @@ export function Header() {
   const { user, logout } = useAuth();
   const nav = useNavigate();
   const [q, setQ] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
   const location = useRouterState({ select: s => s.location.pathname });
   const isAdminArea = location.startsWith("/admin");
   const isAdmin = user?.role === "admin";
@@ -67,27 +67,15 @@ export function Header() {
           )}
 
           {!isAdminArea && !isAdmin && user && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <button className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-medium hover:bg-secondary">
-                  <User2 className="h-4 w-4" />
-                  <span>{user.phone}</span>
-                </button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-56 p-1">
-                <Link to="/orders" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-secondary">
-                  <Package className="h-4 w-4" /> My orders
-                </Link>
-                <Link to="/account" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-secondary">
-                  <UserCog className="h-4 w-4" /> My account details
-                </Link>
-                <div className="my-1 h-px bg-border" />
-                <button onClick={handleLogout} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-destructive hover:bg-secondary">
-                  <LogOut className="h-4 w-4" /> Logout
-                </button>
-              </PopoverContent>
-            </Popover>
+            <button
+              onClick={() => setMenuOpen(true)}
+              aria-label="Account menu"
+              className="inline-flex items-center justify-center rounded-full border border-border bg-card p-2 hover:bg-secondary"
+            >
+              <User2 className="h-4 w-4" />
+            </button>
           )}
+
 
           {/* Admin badge when in admin area */}
           {isAdminArea && isAdmin && (
@@ -127,6 +115,46 @@ export function Header() {
           </div>
         </form>
       )}
+
+      {/* Full-screen account menu */}
+      {menuOpen && user && !isAdmin && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-background">
+          <div className="flex items-center justify-between border-b border-border px-4 py-4">
+            <div className="flex items-center gap-3">
+              <div className="grid h-10 w-10 place-items-center rounded-full bg-primary/10 text-primary">
+                <User2 className="h-5 w-5" />
+              </div>
+              <div className="font-display text-lg font-bold">Account</div>
+            </div>
+            <button onClick={() => setMenuOpen(false)} aria-label="Close" className="rounded-full p-2 hover:bg-secondary">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <nav className="flex-1 p-4">
+            <Link
+              to="/orders"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-4 text-base font-semibold hover:bg-secondary"
+            >
+              <Package className="h-5 w-5" /> My orders
+            </Link>
+            <Link
+              to="/account"
+              onClick={() => setMenuOpen(false)}
+              className="mt-3 flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-4 text-base font-semibold hover:bg-secondary"
+            >
+              <UserCog className="h-5 w-5" /> Account details
+            </Link>
+            <button
+              onClick={() => { setMenuOpen(false); handleLogout(); }}
+              className="mt-3 flex w-full items-center gap-3 rounded-xl border border-border bg-card px-4 py-4 text-left text-base font-semibold text-destructive hover:bg-secondary"
+            >
+              <LogOut className="h-5 w-5" /> Logout
+            </button>
+          </nav>
+        </div>
+      )}
     </header>
   );
 }
+
