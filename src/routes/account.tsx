@@ -63,10 +63,11 @@ function AccountPage() {
             <User2 className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="font-display text-2xl font-bold">My account</h1>
+            <h1 className="font-display text-2xl font-bold">Account details</h1>
             <p className="text-sm text-muted-foreground">Manage your personal details and password</p>
           </div>
         </div>
+
 
         <form onSubmit={saveProfile} className="rounded-2xl border border-border bg-card p-5 shadow-pop">
           <h2 className="mb-4 font-display text-lg font-bold">Account details</h2>
