@@ -67,27 +67,15 @@ export function Header() {
           )}
 
           {!isAdminArea && !isAdmin && user && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <button className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-medium hover:bg-secondary">
-                  <User2 className="h-4 w-4" />
-                  <span>{user.phone}</span>
-                </button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-56 p-1">
-                <Link to="/orders" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-secondary">
-                  <Package className="h-4 w-4" /> My orders
-                </Link>
-                <Link to="/account" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-secondary">
-                  <UserCog className="h-4 w-4" /> My account details
-                </Link>
-                <div className="my-1 h-px bg-border" />
-                <button onClick={handleLogout} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-destructive hover:bg-secondary">
-                  <LogOut className="h-4 w-4" /> Logout
-                </button>
-              </PopoverContent>
-            </Popover>
+            <button
+              onClick={() => setMenuOpen(true)}
+              aria-label="Account menu"
+              className="inline-flex items-center justify-center rounded-full border border-border bg-card p-2 hover:bg-secondary"
+            >
+              <User2 className="h-4 w-4" />
+            </button>
           )}
+
 
           {/* Admin badge when in admin area */}
           {isAdminArea && isAdmin && (
