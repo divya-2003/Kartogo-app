@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ShoppingBag, Search, MapPin, User2, LayoutDashboard, LogOut, ShieldCheck, Package, UserCog, X } from "lucide-react";
+import { ShoppingBag, Search, MapPin, User2, LayoutDashboard, LogOut, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { useCart, useAuth } from "@/lib/store";
 import { toast } from "sonner";
@@ -9,7 +9,6 @@ export function Header() {
   const { user, logout } = useAuth();
   const nav = useNavigate();
   const [q, setQ] = useState("");
-  const [menuOpen, setMenuOpen] = useState(false);
   const location = useRouterState({ select: s => s.location.pathname });
   const isAdminArea = location.startsWith("/admin");
   const isAdmin = user?.role === "admin";
