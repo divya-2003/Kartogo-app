@@ -85,7 +85,7 @@ export function Header() {
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder='Search "avakaya", "maggi", "agarbatti"...'
+                placeholder={placeholder ? `Search "${placeholder}"` : "Search"}
                 className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               />
             </div>
