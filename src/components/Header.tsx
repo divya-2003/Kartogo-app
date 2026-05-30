@@ -143,9 +143,14 @@ export function Header() {
 
       {!isAdminArea && (
         <form onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q } }); }} className="px-4 pb-3 md:hidden">
-          <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
+          <div className="relative flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
             <Search className="h-4 w-4 text-muted-foreground" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder ? `Search "${placeholder}"` : "Search"} className="w-full bg-transparent text-sm outline-none" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" className="w-full bg-transparent text-sm outline-none" />
+            {!q && (
+              <div className="pointer-events-none absolute left-9 right-3 top-1/2 -translate-y-1/2 overflow-hidden">
+                <SlideText key={placeholder} text={`"${placeholder}"`} />
+              </div>
+            )}
           </div>
         </form>
       )}
