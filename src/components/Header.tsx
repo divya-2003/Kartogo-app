@@ -1,10 +1,53 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ShoppingBag, Search, MapPin, User2, LayoutDashboard, LogOut, ShieldCheck } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCart, useAuth } from "@/lib/store";
 import { toast } from "sonner";
 
+const SEARCH_TERMS = ["avakaya", "maggi", "agarbatti", "milk", "bread", "paneer"];
+
+function useTypewriterPlaceholder(terms: string[]) {
+  const [text, setText] = useState("");
+
+  useEffect(() => {
+    let termIndex = 0;
+    let charIndex = 0;
+    let deleting = false;
+    let timeout: ReturnType<typeof setTimeout>;
+
+    const tick = () => {
+      const current = terms[termIndex];
+      if (!deleting) {
+        charIndex++;
+        setText(current.slice(0, charIndex));
+        if (charIndex === current.length) {
+          deleting = true;
+          timeout = setTimeout(tick, 1400);
+          return;
+        }
+        timeout = setTimeout(tick, 110);
+      } else {
+        charIndex--;
+        setText(current.slice(0, charIndex));
+        if (charIndex === 0) {
+          deleting = false;
+          termIndex = (termIndex + 1) % terms.length;
+          timeout = setTimeout(tick, 300);
+          return;
+        }
+        timeout = setTimeout(tick, 50);
+      }
+    };
+
+    timeout = setTimeout(tick, 400);
+    return () => clearTimeout(timeout);
+  }, [terms]);
+
+  return text;
+}
+
 export function Header() {
+  const placeholder = useTypewriterPlaceholder(SEARCH_TERMS);
   const { count } = useCart();
   const { user, logout } = useAuth();
   const nav = useNavigate();
@@ -42,7 +85,7 @@ export function Header() {
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder='Search "avakaya", "maggi", "agarbatti"...'
+                placeholder={placeholder ? `Search "${placeholder}"` : "Search"}
                 className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               />
             </div>
@@ -111,7 +154,7 @@ export function Header() {
         <form onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q } }); }} className="px-4 pb-3 md:hidden">
           <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
             <Search className="h-4 w-4 text-muted-foreground" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search products..." className="w-full bg-transparent text-sm outline-none" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder ? `Search "${placeholder}"` : "Search"} className="w-full bg-transparent text-sm outline-none" />
           </div>
         </form>
       )}
