@@ -154,7 +154,7 @@ export function Header() {
         <form onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q } }); }} className="px-4 pb-3 md:hidden">
           <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
             <Search className="h-4 w-4 text-muted-foreground" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search products..." className="w-full bg-transparent text-sm outline-none" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder ? `Search "${placeholder}"` : "Search"} className="w-full bg-transparent text-sm outline-none" />
           </div>
         </form>
       )}
