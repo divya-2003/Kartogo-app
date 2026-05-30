@@ -6,44 +6,17 @@ import { toast } from "sonner";
 
 const SEARCH_TERMS = ["avakaya", "maggi", "agarbatti", "milk", "bread", "paneer"];
 
-function useTypewriterPlaceholder(terms: string[]) {
-  const [text, setText] = useState("");
+function useSlidePlaceholder(terms: string[]) {
+  const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    let termIndex = 0;
-    let charIndex = 0;
-    let deleting = false;
-    let timeout: ReturnType<typeof setTimeout>;
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % terms.length);
+    }, 2600);
+    return () => clearInterval(interval);
+  }, [terms.length]);
 
-    const tick = () => {
-      const current = terms[termIndex];
-      if (!deleting) {
-        charIndex++;
-        setText(current.slice(0, charIndex));
-        if (charIndex === current.length) {
-          deleting = true;
-          timeout = setTimeout(tick, 1400);
-          return;
-        }
-        timeout = setTimeout(tick, 110);
-      } else {
-        charIndex--;
-        setText(current.slice(0, charIndex));
-        if (charIndex === 0) {
-          deleting = false;
-          termIndex = (termIndex + 1) % terms.length;
-          timeout = setTimeout(tick, 300);
-          return;
-        }
-        timeout = setTimeout(tick, 50);
-      }
-    };
-
-    timeout = setTimeout(tick, 400);
-    return () => clearTimeout(timeout);
-  }, [terms]);
-
-  return text;
+  return { term: terms[index], index };
 }
 
 export function Header() {
