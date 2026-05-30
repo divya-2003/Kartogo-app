@@ -1,9 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Header } from "@/components/Header";
 import { useAuth } from "@/lib/store";
 import { toast } from "sonner";
-import { Phone, KeyRound } from "lucide-react";
+import { Phone, KeyRound, ShoppingBag } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -44,11 +43,21 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="mx-auto max-w-md px-4 py-12 md:px-6">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
+      {/* Brand */}
+      <div className="mb-8 flex flex-col items-center gap-3">
+        <div className="grid h-16 w-16 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-pop">
+          <ShoppingBag className="h-8 w-8" />
+        </div>
+        <div className="text-center">
+          <h1 className="font-display text-3xl font-bold tracking-tight">QuickKart</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Ongole's 15-min neighbourhood store</p>
+        </div>
+      </div>
+
+      <div className="w-full max-w-md">
         <div className="rounded-3xl border border-border bg-card p-6 shadow-pop md:p-8">
-          <h1 className="font-display text-2xl font-bold">Login or sign up</h1>
+          <h2 className="font-display text-xl font-bold">Login or sign up</h2>
           <p className="mt-1 text-sm text-muted-foreground">We'll send an OTP to your mobile.</p>
 
           {stage === "phone" ? (
@@ -93,7 +102,7 @@ function LoginPage() {
           )}
         </div>
         <p className="mt-4 text-center text-xs text-muted-foreground">
-          By continuing, you agree to QuickKart's terms. <Link to="/" className="text-primary">Back to home</Link>
+          By continuing, you agree to QuickKart's terms.
         </p>
       </div>
     </div>
