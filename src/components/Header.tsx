@@ -19,6 +19,19 @@ function useSlidePlaceholder(terms: string[]) {
   return { term: terms[index], index };
 }
 
+function SlideText({ text }: { text: string }) {
+  return (
+    <span
+      className="inline-block text-sm text-muted-foreground"
+      style={{
+        animation: "slideIn 2.5s ease-in-out forwards",
+      }}
+    >
+      {text}
+    </span>
+  );
+}
+
 export function Header() {
   const { term: placeholder } = useSlidePlaceholder(SEARCH_TERMS);
   const { count } = useCart();
