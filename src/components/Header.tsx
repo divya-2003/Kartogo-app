@@ -6,48 +6,34 @@ import { toast } from "sonner";
 
 const SEARCH_TERMS = ["avakaya", "maggi", "agarbatti", "milk", "bread", "paneer"];
 
-function useTypewriterPlaceholder(terms: string[]) {
-  const [text, setText] = useState("");
+function useSlidePlaceholder(terms: string[]) {
+  const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    let termIndex = 0;
-    let charIndex = 0;
-    let deleting = false;
-    let timeout: ReturnType<typeof setTimeout>;
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % terms.length);
+    }, 2600);
+    return () => clearInterval(interval);
+  }, [terms.length]);
 
-    const tick = () => {
-      const current = terms[termIndex];
-      if (!deleting) {
-        charIndex++;
-        setText(current.slice(0, charIndex));
-        if (charIndex === current.length) {
-          deleting = true;
-          timeout = setTimeout(tick, 1400);
-          return;
-        }
-        timeout = setTimeout(tick, 110);
-      } else {
-        charIndex--;
-        setText(current.slice(0, charIndex));
-        if (charIndex === 0) {
-          deleting = false;
-          termIndex = (termIndex + 1) % terms.length;
-          timeout = setTimeout(tick, 300);
-          return;
-        }
-        timeout = setTimeout(tick, 50);
-      }
-    };
+  return { term: terms[index], index };
+}
 
-    timeout = setTimeout(tick, 400);
-    return () => clearTimeout(timeout);
-  }, [terms]);
-
-  return text;
+function SlideText({ text }: { text: string }) {
+  return (
+    <span
+      className="inline-block text-sm text-muted-foreground"
+      style={{
+        animation: "slideIn 2.5s ease-in-out forwards",
+      }}
+    >
+      {text}
+    </span>
+  );
 }
 
 export function Header() {
-  const placeholder = useTypewriterPlaceholder(SEARCH_TERMS);
+  const { term: placeholder } = useSlidePlaceholder(SEARCH_TERMS);
   const { count } = useCart();
   const { user, logout } = useAuth();
   const nav = useNavigate();
@@ -80,14 +66,19 @@ export function Header() {
             onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q } }); }}
             className="ml-2 hidden flex-1 md:block"
           >
-            <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-pop">
+            <div className="relative flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-pop">
               <Search className="h-4 w-4 text-muted-foreground" />
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder={placeholder ? `Search "${placeholder}"` : "Search"}
+                placeholder="Search"
                 className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               />
+              {!q && (
+                <div className="pointer-events-none absolute left-9 right-3 top-1/2 -translate-y-1/2 overflow-hidden">
+                  <SlideText key={placeholder} text={`"${placeholder}"`} />
+                </div>
+              )}
             </div>
           </form>
         )}
@@ -152,9 +143,14 @@ export function Header() {
 
       {!isAdminArea && (
         <form onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q } }); }} className="px-4 pb-3 md:hidden">
-          <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
+          <div className="relative flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
             <Search className="h-4 w-4 text-muted-foreground" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder ? `Search "${placeholder}"` : "Search"} className="w-full bg-transparent text-sm outline-none" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" className="w-full bg-transparent text-sm outline-none" />
+            {!q && (
+              <div className="pointer-events-none absolute left-9 right-3 top-1/2 -translate-y-1/2 overflow-hidden">
+                <SlideText key={placeholder} text={`"${placeholder}"`} />
+              </div>
+            )}
           </div>
         </form>
       )}
