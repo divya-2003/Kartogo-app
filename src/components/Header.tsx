@@ -20,7 +20,7 @@ function useSlidePlaceholder(terms: string[]) {
 }
 
 export function Header() {
-  const placeholder = useTypewriterPlaceholder(SEARCH_TERMS);
+  const { term: placeholder } = useSlidePlaceholder(SEARCH_TERMS);
   const { count } = useCart();
   const { user, logout } = useAuth();
   const nav = useNavigate();
