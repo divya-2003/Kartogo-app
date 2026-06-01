@@ -81,41 +81,7 @@ export const DELIVERY_BOYS = [
   { id: "d3", name: "Naveen P.", phone: "9876500003", active: false },
 ];
 
-// ---------------- Delivery serviceability ----------------
-// Our dark store sits in Ongole. We only deliver to areas within its 15-min range.
-export const DARK_STORE = {
-  name: "QuickKart Dark Store",
-  area: "Magunta Layout",
-  city: "Ongole",
-  state: "Andhra Pradesh",
-};
 
-export type ServiceArea = { name: string; pincode: string };
-
-export const SERVICE_AREAS: ServiceArea[] = [
-  { name: "Magunta Layout", pincode: "523002" },
-  { name: "Kurnool Road", pincode: "523002" },
-  { name: "Mangamuru Road", pincode: "523002" },
-  { name: "Trunk Road", pincode: "523001" },
-  { name: "Lawyerpet", pincode: "523001" },
-  { name: "Gandhi Nagar", pincode: "523001" },
-  { name: "Surya Nagar", pincode: "523002" },
-  { name: "Bhagya Nagar", pincode: "523001" },
-  { name: "Santhapeta", pincode: "523001" },
-  { name: "Addanki Bus Stand", pincode: "523002" },
-  { name: "Pernamitta", pincode: "523002" },
-];
-
-/** Returns the matching serviceable area for a typed locality name or pincode. */
-export function findServiceArea(query: string): ServiceArea | null {
-  const q = query.trim().toLowerCase();
-  if (!q) return null;
-  return (
-    SERVICE_AREAS.find(a => a.pincode === q) ??
-    SERVICE_AREAS.find(a => a.name.toLowerCase().includes(q)) ??
-    null
-  );
-}
 
 
 export const formatINR = (n: number) =>

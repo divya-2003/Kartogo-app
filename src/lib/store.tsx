@@ -251,4 +251,45 @@ export const useOrders = () => {
   return c;
 };
 
+// ---------------- Delivery location ----------------
+export type SavedLocation = { query: string; area: string };
+
+type LocationCtx = {
+  location: SavedLocation | null;
+  /** True once we've restored any persisted location from storage. */
+  ready: boolean;
+  setLocation: (loc: SavedLocation) => void;
+  clearLocation: () => void;
+};
+const LocationContext = createContext<LocationCtx | null>(null);
+
+export function LocationProvider({ children }: { children: ReactNode }) {
+  const [location, setLoc] = useState<SavedLocation | null>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setLoc(read<SavedLocation | null>("qk_location", null));
+    setReady(true);
+  }, []);
+
+  const value: LocationCtx = {
+    location,
+    ready,
+    setLocation: (loc) => { setLoc(loc); write("qk_location", loc); },
+    clearLocation: () => {
+      setLoc(null);
+      if (typeof window !== "undefined") {
+        try { localStorage.removeItem("qk_location"); } catch { /* noop */ }
+      }
+    },
+  };
+  return <LocationContext.Provider value={value}>{children}</LocationContext.Provider>;
+}
+export const useLocation = () => {
+  const c = useContext(LocationContext);
+  if (!c) throw new Error("LocationProvider missing");
+  return c;
+};
+
 export { DELIVERY_BOYS };
+

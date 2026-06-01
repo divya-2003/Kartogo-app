@@ -8,7 +8,7 @@ import {
   Link,
 } from "@tanstack/react-router";
 import { Toaster } from "sonner";
-import { CartProvider, AuthProvider, CatalogProvider, OrdersProvider } from "@/lib/store";
+import { CartProvider, AuthProvider, CatalogProvider, OrdersProvider, LocationProvider } from "@/lib/store";
 
 import appCss from "../styles.css?url";
 
@@ -80,14 +80,16 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <CatalogProvider>
-          <OrdersProvider>
-            <CartProvider>
-              <Outlet />
-              <Toaster position="top-center" richColors />
-            </CartProvider>
-          </OrdersProvider>
-        </CatalogProvider>
+        <LocationProvider>
+          <CatalogProvider>
+            <OrdersProvider>
+              <CartProvider>
+                <Outlet />
+                <Toaster position="top-center" richColors />
+              </CartProvider>
+            </OrdersProvider>
+          </CatalogProvider>
+        </LocationProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
