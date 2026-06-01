@@ -69,11 +69,14 @@ export function Header() {
           <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground font-display text-lg font-bold">Q</div>
           <div className="leading-tight">
             <div className="font-display text-lg font-bold tracking-tight">QuickKart{isAdminArea && <span className="ml-1 text-xs font-semibold text-primary">· Admin</span>}</div>
-            <div className="hidden text-[11px] text-muted-foreground md:flex items-center gap-1">
-              <MapPin className="h-3 w-3" /> Ongole, AP · 15 min
-            </div>
           </div>
         </Link>
+
+        {!isAdminArea && !isAdmin && (
+          <div className="hidden md:block">
+            <LocationPicker />
+          </div>
+        )}
 
         {!isAdminArea && (
           <form
