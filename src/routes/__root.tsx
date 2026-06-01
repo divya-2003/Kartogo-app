@@ -80,14 +80,16 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <CatalogProvider>
-          <OrdersProvider>
-            <CartProvider>
-              <Outlet />
-              <Toaster position="top-center" richColors />
-            </CartProvider>
-          </OrdersProvider>
-        </CatalogProvider>
+        <LocationProvider>
+          <CatalogProvider>
+            <OrdersProvider>
+              <CartProvider>
+                <Outlet />
+                <Toaster position="top-center" richColors />
+              </CartProvider>
+            </OrdersProvider>
+          </CatalogProvider>
+        </LocationProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
