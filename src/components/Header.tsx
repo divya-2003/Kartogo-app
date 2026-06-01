@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ShoppingBag, Search, MapPin, User2, LayoutDashboard, LogOut, ShieldCheck } from "lucide-react";
+import { ShoppingBag, Search, User2, LayoutDashboard, LogOut, ShieldCheck } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useCart, useAuth } from "@/lib/store";
 import { LocationPicker } from "@/components/LocationPicker";
