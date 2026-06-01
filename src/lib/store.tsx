@@ -109,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value: AuthCtx = {
     user,
+    ready,
     adminAudit,
     sendOtp: async (phone) => {
       const otp = "1234"; // demo OTP — replace with a real SMS provider via Lovable Cloud later
