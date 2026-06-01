@@ -70,6 +70,8 @@ export type AdminAuditEntry = { phone: string; at: number };
 
 type AuthCtx = {
   user: User | null;
+  /** False until the persisted session has been restored from storage. */
+  ready: boolean;
   sendOtp: (phone: string) => Promise<string>; // returns the otp for demo
   /** Verify OTP for a customer login. Rejects admin allow-listed numbers. */
   verifyOtp: (phone: string, otp: string) => Promise<User>;
