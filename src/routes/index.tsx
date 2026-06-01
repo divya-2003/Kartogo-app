@@ -17,16 +17,17 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const { user } = useAuth();
+  const { user, ready } = useAuth();
   const nav = useNavigate();
   const { products } = useCatalog();
 
   useEffect(() => {
-    if (!user) {
+    if (ready && !user) {
       nav({ to: "/login" });
     }
-  }, [user, nav]);
+  }, [ready, user, nav]);
 
+  if (!ready) return null;
   if (!user) return null;
   const bestsellerIds = new Set(products.slice(0, 10).map(p => p.id));
   const local = products.filter(p => ["pickles", "local-snacks", "tiffin-batter", "spice-powders"].includes(p.category)).slice(0, 8);

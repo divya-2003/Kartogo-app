@@ -70,6 +70,8 @@ export type AdminAuditEntry = { phone: string; at: number };
 
 type AuthCtx = {
   user: User | null;
+  /** False until the persisted session has been restored from storage. */
+  ready: boolean;
   sendOtp: (phone: string) => Promise<string>; // returns the otp for demo
   /** Verify OTP for a customer login. Rejects admin allow-listed numbers. */
   verifyOtp: (phone: string, otp: string) => Promise<User>;
@@ -86,10 +88,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [pendingOtp, setPendingOtp] = useState<Record<string, string>>({});
   const [adminAudit, setAdminAudit] = useState<AdminAuditEntry[]>([]);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     setUser(read<User | null>("qk_user", null));
     setAdminAudit(read<AdminAuditEntry[]>("qk_admin_audit", []));
+    setReady(true);
   }, []);
   useEffect(() => { write("qk_user", user); }, [user]);
   useEffect(() => { write("qk_admin_audit", adminAudit); }, [adminAudit]);
@@ -105,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value: AuthCtx = {
     user,
+    ready,
     adminAudit,
     sendOtp: async (phone) => {
       const otp = "1234"; // demo OTP — replace with a real SMS provider via Lovable Cloud later
