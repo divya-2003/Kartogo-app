@@ -88,10 +88,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [pendingOtp, setPendingOtp] = useState<Record<string, string>>({});
   const [adminAudit, setAdminAudit] = useState<AdminAuditEntry[]>([]);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     setUser(read<User | null>("qk_user", null));
     setAdminAudit(read<AdminAuditEntry[]>("qk_admin_audit", []));
+    setReady(true);
   }, []);
   useEffect(() => { write("qk_user", user); }, [user]);
   useEffect(() => { write("qk_admin_audit", adminAudit); }, [adminAudit]);
