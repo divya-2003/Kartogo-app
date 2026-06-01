@@ -155,12 +155,19 @@ export function Header() {
       </div>
 
       {!isAdminArea && (
-        <form onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q } }); }} className="px-4 pb-3 md:hidden">
-          <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder ? `Search "${placeholder}"` : "Search"} className="w-full bg-transparent text-sm outline-none" />
-          </div>
-        </form>
+        <div className="px-4 pb-3 md:hidden">
+          {!isAdmin && (
+            <div className="mb-2">
+              <LocationPicker />
+            </div>
+          )}
+          <form onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q } }); }}>
+            <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder ? `Search "${placeholder}"` : "Search"} className="w-full bg-transparent text-sm outline-none" />
+            </div>
+          </form>
+        </div>
       )}
     </header>
   );
