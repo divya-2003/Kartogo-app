@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
-import { useAuth } from "@/lib/store";
+import { useAuth, useLocation } from "@/lib/store";
 import { toast } from "sonner";
-import { User2, Phone, Mail, MapPin, KeyRound } from "lucide-react";
+import { User2, Phone, Mail, MapPin, KeyRound, Check, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/account")({
   component: AccountPage,
