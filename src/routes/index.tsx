@@ -19,7 +19,7 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const { user, ready } = useAuth();
-  const { location, ready: locReady } = useLocation();
+  const { ready: locReady } = useLocation();
   const nav = useNavigate();
   const { products } = useCatalog();
 
