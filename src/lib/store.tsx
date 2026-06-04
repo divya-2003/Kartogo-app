@@ -256,26 +256,47 @@ export type SavedLocation = { query: string; area: string };
 
 type LocationCtx = {
   location: SavedLocation | null;
+  /** Previously confirmed serviceable addresses the user can reselect. */
+  savedAddresses: SavedLocation[];
   /** True once we've restored any persisted location from storage. */
   ready: boolean;
   setLocation: (loc: SavedLocation) => void;
+  removeSavedAddress: (query: string) => void;
   clearLocation: () => void;
 };
 const LocationContext = createContext<LocationCtx | null>(null);
 
 export function LocationProvider({ children }: { children: ReactNode }) {
   const [location, setLoc] = useState<SavedLocation | null>(null);
+  const [savedAddresses, setSaved] = useState<SavedLocation[]>([]);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     setLoc(read<SavedLocation | null>("qk_location", null));
+    setSaved(read<SavedLocation[]>("qk_addresses", []));
     setReady(true);
   }, []);
 
   const value: LocationCtx = {
     location,
+    savedAddresses,
     ready,
-    setLocation: (loc) => { setLoc(loc); write("qk_location", loc); },
+    setLocation: (loc) => {
+      setLoc(loc);
+      write("qk_location", loc);
+      setSaved(prev => {
+        const next = [loc, ...prev.filter(a => a.query.toLowerCase() !== loc.query.toLowerCase())].slice(0, 8);
+        write("qk_addresses", next);
+        return next;
+      });
+    },
+    removeSavedAddress: (query) => {
+      setSaved(prev => {
+        const next = prev.filter(a => a.query.toLowerCase() !== query.toLowerCase());
+        write("qk_addresses", next);
+        return next;
+      });
+    },
     clearLocation: () => {
       setLoc(null);
       if (typeof window !== "undefined") {
