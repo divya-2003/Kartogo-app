@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Zap, Truck, ShieldCheck } from "lucide-react";
 import { Header } from "@/components/Header";
-import { LocationGate } from "@/components/LocationGate";
+
 import { ProductCard } from "@/components/ProductCard";
 import { CATEGORIES } from "@/lib/data";
 import { useCatalog, useAuth, useLocation } from "@/lib/store";
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const { user, ready } = useAuth();
-  const { location, ready: locReady } = useLocation();
+  const { ready: locReady } = useLocation();
   const nav = useNavigate();
   const { products } = useCatalog();
 
@@ -31,8 +31,6 @@ function Index() {
 
   if (!ready || !locReady) return null;
   if (!user) return null;
-  // Logged in but hasn't confirmed a serviceable delivery location yet.
-  if (!location) return <LocationGate />;
   const bestsellerIds = new Set(products.slice(0, 10).map(p => p.id));
   const local = products.filter(p => ["pickles", "local-snacks", "tiffin-batter", "spice-powders"].includes(p.category)).slice(0, 8);
 
