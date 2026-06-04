@@ -12,6 +12,8 @@ export const Route = createFileRoute("/account")({
 
 function AccountPage() {
   const { user, updateProfile } = useAuth();
+  const { location, savedAddresses, setLocation, removeSavedAddress } = useLocation();
+
   
 
   const [name, setName] = useState("");
