@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Zap, Truck, ShieldCheck } from "lucide-react";
 import { Header } from "@/components/Header";
-import { LocationGate } from "@/components/LocationGate";
+
 import { ProductCard } from "@/components/ProductCard";
 import { CATEGORIES } from "@/lib/data";
 import { useCatalog, useAuth, useLocation } from "@/lib/store";
