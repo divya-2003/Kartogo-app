@@ -31,8 +31,6 @@ function Index() {
 
   if (!ready || !locReady) return null;
   if (!user) return null;
-  // Logged in but hasn't confirmed a serviceable delivery location yet.
-  if (!location) return <LocationGate />;
   const bestsellerIds = new Set(products.slice(0, 10).map(p => p.id));
   const local = products.filter(p => ["pickles", "local-snacks", "tiffin-batter", "spice-powders"].includes(p.category)).slice(0, 8);
 
