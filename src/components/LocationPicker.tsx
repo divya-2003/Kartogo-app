@@ -73,7 +73,7 @@ export function LocationPicker() {
         <ChevronDown className="h-3 w-3 opacity-60" />
       </button>
 
-      {open && (
+      {open && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-50 flex flex-col bg-background">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border px-4 py-4">
