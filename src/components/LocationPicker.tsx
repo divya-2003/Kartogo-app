@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { MapPin, Search, X, ChevronDown, Loader2, XCircle } from "lucide-react";
+import { MapPin, Search, X, ChevronDown, Loader2, XCircle, Clock, Check, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { checkServiceability } from "@/lib/serviceability.functions";
-import { useLocation } from "@/lib/store";
+import { useLocation, type SavedLocation } from "@/lib/store";
 
 export function LocationPicker() {
-  const { location, setLocation } = useLocation();
+  const { location, savedAddresses, setLocation, removeSavedAddress } = useLocation();
   const check = useServerFn(checkServiceability);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -16,11 +16,18 @@ export function LocationPicker() {
 
   useEffect(() => {
     if (open) {
-      setQuery(location?.query ?? "");
+      setQuery("");
       setDenied(null);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
-  }, [open, location]);
+  }, [open]);
+
+  // Lock background scroll while the full-screen sheet is open.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +53,12 @@ export function LocationPicker() {
     }
   };
 
+  const selectSaved = (addr: SavedLocation) => {
+    setLocation(addr);
+    toast.success(`Delivering to ${addr.area}`);
+    setOpen(false);
+  };
+
   return (
     <>
       <button
@@ -60,33 +73,35 @@ export function LocationPicker() {
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-foreground/40 p-4 backdrop-blur-sm sm:items-center">
-          <div className="mt-16 w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-pop sm:mt-0">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="font-display text-lg font-bold">Change your location</h2>
-                <p className="text-xs text-muted-foreground">
-                  We'll check if we deliver to your area.
-                </p>
-              </div>
-              <button
-                onClick={() => setOpen(false)}
-                aria-label="Close"
-                className="grid h-8 w-8 place-items-center rounded-full hover:bg-secondary"
-              >
-                <X className="h-4 w-4" />
-              </button>
+        <div className="fixed inset-0 z-50 flex flex-col bg-background">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-border px-4 py-4">
+            <div>
+              <h2 className="font-display text-lg font-bold">Select your location</h2>
+              <p className="text-xs text-muted-foreground">
+                We'll check if we deliver to your area.
+              </p>
             </div>
+            <button
+              onClick={() => setOpen(false)}
+              aria-label="Close"
+              className="grid h-9 w-9 place-items-center rounded-full hover:bg-secondary"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
 
-            <form onSubmit={handleSubmit} className="mt-4 space-y-3">
-              <div className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-2.5 focus-within:ring-2 focus-within:ring-ring">
+          {/* Body */}
+          <div className="mx-auto w-full max-w-lg flex-1 overflow-y-auto px-4 py-5">
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-3 focus-within:ring-2 focus-within:ring-ring">
                 <Search className="h-4 w-4 text-muted-foreground" />
                 <input
                   ref={inputRef}
                   value={query}
                   onChange={e => { setQuery(e.target.value); setDenied(null); }}
-                  placeholder="Type your area or pincode"
-                  className="w-full bg-transparent text-sm outline-none"
+                  placeholder="Type your area, locality or pincode"
+                  className="w-full bg-transparent text-base outline-none"
                 />
               </div>
 
@@ -99,12 +114,59 @@ export function LocationPicker() {
 
               <button
                 disabled={loading}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
               >
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                {loading ? "Checking..." : "Check & save"}
+                {loading ? "Checking..." : "Check & deliver here"}
               </button>
             </form>
+
+            {/* Saved addresses */}
+            <div className="mt-8">
+              <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                <Clock className="h-3.5 w-3.5" /> Saved addresses
+              </h3>
+
+              {savedAddresses.length === 0 ? (
+                <p className="mt-3 rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+                  No saved addresses yet. Locations you confirm will appear here.
+                </p>
+              ) : (
+                <ul className="mt-3 space-y-2">
+                  {savedAddresses.map((addr) => {
+                    const active = location?.query.toLowerCase() === addr.query.toLowerCase();
+                    return (
+                      <li
+                        key={addr.query}
+                        className={`flex items-center gap-3 rounded-xl border p-3 ${active ? "border-primary bg-primary/5" : "border-border bg-card"}`}
+                      >
+                        <button
+                          onClick={() => selectSaved(addr)}
+                          className="flex flex-1 items-start gap-3 text-left"
+                        >
+                          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-semibold">{addr.area}</span>
+                            <span className="block truncate text-xs text-muted-foreground">{addr.query}</span>
+                          </span>
+                        </button>
+                        {active ? (
+                          <Check className="h-4 w-4 shrink-0 text-primary" />
+                        ) : (
+                          <button
+                            onClick={() => removeSavedAddress(addr.query)}
+                            aria-label="Remove address"
+                            className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
           </div>
         </div>
       )}
