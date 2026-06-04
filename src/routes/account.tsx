@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
-import { useAuth } from "@/lib/store";
+import { useAuth, useLocation } from "@/lib/store";
 import { toast } from "sonner";
-import { User2, Phone, Mail, MapPin, KeyRound } from "lucide-react";
+import { User2, Phone, Mail, MapPin, KeyRound, Check, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/account")({
   component: AccountPage,
@@ -12,6 +12,8 @@ export const Route = createFileRoute("/account")({
 
 function AccountPage() {
   const { user, updateProfile } = useAuth();
+  const { location, savedAddresses, setLocation, removeSavedAddress } = useLocation();
+
   
 
   const [name, setName] = useState("");
@@ -111,7 +113,53 @@ function AccountPage() {
           </button>
         </form>
 
+        <div className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-pop">
+          <h2 className="mb-1 font-display text-lg font-bold">Saved addresses</h2>
+          <p className="mb-4 text-xs text-muted-foreground">Locations you've confirmed for delivery. Tap one to set it as active.</p>
+
+          {savedAddresses.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+              No saved addresses yet. Locations you confirm will appear here.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {savedAddresses.map((addr) => {
+                const active = location?.query.toLowerCase() === addr.query.toLowerCase();
+                return (
+                  <li
+                    key={addr.query}
+                    className={`flex items-center gap-3 rounded-xl border p-3 ${active ? "border-primary bg-primary/5" : "border-border bg-background"}`}
+                  >
+                    <button
+                      onClick={() => { setLocation(addr); toast.success(`Delivering to ${addr.area}`); }}
+                      className="flex flex-1 items-start gap-3 text-left"
+                    >
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold">{addr.area}</span>
+                        <span className="block truncate text-xs text-muted-foreground">{addr.query}</span>
+                      </span>
+                    </button>
+                    {active ? (
+                      <Check className="h-4 w-4 shrink-0 text-primary" />
+                    ) : (
+                      <button
+                        onClick={() => removeSavedAddress(addr.query)}
+                        aria-label="Remove address"
+                        className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
       </div>
+
     </div>
   );
 }
