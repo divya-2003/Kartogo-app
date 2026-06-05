@@ -36,7 +36,7 @@ function LoginPage() {
     setLoading(true);
     try {
       const u = await verifyOtp(phone, otp);
-      toast.success("Welcome to QuickKart!");
+      toast.success("Welcome to Kartigo!");
       nav({ to: u.role === "admin" ? "/admin" : "/" });
     } catch (err) {
       toast.error((err as Error).message);
@@ -103,7 +103,7 @@ function LoginPage() {
           )}
         </div>
         <p className="mt-4 text-center text-xs text-muted-foreground">
-          By continuing, you agree to QuickKart's terms.
+          By continuing, you agree to Kartigo's terms.
         </p>
       </div>
     </div>
