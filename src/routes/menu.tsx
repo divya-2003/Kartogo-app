@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useAuth } from "@/lib/store";
+import { useAuth, useLocation } from "@/lib/store";
 import { toast } from "sonner";
 import {
   ChevronLeft,
@@ -14,6 +14,8 @@ import {
   UserCircle2,
   Gift,
   LogOut,
+  Check,
+  Trash2,
 } from "lucide-react";
 
 export const Route = createFileRoute("/menu")({
