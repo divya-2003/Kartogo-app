@@ -19,7 +19,7 @@ function Dashboard() {
     <div className="space-y-6">
       <div>
         <h1 className="font-display text-3xl font-bold">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Today's snapshot for QuickKart Ongole</p>
+        <p className="text-sm text-muted-foreground">Today's snapshot for Kartigo Ongole</p>
       </div>
 
       <div className="grid gap-3 md:grid-cols-4">

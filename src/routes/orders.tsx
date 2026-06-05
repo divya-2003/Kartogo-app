@@ -6,7 +6,7 @@ import { CheckCircle2, Package, Truck, Clock, XCircle } from "lucide-react";
 
 export const Route = createFileRoute("/orders")({
   component: OrdersPage,
-  head: () => ({ meta: [{ title: "My orders — QuickKart" }] }),
+  head: () => ({ meta: [{ title: "My orders — Kartigo" }] }),
 });
 
 const STEPS: { key: OrderStatus; label: string; icon: React.ReactNode }[] = [

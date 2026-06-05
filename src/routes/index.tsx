@@ -11,7 +11,7 @@ export const Route = createFileRoute("/")({
   component: Index,
   head: () => ({
     meta: [
-      { title: "QuickKart — Ongole's 15-min neighbourhood store" },
+      { title: "Kartigo — Ongole's 15-min neighbourhood store" },
       { name: "description", content: "Snacks, pickles, instant food, spices, pooja items, tiffin batter — delivered to your door in 15 minutes across Ongole." },
     ],
   }),
@@ -102,8 +102,8 @@ function Index() {
 
       <footer className="mt-12 border-t border-border bg-cream">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-sm text-muted-foreground md:px-6">
-          <div className="font-display font-bold text-foreground">QuickKart · Ongole, Andhra Pradesh</div>
-          <div>© {new Date().getFullYear()} QuickKart. Delivering happiness in 15 minutes.</div>
+          <div className="font-display font-bold text-foreground">Kartigo · Ongole, Andhra Pradesh</div>
+          <div>© {new Date().getFullYear()} Kartigo. Delivering happiness in 15 minutes.</div>
         </div>
       </footer>
     </div>

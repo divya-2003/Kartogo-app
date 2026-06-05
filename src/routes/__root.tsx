@@ -47,9 +47,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "QuickKart — 15-min delivery in Ongole" },
+      { title: "Kartigo — 15-min delivery in Ongole" },
       { name: "description", content: "Hyperlocal quick commerce in Ongole, Andhra Pradesh. Snacks, instant food, pickles, spice powders, pooja items, tiffin batter and more in 15 minutes." },
-      { property: "og:title", content: "QuickKart — Ongole's neighbourhood quick store" },
+      { property: "og:title", content: "Kartigo — Ongole's neighbourhood quick store" },
       { property: "og:description", content: "Snacks, pickles, spices, tiffin batter and daily essentials in 15 minutes." },
       { property: "og:type", content: "website" },
     ],
