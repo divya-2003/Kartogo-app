@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useAuth } from "@/lib/store";
+import { useAuth, useLocation } from "@/lib/store";
 import { toast } from "sonner";
 import {
   ChevronLeft,
@@ -14,6 +14,8 @@ import {
   UserCircle2,
   Gift,
   LogOut,
+  Check,
+  Trash2,
 } from "lucide-react";
 
 export const Route = createFileRoute("/menu")({
@@ -23,6 +25,7 @@ export const Route = createFileRoute("/menu")({
 
 function MenuPage() {
   const { user, logout } = useAuth();
+  const { location, savedAddresses, setLocation, removeSavedAddress } = useLocation();
   const nav = useNavigate();
 
   if (!user) {
@@ -91,10 +94,54 @@ function MenuPage() {
           <Row onClick={() => soon("Your Wishlist")} icon={<Heart className="h-5 w-5" />} label="Your Wishlist" />
           <Row onClick={() => soon("E-Gift Cards")} icon={<CreditCard className="h-5 w-5" />} label="E-Gift Cards" />
           <Row onClick={() => soon("Help & Support")} icon={<Headphones className="h-5 w-5" />} label="Help & Support" />
-          <Row onClick={() => soon("Saved Addresses")} icon={<MapPin className="h-5 w-5" />} label="Saved Addresses" sub={user.address ? user.address : "Add an address"} />
           <Row to="/account" icon={<UserCircle2 className="h-5 w-5" />} label="Profile" />
           <Row onClick={() => soon("Rewards")} icon={<Gift className="h-5 w-5" />} label="Rewards" last />
         </div>
+
+        {/* Saved Addresses */}
+        <h2 className="mb-3 mt-8 font-display text-xl font-bold">Saved Addresses</h2>
+        {savedAddresses.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-border bg-card p-5 text-sm text-muted-foreground shadow-pop">
+            No saved addresses yet. Locations you confirm while setting your delivery area will appear here.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {savedAddresses.map((addr) => {
+              const active = location?.query.toLowerCase() === addr.query.toLowerCase();
+              return (
+                <div
+                  key={addr.query}
+                  className={`flex items-center gap-3 rounded-2xl border p-4 shadow-pop ${active ? "border-primary bg-primary/5" : "border-border bg-card"}`}
+                >
+                  <button
+                    onClick={() => {
+                      setLocation(addr);
+                      toast.success(`Delivering to ${addr.area}`);
+                    }}
+                    className="flex flex-1 items-start gap-3 text-left"
+                  >
+                    <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                    <span className="min-w-0">
+                      <span className="block truncate font-semibold">{addr.area}</span>
+                      <span className="block truncate text-xs text-muted-foreground">{addr.query}</span>
+                    </span>
+                  </button>
+                  {active ? (
+                    <Check className="h-5 w-5 shrink-0 text-primary" />
+                  ) : (
+                    <button
+                      onClick={() => removeSavedAddress(addr.query)}
+                      aria-label="Remove address"
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-destructive"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Logout */}
         <button
