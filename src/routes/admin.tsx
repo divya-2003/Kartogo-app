@@ -10,7 +10,7 @@ export const Route = createFileRoute("/admin")({
     if (!u || u.role !== "admin") throw redirect({ to: "/login" });
   },
   component: AdminLayout,
-  head: () => ({ meta: [{ title: "Admin — QuickKart" }] }),
+  head: () => ({ meta: [{ title: "Admin — Kartigo" }] }),
 });
 
 const NAV = [

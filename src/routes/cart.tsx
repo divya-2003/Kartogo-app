@@ -6,7 +6,7 @@ import { Trash2, Plus, Minus, ShoppingBag } from "lucide-react";
 
 export const Route = createFileRoute("/cart")({
   component: CartPage,
-  head: () => ({ meta: [{ title: "Cart — QuickKart" }] }),
+  head: () => ({ meta: [{ title: "Cart — Kartigo" }] }),
 });
 
 function CartPage() {

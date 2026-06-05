@@ -8,7 +8,7 @@ import { Banknote, Smartphone } from "lucide-react";
 
 export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
-  head: () => ({ meta: [{ title: "Checkout — QuickKart" }] }),
+  head: () => ({ meta: [{ title: "Checkout — Kartigo" }] }),
 });
 
 function CheckoutPage() {

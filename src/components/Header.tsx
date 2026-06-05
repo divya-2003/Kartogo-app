@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useCart, useAuth } from "@/lib/store";
 import { LocationPicker } from "@/components/LocationPicker";
 import { toast } from "sonner";
+import kartigoLogo from "@/assets/kartigo-logo.png.asset.json";
 
 const SEARCH_TERMS = ["avakaya", "maggi", "agarbatti", "milk", "bread", "paneer"];
 
@@ -67,9 +68,11 @@ export function Header() {
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 md:px-6">
         <Link to={isAdmin && isAdminArea ? "/admin" : "/"} className="flex items-center gap-2">
-          <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground font-display text-lg font-bold">Q</div>
+          <div className="grid h-9 w-9 place-items-center overflow-hidden rounded-xl bg-[#15205a]">
+            <img src={kartigoLogo.url} alt="Kartigo" className="h-full w-full object-cover" />
+          </div>
           <div className="leading-tight">
-            <div className="font-display text-lg font-bold tracking-tight">QuickKart{isAdminArea && <span className="ml-1 text-xs font-semibold text-primary">· Admin</span>}</div>
+            <div className="font-display text-lg font-bold tracking-tight">Kartigo{isAdminArea && <span className="ml-1 text-xs font-semibold text-primary">· Admin</span>}</div>
           </div>
         </Link>
 

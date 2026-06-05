@@ -9,7 +9,7 @@ const SearchSchema = z.object({ q: z.string().optional().default("") });
 export const Route = createFileRoute("/search")({
   validateSearch: SearchSchema,
   component: SearchPage,
-  head: () => ({ meta: [{ title: "Search — QuickKart" }] }),
+  head: () => ({ meta: [{ title: "Search — Kartigo" }] }),
 });
 
 function SearchPage() {

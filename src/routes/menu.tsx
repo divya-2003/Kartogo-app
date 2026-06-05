@@ -18,7 +18,7 @@ import {
 
 export const Route = createFileRoute("/menu")({
   component: MenuPage,
-  head: () => ({ meta: [{ title: "Profile — QuickKart" }] }),
+  head: () => ({ meta: [{ title: "Profile — Kartigo" }] }),
 });
 
 function MenuPage() {
@@ -56,7 +56,7 @@ function MenuPage() {
             <UserCircle2 className="h-12 w-12" />
           </div>
           <div>
-            <div className="font-display text-2xl font-bold">{user.name || "QuickKart User"}</div>
+            <div className="font-display text-2xl font-bold">{user.name || "Kartigo User"}</div>
             <div className="text-sm text-muted-foreground">+91 {user.phone}</div>
           </div>
         </div>
@@ -75,7 +75,7 @@ function MenuPage() {
         >
           <div className="flex items-center gap-3">
             <Wallet className="h-6 w-6 text-primary" />
-            <span className="font-display text-lg font-bold">QuickKart Cash &amp; Gift Card</span>
+            <span className="font-display text-lg font-bold">Kartigo Cash &amp; Gift Card</span>
             <ChevronRight className="ml-auto h-5 w-5 text-muted-foreground" />
           </div>
           <div className="mt-3 flex items-center justify-between border-t border-primary/15 pt-3">

@@ -2,11 +2,12 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useAuth } from "@/lib/store";
 import { toast } from "sonner";
-import { Phone, KeyRound, ShoppingBag } from "lucide-react";
+import { Phone, KeyRound } from "lucide-react";
+import kartigoLogo from "@/assets/kartigo-logo.png.asset.json";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
-  head: () => ({ meta: [{ title: "Login — QuickKart" }] }),
+  head: () => ({ meta: [{ title: "Login — Kartigo" }] }),
 });
 
 function LoginPage() {
@@ -35,7 +36,7 @@ function LoginPage() {
     setLoading(true);
     try {
       const u = await verifyOtp(phone, otp);
-      toast.success("Welcome to QuickKart!");
+      toast.success("Welcome to Kartigo!");
       nav({ to: u.role === "admin" ? "/admin" : "/" });
     } catch (err) {
       toast.error((err as Error).message);
@@ -46,12 +47,12 @@ function LoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
       {/* Brand */}
       <div className="mb-8 flex flex-col items-center gap-3">
-        <div className="grid h-16 w-16 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-pop">
-          <ShoppingBag className="h-8 w-8" />
+        <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-2xl bg-[#15205a] shadow-pop">
+          <img src={kartigoLogo.url} alt="Kartigo" className="h-full w-full object-cover" />
         </div>
         <div className="text-center">
-          <h1 className="font-display text-3xl font-bold tracking-tight">QuickKart</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Ongole's 15-min neighbourhood store</p>
+          <h1 className="font-display text-3xl font-bold tracking-tight">Kartigo</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Everything you need, delivered fast</p>
         </div>
       </div>
 
@@ -102,7 +103,7 @@ function LoginPage() {
           )}
         </div>
         <p className="mt-4 text-center text-xs text-muted-foreground">
-          By continuing, you agree to QuickKart's terms.
+          By continuing, you agree to Kartigo's terms.
         </p>
       </div>
     </div>
