@@ -47,12 +47,12 @@ function LoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
       {/* Brand */}
       <div className="mb-8 flex flex-col items-center gap-3">
-        <div className="grid h-16 w-16 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-pop">
-          <ShoppingBag className="h-8 w-8" />
+        <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-2xl bg-[#15205a] shadow-pop">
+          <img src={kartigoLogo.url} alt="Kartigo" className="h-full w-full object-cover" />
         </div>
         <div className="text-center">
-          <h1 className="font-display text-3xl font-bold tracking-tight">QuickKart</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Ongole's 15-min neighbourhood store</p>
+          <h1 className="font-display text-3xl font-bold tracking-tight">Kartigo</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Everything you need, delivered fast</p>
         </div>
       </div>
 
