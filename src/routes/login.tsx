@@ -2,11 +2,12 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useAuth } from "@/lib/store";
 import { toast } from "sonner";
-import { Phone, KeyRound, ShoppingBag } from "lucide-react";
+import { Phone, KeyRound } from "lucide-react";
+import kartigoLogo from "@/assets/kartigo-logo.png.asset.json";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
-  head: () => ({ meta: [{ title: "Login — QuickKart" }] }),
+  head: () => ({ meta: [{ title: "Login — Kartigo" }] }),
 });
 
 function LoginPage() {
