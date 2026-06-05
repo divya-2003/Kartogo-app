@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useCart, useAuth } from "@/lib/store";
 import { LocationPicker } from "@/components/LocationPicker";
 import { toast } from "sonner";
+import kartigoLogo from "@/assets/kartigo-logo.png.asset.json";
 
 const SEARCH_TERMS = ["avakaya", "maggi", "agarbatti", "milk", "bread", "paneer"];
 
