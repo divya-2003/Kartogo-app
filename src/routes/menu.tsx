@@ -25,6 +25,7 @@ export const Route = createFileRoute("/menu")({
 
 function MenuPage() {
   const { user, logout } = useAuth();
+  const { location, savedAddresses, setLocation, removeSavedAddress } = useLocation();
   const nav = useNavigate();
 
   if (!user) {
