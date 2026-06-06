@@ -1,17 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useServerFn } from "@tanstack/react-start";
-import { MapPin, Search, X, ChevronDown, Loader2, XCircle, Clock, Check, Trash2 } from "lucide-react";
+import { MapPin, Search, X, ChevronDown, Loader2, XCircle, Clock, Check, Trash2, LocateFixed } from "lucide-react";
 import { toast } from "sonner";
-import { checkServiceability } from "@/lib/serviceability.functions";
+import { checkServiceability, locateByCoords } from "@/lib/serviceability.functions";
 import { useLocation, type SavedLocation } from "@/lib/store";
 
 export function LocationPicker() {
   const { location, savedAddresses, setLocation, removeSavedAddress } = useLocation();
   const check = useServerFn(checkServiceability);
+  const locate = useServerFn(locateByCoords);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [locating, setLocating] = useState(false);
   const [denied, setDenied] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -52,6 +54,46 @@ export function LocationPicker() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const useCurrentLocation = () => {
+    setDenied(null);
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      toast.error("Geolocation isn't supported on this device.");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const result = await locate({
+            data: { lat: pos.coords.latitude, lng: pos.coords.longitude },
+          });
+          if (result.serviceable) {
+            const label = result.area ?? result.address ?? "Current location";
+            setLocation({ query: result.address ?? label, area: label });
+            toast.success(result.reason);
+            setOpen(false);
+          } else {
+            if (result.address) setQuery(result.address);
+            setDenied(result.reason);
+          }
+        } catch {
+          toast.error("Couldn't detect your location. Please try again.");
+        } finally {
+          setLocating(false);
+        }
+      },
+      (err) => {
+        setLocating(false);
+        toast.error(
+          err.code === err.PERMISSION_DENIED
+            ? "Location permission denied. Please type your area instead."
+            : "Couldn't get your location. Please type your area instead.",
+        );
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
   };
 
   const selectSaved = (addr: SavedLocation) => {
@@ -121,6 +163,17 @@ export function LocationPicker() {
                 {loading ? "Checking..." : "Check & deliver here"}
               </button>
             </form>
+
+            <button
+              type="button"
+              onClick={useCurrentLocation}
+              disabled={locating}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/5 py-3 font-semibold text-primary hover:bg-primary/10 disabled:opacity-60"
+            >
+              {locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
+              {locating ? "Detecting your location..." : "Use my current location"}
+            </button>
+
 
             {/* Saved addresses */}
             <div className="mt-8">
