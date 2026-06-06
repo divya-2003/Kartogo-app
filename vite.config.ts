@@ -12,4 +12,20 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
+  vite: {
+    optimizeDeps: {
+      include: [
+        "@supabase/supabase-js",
+        "@tanstack/react-start",
+        "@tanstack/router-core",
+        "@tanstack/router-core/ssr/client",
+        "seroval",
+      ],
+    },
+    ssr: {
+      optimizeDeps: {
+        include: ["@tanstack/react-start", "@tanstack/start-client-core"],
+      },
+    },
+  },
 });
