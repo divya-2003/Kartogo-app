@@ -16,7 +16,6 @@ export default defineConfig({
     optimizeDeps: {
       include: [
         "@supabase/supabase-js",
-        "@tanstack/react-start",
         "@tanstack/router-core",
         "@tanstack/router-core/ssr/client",
         "seroval",
