@@ -17,7 +17,6 @@ export default defineConfig({
       include: [
         "@supabase/supabase-js",
         "@tanstack/react-start/client",
-        "@tanstack/react-start-client",
         "@tanstack/router-core",
         "@tanstack/router-core/ssr/client",
         "seroval",
