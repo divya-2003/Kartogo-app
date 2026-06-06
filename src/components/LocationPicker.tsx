@@ -164,6 +164,17 @@ export function LocationPicker() {
               </button>
             </form>
 
+            <button
+              type="button"
+              onClick={useCurrentLocation}
+              disabled={locating}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/5 py-3 font-semibold text-primary hover:bg-primary/10 disabled:opacity-60"
+            >
+              {locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
+              {locating ? "Detecting your location..." : "Use my current location"}
+            </button>
+
+
             {/* Saved addresses */}
             <div className="mt-8">
               <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
