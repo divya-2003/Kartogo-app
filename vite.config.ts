@@ -18,8 +18,6 @@ export default defineConfig({
         "@supabase/supabase-js",
         "@tanstack/react-start/client",
         "@tanstack/react-start-client",
-        "@tanstack/react-start-client/StartClient",
-        "@tanstack/react-start-client/hydrateStart",
         "@tanstack/router-core",
         "@tanstack/router-core/ssr/client",
         "seroval",
