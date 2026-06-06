@@ -56,6 +56,46 @@ export function LocationPicker() {
     }
   };
 
+  const useCurrentLocation = () => {
+    setDenied(null);
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      toast.error("Geolocation isn't supported on this device.");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const result = await locate({
+            data: { lat: pos.coords.latitude, lng: pos.coords.longitude },
+          });
+          if (result.serviceable) {
+            const label = result.area ?? result.address ?? "Current location";
+            setLocation({ query: result.address ?? label, area: label });
+            toast.success(result.reason);
+            setOpen(false);
+          } else {
+            if (result.address) setQuery(result.address);
+            setDenied(result.reason);
+          }
+        } catch {
+          toast.error("Couldn't detect your location. Please try again.");
+        } finally {
+          setLocating(false);
+        }
+      },
+      (err) => {
+        setLocating(false);
+        toast.error(
+          err.code === err.PERMISSION_DENIED
+            ? "Location permission denied. Please type your area instead."
+            : "Couldn't get your location. Please type your area instead.",
+        );
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  };
+
   const selectSaved = (addr: SavedLocation) => {
     setLocation(addr);
     toast.success(`Delivering to ${addr.area}`);
