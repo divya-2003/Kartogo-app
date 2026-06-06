@@ -1,17 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useServerFn } from "@tanstack/react-start";
-import { MapPin, Search, X, ChevronDown, Loader2, XCircle, Clock, Check, Trash2 } from "lucide-react";
+import { MapPin, Search, X, ChevronDown, Loader2, XCircle, Clock, Check, Trash2, LocateFixed } from "lucide-react";
 import { toast } from "sonner";
-import { checkServiceability } from "@/lib/serviceability.functions";
+import { checkServiceability, locateByCoords } from "@/lib/serviceability.functions";
 import { useLocation, type SavedLocation } from "@/lib/store";
 
 export function LocationPicker() {
   const { location, savedAddresses, setLocation, removeSavedAddress } = useLocation();
   const check = useServerFn(checkServiceability);
+  const locate = useServerFn(locateByCoords);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [locating, setLocating] = useState(false);
   const [denied, setDenied] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
