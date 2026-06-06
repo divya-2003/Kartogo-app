@@ -29,8 +29,14 @@ function Index() {
     }
   }, [ready, user, nav]);
 
-  if (!ready || !locReady) return null;
-  if (!user) return null;
+  if (!ready || !locReady || !user) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-center">
+        <div className="font-display text-3xl font-bold tracking-tight text-foreground">Kartigo</div>
+        <p className="mt-2 text-sm text-muted-foreground">Loading your store…</p>
+      </div>
+    );
+  }
   const bestsellerIds = new Set(products.slice(0, 10).map(p => p.id));
   const local = products.filter(p => ["pickles", "local-snacks", "tiffin-batter", "spice-powders"].includes(p.category)).slice(0, 8);
 
