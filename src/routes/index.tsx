@@ -219,34 +219,26 @@ function Index() {
       {/* ---------- Bottom nav ---------- */}
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur">
         <div className="mx-auto flex max-w-2xl items-center justify-around px-2 py-2">
-          <BottomItem to="/" icon={<Home className="h-5 w-5" />} label="Home" active />
-          <BottomItem to="/menu" icon={<LayoutGrid className="h-5 w-5" />} label="Categories" />
-          <BottomItem to="/search" icon={<TrendingUp className="h-5 w-5" />} label="Trending" search={{ q: "" }} />
-          <BottomItem to="/cart" icon={<ShoppingBag className="h-5 w-5" />} label="Cart" badge={count} />
+          <Link to="/" className="flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-bold text-primary">
+            <Home className="h-5 w-5" /> Home
+          </Link>
+          <Link to="/menu" className="flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-bold text-muted-foreground">
+            <LayoutGrid className="h-5 w-5" /> Categories
+          </Link>
+          <Link to="/search" search={{ q: "" }} className="flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-bold text-muted-foreground">
+            <TrendingUp className="h-5 w-5" /> Trending
+          </Link>
+          <Link to="/cart" className="flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-bold text-muted-foreground">
+            <span className="relative">
+              <ShoppingBag className="h-5 w-5" />
+              {count > 0 && (
+                <span className="absolute -right-2 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-saffron px-1 text-[10px] text-saffron-foreground">{count}</span>
+              )}
+            </span>
+            Cart
+          </Link>
         </div>
       </nav>
     </div>
-  );
-}
-
-function BottomItem({
-  to, icon, label, active, badge, search,
-}: {
-  to: string; icon: React.ReactNode; label: string; active?: boolean; badge?: number; search?: { q: string };
-}) {
-  return (
-    <Link
-      to={to}
-      search={search}
-      className={`relative flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-bold ${active ? "text-primary" : "text-muted-foreground"}`}
-    >
-      <span className="relative">
-        {icon}
-        {badge ? (
-          <span className="absolute -right-2 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-saffron px-1 text-[10px] text-saffron-foreground">{badge}</span>
-        ) : null}
-      </span>
-      {label}
-    </Link>
   );
 }
