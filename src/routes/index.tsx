@@ -199,7 +199,7 @@ function Index() {
         <div className="mt-6">
           <h2 className="font-display text-xl font-extrabold">From Ongole homes</h2>
           <p className="text-sm text-muted-foreground">Pickles, podis & tiffin batter from local makers.</p>
-          <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3">
+          <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
             {local.map(p => <ProductCard key={p.id} p={p} bestseller={bestsellerIds.has(p.id)} />)}
           </div>
         </div>
