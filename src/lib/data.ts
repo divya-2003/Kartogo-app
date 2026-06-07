@@ -16,8 +16,10 @@ import p15 from "@/assets/products/p15.jpg";
 import p16 from "@/assets/products/p16.jpg";
 import p17 from "@/assets/products/p17.jpg";
 import p18 from "@/assets/products/p18.jpg";
+import p19 from "@/assets/products/p19.jpg";
+import p20 from "@/assets/products/p20.jpg";
 
-const IMG: Record<string, string> = { p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18 };
+const IMG: Record<string, string> = { p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20 };
 
 export type Category = {
   slug: string;
@@ -50,6 +52,7 @@ export const CATEGORIES: Category[] = [
   { slug: "local-snacks", name: "Local Snacks", emoji: "🥟", tint: "bg-leaf/15" },
   { slug: "pooja", name: "Pooja Items", emoji: "🪔", tint: "bg-saffron/25" },
   { slug: "tiffin-batter", name: "Tiffin Batter", emoji: "🥞", tint: "bg-primary/15" },
+  { slug: "beverages", name: "Beverages", emoji: "☕", tint: "bg-leaf/15" },
 ];
 
 const RAW_PRODUCTS: Product[] = [
@@ -71,6 +74,8 @@ const RAW_PRODUCTS: Product[] = [
   { id: "p16", name: "Lemon Pickle", category: "pickles", price: 150, mrp: 210, unit: "250g jar", stock: 22, emoji: "🍋", description: "Tangy lemon pickle, less oil." },
   { id: "p17", name: "Banana Chips", category: "local-snacks", price: 70, mrp: 95, unit: "200g", stock: 38, emoji: "🍌", description: "Coconut-oil fried Kerala-style chips." },
   { id: "p18", name: "Lays Classic Salted", category: "snacks", price: 20, mrp: 30, unit: "52g", stock: 80, emoji: "🥔", description: "Crispy salted potato chips." },
+  { id: "p19", name: "Bru Coffee Powder", category: "beverages", price: 85, mrp: 140, unit: "50g jar", stock: 55, emoji: "☕", description: "Rich, aromatic instant coffee — perfect morning brew." },
+  { id: "p20", name: "Tetley Tea Powder", category: "beverages", price: 95, mrp: 150, unit: "250g pack", stock: 48, emoji: "🍵", description: "Premium tea powder for a refreshing cup every day." },
 ];
 
 export const PRODUCTS: Product[] = RAW_PRODUCTS.map(p => ({ ...p, image: IMG[p.id] }));
