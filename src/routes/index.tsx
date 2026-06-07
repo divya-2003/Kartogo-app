@@ -147,7 +147,7 @@ function Index() {
         </Link>
 
         {/* ---------- Deal tiles grid ---------- */}
-        <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {/* Big deal-zone card */}
           <Link to="/product/$id" params={{ id: dealProduct.id }} className="row-span-2 flex flex-col overflow-hidden rounded-3xl border border-border bg-card p-3 shadow-pop">
             <div className="font-display text-lg font-extrabold">Deal Zone</div>
