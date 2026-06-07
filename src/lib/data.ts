@@ -52,6 +52,7 @@ export const CATEGORIES: Category[] = [
   { slug: "local-snacks", name: "Local Snacks", emoji: "🥟", tint: "bg-leaf/15" },
   { slug: "pooja", name: "Pooja Items", emoji: "🪔", tint: "bg-saffron/25" },
   { slug: "tiffin-batter", name: "Tiffin Batter", emoji: "🥞", tint: "bg-primary/15" },
+  { slug: "beverages", name: "Beverages", emoji: "☕", tint: "bg-leaf/15" },
 ];
 
 const RAW_PRODUCTS: Product[] = [
