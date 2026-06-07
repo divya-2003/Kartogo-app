@@ -69,7 +69,7 @@ function Index() {
     <div className="min-h-screen bg-background pb-24">
       {/* ---------- Warm top ---------- */}
       <div className="bg-gradient-to-b from-[oklch(0.9_0.07_70)] to-background">
-        <div className="mx-auto max-w-2xl px-4 pt-4">
+        <div className="mx-auto max-w-2xl px-4 pt-4 lg:max-w-7xl lg:px-8">
           {/* row: delivery time + wallet + profile */}
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
@@ -125,7 +125,7 @@ function Index() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-2xl px-4">
+      <div className="mx-auto max-w-2xl px-4 lg:max-w-7xl lg:px-8">
         {/* ---------- Category icon row ---------- */}
         <div className="flex gap-4 overflow-x-auto py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {CATEGORIES.map(c => (
@@ -147,7 +147,7 @@ function Index() {
         </Link>
 
         {/* ---------- Deal tiles grid ---------- */}
-        <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {/* Big deal-zone card */}
           <Link to="/product/$id" params={{ id: dealProduct.id }} className="row-span-2 flex flex-col overflow-hidden rounded-3xl border border-border bg-card p-3 shadow-pop">
             <div className="font-display text-lg font-extrabold">Deal Zone</div>
@@ -199,7 +199,7 @@ function Index() {
         <div className="mt-6">
           <h2 className="font-display text-xl font-extrabold">From Ongole homes</h2>
           <p className="text-sm text-muted-foreground">Pickles, podis & tiffin batter from local makers.</p>
-          <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3">
+          <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
             {local.map(p => <ProductCard key={p.id} p={p} bestseller={bestsellerIds.has(p.id)} />)}
           </div>
         </div>
@@ -218,7 +218,7 @@ function Index() {
 
       {/* ---------- Bottom nav ---------- */}
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur">
-        <div className="mx-auto flex max-w-2xl items-center justify-around px-2 py-2">
+        <div className="mx-auto flex max-w-2xl items-center justify-around px-2 py-2 lg:max-w-7xl">
           <Link to="/" className="flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-bold text-primary">
             <Home className="h-5 w-5" /> Home
           </Link>
