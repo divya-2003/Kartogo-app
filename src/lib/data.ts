@@ -74,6 +74,8 @@ const RAW_PRODUCTS: Product[] = [
   { id: "p16", name: "Lemon Pickle", category: "pickles", price: 150, mrp: 210, unit: "250g jar", stock: 22, emoji: "🍋", description: "Tangy lemon pickle, less oil." },
   { id: "p17", name: "Banana Chips", category: "local-snacks", price: 70, mrp: 95, unit: "200g", stock: 38, emoji: "🍌", description: "Coconut-oil fried Kerala-style chips." },
   { id: "p18", name: "Lays Classic Salted", category: "snacks", price: 20, mrp: 30, unit: "52g", stock: 80, emoji: "🥔", description: "Crispy salted potato chips." },
+  { id: "p19", name: "Bru Coffee Powder", category: "beverages", price: 85, mrp: 140, unit: "50g jar", stock: 55, emoji: "☕", description: "Rich, aromatic instant coffee — perfect morning brew." },
+  { id: "p20", name: "Tetley Tea Powder", category: "beverages", price: 95, mrp: 150, unit: "250g pack", stock: 48, emoji: "🍵", description: "Premium tea powder for a refreshing cup every day." },
 ];
 
 export const PRODUCTS: Product[] = RAW_PRODUCTS.map(p => ({ ...p, image: IMG[p.id] }));
