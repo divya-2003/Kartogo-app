@@ -16,6 +16,8 @@ import p15 from "@/assets/products/p15.jpg";
 import p16 from "@/assets/products/p16.jpg";
 import p17 from "@/assets/products/p17.jpg";
 import p18 from "@/assets/products/p18.jpg";
+import p19 from "@/assets/products/p19.jpg";
+import p20 from "@/assets/products/p20.jpg";
 
 const IMG: Record<string, string> = { p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18 };
 
