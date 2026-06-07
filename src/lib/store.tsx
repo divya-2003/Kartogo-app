@@ -180,7 +180,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     // Always overlay the latest bundled image URLs — localStorage may hold
     // stale Vite-hashed asset paths from a previous build.
     const imgById = new Map(PRODUCTS.map(p => [p.id, p.image]));
-    setProducts(stored.map(p => ({ ...p, image: imgById.get(p.id) ?? p.image })));
+    const storedIds = new Set(stored.map(p => p.id));
+    // Append any newly-bundled products that aren't in the cached list yet.
+    const merged = [...stored, ...PRODUCTS.filter(p => !storedIds.has(p.id))];
+    setProducts(merged.map(p => ({ ...p, image: imgById.get(p.id) ?? p.image })));
   }, []);
   useEffect(() => { write("qk_products", products); }, [products]);
 
