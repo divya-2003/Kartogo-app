@@ -177,13 +177,15 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>(PRODUCTS);
   useEffect(() => {
     const stored = read<Product[]>("qk_products", PRODUCTS);
-    // Always overlay the latest bundled image URLs — localStorage may hold
-    // stale Vite-hashed asset paths from a previous build.
-    const imgById = new Map(PRODUCTS.map(p => [p.id, p.image]));
-    const storedIds = new Set(stored.map(p => p.id));
-    // Append any newly-bundled products that aren't in the cached list yet.
-    const merged = [...stored, ...PRODUCTS.filter(p => !storedIds.has(p.id))];
-    setProducts(merged.map(p => ({ ...p, image: imgById.get(p.id) ?? p.image })));
+    // Code (PRODUCTS) is the source of truth for catalog details (name, price,
+    // mrp, image, etc.). localStorage only preserves locally-edited stock so we
+    // don't clobber admin inventory changes, but still reflect code updates.
+    const stockById = new Map(stored.map(p => [p.id, p.stock]));
+    const merged = PRODUCTS.map(p => ({
+      ...p,
+      stock: stockById.get(p.id) ?? p.stock,
+    }));
+    setProducts(merged);
   }, []);
   useEffect(() => { write("qk_products", products); }, [products]);
 
