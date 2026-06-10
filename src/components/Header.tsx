@@ -54,7 +54,6 @@ export function Header() {
   const { count } = useCart();
   const { user, logout } = useAuth();
   const nav = useNavigate();
-  const [q, setQ] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const location = useRouterState({ select: s => s.location.pathname });
   const isAdminArea = location.startsWith("/admin");
