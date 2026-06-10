@@ -3,6 +3,7 @@ import { ShoppingBag, Search, User2, LayoutDashboard, LogOut, ShieldCheck } from
 import { useState, useEffect } from "react";
 import { useCart, useAuth } from "@/lib/store";
 import { LocationPicker } from "@/components/LocationPicker";
+import { SearchOverlay } from "@/components/SearchOverlay";
 import { toast } from "sonner";
 import kartigoLogo from "@/assets/kartigo-logo.png.asset.json";
 
@@ -53,7 +54,7 @@ export function Header() {
   const { count } = useCart();
   const { user, logout } = useAuth();
   const nav = useNavigate();
-  const [q, setQ] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const location = useRouterState({ select: s => s.location.pathname });
   const isAdminArea = location.startsWith("/admin");
   const isAdmin = user?.role === "admin";
@@ -83,20 +84,18 @@ export function Header() {
         )}
 
         {!isAdminArea && (
-          <form
-            onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q } }); }}
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
             className="ml-2 hidden flex-1 md:block"
           >
-            <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-pop">
+            <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-left shadow-pop">
               <Search className="h-4 w-4 text-muted-foreground" />
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder={placeholder ? `Search "${placeholder}"` : "Search"}
-                className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-              />
+              <span className="w-full truncate text-sm text-muted-foreground">
+                {placeholder ? `Search "${placeholder}"` : "Search"}
+              </span>
             </div>
-          </form>
+          </button>
         )}
 
         <div className="ml-auto flex items-center gap-2">
@@ -164,14 +163,16 @@ export function Header() {
               <LocationPicker />
             </div>
           )}
-          <form onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q } }); }}>
-            <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
+          <button type="button" onClick={() => setSearchOpen(true)} className="w-full">
+            <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-left">
               <Search className="h-4 w-4 text-muted-foreground" />
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder ? `Search "${placeholder}"` : "Search"} className="w-full bg-transparent text-sm outline-none" />
+              <span className="w-full truncate text-sm text-muted-foreground">{placeholder ? `Search "${placeholder}"` : "Search"}</span>
             </div>
-          </form>
+          </button>
         </div>
       )}
+
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
 }
