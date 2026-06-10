@@ -56,7 +56,7 @@ export const CATEGORIES: Category[] = [
 ];
 
 const RAW_PRODUCTS: Product[] = [
-  { id: "p1", name: "Andhra Avakaya Pickle", category: "pickles", price: 180, mrp: 260, unit: "250g jar", stock: 32, emoji: "🥭", description: "Traditional mango pickle from Ongole homes — fiery, oil-rich, ready to pair with curd rice." },
+  { id: "p1", name: "Andhra Avakaya Pickle", category: "pickles", price: 180, mrp: 360, unit: "250g jar", stock: 32, emoji: "🥭", description: "Traditional mango pickle from Ongole homes — fiery, oil-rich, ready to pair with curd rice." },
   { id: "p2", name: "Guntur Red Chilli Powder", category: "spice-powders", price: 140, mrp: 190, unit: "200g pack", stock: 60, emoji: "🌶️", description: "Stone-ground Guntur chillies. Bright red, sharp heat." },
   { id: "p3", name: "Sambar Powder", category: "spice-powders", price: 95, mrp: 130, unit: "200g pack", stock: 44, emoji: "🍲", description: "House-roasted dal and spice blend." },
   { id: "p4", name: "Murukku (Hot)", category: "local-snacks", price: 60, mrp: 80, unit: "200g", stock: 25, emoji: "🥨", description: "Crunchy rice-flour murukku, fresh batch daily." },
