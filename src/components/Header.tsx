@@ -55,6 +55,7 @@ export function Header() {
   const { user, logout } = useAuth();
   const nav = useNavigate();
   const [q, setQ] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const location = useRouterState({ select: s => s.location.pathname });
   const isAdminArea = location.startsWith("/admin");
   const isAdmin = user?.role === "admin";
