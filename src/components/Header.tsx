@@ -164,14 +164,16 @@ export function Header() {
               <LocationPicker />
             </div>
           )}
-          <form onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q } }); }}>
-            <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
+          <button type="button" onClick={() => setSearchOpen(true)} className="w-full">
+            <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-left">
               <Search className="h-4 w-4 text-muted-foreground" />
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder ? `Search "${placeholder}"` : "Search"} className="w-full bg-transparent text-sm outline-none" />
+              <span className="w-full truncate text-sm text-muted-foreground">{placeholder ? `Search "${placeholder}"` : "Search"}</span>
             </div>
-          </form>
+          </button>
         </div>
       )}
+
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
 }
