@@ -3,6 +3,7 @@ import { ShoppingBag, Search, User2, LayoutDashboard, LogOut, ShieldCheck } from
 import { useState, useEffect } from "react";
 import { useCart, useAuth } from "@/lib/store";
 import { LocationPicker } from "@/components/LocationPicker";
+import { SearchOverlay } from "@/components/SearchOverlay";
 import { toast } from "sonner";
 import kartigoLogo from "@/assets/kartigo-logo.png.asset.json";
 
