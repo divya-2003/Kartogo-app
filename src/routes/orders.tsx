@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { useAuth, useOrders, DELIVERY_BOYS, type OrderStatus } from "@/lib/store";
 import { formatINR } from "@/lib/data";
-import { CheckCircle2, Package, Truck, Clock, XCircle } from "lucide-react";
+import { CheckCircle2, Package, Truck, Clock, XCircle, RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/orders")({
   component: OrdersPage,
@@ -18,7 +19,21 @@ const STEPS: { key: OrderStatus; label: string; icon: React.ReactNode }[] = [
 
 function OrdersPage() {
   const { user, logout } = useAuth();
-  const { orders } = useOrders();
+  const { orders, refresh } = useOrders();
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refresh();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   if (!user) {
     return (
@@ -38,12 +53,17 @@ function OrdersPage() {
     <div className="min-h-screen bg-background">
       <Header />
       <div className="mx-auto max-w-4xl px-4 py-8 md:px-6">
-        <div className="mb-6 flex items-end justify-between">
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="font-display text-3xl font-bold">My orders</h1>
             <p className="text-sm text-muted-foreground">Signed in as {user.name || user.phone}</p>
           </div>
-          <button onClick={logout} className="rounded-lg border border-border px-3 py-2 text-sm hover:bg-secondary">Logout</button>
+          <div className="flex items-center gap-2">
+            <button onClick={handleRefresh} disabled={refreshing} className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-secondary disabled:opacity-60">
+              <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} /> Refresh
+            </button>
+            <button onClick={logout} className="rounded-lg border border-border px-3 py-2 text-sm hover:bg-secondary">Logout</button>
+          </div>
         </div>
         {mine.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
