@@ -146,17 +146,12 @@ function OrdersPage() {
 
     for (const order of mine) {
       const previous = previousOrdersRef.current.get(order.id);
-      if (!previous) continue;
 
-      if (previous.status !== order.status) {
+      if (previous && previous.status !== order.status) {
         if (order.status === "out_for_delivery") {
-          toast.success("Order is out for delivery", {
-            description: `${order.id} is on the way to you.`,
-          });
+          notifyOnce(`${order.id}:status:${order.status}:${order.updatedAt ?? Date.now()}`, "Order is out for delivery", `${order.id} is on the way to you.`);
         } else if (order.status === "delivered") {
-          toast.success("Order delivered", {
-            description: `${order.id} has been marked delivered.`,
-          });
+          notifyOnce(`${order.id}:status:${order.status}:${order.updatedAt ?? Date.now()}`, "Order delivered", `${order.id} has been marked delivered.`);
         }
       }
 
@@ -170,12 +165,10 @@ function OrdersPage() {
         );
       }
 
-      if (previous.deliveryBoyId !== order.deliveryBoyId && order.deliveryBoyId) {
+      if (previous && previous.deliveryBoyId !== order.deliveryBoyId && order.deliveryBoyId) {
         const boy = DELIVERY_BOYS.find(d => d.id === order.deliveryBoyId);
         if (boy) {
-          toast.success("Delivery partner assigned", {
-            description: `${boy.name} · ${boy.phone}`,
-          });
+          notifyOnce(`${order.id}:driver:${order.deliveryBoyId}:${order.updatedAt ?? Date.now()}`, "Delivery partner assigned", `${boy.name} · ${boy.phone}`);
         }
       }
 
