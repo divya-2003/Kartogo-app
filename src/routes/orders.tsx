@@ -143,6 +143,46 @@ function OrdersPage() {
     [orders, userPhone],
   );
 
+  // When each order entered its CURRENT status (from the order status log).
+  // Used to estimate arrival time. Keyed by order id.
+  const [statusSince, setStatusSince] = useState<Record<string, number>>({});
+  // Tick so the "Arriving in X mins" countdown stays fresh.
+  const [now, setNow] = useState(() => Date.now());
+
+  const mineKey = mine.map(o => `${o.id}:${o.status}`).join(",");
+
+  useEffect(() => {
+    const ids = mine.map(o => o.id);
+    if (ids.length === 0) { setStatusSince({}); return; }
+    let active = true;
+    (async () => {
+      const { data, error } = await supabase
+        .from("order_status_log")
+        .select("order_id,to_status,changed_at")
+        .in("order_id", ids)
+        .order("changed_at", { ascending: false });
+      if (error || !data || !active) return;
+      const byOrder: Record<string, number> = {};
+      const statusById = new Map(mine.map(o => [o.id, o.status]));
+      for (const row of data as { order_id: string; to_status: OrderStatus; changed_at: string }[]) {
+        // First match (latest, since ordered desc) for the order's current status.
+        if (byOrder[row.order_id] !== undefined) continue;
+        if (row.to_status === statusById.get(row.order_id)) {
+          byOrder[row.order_id] = new Date(row.changed_at).getTime();
+        }
+      }
+      setStatusSince(byOrder);
+    })();
+    return () => { active = false; };
+  }, [mineKey]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+
+
   useEffect(() => {
     const nextSnapshot = new Map<string, { status: OrderStatus; deliveryBoyId?: string }>();
 
