@@ -464,6 +464,27 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
       setOrders(prev => sortOrders([saved, ...prev.filter(o => o.id !== saved.id)]));
       announceOrdersSync(saved.id, saved.status);
     },
+    markRefunded: async (id, refunded) => {
+      const previous = orders;
+      const refundedAt = refunded ? Date.now() : undefined;
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, refunded, refundedAt } : o));
+      const { data, error } = await supabase
+        .from("app_orders")
+        .update({ refunded, refunded_at: refunded ? new Date().toISOString() : null, updated_at: new Date().toISOString() })
+        .eq("id", id)
+        .select("*")
+        .maybeSingle();
+
+      if (error || !data) {
+        console.error("Failed to update refund status", error);
+        setOrders(previous);
+        throw new Error("Refund status could not be updated. Please try again.");
+      }
+
+      const saved = rowToOrder(data as unknown as OrderRow);
+      setOrders(prev => sortOrders([saved, ...prev.filter(o => o.id !== saved.id)]));
+      announceOrdersSync(saved.id, saved.status);
+    },
   };
   return <OrdersContext.Provider value={value}>{children}</OrdersContext.Provider>;
 }
