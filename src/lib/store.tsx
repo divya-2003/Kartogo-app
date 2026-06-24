@@ -226,6 +226,8 @@ export type Order = {
   status: OrderStatus;
   deliveryBoyId?: string;
   cancelReason?: string;
+  refunded?: boolean;
+  refundedAt?: number;
 };
 
 type OrdersCtx = {
@@ -234,6 +236,7 @@ type OrdersCtx = {
   place: (o: Omit<Order, "id" | "createdAt" | "status">) => Promise<Order>;
   setStatus: (id: string, status: OrderStatus, cancelReason?: string) => Promise<void>;
   assign: (id: string, deliveryBoyId: string) => Promise<void>;
+  markRefunded: (id: string, refunded: boolean) => Promise<void>;
 };
 const OrdersContext = createContext<OrdersCtx | null>(null);
 
@@ -253,6 +256,8 @@ type OrderRow = {
   status: OrderStatus;
   delivery_boy_id: string | null;
   cancel_reason?: string | null;
+  refunded?: boolean | null;
+  refunded_at?: string | null;
 };
 function rowToOrder(r: OrderRow): Order {
   return {
@@ -270,6 +275,8 @@ function rowToOrder(r: OrderRow): Order {
     status: r.status,
     deliveryBoyId: r.delivery_boy_id ?? undefined,
     cancelReason: r.cancel_reason ?? undefined,
+    refunded: r.refunded ?? false,
+    refundedAt: r.refunded_at ? new Date(r.refunded_at).getTime() : undefined,
   };
 }
 
@@ -451,6 +458,27 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
         console.error("Failed to assign delivery partner", error);
         setOrders(previous);
         throw new Error("Delivery partner could not be assigned. Please try again.");
+      }
+
+      const saved = rowToOrder(data as unknown as OrderRow);
+      setOrders(prev => sortOrders([saved, ...prev.filter(o => o.id !== saved.id)]));
+      announceOrdersSync(saved.id, saved.status);
+    },
+    markRefunded: async (id, refunded) => {
+      const previous = orders;
+      const refundedAt = refunded ? Date.now() : undefined;
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, refunded, refundedAt } : o));
+      const { data, error } = await supabase
+        .from("app_orders")
+        .update({ refunded, refunded_at: refunded ? new Date().toISOString() : null, updated_at: new Date().toISOString() })
+        .eq("id", id)
+        .select("*")
+        .maybeSingle();
+
+      if (error || !data) {
+        console.error("Failed to update refund status", error);
+        setOrders(previous);
+        throw new Error("Refund status could not be updated. Please try again.");
       }
 
       const saved = rowToOrder(data as unknown as OrderRow);

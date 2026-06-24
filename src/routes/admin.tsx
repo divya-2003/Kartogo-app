@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, Link, useRouterState, redirect } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
-import { LayoutDashboard, Package2, Boxes, ClipboardList, Bike, ArrowLeft } from "lucide-react";
+import { useOrders } from "@/lib/store";
+import { LayoutDashboard, Package2, Boxes, ClipboardList, Bike, ArrowLeft, PackageX } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: () => {
@@ -18,11 +19,14 @@ const NAV = [
   { to: "/admin/products", label: "Products", icon: Package2 },
   { to: "/admin/inventory", label: "Inventory", icon: Boxes },
   { to: "/admin/orders", label: "Orders", icon: ClipboardList },
+  { to: "/admin/cancellations", label: "Cancellations", icon: PackageX },
   { to: "/admin/delivery", label: "Delivery", icon: Bike },
 ] as const;
 
 function AdminLayout() {
   const path = useRouterState({ select: s => s.location.pathname });
+  const { orders } = useOrders();
+  const cancelledCount = orders.filter(o => o.status === "cancelled").length;
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -32,9 +36,13 @@ function AdminLayout() {
           <nav className="flex flex-row gap-1 overflow-x-auto md:flex-col">
             {NAV.map(n => {
               const active = n.to === "/admin" ? path === "/admin" : path.startsWith(n.to);
+              const badge = n.to === "/admin/cancellations" && cancelledCount > 0 ? cancelledCount : null;
               return (
                 <Link key={n.to} to={n.to} className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition ${active ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}>
                   <n.icon className="h-4 w-4" /> {n.label}
+                  {badge !== null && (
+                    <span className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold ${active ? "bg-primary-foreground text-primary" : "bg-destructive text-destructive-foreground"}`}>{badge}</span>
+                  )}
                 </Link>
               );
             })}

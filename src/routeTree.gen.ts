@@ -25,6 +25,7 @@ import { Route as AdminProductsRouteImport } from './routes/admin.products'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
 import { Route as AdminDeliveryRouteImport } from './routes/admin.delivery'
+import { Route as AdminCancellationsRouteImport } from './routes/admin.cancellations'
 
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
@@ -106,6 +107,11 @@ const AdminDeliveryRoute = AdminDeliveryRouteImport.update({
   path: '/delivery',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCancellationsRoute = AdminCancellationsRouteImport.update({
+  id: '/cancellations',
+  path: '/cancellations',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -117,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/menu': typeof MenuRoute
   '/orders': typeof OrdersRoute
   '/search': typeof SearchRoute
+  '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/orders': typeof AdminOrdersRoute
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/menu': typeof MenuRoute
   '/orders': typeof OrdersRoute
   '/search': typeof SearchRoute
+  '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/orders': typeof AdminOrdersRoute
@@ -153,6 +161,7 @@ export interface FileRoutesById {
   '/menu': typeof MenuRoute
   '/orders': typeof OrdersRoute
   '/search': typeof SearchRoute
+  '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/orders': typeof AdminOrdersRoute
@@ -173,6 +182,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/orders'
     | '/search'
+    | '/admin/cancellations'
     | '/admin/delivery'
     | '/admin/inventory'
     | '/admin/orders'
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/orders'
     | '/search'
+    | '/admin/cancellations'
     | '/admin/delivery'
     | '/admin/inventory'
     | '/admin/orders'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/orders'
     | '/search'
+    | '/admin/cancellations'
     | '/admin/delivery'
     | '/admin/inventory'
     | '/admin/orders'
@@ -345,10 +357,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDeliveryRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/cancellations': {
+      id: '/admin/cancellations'
+      path: '/cancellations'
+      fullPath: '/admin/cancellations'
+      preLoaderRoute: typeof AdminCancellationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminCancellationsRoute: typeof AdminCancellationsRoute
   AdminDeliveryRoute: typeof AdminDeliveryRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
@@ -357,6 +377,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminCancellationsRoute: AdminCancellationsRoute,
   AdminDeliveryRoute: AdminDeliveryRoute,
   AdminInventoryRoute: AdminInventoryRoute,
   AdminOrdersRoute: AdminOrdersRoute,
