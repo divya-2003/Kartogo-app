@@ -413,7 +413,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
     setStatus: async (id, status, cancelReason) => {
       const previous = orders;
       setOrders(prev => prev.map(o => o.id === id ? { ...o, status, cancelReason: cancelReason ?? o.cancelReason } : o));
-      const update: Record<string, unknown> = { status, updated_at: new Date().toISOString() };
+      const update: { status: OrderStatus; updated_at: string; cancel_reason?: string } = { status, updated_at: new Date().toISOString() };
       if (status === "cancelled" && cancelReason) update.cancel_reason = cancelReason;
       const { data, error } = await supabase
         .from("app_orders")
