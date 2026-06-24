@@ -79,13 +79,13 @@ export function Header() {
           </div>
         </Link>
 
-        {!isAdminArea && !isAdmin && (
+        {!hideBrowse && !isAdmin && (
           <div className="hidden md:block">
             <LocationPicker />
           </div>
         )}
 
-        {!isAdminArea && (
+        {!hideBrowse && (
           <button
             type="button"
             onClick={() => setSearchOpen(true)}
