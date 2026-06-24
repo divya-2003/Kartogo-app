@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Zap, Search, Wallet, User2, Home, LayoutGrid, ShoppingBag, TrendingUp, Ticket } from "lucide-react";
 import { LocationPicker } from "@/components/LocationPicker";
 import { ProductCard } from "@/components/ProductCard";
