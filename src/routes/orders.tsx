@@ -51,7 +51,30 @@ function OrdersPage() {
     if (notifiedRef.current.has(key)) return;
     notifiedRef.current.add(key);
     setNotices(prev => [{ id: key, title, description }, ...prev].slice(0, 3));
+    toast(title, { description });
   };
+
+  // Notify for any status change. When the order is out for delivery and a
+  // driver is assigned, include the latest driver details in the message.
+  const notifyStatus = (orderId: string, status: OrderStatus, deliveryBoyId?: string) => {
+    const make = STATUS_NOTICE[status];
+    if (!make) return;
+    const base = make(orderId);
+    let description = base.description;
+    if (status === "out_for_delivery" && deliveryBoyId) {
+      const boy = DELIVERY_BOYS.find(d => d.id === deliveryBoyId);
+      if (boy) description += ` Driver: ${boy.name} · ${boy.phone}`;
+    }
+    notifyOnce(`${orderId}:status:${status}`, base.title, description);
+  };
+
+  const notifyDriver = (orderId: string, deliveryBoyId?: string) => {
+    if (!deliveryBoyId) return;
+    const boy = DELIVERY_BOYS.find(d => d.id === deliveryBoyId);
+    if (!boy) return;
+    notifyOnce(`${orderId}:driver:${deliveryBoyId}`, "Delivery partner assigned", `${boy.name} · ${boy.phone}`);
+  };
+
 
   useEffect(() => {
     if (userPhone) void refresh(userPhone);
