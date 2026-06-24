@@ -406,6 +406,8 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
         items: order.items,
         subtotal: order.subtotal,
         delivery_fee: order.deliveryFee,
+        discount: order.discount,
+        promo_code: order.promoCode ?? null,
         total: order.total,
         payment_method: order.paymentMethod,
         status: order.status,
