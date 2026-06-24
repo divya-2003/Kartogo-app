@@ -73,6 +73,10 @@ function OrdersPage() {
   const navigate = useNavigate();
   const [refreshing, setRefreshing] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
+  const { open: openParam } = Route.useSearch();
+  useEffect(() => {
+    if (openParam) setOpenId(openParam);
+  }, [openParam]);
   const [notices, setNotices] = useState<{ id: string; title: string; description: string }[]>([]);
   const userPhone = user?.phone;
   const previousOrdersRef = useRef(new Map<string, { status: OrderStatus; deliveryBoyId?: string }>());
