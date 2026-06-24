@@ -275,6 +275,8 @@ function rowToOrder(r: OrderRow): Order {
     status: r.status,
     deliveryBoyId: r.delivery_boy_id ?? undefined,
     cancelReason: r.cancel_reason ?? undefined,
+    refunded: r.refunded ?? false,
+    refundedAt: r.refunded_at ? new Date(r.refunded_at).getTime() : undefined,
   };
 }
 
