@@ -272,14 +272,17 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
   // Load all orders from the shared backend and keep them live across devices.
   useEffect(() => {
     let active = true;
-    (async () => {
+
+    const refetch = async () => {
       const { data, error } = await supabase
         .from("app_orders")
         .select("*")
         .order("created_at", { ascending: false });
       if (!active || error || !data) return;
       setOrders((data as unknown as OrderRow[]).map(rowToOrder));
-    })();
+    };
+
+    void refetch();
 
     const channel = supabase
       .channel("app_orders_changes")
@@ -295,11 +298,21 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
       })
       .subscribe();
 
+    // Background tabs throttle websockets, so a realtime event can be missed
+    // while the customer/admin tab is hidden. Re-pull the latest on focus so
+    // status changes made elsewhere always show up.
+    const onFocus = () => { if (document.visibilityState === "visible") void refetch(); };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+
     return () => {
       active = false;
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
       supabase.removeChannel(channel);
     };
   }, []);
+
 
   const value: OrdersCtx = {
     orders,
