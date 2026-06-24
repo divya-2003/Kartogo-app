@@ -232,7 +232,7 @@ type OrdersCtx = {
   orders: Order[];
   refresh: (customerPhone?: string) => Promise<void>;
   place: (o: Omit<Order, "id" | "createdAt" | "status">) => Promise<Order>;
-  setStatus: (id: string, status: OrderStatus) => Promise<void>;
+  setStatus: (id: string, status: OrderStatus, cancelReason?: string) => Promise<void>;
   assign: (id: string, deliveryBoyId: string) => Promise<void>;
 };
 const OrdersContext = createContext<OrdersCtx | null>(null);
