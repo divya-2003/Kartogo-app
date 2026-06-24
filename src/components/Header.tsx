@@ -58,6 +58,8 @@ export function Header() {
   const location = useRouterState({ select: s => s.location.pathname });
   const isAdminArea = location.startsWith("/admin");
   const isCheckout = location.startsWith("/checkout") || location.startsWith("/cart");
+  const isOrders = location.startsWith("/orders");
+  const hideUserActions = isCheckout || isOrders;
   const hideBrowse = isAdminArea || isCheckout;
   const isAdmin = user?.role === "admin";
 
@@ -109,14 +111,14 @@ export function Header() {
           )}
 
           {/* Customer-only links */}
-          {!isAdminArea && !isAdmin && !user && !isCheckout && (
+          {!isAdminArea && !isAdmin && !user && !hideUserActions && (
             <Link to="/login" className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-medium hover:bg-secondary">
               <User2 className="h-4 w-4" />
               <span className="hidden sm:inline">Login</span>
             </Link>
           )}
 
-          {!isAdminArea && !isAdmin && user && !isCheckout && (
+          {!isAdminArea && !isAdmin && user && !hideUserActions && (
             <Link
               to="/menu"
               aria-label="Account menu"
@@ -136,7 +138,7 @@ export function Header() {
           )}
 
           {/* Cart — customers only */}
-          {!isAdminArea && !isAdmin && !isCheckout && (
+          {!isAdminArea && !isAdmin && !hideUserActions && (
             <Link to="/cart" className="relative inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
               <ShoppingBag className="h-4 w-4" />
               <span className="hidden sm:inline">Cart</span>

@@ -4,7 +4,7 @@ import { DeliveryProgress } from "@/components/DeliveryProgress";
 import { useAuth, useOrders, useCart, useCatalog, DELIVERY_BOYS, type OrderStatus, type Order } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { etaText, formatDeliveryDuration } from "@/lib/eta";
-import { CheckCircle2, Package, Truck, Clock, XCircle, RefreshCw, ChevronRight, Zap } from "lucide-react";
+import { CheckCircle2, Package, Truck, Clock, XCircle, ChevronRight, Zap } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -49,7 +49,7 @@ const ACTIVE_TITLE: Record<Exclude<OrderStatus, "delivered" | "cancelled">, stri
 };
 
 function OrdersPage() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { orders, refresh, setStatus } = useOrders();
   const [cancelling, setCancelling] = useState<string | null>(null);
   const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
@@ -71,7 +71,6 @@ function OrdersPage() {
   const { products } = useCatalog();
   const { add, clear } = useCart();
   const navigate = useNavigate();
-  const [refreshing, setRefreshing] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const { open: openParam } = Route.useSearch();
   useEffect(() => {
@@ -268,15 +267,6 @@ function OrdersPage() {
     previousOrdersRef.current = nextSnapshot;
   }, [mine]);
 
-  const handleRefresh = async () => {
-    if (!userPhone) return;
-    setRefreshing(true);
-    try {
-      await refresh(userPhone);
-    } finally {
-      setRefreshing(false);
-    }
-  };
 
   const orderAgain = (o: Order) => {
     clear();
@@ -313,12 +303,6 @@ function OrdersPage() {
       <div className="mx-auto max-w-2xl px-3 py-5 md:px-4 md:py-8">
         <div className="mb-5 flex items-center justify-between gap-3">
           <h1 className="font-display text-2xl font-bold md:text-3xl">Your Orders</h1>
-          <div className="flex items-center gap-2">
-            <button onClick={handleRefresh} disabled={refreshing} className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm hover:bg-secondary disabled:opacity-60">
-              <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} /> Refresh
-            </button>
-            <button onClick={logout} className="rounded-lg border border-border bg-card px-3 py-2 text-sm hover:bg-secondary">Logout</button>
-          </div>
         </div>
 
         {mine.length === 0 ? (
