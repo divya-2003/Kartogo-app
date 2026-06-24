@@ -65,7 +65,7 @@ export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolea
           ) : (
             <button
               disabled={out}
-              onClick={() => add(p.id)}
+              onClick={handleAdd}
               className="inline-flex items-center gap-1 rounded-lg border border-primary px-3 py-1.5 text-xs font-bold text-primary transition hover:bg-primary hover:text-primary-foreground disabled:border-border disabled:text-muted-foreground"
             >
               {out ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3" />} ADD
