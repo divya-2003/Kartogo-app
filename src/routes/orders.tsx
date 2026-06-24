@@ -403,8 +403,9 @@ function OrdersPage() {
                         </div>
                       )}
                       {cancelled && (
-                        <div className="mb-4 flex items-center gap-2 rounded-xl bg-destructive/10 px-3 py-2.5 text-sm font-semibold text-destructive">
-                          <XCircle className="h-5 w-5" /> Order cancelled
+                        <div className="mb-4 rounded-xl bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
+                          <div className="flex items-center gap-2 font-semibold"><XCircle className="h-5 w-5" /> Order cancelled</div>
+                          {o.cancelReason && <div className="mt-1 pl-7 text-xs">Reason: {o.cancelReason}</div>}
                         </div>
                       )}
 
