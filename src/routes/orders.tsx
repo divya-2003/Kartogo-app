@@ -268,15 +268,6 @@ function OrdersPage() {
     previousOrdersRef.current = nextSnapshot;
   }, [mine]);
 
-  const handleRefresh = async () => {
-    if (!userPhone) return;
-    setRefreshing(true);
-    try {
-      await refresh(userPhone);
-    } finally {
-      setRefreshing(false);
-    }
-  };
 
   const orderAgain = (o: Order) => {
     clear();
