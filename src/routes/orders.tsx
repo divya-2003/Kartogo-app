@@ -3,7 +3,9 @@ import { Header } from "@/components/Header";
 import { useAuth, useOrders, DELIVERY_BOYS, type OrderStatus } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { CheckCircle2, Package, Truck, Clock, XCircle, RefreshCw } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/orders")({
   component: OrdersPage,
@@ -30,6 +32,8 @@ function OrdersPage() {
   const { orders, refresh } = useOrders();
   const [refreshing, setRefreshing] = useState(false);
   const userPhone = user?.phone;
+  const previousOrdersRef = useRef(new Map<string, { status: OrderStatus; deliveryBoyId?: string }>());
+  const notificationReadyRef = useRef(false);
 
   useEffect(() => {
     if (userPhone) void refresh(userPhone);
@@ -53,6 +57,80 @@ function OrdersPage() {
     return () => window.clearInterval(id);
   }, [hasActiveOrders, refresh, userPhone]);
 
+  useEffect(() => {
+    if (!userPhone) return;
+
+    const channel = supabase
+      .channel(`customer_order_updates_${userPhone}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "app_orders",
+          filter: `customer_phone=eq.${userPhone}`,
+        },
+        () => {
+          void refresh(userPhone);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refresh, userPhone]);
+
+  const mine = useMemo(
+    () => orders.filter(o => o.customerPhone === userPhone),
+    [orders, userPhone],
+  );
+
+  useEffect(() => {
+    const nextSnapshot = new Map<string, { status: OrderStatus; deliveryBoyId?: string }>();
+
+    for (const order of mine) {
+      nextSnapshot.set(order.id, {
+        status: order.status,
+        deliveryBoyId: order.deliveryBoyId,
+      });
+    }
+
+    if (!notificationReadyRef.current) {
+      previousOrdersRef.current = nextSnapshot;
+      notificationReadyRef.current = true;
+      return;
+    }
+
+    for (const order of mine) {
+      const previous = previousOrdersRef.current.get(order.id);
+      if (!previous) continue;
+
+      if (previous.status !== order.status) {
+        if (order.status === "out_for_delivery") {
+          toast.success("Order is out for delivery", {
+            description: `${order.id} is on the way to you.`,
+          });
+        } else if (order.status === "delivered") {
+          toast.success("Order delivered", {
+            description: `${order.id} has been marked delivered.`,
+          });
+        }
+      }
+
+      if (previous.deliveryBoyId !== order.deliveryBoyId && order.deliveryBoyId) {
+        const boy = DELIVERY_BOYS.find(d => d.id === order.deliveryBoyId);
+        if (boy) {
+          toast.success("Delivery partner assigned", {
+            description: `${boy.name} · ${boy.phone}`,
+          });
+        }
+      }
+    }
+
+    previousOrdersRef.current = nextSnapshot;
+  }, [mine]);
+
   const handleRefresh = async () => {
     if (!userPhone) return;
     setRefreshing(true);
@@ -74,8 +152,6 @@ function OrdersPage() {
       </div>
     );
   }
-
-  const mine = orders.filter(o => o.customerPhone === user.phone);
 
   return (
     <div className="min-h-screen bg-background">
