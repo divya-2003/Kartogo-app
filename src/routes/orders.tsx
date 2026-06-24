@@ -29,33 +29,35 @@ function OrdersPage() {
   const { user, logout } = useAuth();
   const { orders, refresh } = useOrders();
   const [refreshing, setRefreshing] = useState(false);
+  const userPhone = user?.phone;
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    if (userPhone) void refresh(userPhone);
+  }, [refresh, userPhone]);
 
   // Short polling fallback: keep refreshing every few seconds while any of the
   // current user's orders are still in a non-final state. Stops automatically
   // once every order reaches "delivered" or "cancelled".
   const FINAL_STATUSES: OrderStatus[] = ["delivered", "cancelled"];
   const hasActiveOrders =
-    !!user &&
+    !!userPhone &&
     orders.some(
-      o => o.customerPhone === user.phone && !FINAL_STATUSES.includes(o.status),
+      o => o.customerPhone === userPhone && !FINAL_STATUSES.includes(o.status),
     );
 
   useEffect(() => {
-    if (!hasActiveOrders) return;
+    if (!hasActiveOrders || !userPhone) return;
     const id = window.setInterval(() => {
-      if (document.visibilityState === "visible") void refresh();
-    }, 4000);
+      void refresh(userPhone);
+    }, 2000);
     return () => window.clearInterval(id);
-  }, [hasActiveOrders, refresh]);
+  }, [hasActiveOrders, refresh, userPhone]);
 
   const handleRefresh = async () => {
+    if (!userPhone) return;
     setRefreshing(true);
     try {
-      await refresh();
+      await refresh(userPhone);
     } finally {
       setRefreshing(false);
     }
