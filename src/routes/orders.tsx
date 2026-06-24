@@ -4,7 +4,7 @@ import { DeliveryProgress } from "@/components/DeliveryProgress";
 import { useAuth, useOrders, useCart, useCatalog, DELIVERY_BOYS, type OrderStatus, type Order } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { etaText, formatDeliveryDuration } from "@/lib/eta";
-import { CheckCircle2, Package, Truck, Clock, XCircle, RefreshCw, ChevronRight, Zap } from "lucide-react";
+import { CheckCircle2, Package, Truck, Clock, XCircle, ChevronRight, Zap } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -49,7 +49,7 @@ const ACTIVE_TITLE: Record<Exclude<OrderStatus, "delivered" | "cancelled">, stri
 };
 
 function OrdersPage() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { orders, refresh, setStatus } = useOrders();
   const [cancelling, setCancelling] = useState<string | null>(null);
   const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
@@ -71,7 +71,6 @@ function OrdersPage() {
   const { products } = useCatalog();
   const { add, clear } = useCart();
   const navigate = useNavigate();
-  const [refreshing, setRefreshing] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const { open: openParam } = Route.useSearch();
   useEffect(() => {
