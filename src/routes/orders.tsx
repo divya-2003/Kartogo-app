@@ -125,13 +125,15 @@ function OrdersPage() {
           filter: `customer_phone=eq.${userPhone}`,
         },
         payload => {
-          const next = payload.new as { id?: string; status?: OrderStatus; delivery_boy_id?: string | null; updated_at?: string } | null;
+          const next = payload.new as { id?: string; status?: OrderStatus; delivery_boy_id?: string | null; updated_at?: string; created_at?: string } | null;
           if ((payload.eventType === "UPDATE" || payload.eventType === "INSERT") && next?.id) {
             const previous = previousOrdersRef.current.get(next.id);
             const nextDeliveryBoyId = next.delivery_boy_id ?? undefined;
 
             if (next.status && (!previous || previous.status !== next.status)) {
-              notifyStatus(next.id, next.status, nextDeliveryBoyId);
+              const placedAt = next.created_at ? new Date(next.created_at).getTime() : undefined;
+              const deliveredAt = next.updated_at ? new Date(next.updated_at).getTime() : undefined;
+              notifyStatus(next.id, next.status, nextDeliveryBoyId, placedAt, deliveredAt);
             }
 
             if (nextDeliveryBoyId && (!previous || previous.deliveryBoyId !== nextDeliveryBoyId)) {
