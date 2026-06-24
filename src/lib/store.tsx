@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { PRODUCTS, DELIVERY_BOYS, type Product } from "./data";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -228,6 +228,7 @@ export type Order = {
 
 type OrdersCtx = {
   orders: Order[];
+  refresh: () => Promise<void>;
   place: (o: Omit<Order, "id" | "createdAt" | "status">) => Promise<Order>;
   setStatus: (id: string, status: OrderStatus) => Promise<void>;
   assign: (id: string, deliveryBoyId: string) => Promise<void>;
@@ -266,20 +267,41 @@ function rowToOrder(r: OrderRow): Order {
   };
 }
 
+const sortOrders = (orders: Order[]) => [...orders].sort((a, b) => b.createdAt - a.createdAt);
+
+async function fetchOrdersFromBackend() {
+  const { data, error } = await supabase
+    .from("app_orders")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Failed to load orders", error);
+    throw new Error("Orders could not be refreshed. Please try again.");
+  }
+
+  return ((data ?? []) as unknown as OrderRow[]).map(rowToOrder);
+}
+
 export function OrdersProvider({ children }: { children: ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([]);
+
+  const refresh = useCallback(async () => {
+    const latest = await fetchOrdersFromBackend();
+    setOrders(sortOrders(latest));
+  }, []);
 
   // Load all orders from the shared backend and keep them live across devices.
   useEffect(() => {
     let active = true;
 
     const refetch = async () => {
-      const { data, error } = await supabase
-        .from("app_orders")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (!active || error || !data) return;
-      setOrders((data as unknown as OrderRow[]).map(rowToOrder));
+      try {
+        const latest = await fetchOrdersFromBackend();
+        if (active) setOrders(sortOrders(latest));
+      } catch {
+        // Keep the last good state on transient network errors.
+      }
     };
 
     void refetch();
@@ -303,6 +325,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
     // status changes made elsewhere always show up.
     const onFocus = () => { if (document.visibilityState === "visible") void refetch(); };
     window.addEventListener("focus", onFocus);
+    window.addEventListener("online", onFocus);
     document.addEventListener("visibilitychange", onFocus);
 
     // Realtime can arrive late on some browsers/networks. A lightweight
@@ -315,6 +338,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false;
       window.removeEventListener("focus", onFocus);
+      window.removeEventListener("online", onFocus);
       document.removeEventListener("visibilitychange", onFocus);
       window.clearInterval(poll);
       supabase.removeChannel(channel);
@@ -324,6 +348,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
 
   const value: OrdersCtx = {
     orders,
+    refresh,
     place: async (o) => {
       const order: Order = { ...o, id: `OK${Date.now().toString().slice(-6)}`, createdAt: Date.now(), status: "placed" };
       const { data, error } = await supabase.from("app_orders").insert({
@@ -348,7 +373,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
       const saved = rowToOrder(data as unknown as OrderRow);
       // Add immediately so customer and admin pages update even before the
       // realtime event arrives. The realtime listener will de-duplicate later.
-      setOrders(prev => [saved, ...prev.filter(o => o.id !== saved.id)].sort((a, b) => b.createdAt - a.createdAt));
+      setOrders(prev => sortOrders([saved, ...prev.filter(o => o.id !== saved.id)]));
       return saved;
     },
     setStatus: async (id, status) => {
@@ -356,19 +381,19 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
       setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
       const { data, error } = await supabase
         .from("app_orders")
-        .update({ status })
+        .update({ status, updated_at: new Date().toISOString() })
         .eq("id", id)
         .select("*")
-        .single();
+        .maybeSingle();
 
-      if (error) {
+      if (error || !data) {
         console.error("Failed to update order status", error);
         setOrders(previous);
         throw new Error("Order status could not be updated. Please try again.");
       }
 
       const saved = rowToOrder(data as unknown as OrderRow);
-      setOrders(prev => [saved, ...prev.filter(o => o.id !== saved.id)].sort((a, b) => b.createdAt - a.createdAt));
+      setOrders(prev => sortOrders([saved, ...prev.filter(o => o.id !== saved.id)]));
     },
     assign: async (id, deliveryBoyId) => {
       const previous = orders;
@@ -376,19 +401,19 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
       setOrders(prev => prev.map(o => o.id === id ? { ...o, deliveryBoyId: nextDeliveryBoyId } : o));
       const { data, error } = await supabase
         .from("app_orders")
-        .update({ delivery_boy_id: deliveryBoyId || null })
+        .update({ delivery_boy_id: deliveryBoyId || null, updated_at: new Date().toISOString() })
         .eq("id", id)
         .select("*")
-        .single();
+        .maybeSingle();
 
-      if (error) {
+      if (error || !data) {
         console.error("Failed to assign delivery partner", error);
         setOrders(previous);
         throw new Error("Delivery partner could not be assigned. Please try again.");
       }
 
       const saved = rowToOrder(data as unknown as OrderRow);
-      setOrders(prev => [saved, ...prev.filter(o => o.id !== saved.id)].sort((a, b) => b.createdAt - a.createdAt));
+      setOrders(prev => sortOrders([saved, ...prev.filter(o => o.id !== saved.id)]));
     },
   };
   return <OrdersContext.Provider value={value}>{children}</OrdersContext.Provider>;
