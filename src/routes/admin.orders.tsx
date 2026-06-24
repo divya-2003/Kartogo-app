@@ -17,6 +17,13 @@ const STATUSES: { key: OrderStatus; label: string }[] = [
 // Statuses that make sense to apply in bulk (forward progression + cancel).
 const BULK_STATUSES: OrderStatus[] = ["packed", "out_for_delivery", "delivered", "cancelled"];
 
+// Forward progression chain and the action label for advancing to the next step.
+const NEXT_STATUS: Partial<Record<OrderStatus, { next: OrderStatus; label: string }>> = {
+  placed: { next: "packed", label: "Mark as Packed" },
+  packed: { next: "out_for_delivery", label: "Send Out for Delivery" },
+  out_for_delivery: { next: "delivered", label: "Mark as Delivered" },
+};
+
 function OrdersAdmin() {
   const { orders, setStatus, assign } = useOrders();
   const [tab, setTab] = useState<"all" | OrderStatus>("all");
