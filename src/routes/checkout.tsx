@@ -78,7 +78,27 @@ function CheckoutPage() {
   }, [addressOptions, selectedId]);
 
   const fee = subtotal === 0 ? 0 : subtotal >= 199 ? 0 : 25;
-  const total = subtotal + fee;
+  const discount = useMemo(() => computeDiscount(appliedCode, subtotal), [appliedCode, subtotal]);
+  const total = Math.max(0, subtotal + fee - discount);
+
+  const applyPromo = () => {
+    const code = promoInput.trim().toUpperCase();
+    if (!code) { toast.error("Enter a promo code"); return; }
+    const coupon = COUPONS[code];
+    if (!coupon) { toast.error("Invalid promo code"); return; }
+    if (subtotal < coupon.minSubtotal) {
+      toast.error(`Add ${formatINR(coupon.minSubtotal - subtotal)} more to use ${code}`);
+      return;
+    }
+    setAppliedCode(code);
+    setPromoInput("");
+    toast.success(`${code} applied — you saved ${formatINR(computeDiscount(code, subtotal))}!`);
+  };
+
+  const removePromo = () => {
+    setAppliedCode(null);
+    toast.success("Promo code removed");
+  };
 
   if (!user) {
     return (
