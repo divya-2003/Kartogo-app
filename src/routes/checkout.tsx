@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 import { useAuth, useCart, useCatalog, useOrders, useLocation } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { toast } from "sonner";
-import { Banknote, Smartphone, MapPin, Plus, Check, Trash2, X } from "lucide-react";
+import { Banknote, Smartphone, MapPin, Plus, Check, Trash2, X, Tag } from "lucide-react";
 
 export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
