@@ -274,6 +274,8 @@ function rowToOrder(r: OrderRow): Order {
     items: r.items ?? [],
     subtotal: Number(r.subtotal),
     deliveryFee: Number(r.delivery_fee),
+    discount: Number(r.discount ?? 0),
+    promoCode: r.promo_code ?? undefined,
     total: Number(r.total),
     paymentMethod: r.payment_method,
     status: r.status,
