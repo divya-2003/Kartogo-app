@@ -17,6 +17,7 @@ export type Database = {
       app_orders: {
         Row: {
           address: string
+          cancel_reason: string | null
           created_at: string
           customer_name: string
           customer_phone: string
@@ -32,6 +33,7 @@ export type Database = {
         }
         Insert: {
           address: string
+          cancel_reason?: string | null
           created_at?: string
           customer_name: string
           customer_phone: string
@@ -47,6 +49,7 @@ export type Database = {
         }
         Update: {
           address?: string
+          cancel_reason?: string | null
           created_at?: string
           customer_name?: string
           customer_phone?: string
