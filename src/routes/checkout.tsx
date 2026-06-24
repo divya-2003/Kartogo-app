@@ -24,6 +24,10 @@ function CheckoutPage() {
   const [payment, setPayment] = useState<"cash" | "upi">("cash");
   const [placing, setPlacing] = useState(false);
 
+  // Promo code state.
+  const [promoInput, setPromoInput] = useState("");
+  const [appliedCode, setAppliedCode] = useState<string | null>(null);
+
   // New-address form state.
   const [label, setLabel] = useState("Home");
   const [name, setName] = useState("");
