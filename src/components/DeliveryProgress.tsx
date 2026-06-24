@@ -16,7 +16,7 @@ const ETA_LABEL: Record<Exclude<OrderStatus, "cancelled">, string> = {
   delivered: "Delivered",
 };
 
-export function DeliveryProgress({ status }: { status: OrderStatus }) {
+export function DeliveryProgress({ status, eta }: { status: OrderStatus; eta?: string | null }) {
   if (status === "cancelled") return null;
   const pct = PROGRESS[status];
   const moving = status === "out_for_delivery";
@@ -26,9 +26,10 @@ export function DeliveryProgress({ status }: { status: OrderStatus }) {
     <div className="mt-4 rounded-xl border border-border bg-gradient-to-r from-primary/5 to-saffron/5 p-4">
       <div className="mb-3 flex items-center justify-between text-xs font-semibold">
         <span className="flex items-center gap-1.5 text-muted-foreground"><Store className="h-4 w-4" /> Store</span>
-        <span className="text-primary">{ETA_LABEL[status]}</span>
+        <span className="text-primary">{STATUS_LABEL[status]}{eta ? ` · ${eta}` : ""}</span>
         <span className="flex items-center gap-1.5 text-muted-foreground">Home <Home className="h-4 w-4" /></span>
       </div>
+
 
       <div className="relative h-2 rounded-full bg-secondary">
         {/* Filled track */}
