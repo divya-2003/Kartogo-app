@@ -38,6 +38,7 @@ function CheckoutPage() {
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
   const [payment, setPayment] = useState<"cash" | "upi">("cash");
   const [placing, setPlacing] = useState(false);
 
