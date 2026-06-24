@@ -498,6 +498,92 @@ function OrdersPage() {
           </div>
         )}
       </div>
+
+      {cancelTarget && (
+        <CancelReasonModal
+          busy={cancelling === cancelTarget.id}
+          onClose={() => { if (cancelling !== cancelTarget.id) setCancelTarget(null); }}
+          onConfirm={confirmCancel}
+        />
+      )}
+    </div>
+  );
+}
+
+const CANCEL_REASONS = [
+  "Changed my mind",
+  "Forgot to add an item",
+  "Delivery time too long",
+  "Ordered by mistake",
+  "Found a better price elsewhere",
+];
+
+function CancelReasonModal({
+  busy,
+  onClose,
+  onConfirm,
+}: {
+  busy: boolean;
+  onClose: () => void;
+  onConfirm: (reason: string) => void;
+}) {
+  const [selected, setSelected] = useState<string | null>(null);
+  const [other, setOther] = useState("");
+  const reason = selected === "Other" ? other.trim() : selected ?? "";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center" onClick={busy ? undefined : onClose}>
+      <div
+        className="w-full max-w-md rounded-t-2xl bg-card p-5 shadow-xl sm:rounded-2xl"
+        onClick={e => e.stopPropagation()}
+      >
+        <h2 className="font-display text-lg font-bold">Cancel order</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Help us improve — why are you cancelling?</p>
+
+        <div className="mt-4 space-y-2">
+          {[...CANCEL_REASONS, "Other"].map(r => (
+            <button
+              key={r}
+              onClick={() => setSelected(r)}
+              className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-sm transition ${
+                selected === r ? "border-primary bg-primary/5 font-semibold" : "border-border hover:bg-secondary"
+              }`}
+            >
+              <span className={`grid h-4 w-4 place-items-center rounded-full border ${selected === r ? "border-primary" : "border-muted-foreground/40"}`}>
+                {selected === r && <span className="h-2 w-2 rounded-full bg-primary" />}
+              </span>
+              {r}
+            </button>
+          ))}
+        </div>
+
+        {selected === "Other" && (
+          <textarea
+            value={other}
+            onChange={e => setOther(e.target.value.slice(0, 200))}
+            placeholder="Tell us more…"
+            rows={2}
+            className="mt-3 w-full resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+          />
+        )}
+
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <button
+            onClick={onClose}
+            disabled={busy}
+            className="rounded-xl border border-border py-2.5 text-sm font-bold transition hover:bg-secondary disabled:opacity-50"
+          >
+            Keep order
+          </button>
+          <button
+            onClick={() => onConfirm(reason)}
+            disabled={busy || !reason}
+            className="rounded-xl bg-destructive py-2.5 text-sm font-bold text-destructive-foreground transition hover:opacity-90 disabled:opacity-50"
+          >
+            {busy ? "Cancelling…" : "Cancel order"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
