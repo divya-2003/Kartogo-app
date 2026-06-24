@@ -252,6 +252,7 @@ type OrderRow = {
   payment_method: Order["paymentMethod"];
   status: OrderStatus;
   delivery_boy_id: string | null;
+  cancel_reason?: string | null;
 };
 function rowToOrder(r: OrderRow): Order {
   return {
