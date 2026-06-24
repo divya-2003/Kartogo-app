@@ -225,13 +225,14 @@ export type Order = {
   paymentMethod: "cash" | "upi";
   status: OrderStatus;
   deliveryBoyId?: string;
+  cancelReason?: string;
 };
 
 type OrdersCtx = {
   orders: Order[];
   refresh: (customerPhone?: string) => Promise<void>;
   place: (o: Omit<Order, "id" | "createdAt" | "status">) => Promise<Order>;
-  setStatus: (id: string, status: OrderStatus) => Promise<void>;
+  setStatus: (id: string, status: OrderStatus, cancelReason?: string) => Promise<void>;
   assign: (id: string, deliveryBoyId: string) => Promise<void>;
 };
 const OrdersContext = createContext<OrdersCtx | null>(null);
@@ -251,6 +252,7 @@ type OrderRow = {
   payment_method: Order["paymentMethod"];
   status: OrderStatus;
   delivery_boy_id: string | null;
+  cancel_reason?: string | null;
 };
 function rowToOrder(r: OrderRow): Order {
   return {
@@ -267,6 +269,7 @@ function rowToOrder(r: OrderRow): Order {
     paymentMethod: r.payment_method,
     status: r.status,
     deliveryBoyId: r.delivery_boy_id ?? undefined,
+    cancelReason: r.cancel_reason ?? undefined,
   };
 }
 
@@ -407,12 +410,14 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
       setOrders(prev => sortOrders([saved, ...prev.filter(o => o.id !== saved.id)]));
       return saved;
     },
-    setStatus: async (id, status) => {
+    setStatus: async (id, status, cancelReason) => {
       const previous = orders;
-      setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, status, cancelReason: cancelReason ?? o.cancelReason } : o));
+      const update: { status: OrderStatus; updated_at: string; cancel_reason?: string } = { status, updated_at: new Date().toISOString() };
+      if (status === "cancelled" && cancelReason) update.cancel_reason = cancelReason;
       const { data, error } = await supabase
         .from("app_orders")
-        .update({ status, updated_at: new Date().toISOString() })
+        .update(update)
         .eq("id", id)
         .select("*")
         .maybeSingle();
