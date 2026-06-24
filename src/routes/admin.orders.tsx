@@ -17,6 +17,13 @@ const STATUSES: { key: OrderStatus; label: string }[] = [
 // Statuses that make sense to apply in bulk (forward progression + cancel).
 const BULK_STATUSES: OrderStatus[] = ["packed", "out_for_delivery", "delivered", "cancelled"];
 
+// Forward progression chain and the action label for advancing to the next step.
+const NEXT_STATUS: Partial<Record<OrderStatus, { next: OrderStatus; label: string }>> = {
+  placed: { next: "packed", label: "Mark as Packed" },
+  packed: { next: "out_for_delivery", label: "Send Out for Delivery" },
+  out_for_delivery: { next: "delivered", label: "Mark as Delivered" },
+};
+
 function OrdersAdmin() {
   const { orders, setStatus, assign } = useOrders();
   const [tab, setTab] = useState<"all" | OrderStatus>("all");
@@ -164,6 +171,26 @@ function OrdersAdmin() {
               <ul className="my-3 grid gap-1 text-sm md:grid-cols-2">
                 {o.items.map(i => <li key={i.productId} className="text-muted-foreground">{i.name} × <span className="font-semibold text-foreground">{i.qty}</span></li>)}
               </ul>
+
+              {(() => {
+                const advance = NEXT_STATUS[o.status];
+                if (!advance) return null;
+                return (
+                  <button
+                    onClick={async () => {
+                      try {
+                        await setStatus(o.id, advance.next);
+                        toast.success(advance.label.replace(/^Mark as |^Send /, "") + " ✓");
+                      } catch (error) {
+                        toast.error(error instanceof Error ? error.message : "Status update failed");
+                      }
+                    }}
+                    className="mb-3 inline-flex w-full items-center justify-center gap-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-pop transition hover:opacity-90 sm:w-auto"
+                  >
+                    {advance.label} →
+                  </button>
+                );
+              })()}
 
               <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
                 <label className="text-xs font-semibold text-muted-foreground">Status</label>
