@@ -229,7 +229,7 @@ export type Order = {
 
 type OrdersCtx = {
   orders: Order[];
-  refresh: () => Promise<void>;
+  refresh: (customerPhone?: string) => Promise<void>;
   place: (o: Omit<Order, "id" | "createdAt" | "status">) => Promise<Order>;
   setStatus: (id: string, status: OrderStatus) => Promise<void>;
   assign: (id: string, deliveryBoyId: string) => Promise<void>;
@@ -280,11 +280,15 @@ function announceOrdersSync(id: string, status?: OrderStatus) {
   } catch { /* noop */ }
 }
 
-async function fetchOrdersFromBackend() {
-  const { data, error } = await supabase
+async function fetchOrdersFromBackend(customerPhone?: string) {
+  let query = supabase
     .from("app_orders")
     .select("*")
     .order("created_at", { ascending: false });
+
+  if (customerPhone) query = query.eq("customer_phone", customerPhone);
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Failed to load orders", error);
@@ -297,9 +301,13 @@ async function fetchOrdersFromBackend() {
 export function OrdersProvider({ children }: { children: ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([]);
 
-  const refresh = useCallback(async () => {
-    const latest = await fetchOrdersFromBackend();
-    setOrders(sortOrders(latest));
+  const refresh = useCallback(async (customerPhone?: string) => {
+    const latest = await fetchOrdersFromBackend(customerPhone);
+    setOrders(prev => {
+      if (!customerPhone) return sortOrders(latest);
+      const otherOrders = prev.filter(o => o.customerPhone !== customerPhone);
+      return sortOrders([...latest, ...otherOrders]);
+    });
   }, []);
 
   // Load all orders from the shared backend and keep them live across devices.
