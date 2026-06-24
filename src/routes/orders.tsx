@@ -47,7 +47,21 @@ const ACTIVE_TITLE: Record<Exclude<OrderStatus, "delivered" | "cancelled">, stri
 
 function OrdersPage() {
   const { user, logout } = useAuth();
-  const { orders, refresh } = useOrders();
+  const { orders, refresh, setStatus } = useOrders();
+  const [cancelling, setCancelling] = useState<string | null>(null);
+
+  const cancelOrder = async (o: Order) => {
+    if (o.status !== "placed") return;
+    setCancelling(o.id);
+    try {
+      await setStatus(o.id, "cancelled");
+      toast.success("Order cancelled");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not cancel order");
+    } finally {
+      setCancelling(null);
+    }
+  };
   const { products } = useCatalog();
   const { add, clear } = useCart();
   const navigate = useNavigate();
@@ -457,6 +471,24 @@ function OrdersPage() {
                       Order Again
                     </button>
                   </div>
+
+                  {/* Cancellation — only allowed while the order is still "Placed".
+                      Once packed it is locked to avoid wasted store effort/inventory. */}
+                  {active && (
+                    o.status === "placed" ? (
+                      <button
+                        onClick={() => cancelOrder(o)}
+                        disabled={cancelling === o.id}
+                        className="w-full border-t border-border py-3 text-sm font-bold text-destructive transition hover:bg-destructive/10 disabled:opacity-50"
+                      >
+                        {cancelling === o.id ? "Cancelling…" : "Cancel order"}
+                      </button>
+                    ) : (
+                      <div className="w-full border-t border-border py-3 text-center text-xs font-medium text-muted-foreground">
+                        Cancellation unavailable once the order is packed
+                      </div>
+                    )
+                  )}
                 </article>
               );
             })}
