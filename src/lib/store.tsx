@@ -310,7 +310,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
     // few seconds even if a websocket event is delayed or dropped.
     const poll = window.setInterval(() => {
       if (document.visibilityState === "visible") void refetch();
-    }, 3000);
+    }, 1500);
 
     return () => {
       active = false;
