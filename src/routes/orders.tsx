@@ -471,6 +471,24 @@ function OrdersPage() {
                       Order Again
                     </button>
                   </div>
+
+                  {/* Cancellation — only allowed while the order is still "Placed".
+                      Once packed it is locked to avoid wasted store effort/inventory. */}
+                  {active && (
+                    o.status === "placed" ? (
+                      <button
+                        onClick={() => cancelOrder(o)}
+                        disabled={cancelling === o.id}
+                        className="w-full border-t border-border py-3 text-sm font-bold text-destructive transition hover:bg-destructive/10 disabled:opacity-50"
+                      >
+                        {cancelling === o.id ? "Cancelling…" : "Cancel order"}
+                      </button>
+                    ) : (
+                      <div className="w-full border-t border-border py-3 text-center text-xs font-medium text-muted-foreground">
+                        Cancellation unavailable once the order is packed
+                      </div>
+                    )
+                  )}
                 </article>
               );
             })}
