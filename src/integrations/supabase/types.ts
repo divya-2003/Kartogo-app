@@ -164,6 +164,30 @@ export type Database = {
         }
         Relationships: []
       }
+      order_status_log: {
+        Row: {
+          changed_at: string
+          from_status: string | null
+          id: string
+          order_id: string
+          to_status: string
+        }
+        Insert: {
+          changed_at?: string
+          from_status?: string | null
+          id?: string
+          order_id: string
+          to_status: string
+        }
+        Update: {
+          changed_at?: string
+          from_status?: string | null
+          id?: string
+          order_id?: string
+          to_status?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           commission_amount: number
