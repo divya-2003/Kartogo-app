@@ -60,7 +60,7 @@ export function Header() {
   const isCheckout = location.startsWith("/checkout") || location.startsWith("/cart");
   const isOrders = location.startsWith("/orders");
   const hideUserActions = isCheckout || isOrders;
-  const hideBrowse = isAdminArea || isCheckout;
+  const hideBrowse = isAdminArea || isCheckout || isOrders;
   const isAdmin = user?.role === "admin";
 
   const handleLogout = () => {
