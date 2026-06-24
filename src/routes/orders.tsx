@@ -480,7 +480,7 @@ function OrdersPage() {
                   {active && (
                     o.status === "placed" ? (
                       <button
-                        onClick={() => cancelOrder(o)}
+                        onClick={() => setCancelTarget(o)}
                         disabled={cancelling === o.id}
                         className="w-full border-t border-border py-3 text-sm font-bold text-destructive transition hover:bg-destructive/10 disabled:opacity-50"
                       >
