@@ -41,7 +41,7 @@ function LoginPage() {
     try {
       const u = await verifyOtp(phone, otp);
       toast.success("Welcome to Kartigo!");
-      nav({ to: u.role === "admin" ? "/admin" : "/" });
+      nav({ to: u.role === "admin" ? "/admin" : (redirect ?? "/") });
     } catch (err) {
       toast.error((err as Error).message);
     } finally { setLoading(false); }
