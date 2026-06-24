@@ -256,6 +256,8 @@ type OrderRow = {
   status: OrderStatus;
   delivery_boy_id: string | null;
   cancel_reason?: string | null;
+  refunded?: boolean | null;
+  refunded_at?: string | null;
 };
 function rowToOrder(r: OrderRow): Order {
   return {
