@@ -410,12 +410,14 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
       setOrders(prev => sortOrders([saved, ...prev.filter(o => o.id !== saved.id)]));
       return saved;
     },
-    setStatus: async (id, status) => {
+    setStatus: async (id, status, cancelReason) => {
       const previous = orders;
-      setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, status, cancelReason: cancelReason ?? o.cancelReason } : o));
+      const update: Record<string, unknown> = { status, updated_at: new Date().toISOString() };
+      if (status === "cancelled" && cancelReason) update.cancel_reason = cancelReason;
       const { data, error } = await supabase
         .from("app_orders")
-        .update({ status, updated_at: new Date().toISOString() })
+        .update(update)
         .eq("id", id)
         .select("*")
         .maybeSingle();
