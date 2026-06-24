@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
+import { DeliveryProgress } from "@/components/DeliveryProgress";
 import { useAuth, useOrders, DELIVERY_BOYS, type OrderStatus } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { CheckCircle2, Package, Truck, Clock, XCircle, RefreshCw } from "lucide-react";
