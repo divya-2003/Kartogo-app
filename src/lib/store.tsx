@@ -278,7 +278,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
         .select("*")
         .order("created_at", { ascending: false });
       if (!active || error || !data) return;
-      setOrders((data as OrderRow[]).map(rowToOrder));
+      setOrders((data as unknown as OrderRow[]).map(rowToOrder));
     })();
 
     const channel = supabase
