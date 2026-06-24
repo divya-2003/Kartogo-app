@@ -15,8 +15,8 @@ export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolea
   const handleAdd = () => {
     add(p.id);
     if (!user) {
-      toast.info("Please login to continue to checkout");
-      nav({ to: "/login", search: { redirect: "/checkout" } });
+      toast.info("Please login to add items to your cart");
+      nav({ to: "/login", search: { redirect: "/" } });
     }
   };
 
