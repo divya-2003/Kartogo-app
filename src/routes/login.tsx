@@ -6,6 +6,9 @@ import { Phone, KeyRound } from "lucide-react";
 import kartigoLogo from "@/assets/kartigo-logo.png.asset.json";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
+    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+  }),
   component: LoginPage,
   head: () => ({ meta: [{ title: "Login — Kartigo" }] }),
 });
