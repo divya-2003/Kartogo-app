@@ -103,13 +103,14 @@ function OrdersPage() {
                   {cancelled ? (
                     <div className="mt-4 flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"><XCircle className="h-4 w-4" /> Order cancelled</div>
                   ) : (
-                    <div className="mt-4 flex items-center gap-2">
+                      <div className="mt-4 flex items-center gap-2">
                       {STEPS.map((s, i) => {
                         const done = i <= stepIdx;
+                          const current = s.key === o.status;
                         return (
                           <div key={s.key} className="flex flex-1 items-center gap-2">
-                            <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${done ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>{s.icon}</div>
-                            <div className={`text-xs font-semibold ${done ? "text-foreground" : "text-muted-foreground"}`}>{s.label}</div>
+                            <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${current ? "bg-primary text-primary-foreground ring-4 ring-primary/20" : done ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>{s.icon}</div>
+                            <div className={`text-xs font-semibold ${current ? "text-primary" : done ? "text-foreground" : "text-muted-foreground"}`}>{s.label}</div>
                             {i < STEPS.length - 1 && <div className={`h-0.5 flex-1 ${i < stepIdx ? "bg-primary" : "bg-border"}`} />}
                           </div>
                         );
