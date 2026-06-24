@@ -58,7 +58,14 @@ function OrdersPage() {
 
   // Notify for any status change. When the order is out for delivery and a
   // driver is assigned, include the latest driver details in the message.
-  const notifyStatus = (orderId: string, status: OrderStatus, deliveryBoyId?: string) => {
+  // When delivered, include how long the order took from placed to delivered.
+  const notifyStatus = (
+    orderId: string,
+    status: OrderStatus,
+    deliveryBoyId?: string,
+    placedAt?: number,
+    deliveredAt?: number,
+  ) => {
     const make = STATUS_NOTICE[status];
     if (!make) return;
     const base = make(orderId);
@@ -66,6 +73,10 @@ function OrdersPage() {
     if (status === "out_for_delivery" && deliveryBoyId) {
       const boy = DELIVERY_BOYS.find(d => d.id === deliveryBoyId);
       if (boy) description += ` Driver: ${boy.name} · ${boy.phone}`;
+    }
+    if (status === "delivered" && placedAt) {
+      const duration = formatDeliveryDuration(placedAt, deliveredAt ?? Date.now());
+      description += ` Delivered in ${duration}.`;
     }
     notifyOnce(`${orderId}:status:${status}`, base.title, description);
   };
