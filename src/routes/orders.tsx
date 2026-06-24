@@ -85,7 +85,7 @@ function OrdersPage() {
             const previous = previousOrdersRef.current.get(next.id);
             const nextDeliveryBoyId = next.delivery_boy_id ?? undefined;
 
-            if (next.status && previous?.status !== next.status) {
+            if (next.status && (!previous || previous.status !== next.status)) {
               if (next.status === "out_for_delivery") {
                 notifyOnce(
                   `${next.id}:status:${next.status}:${next.updated_at ?? Date.now()}`,
@@ -101,7 +101,7 @@ function OrdersPage() {
               }
             }
 
-            if (nextDeliveryBoyId && previous?.deliveryBoyId !== nextDeliveryBoyId) {
+            if (nextDeliveryBoyId && (!previous || previous.deliveryBoyId !== nextDeliveryBoyId)) {
               const boy = DELIVERY_BOYS.find(d => d.id === nextDeliveryBoyId);
               if (boy) {
                 notifyOnce(
@@ -160,12 +160,33 @@ function OrdersPage() {
         }
       }
 
+      if (!previous && (order.status === "out_for_delivery" || order.status === "delivered")) {
+        notifyOnce(
+          `${order.id}:initial-status:${order.status}:${order.updatedAt ?? Date.now()}`,
+          order.status === "out_for_delivery" ? "Order is out for delivery" : "Order delivered",
+          order.status === "out_for_delivery"
+            ? `${order.id} is on the way to you.`
+            : `${order.id} has been marked delivered.`,
+        );
+      }
+
       if (previous.deliveryBoyId !== order.deliveryBoyId && order.deliveryBoyId) {
         const boy = DELIVERY_BOYS.find(d => d.id === order.deliveryBoyId);
         if (boy) {
           toast.success("Delivery partner assigned", {
             description: `${boy.name} · ${boy.phone}`,
           });
+        }
+      }
+
+      if (!previous && order.deliveryBoyId) {
+        const boy = DELIVERY_BOYS.find(d => d.id === order.deliveryBoyId);
+        if (boy) {
+          notifyOnce(
+            `${order.id}:initial-driver:${order.deliveryBoyId}:${order.updatedAt ?? Date.now()}`,
+            "Delivery partner assigned",
+            `${boy.name} · ${boy.phone}`,
+          );
         }
       }
     }
