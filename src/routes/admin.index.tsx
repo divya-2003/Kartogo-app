@@ -31,6 +31,27 @@ function Dashboard() {
         <Stat icon={<AlertTriangle className="h-5 w-5" />} label="Low stock" value={String(lowStock.length)} warn />
       </div>
 
+      {cancelled.length > 0 && (
+        <Link to="/admin/cancellations" className="block rounded-2xl border border-destructive/40 bg-destructive/10 p-4 transition hover:bg-destructive/15">
+          <div className="flex flex-wrap items-center gap-3">
+            <PackageX className="h-6 w-6 shrink-0 text-destructive" />
+            <div className="min-w-0">
+              <p className="font-display font-bold text-destructive">
+                {cancelled.length} cancelled order{cancelled.length > 1 ? "s" : ""} — do not pack
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {refundsDue.length > 0
+                  ? `${refundsDue.length} prepaid refund${refundsDue.length > 1 ? "s" : ""} pending · ${formatINR(refundsDue.reduce((s, o) => s + o.total, 0))}`
+                  : "No refunds pending."}
+              </p>
+            </div>
+            <span className="ml-auto rounded-lg bg-destructive px-3 py-1.5 text-xs font-bold text-destructive-foreground">Review</span>
+          </div>
+        </Link>
+      )}
+
+
+
       <div className="grid gap-4 md:grid-cols-2">
         <section className="rounded-2xl border border-border bg-card p-5">
           <div className="mb-3 flex items-center justify-between">
