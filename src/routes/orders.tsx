@@ -161,18 +161,11 @@ function OrdersPage() {
       const previous = previousOrdersRef.current.get(order.id);
 
       if (previous && previous.status !== order.status) {
-        if (order.status === "out_for_delivery") {
-          notifyOnce(`${order.id}:status:${order.status}`, "Order is out for delivery", `${order.id} is on the way to you.`);
-        } else if (order.status === "delivered") {
-          notifyOnce(`${order.id}:status:${order.status}`, "Order delivered", `${order.id} has been marked delivered.`);
-        }
+        notifyStatus(order.id, order.status, order.deliveryBoyId);
       }
 
       if (previous && previous.deliveryBoyId !== order.deliveryBoyId && order.deliveryBoyId) {
-        const boy = DELIVERY_BOYS.find(d => d.id === order.deliveryBoyId);
-        if (boy) {
-          notifyOnce(`${order.id}:driver:${order.deliveryBoyId}`, "Delivery partner assigned", `${boy.name} · ${boy.phone}`);
-        }
+        notifyDriver(order.id, order.deliveryBoyId);
       }
     }
 
