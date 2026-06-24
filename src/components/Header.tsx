@@ -57,6 +57,8 @@ export function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const location = useRouterState({ select: s => s.location.pathname });
   const isAdminArea = location.startsWith("/admin");
+  const isCheckout = location.startsWith("/checkout");
+  const hideBrowse = isAdminArea || isCheckout;
   const isAdmin = user?.role === "admin";
 
   const handleLogout = () => {
