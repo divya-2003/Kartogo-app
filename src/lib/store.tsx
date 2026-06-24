@@ -214,6 +214,7 @@ export type OrderStatus = "placed" | "packed" | "out_for_delivery" | "delivered"
 export type Order = {
   id: string;
   createdAt: number;
+  updatedAt?: number;
   customerPhone: string;
   customerName: string;
   address: string;
@@ -239,6 +240,7 @@ const OrdersContext = createContext<OrdersCtx | null>(null);
 type OrderRow = {
   id: string;
   created_at: string;
+  updated_at?: string | null;
   customer_phone: string;
   customer_name: string;
   address: string;
@@ -254,6 +256,7 @@ function rowToOrder(r: OrderRow): Order {
   return {
     id: r.id,
     createdAt: new Date(r.created_at).getTime(),
+    updatedAt: r.updated_at ? new Date(r.updated_at).getTime() : undefined,
     customerPhone: r.customer_phone,
     customerName: r.customer_name,
     address: r.address,
@@ -268,6 +271,14 @@ function rowToOrder(r: OrderRow): Order {
 }
 
 const sortOrders = (orders: Order[]) => [...orders].sort((a, b) => b.createdAt - a.createdAt);
+const ORDERS_SYNC_KEY = "qk_orders_sync";
+
+function announceOrdersSync(id: string, status?: OrderStatus) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(ORDERS_SYNC_KEY, JSON.stringify({ id, status, at: Date.now() }));
+  } catch { /* noop */ }
+}
 
 async function fetchOrdersFromBackend() {
   const { data, error } = await supabase
@@ -327,6 +338,10 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
     window.addEventListener("focus", onFocus);
     window.addEventListener("online", onFocus);
     document.addEventListener("visibilitychange", onFocus);
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === ORDERS_SYNC_KEY) void refetch();
+    };
+    window.addEventListener("storage", onStorage);
 
     // Realtime can arrive late on some browsers/networks. A lightweight
     // foreground poll keeps admin and customer order screens in sync within a
@@ -340,6 +355,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("focus", onFocus);
       window.removeEventListener("online", onFocus);
       document.removeEventListener("visibilitychange", onFocus);
+      window.removeEventListener("storage", onStorage);
       window.clearInterval(poll);
       supabase.removeChannel(channel);
     };
@@ -394,6 +410,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
 
       const saved = rowToOrder(data as unknown as OrderRow);
       setOrders(prev => sortOrders([saved, ...prev.filter(o => o.id !== saved.id)]));
+      announceOrdersSync(saved.id, saved.status);
     },
     assign: async (id, deliveryBoyId) => {
       const previous = orders;
@@ -414,6 +431,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
 
       const saved = rowToOrder(data as unknown as OrderRow);
       setOrders(prev => sortOrders([saved, ...prev.filter(o => o.id !== saved.id)]));
+      announceOrdersSync(saved.id, saved.status);
     },
   };
   return <OrdersContext.Provider value={value}>{children}</OrdersContext.Provider>;
