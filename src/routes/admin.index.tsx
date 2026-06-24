@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCatalog, useOrders, useAuth } from "@/lib/store";
 import { formatINR } from "@/lib/data";
-import { IndianRupee, ShoppingBag, AlertTriangle, Truck, ShieldCheck } from "lucide-react";
+import { IndianRupee, ShoppingBag, AlertTriangle, Truck, ShieldCheck, PackageX } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({ component: Dashboard });
 
