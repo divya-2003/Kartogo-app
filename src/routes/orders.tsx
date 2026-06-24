@@ -3,7 +3,8 @@ import { Header } from "@/components/Header";
 import { useAuth, useOrders, DELIVERY_BOYS, type OrderStatus } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { CheckCircle2, Package, Truck, Clock, XCircle, RefreshCw } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/orders")({
   component: OrdersPage,
@@ -29,7 +30,17 @@ function OrdersPage() {
   const { user, logout } = useAuth();
   const { orders, refresh } = useOrders();
   const [refreshing, setRefreshing] = useState(false);
+  const [notices, setNotices] = useState<{ id: string; title: string; description: string }[]>([]);
   const userPhone = user?.phone;
+  const previousOrdersRef = useRef(new Map<string, { status: OrderStatus; deliveryBoyId?: string }>());
+  const notificationReadyRef = useRef(false);
+  const notifiedRef = useRef(new Set<string>());
+
+  const notifyOnce = (key: string, title: string, description: string) => {
+    if (notifiedRef.current.has(key)) return;
+    notifiedRef.current.add(key);
+    setNotices(prev => [{ id: key, title, description }, ...prev].slice(0, 3));
+  };
 
   useEffect(() => {
     if (userPhone) void refresh(userPhone);
@@ -53,6 +64,106 @@ function OrdersPage() {
     return () => window.clearInterval(id);
   }, [hasActiveOrders, refresh, userPhone]);
 
+  useEffect(() => {
+    if (!userPhone) return;
+
+    const channel = supabase
+      .channel(`customer_order_updates_${userPhone}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "app_orders",
+          filter: `customer_phone=eq.${userPhone}`,
+        },
+        payload => {
+          const next = payload.new as { id?: string; status?: OrderStatus; delivery_boy_id?: string | null; updated_at?: string } | null;
+          if (payload.eventType === "UPDATE" && next?.id) {
+            const previous = previousOrdersRef.current.get(next.id);
+            const nextDeliveryBoyId = next.delivery_boy_id ?? undefined;
+
+            if (next.status && (!previous || previous.status !== next.status)) {
+              if (next.status === "out_for_delivery") {
+                notifyOnce(
+                  `${next.id}:status:${next.status}`,
+                  "Order is out for delivery",
+                  `${next.id} is on the way to you.`,
+                );
+              } else if (next.status === "delivered") {
+                notifyOnce(
+                  `${next.id}:status:${next.status}`,
+                  "Order delivered",
+                  `${next.id} has been marked delivered.`,
+                );
+              }
+            }
+
+            if (nextDeliveryBoyId && (!previous || previous.deliveryBoyId !== nextDeliveryBoyId)) {
+              const boy = DELIVERY_BOYS.find(d => d.id === nextDeliveryBoyId);
+              if (boy) {
+                notifyOnce(
+                  `${next.id}:driver:${nextDeliveryBoyId}`,
+                  "Delivery partner assigned",
+                  `${boy.name} · ${boy.phone}`,
+                );
+              }
+            }
+          }
+
+          void refresh(userPhone);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refresh, userPhone]);
+
+  const mine = useMemo(
+    () => orders.filter(o => o.customerPhone === userPhone),
+    [orders, userPhone],
+  );
+
+  useEffect(() => {
+    const nextSnapshot = new Map<string, { status: OrderStatus; deliveryBoyId?: string }>();
+
+    for (const order of mine) {
+      nextSnapshot.set(order.id, {
+        status: order.status,
+        deliveryBoyId: order.deliveryBoyId,
+      });
+    }
+
+    if (!notificationReadyRef.current) {
+      previousOrdersRef.current = nextSnapshot;
+      notificationReadyRef.current = true;
+      return;
+    }
+
+    for (const order of mine) {
+      const previous = previousOrdersRef.current.get(order.id);
+
+      if (previous && previous.status !== order.status) {
+        if (order.status === "out_for_delivery") {
+          notifyOnce(`${order.id}:status:${order.status}`, "Order is out for delivery", `${order.id} is on the way to you.`);
+        } else if (order.status === "delivered") {
+          notifyOnce(`${order.id}:status:${order.status}`, "Order delivered", `${order.id} has been marked delivered.`);
+        }
+      }
+
+      if (previous && previous.deliveryBoyId !== order.deliveryBoyId && order.deliveryBoyId) {
+        const boy = DELIVERY_BOYS.find(d => d.id === order.deliveryBoyId);
+        if (boy) {
+          notifyOnce(`${order.id}:driver:${order.deliveryBoyId}`, "Delivery partner assigned", `${boy.name} · ${boy.phone}`);
+        }
+      }
+    }
+
+    previousOrdersRef.current = nextSnapshot;
+  }, [mine]);
+
   const handleRefresh = async () => {
     if (!userPhone) return;
     setRefreshing(true);
@@ -75,11 +186,19 @@ function OrdersPage() {
     );
   }
 
-  const mine = orders.filter(o => o.customerPhone === user.phone);
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      {notices.length > 0 && (
+        <div className="fixed left-1/2 top-20 z-50 w-[min(92vw,420px)] -translate-x-1/2 space-y-2">
+          {notices.map(notice => (
+            <div key={notice.id} className="rounded-xl border border-primary/25 bg-card p-3 text-sm shadow-pop">
+              <div className="font-bold text-primary">{notice.title}</div>
+              <div className="text-muted-foreground">{notice.description}</div>
+            </div>
+          ))}
+        </div>
+      )}
       <div className="mx-auto max-w-4xl px-4 py-8 md:px-6">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
