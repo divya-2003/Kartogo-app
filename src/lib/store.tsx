@@ -226,6 +226,8 @@ export type Order = {
   status: OrderStatus;
   deliveryBoyId?: string;
   cancelReason?: string;
+  refunded?: boolean;
+  refundedAt?: number;
 };
 
 type OrdersCtx = {
