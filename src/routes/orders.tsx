@@ -313,12 +313,6 @@ function OrdersPage() {
       <div className="mx-auto max-w-2xl px-3 py-5 md:px-4 md:py-8">
         <div className="mb-5 flex items-center justify-between gap-3">
           <h1 className="font-display text-2xl font-bold md:text-3xl">Your Orders</h1>
-          <div className="flex items-center gap-2">
-            <button onClick={handleRefresh} disabled={refreshing} className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm hover:bg-secondary disabled:opacity-60">
-              <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} /> Refresh
-            </button>
-            <button onClick={logout} className="rounded-lg border border-border bg-card px-3 py-2 text-sm hover:bg-secondary">Logout</button>
-          </div>
         </div>
 
         {mine.length === 0 ? (
