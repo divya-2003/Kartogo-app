@@ -225,6 +225,7 @@ export type Order = {
   paymentMethod: "cash" | "upi";
   status: OrderStatus;
   deliveryBoyId?: string;
+  cancelReason?: string;
 };
 
 type OrdersCtx = {
