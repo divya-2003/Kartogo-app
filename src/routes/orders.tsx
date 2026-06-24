@@ -1,10 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { DeliveryProgress } from "@/components/DeliveryProgress";
-import { useAuth, useOrders, DELIVERY_BOYS, type OrderStatus } from "@/lib/store";
+import { useAuth, useOrders, useCart, useCatalog, DELIVERY_BOYS, type OrderStatus, type Order } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { etaText, formatDeliveryDuration } from "@/lib/eta";
-import { CheckCircle2, Package, Truck, Clock, XCircle, RefreshCw } from "lucide-react";
+import { CheckCircle2, Package, Truck, Clock, XCircle, RefreshCw, ChevronRight, Zap } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -39,15 +39,27 @@ const STATUS_NOTICE: Record<OrderStatus, (id: string) => { title: string; descri
   cancelled: id => ({ title: "Order cancelled", description: `${id} has been cancelled.` }),
 };
 
+const ACTIVE_TITLE: Record<Exclude<OrderStatus, "delivered" | "cancelled">, string> = {
+  placed: "Order placed",
+  packed: "Order packed",
+  out_for_delivery: "Out for delivery",
+};
+
 function OrdersPage() {
   const { user, logout } = useAuth();
   const { orders, refresh } = useOrders();
+  const { products } = useCatalog();
+  const { add, clear } = useCart();
+  const navigate = useNavigate();
   const [refreshing, setRefreshing] = useState(false);
+  const [openId, setOpenId] = useState<string | null>(null);
   const [notices, setNotices] = useState<{ id: string; title: string; description: string }[]>([]);
   const userPhone = user?.phone;
   const previousOrdersRef = useRef(new Map<string, { status: OrderStatus; deliveryBoyId?: string }>());
   const notificationReadyRef = useRef(false);
   const notifiedRef = useRef(new Set<string>());
+
+  const imageFor = (productId: string) => products.find(p => p.id === productId)?.image;
 
   const notifyOnce = (key: string, title: string, description: string) => {
     if (notifiedRef.current.has(key)) return;
@@ -239,6 +251,13 @@ function OrdersPage() {
     }
   };
 
+  const orderAgain = (o: Order) => {
+    clear();
+    o.items.forEach(i => add(i.productId, i.qty));
+    toast.success("Items added to your cart");
+    navigate({ to: "/cart" });
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-background">
@@ -252,7 +271,7 @@ function OrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-secondary/40">
       <Header />
       {notices.length > 0 && (
         <div className="fixed left-1/2 top-20 z-50 w-[min(92vw,420px)] -translate-x-1/2 space-y-2">
@@ -264,87 +283,195 @@ function OrdersPage() {
           ))}
         </div>
       )}
-      <div className="mx-auto max-w-4xl px-4 py-8 md:px-6">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="font-display text-3xl font-bold">My orders</h1>
-            <p className="text-sm text-muted-foreground">Signed in as {user.name || user.phone}</p>
-          </div>
+      <div className="mx-auto max-w-2xl px-3 py-5 md:px-4 md:py-8">
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <h1 className="font-display text-2xl font-bold md:text-3xl">Your Orders</h1>
           <div className="flex items-center gap-2">
-            <button onClick={handleRefresh} disabled={refreshing} className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-secondary disabled:opacity-60">
+            <button onClick={handleRefresh} disabled={refreshing} className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm hover:bg-secondary disabled:opacity-60">
               <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} /> Refresh
             </button>
-            <button onClick={logout} className="rounded-lg border border-border px-3 py-2 text-sm hover:bg-secondary">Logout</button>
+            <button onClick={logout} className="rounded-lg border border-border bg-card px-3 py-2 text-sm hover:bg-secondary">Logout</button>
           </div>
         </div>
+
         {mine.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
             <div className="font-semibold">No orders yet</div>
             <Link to="/" className="mt-4 inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Start shopping</Link>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {mine.map(o => {
-              const stepIdx = STEPS.findIndex(s => s.key === o.status);
               const cancelled = o.status === "cancelled";
+              const delivered = o.status === "delivered";
+              const active = !cancelled && !delivered;
               const boy = DELIVERY_BOYS.find(d => d.id === o.deliveryBoyId);
+              const open = openId === o.id;
+              const mrpTotal = o.items.reduce((s, i) => {
+                const p = products.find(p => p.id === i.productId);
+                return s + (p?.mrp ?? i.price) * i.qty;
+              }, 0);
+              const deliveredDuration =
+                delivered ? formatDeliveryDuration(o.createdAt, statusSince[o.id] ?? o.updatedAt ?? Date.now()) : null;
+
               return (
-                <article key={o.id} className="rounded-2xl border border-border bg-card p-5 shadow-pop">
-                  <header className="flex flex-wrap items-start justify-between gap-2">
-                    <div>
-                      <div className="font-display text-lg font-bold">{o.id}</div>
-                      <div className="text-xs text-muted-foreground">{new Date(o.createdAt).toLocaleString("en-IN")}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-display text-lg font-bold">{formatINR(o.total)}</div>
-                      <div className="text-xs uppercase tracking-wider text-muted-foreground">{o.paymentMethod === "cash" ? "Cash" : "UPI"} on delivery</div>
-                      <div className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-bold ${cancelled ? "bg-destructive/10 text-destructive" : "bg-primary text-primary-foreground"}`}>
-                        Status: {STATUS_LABELS[o.status]}
+                <article key={o.id} className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                  {/* Summary row — tap to expand */}
+                  <button
+                    onClick={() => setOpenId(open ? null : o.id)}
+                    className="flex w-full items-start gap-3 p-4 text-left"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        {cancelled ? (
+                          <XCircle className="h-5 w-5 shrink-0 text-muted-foreground" />
+                        ) : delivered ? (
+                          <CheckCircle2 className="h-5 w-5 shrink-0 text-leaf" />
+                        ) : (
+                          <Truck className="h-5 w-5 shrink-0 text-primary" />
+                        )}
+                        <span className="font-display text-base font-bold">
+                          {cancelled ? "Order cancelled" : delivered ? "Order delivered" : ACTIVE_TITLE[o.status as Exclude<OrderStatus, "delivered" | "cancelled">]}
+                        </span>
+                      </div>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        Placed at {new Date(o.createdAt).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true })}
                       </div>
                     </div>
-                  </header>
+                    <div className="flex items-center gap-2 pl-2">
+                      <span className="font-display text-base font-bold">{formatINR(o.total)}</span>
+                      <ChevronRight className={`h-5 w-5 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`} />
+                    </div>
+                  </button>
 
-                  {cancelled ? (
-                    <div className="mt-4 flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"><XCircle className="h-4 w-4" /> Order cancelled</div>
-                  ) : (
-                      <div className="mt-4 flex items-center gap-2">
-                      {STEPS.map((s, i) => {
-                        const done = i <= stepIdx;
-                          const current = s.key === o.status;
-                        return (
-                          <div key={s.key} className="flex flex-1 items-center gap-2">
-                            <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${current ? "bg-primary text-primary-foreground ring-4 ring-primary/20" : done ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>{s.icon}</div>
-                            <div className={`text-xs font-semibold ${current ? "text-primary" : done ? "text-foreground" : "text-muted-foreground"}`}>{s.label}</div>
-                            {i < STEPS.length - 1 && <div className={`h-0.5 flex-1 ${i < stepIdx ? "bg-primary" : "bg-border"}`} />}
+                  {/* Thumbnails strip */}
+                  <div className="flex gap-2 overflow-x-auto px-4 pb-4">
+                    {o.items.map(i => {
+                      const img = imageFor(i.productId);
+                      return (
+                        <div key={i.productId} className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl border border-border bg-secondary/50">
+                          {img ? (
+                            <img src={img} alt={i.name} className="h-full w-full object-cover" loading="lazy" />
+                          ) : (
+                            <span className="text-xl">📦</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Live tracking for active orders */}
+                  {active && (
+                    <div className="px-4 pb-4">
+                      <DeliveryProgress status={o.status} eta={etaText(o.status, statusSince[o.id], now)} />
+                      {boy && (
+                        <div className="mt-3 rounded-lg bg-primary/5 px-3 py-2 text-sm">
+                          Delivery partner: <span className="font-semibold">{boy.name}</span> · <a className="text-primary" href={`tel:${boy.phone}`}>{boy.phone}</a>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Expanded detail — bill summary */}
+                  {open && (
+                    <div className="border-t border-border px-4 py-4">
+                      {delivered && (
+                        <div className="mb-4 flex items-center justify-between rounded-xl bg-leaf/10 px-3 py-2.5">
+                          <span className="flex items-center gap-2 font-bold text-leaf"><CheckCircle2 className="h-5 w-5" /> Delivered</span>
+                          {deliveredDuration && (
+                            <span className="flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
+                              <Zap className="h-3.5 w-3.5" /> Arrived in {deliveredDuration}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      {cancelled && (
+                        <div className="mb-4 flex items-center gap-2 rounded-xl bg-destructive/10 px-3 py-2.5 text-sm font-semibold text-destructive">
+                          <XCircle className="h-5 w-5" /> Order cancelled
+                        </div>
+                      )}
+
+                      <div className="mb-2 text-sm font-bold">{o.items.length} {o.items.length === 1 ? "item" : "items"} in order</div>
+                      <ul className="space-y-3">
+                        {o.items.map(i => {
+                          const p = products.find(p => p.id === i.productId);
+                          const img = imageFor(i.productId);
+                          const hasDiscount = p?.mrp && p.mrp > i.price;
+                          return (
+                            <li key={i.productId} className="flex items-center gap-3">
+                              <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-lg border border-border bg-secondary/50">
+                                {img ? <img src={img} alt={i.name} className="h-full w-full object-cover" /> : <span>📦</span>}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="truncate text-sm font-medium">{i.name}</div>
+                                <div className="text-xs text-muted-foreground">{p?.unit ?? ""} · {i.qty} unit{i.qty > 1 ? "s" : ""}</div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-sm font-bold">{formatINR(i.price * i.qty)}</div>
+                                {hasDiscount && <div className="text-xs text-muted-foreground line-through">{formatINR((p!.mrp!) * i.qty)}</div>}
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+
+                      <div className="mt-4 rounded-xl bg-secondary/40 p-3">
+                        <div className="mb-2 text-sm font-bold">Bill Summary</div>
+                        <div className="space-y-1.5 text-sm">
+                          <Row label="Item Total" value={
+                            <span className="flex items-center gap-2">
+                              {mrpTotal > o.subtotal && <span className="text-muted-foreground line-through">{formatINR(mrpTotal)}</span>}
+                              <span className="font-semibold">{formatINR(o.subtotal)}</span>
+                            </span>
+                          } />
+                          <Row label="Delivery Fee" value={
+                            o.deliveryFee > 0
+                              ? <span className="font-semibold">{formatINR(o.deliveryFee)}</span>
+                              : <span className="font-semibold text-leaf">FREE</span>
+                          } />
+                          <div className="mt-2 flex items-center justify-between border-t border-border pt-2 text-base font-bold">
+                            <span>Total Bill</span>
+                            <span>{formatINR(o.total)}</span>
                           </div>
-                        );
-                      })}
+                        </div>
+                      </div>
+
+                      <div className="mt-3 text-xs text-muted-foreground">Deliver to: {o.address}</div>
                     </div>
                   )}
 
-                  {!cancelled && <DeliveryProgress status={o.status} eta={etaText(o.status, statusSince[o.id], now)} />}
-
-                  {boy && !cancelled && (
-                    <div className="mt-3 rounded-lg bg-primary/5 px-3 py-2 text-sm">
-                      Delivery partner: <span className="font-semibold">{boy.name}</span> · <a className="text-primary" href={`tel:${boy.phone}`}>{boy.phone}</a>
-                    </div>
-                  )}
-
-                  <ul className="mt-4 space-y-1 border-t border-border pt-3 text-sm">
-                    {o.items.map(i => (
-                      <li key={i.productId} className="flex justify-between text-muted-foreground">
-                        <span>{i.name} × {i.qty}</span>
-                        <span className="font-semibold text-foreground">{formatINR(i.price * i.qty)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-3 text-xs text-muted-foreground">Deliver to: {o.address}</div>
+                  {/* Footer actions */}
+                  <div className="grid grid-cols-2 border-t border-border">
+                    {!cancelled && (
+                      <button
+                        onClick={() => toast.success("Thanks for rating your order!")}
+                        className="border-r border-border py-3 text-sm font-bold transition hover:bg-secondary"
+                      >
+                        Rate Order
+                      </button>
+                    )}
+                    <button
+                      onClick={() => orderAgain(o)}
+                      className={`py-3 text-sm font-bold text-primary transition hover:bg-secondary ${cancelled ? "col-span-2" : ""}`}
+                    >
+                      Order Again
+                    </button>
+                  </div>
                 </article>
               );
             })}
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-muted-foreground">{label}</span>
+      {value}
     </div>
   );
 }
