@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, Link, useRouterState, redirect } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
-import { LayoutDashboard, Package2, Boxes, ClipboardList, Bike, ArrowLeft } from "lucide-react";
+import { useOrders } from "@/lib/store";
+import { LayoutDashboard, Package2, Boxes, ClipboardList, Bike, ArrowLeft, PackageX } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: () => {
