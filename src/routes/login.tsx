@@ -16,6 +16,7 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const { sendOtp, verifyOtp } = useAuth();
   const nav = useNavigate();
+  const { redirect } = Route.useSearch();
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [stage, setStage] = useState<"phone" | "otp">("phone");
