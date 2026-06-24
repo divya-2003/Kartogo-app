@@ -25,6 +25,8 @@ const NAV = [
 
 function AdminLayout() {
   const path = useRouterState({ select: s => s.location.pathname });
+  const { orders } = useOrders();
+  const cancelledCount = orders.filter(o => o.status === "cancelled").length;
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -34,14 +36,23 @@ function AdminLayout() {
           <nav className="flex flex-row gap-1 overflow-x-auto md:flex-col">
             {NAV.map(n => {
               const active = n.to === "/admin" ? path === "/admin" : path.startsWith(n.to);
+              const badge = n.to === "/admin/cancellations" && cancelledCount > 0 ? cancelledCount : null;
               return (
                 <Link key={n.to} to={n.to} className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition ${active ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}>
                   <n.icon className="h-4 w-4" /> {n.label}
+                  {badge !== null && (
+                    <span className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold ${active ? "bg-primary-foreground text-primary" : "bg-destructive text-destructive-foreground"}`}>{badge}</span>
+                  )}
                 </Link>
               );
             })}
           </nav>
         </aside>
+        <main><Outlet /></main>
+      </div>
+    </div>
+  );
+}
         <main><Outlet /></main>
       </div>
     </div>
