@@ -148,6 +148,7 @@ function CheckoutPage() {
     const created = addDeliveryAddress({ label: label.trim() || "Home", name: name.trim(), address: address.trim() });
     setSelectedId(`delivery:${created.id}`);
     setShowForm(false);
+    setShowPicker(false);
     setLabel("Home");
     setAddress("");
     toast.success("Address saved");
