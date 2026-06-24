@@ -16,8 +16,19 @@ function ProductPage() {
   const { products } = useCatalog();
   const p = products.find(x => x.id === id);
   const { add, items, setQty } = useCart();
+  const { user } = useAuth();
+  const nav = useNavigate();
   if (!p) throw notFound();
   const inCart = items.find(i => i.productId === p.id);
+
+  const handleAdd = () => {
+    if (!user) {
+      toast.info("Please login to add items to your cart");
+      nav({ to: "/login" });
+      return;
+    }
+    add(p.id);
+  };
 
   return (
     <div className="min-h-screen bg-background">
