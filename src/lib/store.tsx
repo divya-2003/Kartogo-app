@@ -273,6 +273,13 @@ function rowToOrder(r: OrderRow): Order {
 const sortOrders = (orders: Order[]) => [...orders].sort((a, b) => b.createdAt - a.createdAt);
 const ORDERS_SYNC_KEY = "qk_orders_sync";
 
+// Postgres errors from RAISE EXCEPTION come back prefixed; strip noise so the
+// admin sees just the human-readable validation message.
+function cleanDbError(message?: string | null): string | undefined {
+  if (!message) return undefined;
+  return message.replace(/^.*?(?:ERROR:|error:)\s*/i, "").trim() || undefined;
+}
+
 function announceOrdersSync(id: string, status?: OrderStatus) {
   if (typeof window === "undefined") return;
   try {
@@ -413,8 +420,12 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
       if (error || !data) {
         console.error("Failed to update order status", error);
         setOrders(previous);
-        throw new Error("Order status could not be updated. Please try again.");
+        // The server-side transition trigger raises a clear message for invalid
+        // jumps (e.g. moving backwards or changing a delivered order). Surface
+        // it so admins understand why the change was blocked.
+        throw new Error(cleanDbError(error?.message) ?? "Order status could not be updated. Please try again.");
       }
+
 
       const saved = rowToOrder(data as unknown as OrderRow);
       setOrders(prev => sortOrders([saved, ...prev.filter(o => o.id !== saved.id)]));
