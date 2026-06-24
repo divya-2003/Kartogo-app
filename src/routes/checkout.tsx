@@ -38,6 +38,7 @@ function CheckoutPage() {
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
   const [payment, setPayment] = useState<"cash" | "upi">("cash");
   const [placing, setPlacing] = useState(false);
 
@@ -147,6 +148,7 @@ function CheckoutPage() {
     const created = addDeliveryAddress({ label: label.trim() || "Home", name: name.trim(), address: address.trim() });
     setSelectedId(`delivery:${created.id}`);
     setShowForm(false);
+    setShowPicker(false);
     setLabel("Home");
     setAddress("");
     toast.success("Address saved");
@@ -185,101 +187,148 @@ function CheckoutPage() {
         <div className="grid gap-6 md:grid-cols-[1fr_340px]">
           <div className="space-y-6">
             <section className="rounded-2xl border border-border bg-card p-5">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="font-display text-lg font-bold">Delivery address</h2>
-                {!showForm && (
-                  <button
-                    onClick={() => { setName(user.name ?? ""); setShowForm(true); }}
-                    className="inline-flex items-center gap-1 rounded-lg border border-primary/40 px-3 py-1.5 text-sm font-semibold text-primary hover:bg-primary/5"
-                  >
-                    <Plus className="h-4 w-4" /> Add new
-                  </button>
-                )}
-              </div>
-
-              {/* Saved addresses to pick from */}
-              {addressOptions.length > 0 && (
-                <ul className="grid gap-2">
-                  {addressOptions.map((addr) => {
-                    const active = addr.id === selectedId;
-                    return (
-                      <li
-                        key={addr.id}
-                        className={`flex items-start gap-3 rounded-xl border p-3 transition ${active ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}
-                      >
-                        <button onClick={() => setSelectedId(addr.id)} className="flex flex-1 items-start gap-3 text-left">
-                          <div className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg ${active ? "bg-primary text-primary-foreground" : "bg-secondary"}`}>
-                            {active ? <Check className="h-4 w-4" /> : <MapPin className="h-4 w-4" />}
-                          </div>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-bold">{addr.label}</span>
-                              <span className="text-xs text-muted-foreground">{addr.name}</span>
-                            </div>
-                            <div className="text-sm text-muted-foreground">{addr.address}</div>
-                          </div>
-                        </button>
+              {(() => {
+                const selectedAddress = addressOptions.find(a => a.id === selectedId);
+                return (
+                  <>
+                    <div className="mb-3 flex items-center justify-between">
+                      <h2 className="font-display text-lg font-bold">Delivery address</h2>
+                      {addressOptions.length > 0 && (
                         <button
-                          onClick={() => addr.kind === "delivery" ? removeDeliveryAddress(addr.removableId) : removeSavedAddress(addr.removableId)}
-                          aria-label="Remove address"
-                          className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-destructive"
+                          onClick={() => { setShowForm(false); setShowPicker(true); }}
+                          className="text-sm font-semibold text-primary underline-offset-2 hover:underline"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          Change
                         </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
+                      )}
+                    </div>
 
-              {addressOptions.length === 0 && !showForm && (
-                <div className="rounded-xl border border-dashed border-border bg-background p-4 text-center">
-                  <MapPin className="mx-auto h-6 w-6 text-primary" />
-                  <p className="mt-2 text-sm font-semibold">No saved address found</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Add one address once, then select it for future orders.</p>
-                  <button
-                    onClick={() => { setName(user.name ?? ""); setShowForm(true); }}
-                    className="mt-3 inline-flex items-center gap-1 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90"
-                  >
-                    <Plus className="h-4 w-4" /> Add new address
-                  </button>
-                </div>
-              )}
-
-              {/* New address form */}
-              {showForm && (
-                <div className="mt-3 rounded-xl border border-border bg-background p-4">
-                  <div className="mb-3 flex items-center justify-between">
-                    <h3 className="text-sm font-bold">Add a new address</h3>
-                    {addressOptions.length > 0 && (
-                      <button onClick={() => setShowForm(false)} aria-label="Cancel" className="grid h-7 w-7 place-items-center rounded-full hover:bg-secondary">
-                        <X className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid gap-3">
-                    <Field label="Label">
-                      <div className="flex flex-wrap gap-2">
-                        {["Home", "Work", "Other"].map(l => (
-                          <button
-                            key={l}
-                            type="button"
-                            onClick={() => setLabel(l)}
-                            className={`rounded-lg border px-3 py-1.5 text-sm font-semibold ${label === l ? "border-primary bg-primary/10 text-primary" : "border-input"}`}
-                          >
-                            {l}
-                          </button>
-                        ))}
+                    {/* Collapsed: selected address only */}
+                    {selectedAddress && (
+                      <div className="flex items-start gap-3 rounded-xl border border-primary bg-primary/5 p-3">
+                        <div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground">
+                          <MapPin className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold">{selectedAddress.label}</span>
+                            <span className="text-xs text-muted-foreground">{selectedAddress.name}</span>
+                          </div>
+                          <div className="text-sm text-muted-foreground">{selectedAddress.address}</div>
+                        </div>
                       </div>
-                    </Field>
-                    <Field label="Full name"><input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" /></Field>
-                    <Field label="Mobile"><input value={user.phone} disabled className="w-full rounded-lg border border-input bg-secondary px-3 py-2 text-muted-foreground" /></Field>
-                    <Field label="Delivery address"><textarea value={address} onChange={e => setAddress(e.target.value)} rows={3} placeholder="House no., street, landmark, Ongole" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" /></Field>
-                    <button onClick={saveNewAddress} className="rounded-xl bg-primary py-2.5 font-bold text-primary-foreground hover:bg-primary/90">Save address</button>
-                  </div>
-                </div>
-              )}
+                    )}
+
+                    {/* Empty state */}
+                    {addressOptions.length === 0 && (
+                      <div className="rounded-xl border border-dashed border-border bg-background p-4 text-center">
+                        <MapPin className="mx-auto h-6 w-6 text-primary" />
+                        <p className="mt-2 text-sm font-semibold">No saved address found</p>
+                        <p className="mt-1 text-xs text-muted-foreground">Add one address once, then select it for future orders.</p>
+                        <button
+                          onClick={() => { setName(user.name ?? ""); setShowForm(true); setShowPicker(true); }}
+                          className="mt-3 inline-flex items-center gap-1 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90"
+                        >
+                          <Plus className="h-4 w-4" /> Add new address
+                        </button>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </section>
+
+            {/* Address picker modal */}
+            {showPicker && (
+              <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4" onClick={() => setShowPicker(false)}>
+                <div
+                  className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-card p-5 shadow-xl sm:rounded-2xl"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="font-display text-lg font-bold">{showForm ? "Add a new address" : "Select delivery address"}</h3>
+                    <button onClick={() => setShowPicker(false)} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full hover:bg-secondary">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {!showForm && (
+                    <>
+                      {addressOptions.length > 0 && (
+                        <ul className="grid gap-2">
+                          {addressOptions.map((addr) => {
+                            const active = addr.id === selectedId;
+                            return (
+                              <li
+                                key={addr.id}
+                                className={`flex items-start gap-3 rounded-xl border p-3 transition ${active ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}
+                              >
+                                <button onClick={() => { setSelectedId(addr.id); setShowPicker(false); }} className="flex flex-1 items-start gap-3 text-left">
+                                  <div className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg ${active ? "bg-primary text-primary-foreground" : "bg-secondary"}`}>
+                                    {active ? <Check className="h-4 w-4" /> : <MapPin className="h-4 w-4" />}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-bold">{addr.label}</span>
+                                      <span className="text-xs text-muted-foreground">{addr.name}</span>
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">{addr.address}</div>
+                                  </div>
+                                </button>
+                                <button
+                                  onClick={() => addr.kind === "delivery" ? removeDeliveryAddress(addr.removableId) : removeSavedAddress(addr.removableId)}
+                                  aria-label="Remove address"
+                                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                      <button
+                        onClick={() => { setName(user.name ?? ""); setShowForm(true); }}
+                        className="mt-3 inline-flex w-full items-center justify-center gap-1 rounded-lg border border-primary/40 px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/5"
+                      >
+                        <Plus className="h-4 w-4" /> Add new address
+                      </button>
+                    </>
+                  )}
+
+                  {/* New address form */}
+                  {showForm && (
+                    <div className="rounded-xl border border-border bg-background p-4">
+                      <div className="grid gap-3">
+                        <Field label="Label">
+                          <div className="flex flex-wrap gap-2">
+                            {["Home", "Work", "Other"].map(l => (
+                              <button
+                                key={l}
+                                type="button"
+                                onClick={() => setLabel(l)}
+                                className={`rounded-lg border px-3 py-1.5 text-sm font-semibold ${label === l ? "border-primary bg-primary/10 text-primary" : "border-input"}`}
+                              >
+                                {l}
+                              </button>
+                            ))}
+                          </div>
+                        </Field>
+                        <Field label="Full name"><input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" /></Field>
+                        <Field label="Mobile"><input value={user.phone} disabled className="w-full rounded-lg border border-input bg-secondary px-3 py-2 text-muted-foreground" /></Field>
+                        <Field label="Delivery address"><textarea value={address} onChange={e => setAddress(e.target.value)} rows={3} placeholder="House no., street, landmark, Ongole" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" /></Field>
+                        <div className="flex gap-2">
+                          {addressOptions.length > 0 && (
+                            <button onClick={() => setShowForm(false)} className="flex-1 rounded-xl border border-border py-2.5 font-bold hover:bg-secondary">Back</button>
+                          )}
+                          <button onClick={saveNewAddress} className="flex-1 rounded-xl bg-primary py-2.5 font-bold text-primary-foreground hover:bg-primary/90">Save address</button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             <section className="rounded-2xl border border-border bg-card p-5">
               <h2 className="mb-3 font-display text-lg font-bold">Payment</h2>
