@@ -286,9 +286,9 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
       .on("postgres_changes", { event: "*", schema: "public", table: "app_orders" }, payload => {
         setOrders(prev => {
           if (payload.eventType === "DELETE") {
-            return prev.filter(o => o.id !== (payload.old as OrderRow).id);
+            return prev.filter(o => o.id !== (payload.old as unknown as OrderRow).id);
           }
-          const next = rowToOrder(payload.new as OrderRow);
+          const next = rowToOrder(payload.new as unknown as OrderRow);
           const rest = prev.filter(o => o.id !== next.id);
           return [next, ...rest].sort((a, b) => b.createdAt - a.createdAt);
         });
