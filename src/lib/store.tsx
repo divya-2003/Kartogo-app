@@ -253,6 +253,8 @@ type OrderRow = {
   items: Order["items"];
   subtotal: number;
   delivery_fee: number;
+  discount?: number | null;
+  promo_code?: string | null;
   total: number;
   payment_method: Order["paymentMethod"];
   status: OrderStatus;
