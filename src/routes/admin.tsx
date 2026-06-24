@@ -53,8 +53,3 @@ function AdminLayout() {
     </div>
   );
 }
-        <main><Outlet /></main>
-      </div>
-    </div>
-  );
-}
