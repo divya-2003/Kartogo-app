@@ -235,8 +235,27 @@ const OrdersContext = createContext<OrdersCtx | null>(null);
 
 export function OrdersProvider({ children }: { children: ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([]);
+  const skipWrite = useRef(false);
   useEffect(() => { setOrders(read<Order[]>("qk_orders", [])); }, []);
-  useEffect(() => { write("qk_orders", orders); }, [orders]);
+  useEffect(() => {
+    if (skipWrite.current) { skipWrite.current = false; return; }
+    write("qk_orders", orders);
+  }, [orders]);
+  // Keep orders in sync across tabs/sessions (e.g. admin updates status in one
+  // tab, the customer sees it reflected in their orders tab without a refresh).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== "qk_orders") return;
+      try {
+        skipWrite.current = true;
+        setOrders(e.newValue ? (JSON.parse(e.newValue) as Order[]) : []);
+      } catch { skipWrite.current = false; }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
 
   const value: OrdersCtx = {
     orders,
