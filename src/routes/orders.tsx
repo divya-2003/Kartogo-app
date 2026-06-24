@@ -307,7 +307,7 @@ function OrdersPage() {
                     </div>
                   )}
 
-                  {!cancelled && <DeliveryProgress status={o.status} />}
+                  {!cancelled && <DeliveryProgress status={o.status} eta={etaText(o.status, statusSince[o.id], now)} />}
 
                   {boy && !cancelled && (
                     <div className="mt-3 rounded-lg bg-primary/5 px-3 py-2 text-sm">
