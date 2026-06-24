@@ -49,13 +49,16 @@ function OrdersPage() {
   const { user, logout } = useAuth();
   const { orders, refresh, setStatus } = useOrders();
   const [cancelling, setCancelling] = useState<string | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
 
-  const cancelOrder = async (o: Order) => {
-    if (o.status !== "placed") return;
+  const confirmCancel = async (reason: string) => {
+    const o = cancelTarget;
+    if (!o || o.status !== "placed") return;
     setCancelling(o.id);
     try {
-      await setStatus(o.id, "cancelled");
+      await setStatus(o.id, "cancelled", reason);
       toast.success("Order cancelled");
+      setCancelTarget(null);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not cancel order");
     } finally {
