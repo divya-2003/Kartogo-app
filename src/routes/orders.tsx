@@ -216,7 +216,9 @@ function OrdersPage() {
       const previous = previousOrdersRef.current.get(order.id);
 
       if (previous && previous.status !== order.status) {
-        notifyStatus(order.id, order.status, order.deliveryBoyId);
+        const placedAt = order.createdAt ? new Date(order.createdAt).getTime() : undefined;
+        const deliveredAt = statusSince[order.id] ?? Date.now();
+        notifyStatus(order.id, order.status, order.deliveryBoyId, placedAt, deliveredAt);
       }
 
       if (previous && previous.deliveryBoyId !== order.deliveryBoyId && order.deliveryBoyId) {
