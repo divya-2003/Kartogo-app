@@ -17,6 +17,14 @@ const STEPS: { key: OrderStatus; label: string; icon: React.ReactNode }[] = [
   { key: "delivered", label: "Delivered", icon: <CheckCircle2 className="h-4 w-4" /> },
 ];
 
+const STATUS_LABELS: Record<OrderStatus, string> = {
+  placed: "Placed",
+  packed: "Packed",
+  out_for_delivery: "Out for delivery",
+  delivered: "Delivered",
+  cancelled: "Cancelled",
+};
+
 function OrdersPage() {
   const { user, logout } = useAuth();
   const { orders, refresh } = useOrders();
@@ -86,6 +94,9 @@ function OrdersPage() {
                     <div className="text-right">
                       <div className="font-display text-lg font-bold">{formatINR(o.total)}</div>
                       <div className="text-xs uppercase tracking-wider text-muted-foreground">{o.paymentMethod === "cash" ? "Cash" : "UPI"} on delivery</div>
+                      <div className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-bold ${cancelled ? "bg-destructive/10 text-destructive" : "bg-primary text-primary-foreground"}`}>
+                        Status: {STATUS_LABELS[o.status]}
+                      </div>
                     </div>
                   </header>
 
