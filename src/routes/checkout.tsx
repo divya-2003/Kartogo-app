@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Header } from "@/components/Header";
-import { useAuth, useCart, useCatalog, useOrders, useLocation, type DeliveryAddress } from "@/lib/store";
+import { useAuth, useCart, useCatalog, useOrders, useLocation } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { toast } from "sonner";
 import { Banknote, Smartphone, MapPin, Plus, Check, Trash2, X } from "lucide-react";
@@ -16,7 +16,7 @@ function CheckoutPage() {
   const { items, subtotal, clear } = useCart();
   const { products } = useCatalog();
   const { place } = useOrders();
-  const { deliveryAddresses, addDeliveryAddress, removeDeliveryAddress } = useLocation();
+  const { savedAddresses, deliveryAddresses, addDeliveryAddress, removeDeliveryAddress, removeSavedAddress } = useLocation();
   const nav = useNavigate();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -29,18 +29,49 @@ function CheckoutPage() {
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
 
+  const userName = user?.name?.trim() || "Kartigo User";
+  const addressOptions = useMemo(() => {
+    const normalizedDelivery = deliveryAddresses.map(addr => ({
+      id: `delivery:${addr.id}`,
+      kind: "delivery" as const,
+      label: addr.label,
+      name: addr.name,
+      address: addr.address,
+      removableId: addr.id,
+    }));
+
+    const seen = new Set(normalizedDelivery.map(addr => addr.address.trim().toLowerCase()));
+    const savedLocationOptions = savedAddresses
+      .filter(addr => {
+        const key = (addr.query || addr.area).trim().toLowerCase();
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .map(addr => ({
+        id: `location:${addr.query}`,
+        kind: "location" as const,
+        label: addr.area,
+        name: userName,
+        address: addr.query || addr.area,
+        removableId: addr.query,
+      }));
+
+    return [...normalizedDelivery, ...savedLocationOptions];
+  }, [deliveryAddresses, savedAddresses, userName]);
+
   useEffect(() => { if (user?.name && !name) setName(user.name); }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Keep a valid selection: default to first saved address, open the form when none exist.
+  // Keep a valid selection: default to saved addresses and only show the form when requested.
   useEffect(() => {
-    if (deliveryAddresses.length === 0) {
-      setShowForm(true);
+    if (addressOptions.length === 0) {
       setSelectedId(null);
-    } else if (!selectedId || !deliveryAddresses.some(a => a.id === selectedId)) {
-      setSelectedId(deliveryAddresses[0].id);
+      setShowForm(false);
+    } else if (!selectedId || !addressOptions.some(a => a.id === selectedId)) {
+      setSelectedId(addressOptions[0].id);
       setShowForm(false);
     }
-  }, [deliveryAddresses]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [addressOptions, selectedId]);
 
   const fee = subtotal === 0 ? 0 : subtotal >= 199 ? 0 : 25;
   const total = subtotal + fee;
@@ -73,7 +104,7 @@ function CheckoutPage() {
   const saveNewAddress = () => {
     if (!name.trim() || !address.trim()) { toast.error("Please fill name & address"); return; }
     const created = addDeliveryAddress({ label: label.trim() || "Home", name: name.trim(), address: address.trim() });
-    setSelectedId(created.id);
+    setSelectedId(`delivery:${created.id}`);
     setShowForm(false);
     setLabel("Home");
     setAddress("");
@@ -81,7 +112,7 @@ function CheckoutPage() {
   };
 
   const handlePlace = async () => {
-    const selected = deliveryAddresses.find(a => a.id === selectedId);
+    const selected = addressOptions.find(a => a.id === selectedId);
     if (!selected) { toast.error("Please select a delivery address"); return; }
     setPlacing(true);
     try {
@@ -115,7 +146,7 @@ function CheckoutPage() {
             <section className="rounded-2xl border border-border bg-card p-5">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="font-display text-lg font-bold">Delivery address</h2>
-                {deliveryAddresses.length > 0 && !showForm && (
+                {!showForm && (
                   <button
                     onClick={() => { setName(user.name ?? ""); setShowForm(true); }}
                     className="inline-flex items-center gap-1 rounded-lg border border-primary/40 px-3 py-1.5 text-sm font-semibold text-primary hover:bg-primary/5"
@@ -126,9 +157,9 @@ function CheckoutPage() {
               </div>
 
               {/* Saved addresses to pick from */}
-              {deliveryAddresses.length > 0 && (
+              {addressOptions.length > 0 && (
                 <ul className="grid gap-2">
-                  {deliveryAddresses.map((addr: DeliveryAddress) => {
+                  {addressOptions.map((addr) => {
                     const active = addr.id === selectedId;
                     return (
                       <li
@@ -148,7 +179,7 @@ function CheckoutPage() {
                           </div>
                         </button>
                         <button
-                          onClick={() => removeDeliveryAddress(addr.id)}
+                          onClick={() => addr.kind === "delivery" ? removeDeliveryAddress(addr.removableId) : removeSavedAddress(addr.removableId)}
                           aria-label="Remove address"
                           className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-destructive"
                         >
@@ -160,12 +191,26 @@ function CheckoutPage() {
                 </ul>
               )}
 
+              {addressOptions.length === 0 && !showForm && (
+                <div className="rounded-xl border border-dashed border-border bg-background p-4 text-center">
+                  <MapPin className="mx-auto h-6 w-6 text-primary" />
+                  <p className="mt-2 text-sm font-semibold">No saved address found</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Add one address once, then select it for future orders.</p>
+                  <button
+                    onClick={() => { setName(user.name ?? ""); setShowForm(true); }}
+                    className="mt-3 inline-flex items-center gap-1 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90"
+                  >
+                    <Plus className="h-4 w-4" /> Add new address
+                  </button>
+                </div>
+              )}
+
               {/* New address form */}
               {showForm && (
                 <div className="mt-3 rounded-xl border border-border bg-background p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <h3 className="text-sm font-bold">Add a new address</h3>
-                    {deliveryAddresses.length > 0 && (
+                    {addressOptions.length > 0 && (
                       <button onClick={() => setShowForm(false)} aria-label="Cancel" className="grid h-7 w-7 place-items-center rounded-full hover:bg-secondary">
                         <X className="h-4 w-4" />
                       </button>
