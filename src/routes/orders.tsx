@@ -47,7 +47,21 @@ const ACTIVE_TITLE: Record<Exclude<OrderStatus, "delivered" | "cancelled">, stri
 
 function OrdersPage() {
   const { user, logout } = useAuth();
-  const { orders, refresh } = useOrders();
+  const { orders, refresh, setStatus } = useOrders();
+  const [cancelling, setCancelling] = useState<string | null>(null);
+
+  const cancelOrder = async (o: Order) => {
+    if (o.status !== "placed") return;
+    setCancelling(o.id);
+    try {
+      await setStatus(o.id, "cancelled");
+      toast.success("Order cancelled");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not cancel order");
+    } finally {
+      setCancelling(null);
+    }
+  };
   const { products } = useCatalog();
   const { add, clear } = useCart();
   const navigate = useNavigate();
