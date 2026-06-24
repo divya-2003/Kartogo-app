@@ -1,5 +1,6 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { PRODUCTS, DELIVERY_BOYS, type Product } from "./data";
+import { supabase } from "@/integrations/supabase/client";
 
 // ---------------- Allow list (server/mock layer) ----------------
 // In a real app this lives on the server. Roles are always derived from this
@@ -233,39 +234,102 @@ type OrdersCtx = {
 };
 const OrdersContext = createContext<OrdersCtx | null>(null);
 
+// Maps a database row (snake_case) to the in-app Order shape.
+type OrderRow = {
+  id: string;
+  created_at: string;
+  customer_phone: string;
+  customer_name: string;
+  address: string;
+  items: Order["items"];
+  subtotal: number;
+  delivery_fee: number;
+  total: number;
+  payment_method: Order["paymentMethod"];
+  status: OrderStatus;
+  delivery_boy_id: string | null;
+};
+function rowToOrder(r: OrderRow): Order {
+  return {
+    id: r.id,
+    createdAt: new Date(r.created_at).getTime(),
+    customerPhone: r.customer_phone,
+    customerName: r.customer_name,
+    address: r.address,
+    items: r.items ?? [],
+    subtotal: Number(r.subtotal),
+    deliveryFee: Number(r.delivery_fee),
+    total: Number(r.total),
+    paymentMethod: r.payment_method,
+    status: r.status,
+    deliveryBoyId: r.delivery_boy_id ?? undefined,
+  };
+}
+
 export function OrdersProvider({ children }: { children: ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([]);
-  const skipWrite = useRef(false);
-  useEffect(() => { setOrders(read<Order[]>("qk_orders", [])); }, []);
-  useEffect(() => {
-    if (skipWrite.current) { skipWrite.current = false; return; }
-    write("qk_orders", orders);
-  }, [orders]);
-  // Keep orders in sync across tabs/sessions (e.g. admin updates status in one
-  // tab, the customer sees it reflected in their orders tab without a refresh).
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const onStorage = (e: StorageEvent) => {
-      if (e.key !== "qk_orders") return;
-      try {
-        skipWrite.current = true;
-        setOrders(e.newValue ? (JSON.parse(e.newValue) as Order[]) : []);
-      } catch { skipWrite.current = false; }
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
 
+  // Load all orders from the shared backend and keep them live across devices.
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data, error } = await supabase
+        .from("app_orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (!active || error || !data) return;
+      setOrders((data as unknown as OrderRow[]).map(rowToOrder));
+    })();
+
+    const channel = supabase
+      .channel("app_orders_changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "app_orders" }, payload => {
+        setOrders(prev => {
+          if (payload.eventType === "DELETE") {
+            return prev.filter(o => o.id !== (payload.old as unknown as OrderRow).id);
+          }
+          const next = rowToOrder(payload.new as unknown as OrderRow);
+          const rest = prev.filter(o => o.id !== next.id);
+          return [next, ...rest].sort((a, b) => b.createdAt - a.createdAt);
+        });
+      })
+      .subscribe();
+
+    return () => {
+      active = false;
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const value: OrdersCtx = {
     orders,
     place: (o) => {
       const order: Order = { ...o, id: `OK${Date.now().toString().slice(-6)}`, createdAt: Date.now(), status: "placed" };
+      // Optimistic local insert; realtime will reconcile on confirmation.
       setOrders(prev => [order, ...prev]);
+      void supabase.from("app_orders").insert({
+        id: order.id,
+        customer_phone: order.customerPhone,
+        customer_name: order.customerName,
+        address: order.address,
+        items: order.items,
+        subtotal: order.subtotal,
+        delivery_fee: order.deliveryFee,
+        total: order.total,
+        payment_method: order.paymentMethod,
+        status: order.status,
+        delivery_boy_id: order.deliveryBoyId ?? null,
+      });
       return order;
     },
-    setStatus: (id, status) => setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o)),
-    assign: (id, deliveryBoyId) => setOrders(prev => prev.map(o => o.id === id ? { ...o, deliveryBoyId } : o)),
+    setStatus: (id, status) => {
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+      void supabase.from("app_orders").update({ status }).eq("id", id);
+    },
+    assign: (id, deliveryBoyId) => {
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, deliveryBoyId } : o));
+      void supabase.from("app_orders").update({ delivery_boy_id: deliveryBoyId }).eq("id", id);
+    },
   };
   return <OrdersContext.Provider value={value}>{children}</OrdersContext.Provider>;
 }
