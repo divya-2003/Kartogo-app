@@ -113,35 +113,16 @@ function OrdersPage() {
         },
         payload => {
           const next = payload.new as { id?: string; status?: OrderStatus; delivery_boy_id?: string | null; updated_at?: string } | null;
-          if (payload.eventType === "UPDATE" && next?.id) {
+          if ((payload.eventType === "UPDATE" || payload.eventType === "INSERT") && next?.id) {
             const previous = previousOrdersRef.current.get(next.id);
             const nextDeliveryBoyId = next.delivery_boy_id ?? undefined;
 
             if (next.status && (!previous || previous.status !== next.status)) {
-              if (next.status === "out_for_delivery") {
-                notifyOnce(
-                  `${next.id}:status:${next.status}`,
-                  "Order is out for delivery",
-                  `${next.id} is on the way to you.`,
-                );
-              } else if (next.status === "delivered") {
-                notifyOnce(
-                  `${next.id}:status:${next.status}`,
-                  "Order delivered",
-                  `${next.id} has been marked delivered.`,
-                );
-              }
+              notifyStatus(next.id, next.status, nextDeliveryBoyId);
             }
 
             if (nextDeliveryBoyId && (!previous || previous.deliveryBoyId !== nextDeliveryBoyId)) {
-              const boy = DELIVERY_BOYS.find(d => d.id === nextDeliveryBoyId);
-              if (boy) {
-                notifyOnce(
-                  `${next.id}:driver:${nextDeliveryBoyId}`,
-                  "Delivery partner assigned",
-                  `${boy.name} · ${boy.phone}`,
-                );
-              }
+              notifyDriver(next.id, nextDeliveryBoyId);
             }
           }
 
