@@ -57,6 +57,8 @@ export function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const location = useRouterState({ select: s => s.location.pathname });
   const isAdminArea = location.startsWith("/admin");
+  const isCheckout = location.startsWith("/checkout");
+  const hideBrowse = isAdminArea || isCheckout;
   const isAdmin = user?.role === "admin";
 
   const handleLogout = () => {
@@ -77,13 +79,13 @@ export function Header() {
           </div>
         </Link>
 
-        {!isAdminArea && !isAdmin && (
+        {!hideBrowse && !isAdmin && (
           <div className="hidden md:block">
             <LocationPicker />
           </div>
         )}
 
-        {!isAdminArea && (
+        {!hideBrowse && (
           <button
             type="button"
             onClick={() => setSearchOpen(true)}
@@ -156,7 +158,7 @@ export function Header() {
         </div>
       </div>
 
-      {!isAdminArea && (
+      {!hideBrowse && (
         <div className="px-4 pb-3 md:hidden">
           {!isAdmin && (
             <div className="mb-2">
