@@ -464,14 +464,26 @@ export const useOrders = () => {
 // ---------------- Delivery location ----------------
 export type SavedLocation = { query: string; area: string };
 
+/** A full delivery address the customer can reuse at checkout. */
+export type DeliveryAddress = {
+  id: string;
+  label: string;
+  name: string;
+  address: string;
+};
+
 type LocationCtx = {
   location: SavedLocation | null;
   /** Previously confirmed serviceable addresses the user can reselect. */
   savedAddresses: SavedLocation[];
+  /** Full delivery addresses the user can pick from at checkout. */
+  deliveryAddresses: DeliveryAddress[];
   /** True once we've restored any persisted location from storage. */
   ready: boolean;
   setLocation: (loc: SavedLocation) => void;
   removeSavedAddress: (query: string) => void;
+  addDeliveryAddress: (addr: Omit<DeliveryAddress, "id">) => DeliveryAddress;
+  removeDeliveryAddress: (id: string) => void;
   clearLocation: () => void;
 };
 const LocationContext = createContext<LocationCtx | null>(null);
@@ -479,17 +491,20 @@ const LocationContext = createContext<LocationCtx | null>(null);
 export function LocationProvider({ children }: { children: ReactNode }) {
   const [location, setLoc] = useState<SavedLocation | null>(null);
   const [savedAddresses, setSaved] = useState<SavedLocation[]>([]);
+  const [deliveryAddresses, setDelivery] = useState<DeliveryAddress[]>([]);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     setLoc(read<SavedLocation | null>("qk_location", null));
     setSaved(read<SavedLocation[]>("qk_addresses", []));
+    setDelivery(read<DeliveryAddress[]>("qk_delivery_addresses", []));
     setReady(true);
   }, []);
 
   const value: LocationCtx = {
     location,
     savedAddresses,
+    deliveryAddresses,
     ready,
     setLocation: (loc) => {
       setLoc(loc);
@@ -504,6 +519,27 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       setSaved(prev => {
         const next = prev.filter(a => a.query.toLowerCase() !== query.toLowerCase());
         write("qk_addresses", next);
+        return next;
+      });
+    },
+    addDeliveryAddress: (addr) => {
+      const created: DeliveryAddress = {
+        ...addr,
+        id: (typeof crypto !== "undefined" && crypto.randomUUID)
+          ? crypto.randomUUID()
+          : `addr_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      };
+      setDelivery(prev => {
+        const next = [created, ...prev].slice(0, 12);
+        write("qk_delivery_addresses", next);
+        return next;
+      });
+      return created;
+    },
+    removeDeliveryAddress: (id) => {
+      setDelivery(prev => {
+        const next = prev.filter(a => a.id !== id);
+        write("qk_delivery_addresses", next);
         return next;
       });
     },
