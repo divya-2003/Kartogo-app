@@ -1,6 +1,7 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { Header } from "@/components/Header";
-import { useCart, useCatalog } from "@/lib/store";
+import { useCart, useCatalog, useAuth } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { Plus, Minus, ShoppingBag } from "lucide-react";
 
