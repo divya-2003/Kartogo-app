@@ -228,7 +228,7 @@ export type Order = {
 
 type OrdersCtx = {
   orders: Order[];
-  place: (o: Omit<Order, "id" | "createdAt" | "status">) => Order;
+  place: (o: Omit<Order, "id" | "createdAt" | "status">) => Promise<Order>;
   setStatus: (id: string, status: OrderStatus) => void;
   assign: (id: string, deliveryBoyId: string) => void;
 };
@@ -303,11 +303,9 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
 
   const value: OrdersCtx = {
     orders,
-    place: (o) => {
+    place: async (o) => {
       const order: Order = { ...o, id: `OK${Date.now().toString().slice(-6)}`, createdAt: Date.now(), status: "placed" };
-      // Optimistic local insert; realtime will reconcile on confirmation.
-      setOrders(prev => [order, ...prev]);
-      void supabase.from("app_orders").insert({
+      const { data, error } = await supabase.from("app_orders").insert({
         id: order.id,
         customer_phone: order.customerPhone,
         customer_name: order.customerName,
@@ -319,8 +317,18 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
         payment_method: order.paymentMethod,
         status: order.status,
         delivery_boy_id: order.deliveryBoyId ?? null,
-      });
-      return order;
+      }).select("*").single();
+
+      if (error) {
+        console.error("Failed to save order", error);
+        throw new Error("Order could not be saved. Please try again.");
+      }
+
+      const saved = rowToOrder(data as unknown as OrderRow);
+      // Add immediately so customer and admin pages update even before the
+      // realtime event arrives. The realtime listener will de-duplicate later.
+      setOrders(prev => [saved, ...prev.filter(o => o.id !== saved.id)].sort((a, b) => b.createdAt - a.createdAt));
+      return saved;
     },
     setStatus: (id, status) => {
       setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
