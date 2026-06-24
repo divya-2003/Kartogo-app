@@ -31,6 +31,7 @@ function OrdersPage() {
   const { user, logout } = useAuth();
   const { orders, refresh } = useOrders();
   const [refreshing, setRefreshing] = useState(false);
+  const [notices, setNotices] = useState<{ id: string; title: string; description: string }[]>([]);
   const userPhone = user?.phone;
   const previousOrdersRef = useRef(new Map<string, { status: OrderStatus; deliveryBoyId?: string }>());
   const notificationReadyRef = useRef(false);
@@ -39,6 +40,7 @@ function OrdersPage() {
   const notifyOnce = (key: string, title: string, description: string) => {
     if (notifiedRef.current.has(key)) return;
     notifiedRef.current.add(key);
+    setNotices(prev => [{ id: key, title, description }, ...prev].slice(0, 3));
     toast.success(title, { description });
   };
 
@@ -196,6 +198,16 @@ function OrdersPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      {notices.length > 0 && (
+        <div className="fixed left-1/2 top-20 z-50 w-[min(92vw,420px)] -translate-x-1/2 space-y-2">
+          {notices.map(notice => (
+            <div key={notice.id} className="rounded-xl border border-primary/25 bg-card p-3 text-sm shadow-pop">
+              <div className="font-bold text-primary">{notice.title}</div>
+              <div className="text-muted-foreground">{notice.description}</div>
+            </div>
+          ))}
+        </div>
+      )}
       <div className="mx-auto max-w-4xl px-4 py-8 md:px-6">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
