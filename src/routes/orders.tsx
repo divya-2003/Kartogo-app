@@ -3,7 +3,7 @@ import { Header } from "@/components/Header";
 import { DeliveryProgress } from "@/components/DeliveryProgress";
 import { useAuth, useOrders, DELIVERY_BOYS, type OrderStatus } from "@/lib/store";
 import { formatINR } from "@/lib/data";
-import { etaText } from "@/lib/eta";
+import { etaText, formatDeliveryDuration } from "@/lib/eta";
 import { CheckCircle2, Package, Truck, Clock, XCircle, RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,7 +58,14 @@ function OrdersPage() {
 
   // Notify for any status change. When the order is out for delivery and a
   // driver is assigned, include the latest driver details in the message.
-  const notifyStatus = (orderId: string, status: OrderStatus, deliveryBoyId?: string) => {
+  // When delivered, include how long the order took from placed to delivered.
+  const notifyStatus = (
+    orderId: string,
+    status: OrderStatus,
+    deliveryBoyId?: string,
+    placedAt?: number,
+    deliveredAt?: number,
+  ) => {
     const make = STATUS_NOTICE[status];
     if (!make) return;
     const base = make(orderId);
@@ -66,6 +73,10 @@ function OrdersPage() {
     if (status === "out_for_delivery" && deliveryBoyId) {
       const boy = DELIVERY_BOYS.find(d => d.id === deliveryBoyId);
       if (boy) description += ` Driver: ${boy.name} · ${boy.phone}`;
+    }
+    if (status === "delivered" && placedAt) {
+      const duration = formatDeliveryDuration(placedAt, deliveredAt ?? Date.now());
+      description += ` Delivered in ${duration}.`;
     }
     notifyOnce(`${orderId}:status:${status}`, base.title, description);
   };
@@ -114,13 +125,15 @@ function OrdersPage() {
           filter: `customer_phone=eq.${userPhone}`,
         },
         payload => {
-          const next = payload.new as { id?: string; status?: OrderStatus; delivery_boy_id?: string | null; updated_at?: string } | null;
+          const next = payload.new as { id?: string; status?: OrderStatus; delivery_boy_id?: string | null; updated_at?: string; created_at?: string } | null;
           if ((payload.eventType === "UPDATE" || payload.eventType === "INSERT") && next?.id) {
             const previous = previousOrdersRef.current.get(next.id);
             const nextDeliveryBoyId = next.delivery_boy_id ?? undefined;
 
             if (next.status && (!previous || previous.status !== next.status)) {
-              notifyStatus(next.id, next.status, nextDeliveryBoyId);
+              const placedAt = next.created_at ? new Date(next.created_at).getTime() : undefined;
+              const deliveredAt = next.updated_at ? new Date(next.updated_at).getTime() : undefined;
+              notifyStatus(next.id, next.status, nextDeliveryBoyId, placedAt, deliveredAt);
             }
 
             if (nextDeliveryBoyId && (!previous || previous.deliveryBoyId !== nextDeliveryBoyId)) {
@@ -203,7 +216,9 @@ function OrdersPage() {
       const previous = previousOrdersRef.current.get(order.id);
 
       if (previous && previous.status !== order.status) {
-        notifyStatus(order.id, order.status, order.deliveryBoyId);
+        const placedAt = order.createdAt ? new Date(order.createdAt).getTime() : undefined;
+        const deliveredAt = statusSince[order.id] ?? Date.now();
+        notifyStatus(order.id, order.status, order.deliveryBoyId, placedAt, deliveredAt);
       }
 
       if (previous && previous.deliveryBoyId !== order.deliveryBoyId && order.deliveryBoyId) {
