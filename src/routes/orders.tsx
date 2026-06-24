@@ -31,8 +31,8 @@ function OrdersPage() {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    if (user?.phone) void refresh(user.phone);
+  }, [refresh, user?.phone]);
 
   // Short polling fallback: keep refreshing every few seconds while any of the
   // current user's orders are still in a non-final state. Stops automatically
@@ -47,15 +47,15 @@ function OrdersPage() {
   useEffect(() => {
     if (!hasActiveOrders) return;
     const id = window.setInterval(() => {
-      if (document.visibilityState === "visible") void refresh();
-    }, 4000);
+      void refresh(user.phone);
+    }, 2000);
     return () => window.clearInterval(id);
-  }, [hasActiveOrders, refresh]);
+  }, [hasActiveOrders, refresh, user?.phone]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await refresh();
+      await refresh(user.phone);
     } finally {
       setRefreshing(false);
     }
