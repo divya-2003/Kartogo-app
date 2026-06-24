@@ -273,6 +273,13 @@ function rowToOrder(r: OrderRow): Order {
 const sortOrders = (orders: Order[]) => [...orders].sort((a, b) => b.createdAt - a.createdAt);
 const ORDERS_SYNC_KEY = "qk_orders_sync";
 
+// Postgres errors from RAISE EXCEPTION come back prefixed; strip noise so the
+// admin sees just the human-readable validation message.
+function cleanDbError(message?: string | null): string | undefined {
+  if (!message) return undefined;
+  return message.replace(/^.*?(?:ERROR:|error:)\s*/i, "").trim() || undefined;
+}
+
 function announceOrdersSync(id: string, status?: OrderStatus) {
   if (typeof window === "undefined") return;
   try {
