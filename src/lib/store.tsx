@@ -236,6 +236,7 @@ type OrdersCtx = {
   place: (o: Omit<Order, "id" | "createdAt" | "status">) => Promise<Order>;
   setStatus: (id: string, status: OrderStatus, cancelReason?: string) => Promise<void>;
   assign: (id: string, deliveryBoyId: string) => Promise<void>;
+  markRefunded: (id: string, refunded: boolean) => Promise<void>;
 };
 const OrdersContext = createContext<OrdersCtx | null>(null);
 
