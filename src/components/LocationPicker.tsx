@@ -8,6 +8,46 @@ import { useLocation, type SavedLocation } from "@/lib/store";
 
 export function LocationPicker() {
   const { location, savedAddresses, setLocation, removeSavedAddress } = useLocation();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  // useServerFn needs the client-side router context. Rendering the interactive
+  // picker only after mount prevents SSR from crashing and switching the whole
+  // app to client rendering.
+  if (!mounted) {
+    return (
+      <button className="flex items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-semibold">
+        <MapPin className="h-3.5 w-3.5 text-primary" />
+        <span className="max-w-[140px] truncate">
+          {location ? `${location.area} · 15 min` : "Set your location"}
+        </span>
+        <ChevronDown className="h-3 w-3 opacity-60" />
+      </button>
+    );
+  }
+
+  return (
+    <LocationPickerClient
+      location={location}
+      savedAddresses={savedAddresses}
+      setLocation={setLocation}
+      removeSavedAddress={removeSavedAddress}
+    />
+  );
+}
+
+function LocationPickerClient({
+  location,
+  savedAddresses,
+  setLocation,
+  removeSavedAddress,
+}: {
+  location: SavedLocation | null;
+  savedAddresses: SavedLocation[];
+  setLocation: (loc: SavedLocation) => void;
+  removeSavedAddress: (query: string) => void;
+}) {
   const check = useServerFn(checkServiceability);
   const locate = useServerFn(locateByCoords);
   const [open, setOpen] = useState(false);

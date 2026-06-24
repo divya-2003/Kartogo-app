@@ -20,6 +20,7 @@ function CheckoutPage() {
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [payment, setPayment] = useState<"cash" | "upi">("cash");
+  const [placing, setPlacing] = useState(false);
 
   useEffect(() => { if (user?.name) setName(user.name); }, [user]);
 
@@ -51,21 +52,28 @@ function CheckoutPage() {
     );
   }
 
-  const handlePlace = () => {
+  const handlePlace = async () => {
     if (!name.trim() || !address.trim()) { toast.error("Please fill name & address"); return; }
-    const order = place({
-      customerPhone: user.phone,
-      customerName: name,
-      address,
-      items: items.map(i => {
-        const p = products.find(p => p.id === i.productId)!;
-        return { productId: p.id, name: p.name, qty: i.qty, price: p.price };
-      }),
-      subtotal, deliveryFee: fee, total, paymentMethod: payment,
-    });
-    clear();
-    toast.success(`Order ${order.id} placed!`);
-    nav({ to: "/orders" });
+    setPlacing(true);
+    try {
+      const order = await place({
+        customerPhone: user.phone,
+        customerName: name,
+        address,
+        items: items.map(i => {
+          const p = products.find(p => p.id === i.productId)!;
+          return { productId: p.id, name: p.name, qty: i.qty, price: p.price };
+        }),
+        subtotal, deliveryFee: fee, total, paymentMethod: payment,
+      });
+      clear();
+      toast.success(`Order ${order.id} placed!`);
+      nav({ to: "/orders" });
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setPlacing(false);
+    }
   };
 
   return (
@@ -106,7 +114,9 @@ function CheckoutPage() {
               <Row label="Delivery" value={fee === 0 ? "FREE" : formatINR(fee)} />
               <div className="mt-2 flex justify-between border-t border-border pt-2 text-base font-bold"><span>Total</span><span>{formatINR(total)}</span></div>
             </div>
-            <button onClick={handlePlace} className="mt-5 w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90">Place order</button>
+            <button disabled={placing} onClick={handlePlace} className="mt-5 w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
+              {placing ? "Placing order..." : "Place order"}
+            </button>
           </aside>
         </div>
       </div>
