@@ -34,6 +34,13 @@ function OrdersPage() {
   const userPhone = user?.phone;
   const previousOrdersRef = useRef(new Map<string, { status: OrderStatus; deliveryBoyId?: string }>());
   const notificationReadyRef = useRef(false);
+  const notifiedRef = useRef(new Set<string>());
+
+  const notifyOnce = (key: string, title: string, description: string) => {
+    if (notifiedRef.current.has(key)) return;
+    notifiedRef.current.add(key);
+    toast.success(title, { description });
+  };
 
   useEffect(() => {
     if (userPhone) void refresh(userPhone);
@@ -70,7 +77,40 @@ function OrdersPage() {
           table: "app_orders",
           filter: `customer_phone=eq.${userPhone}`,
         },
-        () => {
+        payload => {
+          const next = payload.new as { id?: string; status?: OrderStatus; delivery_boy_id?: string | null; updated_at?: string } | null;
+          if (payload.eventType === "UPDATE" && next?.id) {
+            const previous = previousOrdersRef.current.get(next.id);
+            const nextDeliveryBoyId = next.delivery_boy_id ?? undefined;
+
+            if (next.status && previous?.status !== next.status) {
+              if (next.status === "out_for_delivery") {
+                notifyOnce(
+                  `${next.id}:status:${next.status}:${next.updated_at ?? Date.now()}`,
+                  "Order is out for delivery",
+                  `${next.id} is on the way to you.`,
+                );
+              } else if (next.status === "delivered") {
+                notifyOnce(
+                  `${next.id}:status:${next.status}:${next.updated_at ?? Date.now()}`,
+                  "Order delivered",
+                  `${next.id} has been marked delivered.`,
+                );
+              }
+            }
+
+            if (nextDeliveryBoyId && previous?.deliveryBoyId !== nextDeliveryBoyId) {
+              const boy = DELIVERY_BOYS.find(d => d.id === nextDeliveryBoyId);
+              if (boy) {
+                notifyOnce(
+                  `${next.id}:driver:${nextDeliveryBoyId}:${next.updated_at ?? Date.now()}`,
+                  "Delivery partner assigned",
+                  `${boy.name} · ${boy.phone}`,
+                );
+              }
+            }
+          }
+
           void refresh(userPhone);
         },
       )
