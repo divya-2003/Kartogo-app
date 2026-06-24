@@ -9,7 +9,7 @@ const PROGRESS: Record<Exclude<OrderStatus, "cancelled">, number> = {
   delivered: 100,
 };
 
-const ETA_LABEL: Record<Exclude<OrderStatus, "cancelled">, string> = {
+const STATUS_LABEL: Record<Exclude<OrderStatus, "cancelled">, string> = {
   placed: "Preparing your order",
   packed: "Packed — dispatching soon",
   out_for_delivery: "On the way to you",
