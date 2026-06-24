@@ -4,12 +4,29 @@ import { Header } from "@/components/Header";
 import { useAuth, useCart, useCatalog, useOrders, useLocation } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { toast } from "sonner";
-import { Banknote, Smartphone, MapPin, Plus, Check, Trash2, X } from "lucide-react";
+import { Banknote, Smartphone, MapPin, Plus, Check, Trash2, X, Tag } from "lucide-react";
 
 export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
   head: () => ({ meta: [{ title: "Checkout — Kartigo" }] }),
 });
+
+// Available promo codes. `type` "flat" = rupees off, "pct" = percentage off (capped).
+type Coupon = { type: "flat" | "pct"; value: number; minSubtotal: number; maxOff?: number; desc: string };
+const COUPONS: Record<string, Coupon> = {
+  SAVE50: { type: "flat", value: 50, minSubtotal: 299, desc: "₹50 off on orders above ₹299" },
+  KART10: { type: "pct", value: 10, minSubtotal: 199, maxOff: 100, desc: "10% off (up to ₹100) above ₹199" },
+  BIG100: { type: "flat", value: 100, minSubtotal: 599, desc: "₹100 off on orders above ₹599" },
+};
+
+function computeDiscount(code: string | null, subtotal: number): number {
+  if (!code) return 0;
+  const c = COUPONS[code];
+  if (!c || subtotal < c.minSubtotal) return 0;
+  const raw = c.type === "flat" ? c.value : Math.floor((subtotal * c.value) / 100);
+  const capped = c.maxOff ? Math.min(raw, c.maxOff) : raw;
+  return Math.min(capped, subtotal);
+}
 
 function CheckoutPage() {
   const { user } = useAuth();
@@ -23,6 +40,10 @@ function CheckoutPage() {
   const [showForm, setShowForm] = useState(false);
   const [payment, setPayment] = useState<"cash" | "upi">("cash");
   const [placing, setPlacing] = useState(false);
+
+  // Promo code state.
+  const [promoInput, setPromoInput] = useState("");
+  const [appliedCode, setAppliedCode] = useState<string | null>(null);
 
   // New-address form state.
   const [label, setLabel] = useState("Home");
@@ -74,7 +95,27 @@ function CheckoutPage() {
   }, [addressOptions, selectedId]);
 
   const fee = subtotal === 0 ? 0 : subtotal >= 199 ? 0 : 25;
-  const total = subtotal + fee;
+  const discount = useMemo(() => computeDiscount(appliedCode, subtotal), [appliedCode, subtotal]);
+  const total = Math.max(0, subtotal + fee - discount);
+
+  const applyPromo = () => {
+    const code = promoInput.trim().toUpperCase();
+    if (!code) { toast.error("Enter a promo code"); return; }
+    const coupon = COUPONS[code];
+    if (!coupon) { toast.error("Invalid promo code"); return; }
+    if (subtotal < coupon.minSubtotal) {
+      toast.error(`Add ${formatINR(coupon.minSubtotal - subtotal)} more to use ${code}`);
+      return;
+    }
+    setAppliedCode(code);
+    setPromoInput("");
+    toast.success(`${code} applied — you saved ${formatINR(computeDiscount(code, subtotal))}!`);
+  };
+
+  const removePromo = () => {
+    setAppliedCode(null);
+    toast.success("Promo code removed");
+  };
 
   if (!user) {
     return (
@@ -257,9 +298,44 @@ function CheckoutPage() {
                 return <li key={i.productId} className="flex justify-between"><span>{p.emoji} {p.name} × {i.qty}</span><span className="font-semibold">{formatINR(p.price * i.qty)}</span></li>;
               })}
             </ul>
-            <div className="space-y-1 border-t border-border pt-3 text-sm">
+            {/* Promo code */}
+            <div className="border-t border-border pt-3">
+              {appliedCode ? (
+                <div className="flex items-center justify-between rounded-xl border border-primary/40 bg-primary/5 px-3 py-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Tag className="h-4 w-4 text-primary" />
+                    <span className="font-bold text-primary">{appliedCode}</span>
+                    <span className="text-muted-foreground">applied</span>
+                  </div>
+                  <button onClick={removePromo} className="text-xs font-semibold text-muted-foreground hover:text-destructive">Remove</button>
+                </div>
+              ) : (
+                <>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Tag className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <input
+                        value={promoInput}
+                        onChange={e => setPromoInput(e.target.value.toUpperCase())}
+                        onKeyDown={e => { if (e.key === "Enter") applyPromo(); }}
+                        placeholder="Promo code"
+                        maxLength={20}
+                        className="w-full rounded-lg border border-input bg-background py-2 pl-9 pr-3 text-sm uppercase outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </div>
+                    <button onClick={applyPromo} className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90">Apply</button>
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">Try <span className="font-semibold text-primary">SAVE50</span>, <span className="font-semibold text-primary">KART10</span> or <span className="font-semibold text-primary">BIG100</span></p>
+                </>
+              )}
+            </div>
+
+            <div className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
               <Row label="Subtotal" value={formatINR(subtotal)} />
               <Row label="Delivery" value={fee === 0 ? "FREE" : formatINR(fee)} />
+              {discount > 0 && (
+                <div className="flex justify-between"><span className="text-muted-foreground">Discount ({appliedCode})</span><span className="font-semibold text-primary">−{formatINR(discount)}</span></div>
+              )}
               <div className="mt-2 flex justify-between border-t border-border pt-2 text-base font-bold"><span>Total</span><span>{formatINR(total)}</span></div>
             </div>
             <button disabled={placing || !selectedId} onClick={handlePlace} className="mt-5 w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
