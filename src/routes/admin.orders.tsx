@@ -172,6 +172,26 @@ function OrdersAdmin() {
                 {o.items.map(i => <li key={i.productId} className="text-muted-foreground">{i.name} × <span className="font-semibold text-foreground">{i.qty}</span></li>)}
               </ul>
 
+              {(() => {
+                const advance = NEXT_STATUS[o.status];
+                if (!advance) return null;
+                return (
+                  <button
+                    onClick={async () => {
+                      try {
+                        await setStatus(o.id, advance.next);
+                        toast.success(advance.label.replace(/^Mark as |^Send /, "") + " ✓");
+                      } catch (error) {
+                        toast.error(error instanceof Error ? error.message : "Status update failed");
+                      }
+                    }}
+                    className="mb-3 inline-flex w-full items-center justify-center gap-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-pop transition hover:opacity-90 sm:w-auto"
+                  >
+                    {advance.label} →
+                  </button>
+                );
+              })()}
+
               <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
                 <label className="text-xs font-semibold text-muted-foreground">Status</label>
                 <select value={o.status} onChange={async e => {
