@@ -89,7 +89,10 @@ function OrdersPage() {
     if (notifiedRef.current.has(key)) return;
     notifiedRef.current.add(key);
     setNotices(prev => [{ id: key, title, description }, ...prev].slice(0, 3));
-    toast(title, { description });
+    toast(title, { description, duration: 2000 });
+    setTimeout(() => {
+      setNotices(prev => prev.filter(n => n.id !== key));
+    }, 2000);
   };
 
   // Notify for any status change. When the order is out for delivery and a
