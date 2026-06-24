@@ -298,9 +298,44 @@ function CheckoutPage() {
                 return <li key={i.productId} className="flex justify-between"><span>{p.emoji} {p.name} × {i.qty}</span><span className="font-semibold">{formatINR(p.price * i.qty)}</span></li>;
               })}
             </ul>
-            <div className="space-y-1 border-t border-border pt-3 text-sm">
+            {/* Promo code */}
+            <div className="border-t border-border pt-3">
+              {appliedCode ? (
+                <div className="flex items-center justify-between rounded-xl border border-primary/40 bg-primary/5 px-3 py-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Tag className="h-4 w-4 text-primary" />
+                    <span className="font-bold text-primary">{appliedCode}</span>
+                    <span className="text-muted-foreground">applied</span>
+                  </div>
+                  <button onClick={removePromo} className="text-xs font-semibold text-muted-foreground hover:text-destructive">Remove</button>
+                </div>
+              ) : (
+                <>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Tag className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <input
+                        value={promoInput}
+                        onChange={e => setPromoInput(e.target.value.toUpperCase())}
+                        onKeyDown={e => { if (e.key === "Enter") applyPromo(); }}
+                        placeholder="Promo code"
+                        maxLength={20}
+                        className="w-full rounded-lg border border-input bg-background py-2 pl-9 pr-3 text-sm uppercase outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </div>
+                    <button onClick={applyPromo} className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90">Apply</button>
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">Try <span className="font-semibold text-primary">SAVE50</span>, <span className="font-semibold text-primary">KART10</span> or <span className="font-semibold text-primary">BIG100</span></p>
+                </>
+              )}
+            </div>
+
+            <div className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
               <Row label="Subtotal" value={formatINR(subtotal)} />
               <Row label="Delivery" value={fee === 0 ? "FREE" : formatINR(fee)} />
+              {discount > 0 && (
+                <div className="flex justify-between"><span className="text-muted-foreground">Discount ({appliedCode})</span><span className="font-semibold text-primary">−{formatINR(discount)}</span></div>
+              )}
               <div className="mt-2 flex justify-between border-t border-border pt-2 text-base font-bold"><span>Total</span><span>{formatINR(total)}</span></div>
             </div>
             <button disabled={placing || !selectedId} onClick={handlePlace} className="mt-5 w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
