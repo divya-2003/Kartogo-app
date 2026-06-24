@@ -1,13 +1,26 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Plus, Check } from "lucide-react";
+import { toast } from "sonner";
 import type { Product } from "@/lib/data";
 import { formatINR } from "@/lib/data";
-import { useCart } from "@/lib/store";
+import { useCart, useAuth } from "@/lib/store";
 
 export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolean }) {
   const { items, add, setQty } = useCart();
+  const { user } = useAuth();
+  const nav = useNavigate();
   const inCart = items.find(i => i.productId === p.id);
   const out = p.stock <= 0;
+
+  const handleAdd = () => {
+    if (!user) {
+      toast.info("Please login to add items to your cart");
+      nav({ to: "/login" });
+      return;
+    }
+    add(p.id);
+  };
+
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:shadow-pop">
