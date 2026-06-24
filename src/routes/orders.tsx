@@ -266,6 +266,8 @@ function OrdersPage() {
                     </div>
                   )}
 
+                  {!cancelled && <DeliveryProgress status={o.status} />}
+
                   {boy && !cancelled && (
                     <div className="mt-3 rounded-lg bg-primary/5 px-3 py-2 text-sm">
                       Delivery partner: <span className="font-semibold">{boy.name}</span> · <a className="text-primary" href={`tel:${boy.phone}`}>{boy.phone}</a>
