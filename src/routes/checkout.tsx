@@ -167,7 +167,7 @@ function CheckoutPage() {
           const p = products.find(p => p.id === i.productId)!;
           return { productId: p.id, name: p.name, qty: i.qty, price: p.price };
         }),
-        subtotal, deliveryFee: fee, total, paymentMethod: payment,
+        subtotal, deliveryFee: fee, discount, promoCode: appliedCode ?? undefined, total, paymentMethod: payment,
       });
       clear();
       toast.success(`Order ${order.id} placed!`);

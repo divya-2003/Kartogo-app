@@ -23,9 +23,11 @@ export type Database = {
           customer_phone: string
           delivery_boy_id: string | null
           delivery_fee: number
+          discount: number
           id: string
           items: Json
           payment_method: string
+          promo_code: string | null
           refunded: boolean
           refunded_at: string | null
           status: string
@@ -41,9 +43,11 @@ export type Database = {
           customer_phone: string
           delivery_boy_id?: string | null
           delivery_fee?: number
+          discount?: number
           id: string
           items?: Json
           payment_method?: string
+          promo_code?: string | null
           refunded?: boolean
           refunded_at?: string | null
           status?: string
@@ -59,9 +63,11 @@ export type Database = {
           customer_phone?: string
           delivery_boy_id?: string | null
           delivery_fee?: number
+          discount?: number
           id?: string
           items?: Json
           payment_method?: string
+          promo_code?: string | null
           refunded?: boolean
           refunded_at?: string | null
           status?: string

@@ -152,6 +152,11 @@ function OrdersAdmin() {
                 </div>
                 <div className="text-right">
                   <div className="font-display text-lg font-bold">{formatINR(o.total)}</div>
+                  {o.discount > 0 && (
+                    <div className="text-xs font-medium text-primary">
+                      {o.promoCode ? `${o.promoCode} · ` : ""}−{formatINR(o.discount)}
+                    </div>
+                  )}
                   <div className="text-xs uppercase text-muted-foreground">{o.paymentMethod}</div>
                 </div>
               </header>

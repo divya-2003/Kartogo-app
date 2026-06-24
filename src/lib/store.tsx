@@ -221,6 +221,8 @@ export type Order = {
   items: { productId: string; name: string; qty: number; price: number }[];
   subtotal: number;
   deliveryFee: number;
+  discount: number;
+  promoCode?: string;
   total: number;
   paymentMethod: "cash" | "upi";
   status: OrderStatus;
@@ -251,6 +253,8 @@ type OrderRow = {
   items: Order["items"];
   subtotal: number;
   delivery_fee: number;
+  discount?: number | null;
+  promo_code?: string | null;
   total: number;
   payment_method: Order["paymentMethod"];
   status: OrderStatus;
@@ -270,6 +274,8 @@ function rowToOrder(r: OrderRow): Order {
     items: r.items ?? [],
     subtotal: Number(r.subtotal),
     deliveryFee: Number(r.delivery_fee),
+    discount: Number(r.discount ?? 0),
+    promoCode: r.promo_code ?? undefined,
     total: Number(r.total),
     paymentMethod: r.payment_method,
     status: r.status,
@@ -400,6 +406,8 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
         items: order.items,
         subtotal: order.subtotal,
         delivery_fee: order.deliveryFee,
+        discount: order.discount,
+        promo_code: order.promoCode ?? null,
         total: order.total,
         payment_method: order.paymentMethod,
         status: order.status,
