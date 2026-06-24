@@ -27,6 +27,16 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   cancelled: "Cancelled",
 };
 
+// One notification message per status. Covers the full lifecycle so the
+// customer hears about every change the admin makes.
+const STATUS_NOTICE: Record<OrderStatus, (id: string) => { title: string; description: string }> = {
+  placed: id => ({ title: "Order placed", description: `${id} has been placed successfully.` }),
+  packed: id => ({ title: "Order packed", description: `${id} is packed and ready to dispatch.` }),
+  out_for_delivery: id => ({ title: "Out for delivery", description: `${id} is on the way to you.` }),
+  delivered: id => ({ title: "Order delivered", description: `${id} has been delivered. Enjoy!` }),
+  cancelled: id => ({ title: "Order cancelled", description: `${id} has been cancelled.` }),
+};
+
 function OrdersPage() {
   const { user, logout } = useAuth();
   const { orders, refresh } = useOrders();
