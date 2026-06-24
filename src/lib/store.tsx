@@ -221,6 +221,8 @@ export type Order = {
   items: { productId: string; name: string; qty: number; price: number }[];
   subtotal: number;
   deliveryFee: number;
+  discount: number;
+  promoCode?: string;
   total: number;
   paymentMethod: "cash" | "upi";
   status: OrderStatus;
