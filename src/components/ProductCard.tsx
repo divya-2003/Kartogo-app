@@ -1,13 +1,26 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Plus, Check } from "lucide-react";
+import { toast } from "sonner";
 import type { Product } from "@/lib/data";
 import { formatINR } from "@/lib/data";
-import { useCart } from "@/lib/store";
+import { useCart, useAuth } from "@/lib/store";
 
 export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolean }) {
   const { items, add, setQty } = useCart();
+  const { user } = useAuth();
+  const nav = useNavigate();
   const inCart = items.find(i => i.productId === p.id);
   const out = p.stock <= 0;
+
+  const handleAdd = () => {
+    if (!user) {
+      toast.info("Please login to add items to your cart");
+      nav({ to: "/login" });
+      return;
+    }
+    add(p.id);
+  };
+
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:shadow-pop">
@@ -52,7 +65,7 @@ export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolea
           ) : (
             <button
               disabled={out}
-              onClick={() => add(p.id)}
+              onClick={handleAdd}
               className="inline-flex items-center gap-1 rounded-lg border border-primary px-3 py-1.5 text-xs font-bold text-primary transition hover:bg-primary hover:text-primary-foreground disabled:border-border disabled:text-muted-foreground"
             >
               {out ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3" />} ADD

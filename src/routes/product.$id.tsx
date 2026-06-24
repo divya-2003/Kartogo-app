@@ -1,6 +1,7 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { Header } from "@/components/Header";
-import { useCart, useCatalog } from "@/lib/store";
+import { useCart, useCatalog, useAuth } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { Plus, Minus, ShoppingBag } from "lucide-react";
 
@@ -15,8 +16,19 @@ function ProductPage() {
   const { products } = useCatalog();
   const p = products.find(x => x.id === id);
   const { add, items, setQty } = useCart();
+  const { user } = useAuth();
+  const nav = useNavigate();
   if (!p) throw notFound();
   const inCart = items.find(i => i.productId === p.id);
+
+  const handleAdd = () => {
+    if (!user) {
+      toast.info("Please login to add items to your cart");
+      nav({ to: "/login" });
+      return;
+    }
+    add(p.id);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,7 +70,7 @@ function ProductPage() {
                   <button onClick={() => setQty(p.id, inCart.qty + 1)} className="grid h-9 w-9 place-items-center rounded-lg text-primary hover:bg-primary/10"><Plus className="h-4 w-4" /></button>
                 </div>
               ) : (
-                <button disabled={p.stock <= 0} onClick={() => add(p.id)} className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground">
+                <button disabled={p.stock <= 0} onClick={handleAdd} className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground">
                   <ShoppingBag className="h-4 w-4" /> Add to cart
                 </button>
               )}

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Zap, Search, Wallet, User2, Home, LayoutGrid, ShoppingBag, TrendingUp, Ticket } from "lucide-react";
 import { LocationPicker } from "@/components/LocationPicker";
 import { ProductCard } from "@/components/ProductCard";
@@ -31,20 +31,14 @@ const COUPONS = [
 ];
 
 function Index() {
-  const { user, ready } = useAuth();
+  const { ready } = useAuth();
   const { ready: locReady, location } = useLocation();
   const nav = useNavigate();
   const { products } = useCatalog();
   const { count, subtotal } = useCart();
   const [q, setQ] = useState("");
 
-  useEffect(() => {
-    if (ready && !user) {
-      nav({ to: "/login" });
-    }
-  }, [ready, user, nav]);
-
-  if (!ready || !locReady || !user) {
+  if (!ready || !locReady) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-center">
         <div className="font-display text-3xl font-bold tracking-tight text-foreground">Kartigo</div>
