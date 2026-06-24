@@ -158,7 +158,7 @@ export function Header() {
         </div>
       </div>
 
-      {!isAdminArea && (
+      {!hideBrowse && (
         <div className="px-4 pb-3 md:hidden">
           {!isAdmin && (
             <div className="mb-2">
