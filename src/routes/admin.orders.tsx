@@ -58,12 +58,26 @@ function OrdersAdmin() {
 
               <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
                 <label className="text-xs font-semibold text-muted-foreground">Status</label>
-                <select value={o.status} onChange={e => { setStatus(o.id, e.target.value as OrderStatus); toast.success("Status updated"); }} className="rounded-lg border border-input bg-background px-2 py-1 text-sm">
+                <select value={o.status} onChange={async e => {
+                  try {
+                    await setStatus(o.id, e.target.value as OrderStatus);
+                    toast.success("Status updated");
+                  } catch (error) {
+                    toast.error(error instanceof Error ? error.message : "Status update failed");
+                  }
+                }} className="rounded-lg border border-input bg-background px-2 py-1 text-sm">
                   {STATUSES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
                 </select>
 
                 <label className="ml-2 text-xs font-semibold text-muted-foreground">Delivery</label>
-                <select value={o.deliveryBoyId ?? ""} onChange={e => { assign(o.id, e.target.value); toast.success("Delivery partner assigned"); }} className="rounded-lg border border-input bg-background px-2 py-1 text-sm">
+                <select value={o.deliveryBoyId ?? ""} onChange={async e => {
+                  try {
+                    await assign(o.id, e.target.value);
+                    toast.success("Delivery partner assigned");
+                  } catch (error) {
+                    toast.error(error instanceof Error ? error.message : "Delivery assignment failed");
+                  }
+                }} className="rounded-lg border border-input bg-background px-2 py-1 text-sm">
                   <option value="">— Assign rider —</option>
                   {DELIVERY_BOYS.filter(d => d.active).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                 </select>

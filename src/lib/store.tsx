@@ -229,8 +229,8 @@ export type Order = {
 type OrdersCtx = {
   orders: Order[];
   place: (o: Omit<Order, "id" | "createdAt" | "status">) => Promise<Order>;
-  setStatus: (id: string, status: OrderStatus) => void;
-  assign: (id: string, deliveryBoyId: string) => void;
+  setStatus: (id: string, status: OrderStatus) => Promise<void>;
+  assign: (id: string, deliveryBoyId: string) => Promise<void>;
 };
 const OrdersContext = createContext<OrdersCtx | null>(null);
 
@@ -305,10 +305,18 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onFocus);
 
+    // Realtime can arrive late on some browsers/networks. A lightweight
+    // foreground poll keeps admin and customer order screens in sync within a
+    // few seconds even if a websocket event is delayed or dropped.
+    const poll = window.setInterval(() => {
+      if (document.visibilityState === "visible") void refetch();
+    }, 1500);
+
     return () => {
       active = false;
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onFocus);
+      window.clearInterval(poll);
       supabase.removeChannel(channel);
     };
   }, []);
@@ -343,13 +351,44 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
       setOrders(prev => [saved, ...prev.filter(o => o.id !== saved.id)].sort((a, b) => b.createdAt - a.createdAt));
       return saved;
     },
-    setStatus: (id, status) => {
+    setStatus: async (id, status) => {
+      const previous = orders;
       setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
-      void supabase.from("app_orders").update({ status }).eq("id", id);
+      const { data, error } = await supabase
+        .from("app_orders")
+        .update({ status })
+        .eq("id", id)
+        .select("*")
+        .single();
+
+      if (error) {
+        console.error("Failed to update order status", error);
+        setOrders(previous);
+        throw new Error("Order status could not be updated. Please try again.");
+      }
+
+      const saved = rowToOrder(data as unknown as OrderRow);
+      setOrders(prev => [saved, ...prev.filter(o => o.id !== saved.id)].sort((a, b) => b.createdAt - a.createdAt));
     },
-    assign: (id, deliveryBoyId) => {
-      setOrders(prev => prev.map(o => o.id === id ? { ...o, deliveryBoyId } : o));
-      void supabase.from("app_orders").update({ delivery_boy_id: deliveryBoyId }).eq("id", id);
+    assign: async (id, deliveryBoyId) => {
+      const previous = orders;
+      const nextDeliveryBoyId = deliveryBoyId || undefined;
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, deliveryBoyId: nextDeliveryBoyId } : o));
+      const { data, error } = await supabase
+        .from("app_orders")
+        .update({ delivery_boy_id: deliveryBoyId || null })
+        .eq("id", id)
+        .select("*")
+        .single();
+
+      if (error) {
+        console.error("Failed to assign delivery partner", error);
+        setOrders(previous);
+        throw new Error("Delivery partner could not be assigned. Please try again.");
+      }
+
+      const saved = rowToOrder(data as unknown as OrderRow);
+      setOrders(prev => [saved, ...prev.filter(o => o.id !== saved.id)].sort((a, b) => b.createdAt - a.createdAt));
     },
   };
   return <OrdersContext.Provider value={value}>{children}</OrdersContext.Provider>;
