@@ -269,6 +269,7 @@ function rowToOrder(r: OrderRow): Order {
     paymentMethod: r.payment_method,
     status: r.status,
     deliveryBoyId: r.delivery_boy_id ?? undefined,
+    cancelReason: r.cancel_reason ?? undefined,
   };
 }
 
