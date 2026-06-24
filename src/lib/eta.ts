@@ -35,3 +35,18 @@ export function etaText(status: OrderStatus, statusSince: number | undefined, no
   if (minsLeft === 1) return "Arriving in 1 min";
   return `Arriving in ${minsLeft} mins`;
 }
+
+/**
+ * Human-friendly total delivery duration between two timestamps (ms).
+ * e.g. "12 mins", "1 hr 5 mins", "45 secs".
+ */
+export function formatDeliveryDuration(fromMs: number, toMs: number): string {
+  const totalSecs = Math.max(0, Math.round((toMs - fromMs) / 1000));
+  if (totalSecs < 60) return `${totalSecs} sec${totalSecs === 1 ? "" : "s"}`;
+  const totalMins = Math.round(totalSecs / 60);
+  if (totalMins < 60) return `${totalMins} min${totalMins === 1 ? "" : "s"}`;
+  const hrs = Math.floor(totalMins / 60);
+  const mins = totalMins % 60;
+  const hrPart = `${hrs} hr${hrs === 1 ? "" : "s"}`;
+  return mins === 0 ? hrPart : `${hrPart} ${mins} min${mins === 1 ? "" : "s"}`;
+}
