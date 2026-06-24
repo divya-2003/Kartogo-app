@@ -6,6 +6,9 @@ import { Phone, KeyRound } from "lucide-react";
 import kartigoLogo from "@/assets/kartigo-logo.png.asset.json";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
+    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+  }),
   component: LoginPage,
   head: () => ({ meta: [{ title: "Login — Kartigo" }] }),
 });
@@ -13,6 +16,7 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const { sendOtp, verifyOtp } = useAuth();
   const nav = useNavigate();
+  const { redirect } = Route.useSearch();
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [stage, setStage] = useState<"phone" | "otp">("phone");
@@ -37,7 +41,7 @@ function LoginPage() {
     try {
       const u = await verifyOtp(phone, otp);
       toast.success("Welcome to Kartigo!");
-      nav({ to: u.role === "admin" ? "/admin" : "/" });
+      nav({ to: u.role === "admin" ? "/admin" : (redirect ?? "/") });
     } catch (err) {
       toast.error((err as Error).message);
     } finally { setLoading(false); }

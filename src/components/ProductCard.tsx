@@ -13,12 +13,11 @@ export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolea
   const out = p.stock <= 0;
 
   const handleAdd = () => {
-    if (!user) {
-      toast.info("Please login to add items to your cart");
-      nav({ to: "/login" });
-      return;
-    }
     add(p.id);
+    if (!user) {
+      toast.info("Please login to continue to checkout");
+      nav({ to: "/login", search: { redirect: "/checkout" } });
+    }
   };
 
 
