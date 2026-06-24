@@ -5,6 +5,7 @@ import { formatINR } from "@/lib/data";
 import { CheckCircle2, Package, Truck, Clock, XCircle, RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/orders")({
   component: OrdersPage,
@@ -26,6 +27,16 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   cancelled: "Cancelled",
 };
 
+// One notification message per status. Covers the full lifecycle so the
+// customer hears about every change the admin makes.
+const STATUS_NOTICE: Record<OrderStatus, (id: string) => { title: string; description: string }> = {
+  placed: id => ({ title: "Order placed", description: `${id} has been placed successfully.` }),
+  packed: id => ({ title: "Order packed", description: `${id} is packed and ready to dispatch.` }),
+  out_for_delivery: id => ({ title: "Out for delivery", description: `${id} is on the way to you.` }),
+  delivered: id => ({ title: "Order delivered", description: `${id} has been delivered. Enjoy!` }),
+  cancelled: id => ({ title: "Order cancelled", description: `${id} has been cancelled.` }),
+};
+
 function OrdersPage() {
   const { user, logout } = useAuth();
   const { orders, refresh } = useOrders();
@@ -40,7 +51,30 @@ function OrdersPage() {
     if (notifiedRef.current.has(key)) return;
     notifiedRef.current.add(key);
     setNotices(prev => [{ id: key, title, description }, ...prev].slice(0, 3));
+    toast(title, { description });
   };
+
+  // Notify for any status change. When the order is out for delivery and a
+  // driver is assigned, include the latest driver details in the message.
+  const notifyStatus = (orderId: string, status: OrderStatus, deliveryBoyId?: string) => {
+    const make = STATUS_NOTICE[status];
+    if (!make) return;
+    const base = make(orderId);
+    let description = base.description;
+    if (status === "out_for_delivery" && deliveryBoyId) {
+      const boy = DELIVERY_BOYS.find(d => d.id === deliveryBoyId);
+      if (boy) description += ` Driver: ${boy.name} · ${boy.phone}`;
+    }
+    notifyOnce(`${orderId}:status:${status}`, base.title, description);
+  };
+
+  const notifyDriver = (orderId: string, deliveryBoyId?: string) => {
+    if (!deliveryBoyId) return;
+    const boy = DELIVERY_BOYS.find(d => d.id === deliveryBoyId);
+    if (!boy) return;
+    notifyOnce(`${orderId}:driver:${deliveryBoyId}`, "Delivery partner assigned", `${boy.name} · ${boy.phone}`);
+  };
+
 
   useEffect(() => {
     if (userPhone) void refresh(userPhone);
@@ -79,35 +113,16 @@ function OrdersPage() {
         },
         payload => {
           const next = payload.new as { id?: string; status?: OrderStatus; delivery_boy_id?: string | null; updated_at?: string } | null;
-          if (payload.eventType === "UPDATE" && next?.id) {
+          if ((payload.eventType === "UPDATE" || payload.eventType === "INSERT") && next?.id) {
             const previous = previousOrdersRef.current.get(next.id);
             const nextDeliveryBoyId = next.delivery_boy_id ?? undefined;
 
             if (next.status && (!previous || previous.status !== next.status)) {
-              if (next.status === "out_for_delivery") {
-                notifyOnce(
-                  `${next.id}:status:${next.status}`,
-                  "Order is out for delivery",
-                  `${next.id} is on the way to you.`,
-                );
-              } else if (next.status === "delivered") {
-                notifyOnce(
-                  `${next.id}:status:${next.status}`,
-                  "Order delivered",
-                  `${next.id} has been marked delivered.`,
-                );
-              }
+              notifyStatus(next.id, next.status, nextDeliveryBoyId);
             }
 
             if (nextDeliveryBoyId && (!previous || previous.deliveryBoyId !== nextDeliveryBoyId)) {
-              const boy = DELIVERY_BOYS.find(d => d.id === nextDeliveryBoyId);
-              if (boy) {
-                notifyOnce(
-                  `${next.id}:driver:${nextDeliveryBoyId}`,
-                  "Delivery partner assigned",
-                  `${boy.name} · ${boy.phone}`,
-                );
-              }
+              notifyDriver(next.id, nextDeliveryBoyId);
             }
           }
 
@@ -146,18 +161,11 @@ function OrdersPage() {
       const previous = previousOrdersRef.current.get(order.id);
 
       if (previous && previous.status !== order.status) {
-        if (order.status === "out_for_delivery") {
-          notifyOnce(`${order.id}:status:${order.status}`, "Order is out for delivery", `${order.id} is on the way to you.`);
-        } else if (order.status === "delivered") {
-          notifyOnce(`${order.id}:status:${order.status}`, "Order delivered", `${order.id} has been marked delivered.`);
-        }
+        notifyStatus(order.id, order.status, order.deliveryBoyId);
       }
 
       if (previous && previous.deliveryBoyId !== order.deliveryBoyId && order.deliveryBoyId) {
-        const boy = DELIVERY_BOYS.find(d => d.id === order.deliveryBoyId);
-        if (boy) {
-          notifyOnce(`${order.id}:driver:${order.deliveryBoyId}`, "Delivery partner assigned", `${boy.name} · ${boy.phone}`);
-        }
+        notifyDriver(order.id, order.deliveryBoyId);
       }
     }
 
