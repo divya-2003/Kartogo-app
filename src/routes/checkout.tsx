@@ -171,7 +171,7 @@ function CheckoutPage() {
       });
       clear();
       toast.success(`Order ${order.id} placed!`);
-      nav({ to: "/orders" });
+      nav({ to: "/orders", search: { open: order.id } });
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
