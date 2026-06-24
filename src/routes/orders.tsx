@@ -5,7 +5,6 @@ import { formatINR } from "@/lib/data";
 import { CheckCircle2, Package, Truck, Clock, XCircle, RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 export const Route = createFileRoute("/orders")({
   component: OrdersPage,
@@ -41,7 +40,6 @@ function OrdersPage() {
     if (notifiedRef.current.has(key)) return;
     notifiedRef.current.add(key);
     setNotices(prev => [{ id: key, title, description }, ...prev].slice(0, 3));
-    toast.success(title, { description });
   };
 
   useEffect(() => {
@@ -88,13 +86,13 @@ function OrdersPage() {
             if (next.status && (!previous || previous.status !== next.status)) {
               if (next.status === "out_for_delivery") {
                 notifyOnce(
-                  `${next.id}:status:${next.status}:${next.updated_at ?? Date.now()}`,
+                  `${next.id}:status:${next.status}`,
                   "Order is out for delivery",
                   `${next.id} is on the way to you.`,
                 );
               } else if (next.status === "delivered") {
                 notifyOnce(
-                  `${next.id}:status:${next.status}:${next.updated_at ?? Date.now()}`,
+                  `${next.id}:status:${next.status}`,
                   "Order delivered",
                   `${next.id} has been marked delivered.`,
                 );
@@ -105,7 +103,7 @@ function OrdersPage() {
               const boy = DELIVERY_BOYS.find(d => d.id === nextDeliveryBoyId);
               if (boy) {
                 notifyOnce(
-                  `${next.id}:driver:${nextDeliveryBoyId}:${next.updated_at ?? Date.now()}`,
+                  `${next.id}:driver:${nextDeliveryBoyId}`,
                   "Delivery partner assigned",
                   `${boy.name} · ${boy.phone}`,
                 );
@@ -149,37 +147,16 @@ function OrdersPage() {
 
       if (previous && previous.status !== order.status) {
         if (order.status === "out_for_delivery") {
-          notifyOnce(`${order.id}:status:${order.status}:${order.updatedAt ?? Date.now()}`, "Order is out for delivery", `${order.id} is on the way to you.`);
+          notifyOnce(`${order.id}:status:${order.status}`, "Order is out for delivery", `${order.id} is on the way to you.`);
         } else if (order.status === "delivered") {
-          notifyOnce(`${order.id}:status:${order.status}:${order.updatedAt ?? Date.now()}`, "Order delivered", `${order.id} has been marked delivered.`);
+          notifyOnce(`${order.id}:status:${order.status}`, "Order delivered", `${order.id} has been marked delivered.`);
         }
-      }
-
-      if (!previous && (order.status === "out_for_delivery" || order.status === "delivered")) {
-        notifyOnce(
-          `${order.id}:initial-status:${order.status}:${order.updatedAt ?? Date.now()}`,
-          order.status === "out_for_delivery" ? "Order is out for delivery" : "Order delivered",
-          order.status === "out_for_delivery"
-            ? `${order.id} is on the way to you.`
-            : `${order.id} has been marked delivered.`,
-        );
       }
 
       if (previous && previous.deliveryBoyId !== order.deliveryBoyId && order.deliveryBoyId) {
         const boy = DELIVERY_BOYS.find(d => d.id === order.deliveryBoyId);
         if (boy) {
-          notifyOnce(`${order.id}:driver:${order.deliveryBoyId}:${order.updatedAt ?? Date.now()}`, "Delivery partner assigned", `${boy.name} · ${boy.phone}`);
-        }
-      }
-
-      if (!previous && order.deliveryBoyId) {
-        const boy = DELIVERY_BOYS.find(d => d.id === order.deliveryBoyId);
-        if (boy) {
-          notifyOnce(
-            `${order.id}:initial-driver:${order.deliveryBoyId}:${order.updatedAt ?? Date.now()}`,
-            "Delivery partner assigned",
-            `${boy.name} · ${boy.phone}`,
-          );
+          notifyOnce(`${order.id}:driver:${order.deliveryBoyId}`, "Delivery partner assigned", `${boy.name} · ${boy.phone}`);
         }
       }
     }
