@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { Header } from "@/components/Header";
-import { useAuth, useCart, useCatalog, useOrders, useLocation, type DeliveryAddress } from "@/lib/store";
+import { useAuth, useCart, useCatalog, useOrders, useLocation } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { toast } from "sonner";
 import { Banknote, Smartphone, MapPin, Plus, Check, Trash2, X } from "lucide-react";
@@ -210,7 +210,7 @@ function CheckoutPage() {
                 <div className="mt-3 rounded-xl border border-border bg-background p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <h3 className="text-sm font-bold">Add a new address</h3>
-                    {deliveryAddresses.length > 0 && (
+                    {addressOptions.length > 0 && (
                       <button onClick={() => setShowForm(false)} aria-label="Cancel" className="grid h-7 w-7 place-items-center rounded-full hover:bg-secondary">
                         <X className="h-4 w-4" />
                       </button>
