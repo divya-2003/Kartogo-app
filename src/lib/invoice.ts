@@ -23,7 +23,8 @@ function when(at?: number) {
 }
 
 /** Builds and downloads a PDF invoice/receipt for a single order. */
-export function downloadInvoice(o: Order) {
+export async function downloadInvoice(o: Order) {
+  const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const W = doc.internal.pageSize.getWidth();
   const M = 40;
