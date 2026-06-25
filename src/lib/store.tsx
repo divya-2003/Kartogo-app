@@ -159,6 +159,67 @@ export const useAuth = () => {
   return c;
 };
 
+// ---------------- Wallet (Kartigo Cash) ----------------
+// Real stored-value wallet. Balance changes ONLY when the user tops up money
+// or spends it on an order — it is never tied to the cart subtotal. Balances
+// are kept per phone number so each account has its own wallet.
+export type WalletTxn = { id: string; type: "credit" | "debit"; amount: number; note: string; at: number };
+type WalletCtx = {
+  balance: number;
+  txns: WalletTxn[];
+  addMoney: (amount: number) => void;
+  spend: (amount: number, note?: string) => boolean;
+};
+const WalletContext = createContext<WalletCtx | null>(null);
+
+export function WalletProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  const phone = user?.phone ?? null;
+  const [balances, setBalances] = useState<Record<string, number>>({});
+  const [allTxns, setAllTxns] = useState<Record<string, WalletTxn[]>>({});
+
+  useEffect(() => {
+    setBalances(read<Record<string, number>>("qk_wallet", {}));
+    setAllTxns(read<Record<string, WalletTxn[]>>("qk_wallet_txns", {}));
+  }, []);
+  useEffect(() => { write("qk_wallet", balances); }, [balances]);
+  useEffect(() => { write("qk_wallet_txns", allTxns); }, [allTxns]);
+
+  const value = useMemo<WalletCtx>(() => {
+    const balance = phone ? (balances[phone] ?? 0) : 0;
+    const txns = phone ? (allTxns[phone] ?? []) : [];
+
+    const pushTxn = (txn: WalletTxn) =>
+      setAllTxns(prev => ({ ...prev, [phone!]: [txn, ...(prev[phone!] ?? [])].slice(0, 50) }));
+
+    const addMoney: WalletCtx["addMoney"] = (amount) => {
+      if (!phone || !amount || amount <= 0) return;
+      const amt = Math.round(amount);
+      setBalances(prev => ({ ...prev, [phone]: (prev[phone] ?? 0) + amt }));
+      pushTxn({ id: `w${Date.now()}`, type: "credit", amount: amt, note: "Added to wallet", at: Date.now() });
+    };
+
+    const spend: WalletCtx["spend"] = (amount, note = "Order payment") => {
+      if (!phone || !amount || amount <= 0) return false;
+      const current = balances[phone] ?? 0;
+      const amt = Math.round(amount);
+      if (amt > current) return false;
+      setBalances(prev => ({ ...prev, [phone]: (prev[phone] ?? 0) - amt }));
+      pushTxn({ id: `w${Date.now()}`, type: "debit", amount: amt, note, at: Date.now() });
+      return true;
+    };
+
+    return { balance, txns, addMoney, spend };
+  }, [phone, balances, allTxns]);
+
+  return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
+}
+export const useWallet = () => {
+  const c = useContext(WalletContext);
+  if (!c) throw new Error("WalletProvider missing");
+  return c;
+};
+
 // ---------------- Catalog (products + inventory editable) ----------------
 type CatalogCtx = {
   products: Product[];
