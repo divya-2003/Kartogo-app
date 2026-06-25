@@ -1,12 +1,16 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { PRODUCTS, DELIVERY_BOYS, type Product } from "./data";
-import { supabase } from "@/integrations/supabase/client";
+import { requestOtpFn, verifyOtpFn, adminLoginFn } from "./auth.functions";
+import {
+  listOrdersFn,
+  placeOrderFn,
+  setOrderStatusFn,
+  assignOrderFn,
+  markRefundedFn,
+  cancelOrderFn,
+} from "./orders.functions";
 
-// ---------------- Allow list (server/mock layer) ----------------
-// In a real app this lives on the server. Roles are always derived from this
-// list — never from anything the client sends.
-export const ADMIN_PHONES: readonly string[] = ["9110310034"];
-export const isAdminPhone = (phone: string) => ADMIN_PHONES.includes(phone);
+
 
 // ---------------- Cart ----------------
 export type CartItem = { productId: string; qty: number };
