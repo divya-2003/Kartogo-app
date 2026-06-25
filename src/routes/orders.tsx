@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { DeliveryProgress } from "@/components/DeliveryProgress";
-import { useAuth, useOrders, useCart, useCatalog, DELIVERY_BOYS, type OrderStatus, type Order } from "@/lib/store";
+import { useAuth, useOrders, useCart, useCatalog, useWallet, DELIVERY_BOYS, type OrderStatus, type Order } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { etaText, formatDeliveryDuration } from "@/lib/eta";
 import { paymentBreakdown, PAYMENT_LABELS } from "@/lib/payment";
