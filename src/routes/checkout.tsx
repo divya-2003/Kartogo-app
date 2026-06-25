@@ -158,8 +158,17 @@ function CheckoutPage() {
   const handlePlace = async () => {
     const selected = addressOptions.find(a => a.id === selectedId);
     if (!selected) { toast.error("Please select a delivery address"); return; }
+    if (payment === "wallet" && walletBalance < total) {
+      toast.error(`Not enough wallet balance. Add ${formatINR(total - walletBalance)} more.`);
+      return;
+    }
     setPlacing(true);
     try {
+      // Deduct from wallet first so a failed debit blocks the order.
+      if (payment === "wallet") {
+        const ok = walletSpend(total, "Order payment");
+        if (!ok) { toast.error("Could not charge wallet"); setPlacing(false); return; }
+      }
       const order = await place({
         customerPhone: user.phone,
         customerName: selected.name,
@@ -179,6 +188,7 @@ function CheckoutPage() {
       setPlacing(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-background">
