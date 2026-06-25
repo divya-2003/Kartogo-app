@@ -1,5 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useAuth, useLocation } from "@/lib/store";
+import { useState } from "react";
+import { useAuth, useLocation, useWallet } from "@/lib/store";
+import { formatINR } from "@/lib/data";
 import { toast } from "sonner";
 import {
   ChevronLeft,
@@ -26,7 +28,11 @@ export const Route = createFileRoute("/menu")({
 function MenuPage() {
   const { user, logout } = useAuth();
   const { location, savedAddresses, setLocation, removeSavedAddress } = useLocation();
+  const { balance, addMoney } = useWallet();
   const nav = useNavigate();
+  const [showAdd, setShowAdd] = useState(false);
+  const [amount, setAmount] = useState("");
+
 
   if (!user) {
     return (
@@ -72,20 +78,55 @@ function MenuPage() {
         </div>
 
         {/* Cash & Gift card banner */}
-        <button
-          onClick={() => soon("Cash & Gift Card")}
-          className="mt-4 w-full rounded-2xl bg-primary/10 p-4 text-left"
-        >
+        <div className="mt-4 w-full rounded-2xl bg-primary/10 p-4 text-left">
           <div className="flex items-center gap-3">
             <Wallet className="h-6 w-6 text-primary" />
             <span className="font-display text-lg font-bold">Kartigo Cash &amp; Gift Card</span>
-            <ChevronRight className="ml-auto h-5 w-5 text-muted-foreground" />
           </div>
           <div className="mt-3 flex items-center justify-between border-t border-primary/15 pt-3">
-            <span className="text-sm text-muted-foreground">Available Balance <span className="font-bold text-foreground">₹0</span></span>
-            <span className="rounded-lg bg-card px-4 py-2 text-sm font-bold shadow-pop">Add Balance</span>
+            <span className="text-sm text-muted-foreground">Available Balance <span className="font-bold text-foreground">{formatINR(balance)}</span></span>
+            <button onClick={() => { setAmount(""); setShowAdd(true); }} className="rounded-lg bg-card px-4 py-2 text-sm font-bold shadow-pop">Add Balance</button>
           </div>
-        </button>
+        </div>
+
+        {showAdd && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center" onClick={() => setShowAdd(false)}>
+            <div className="w-full max-w-sm rounded-2xl bg-card p-5 shadow-pop" onClick={e => e.stopPropagation()}>
+              <h3 className="font-display text-lg font-bold">Add money to wallet</h3>
+              <p className="mt-1 text-sm text-muted-foreground">Current balance: {formatINR(balance)}</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {[100, 200, 500, 1000].map(v => (
+                  <button key={v} onClick={() => setAmount(String(v))} className={`rounded-lg border px-3 py-1.5 text-sm font-semibold ${amount === String(v) ? "border-primary bg-primary/10 text-primary" : "border-input"}`}>+{formatINR(v)}</button>
+                ))}
+              </div>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                value={amount}
+                onChange={e => setAmount(e.target.value)}
+                placeholder="Enter amount"
+                className="mt-3 w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
+              />
+              <div className="mt-4 flex gap-2">
+                <button onClick={() => setShowAdd(false)} className="flex-1 rounded-xl border border-border py-2.5 font-bold hover:bg-secondary">Cancel</button>
+                <button
+                  onClick={() => {
+                    const amt = Math.round(Number(amount));
+                    if (!amt || amt <= 0) { toast.error("Enter a valid amount"); return; }
+                    addMoney(amt);
+                    toast.success(`${formatINR(amt)} added to your wallet`);
+                    setShowAdd(false);
+                  }}
+                  className="flex-1 rounded-xl bg-primary py-2.5 font-bold text-primary-foreground hover:bg-primary/90"
+                >
+                  Add money
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
 
         {/* Your Information */}
         <h2 className="mb-3 mt-8 font-display text-xl font-bold">Your Information</h2>

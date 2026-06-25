@@ -4,7 +4,7 @@ import { Zap, Search, Wallet, User2, Home, LayoutGrid, ShoppingBag, TrendingUp, 
 import { LocationPicker } from "@/components/LocationPicker";
 import { ProductCard } from "@/components/ProductCard";
 import { CATEGORIES, formatINR } from "@/lib/data";
-import { useCatalog, useAuth, useLocation, useCart } from "@/lib/store";
+import { useCatalog, useAuth, useLocation, useCart, useWallet } from "@/lib/store";
 import promoBanner from "@/assets/promo-banner.jpg";
 
 export const Route = createFileRoute("/")({
@@ -35,7 +35,8 @@ function Index() {
   const { ready: locReady, location } = useLocation();
   const nav = useNavigate();
   const { products } = useCatalog();
-  const { count, subtotal } = useCart();
+  const { count } = useCart();
+  const { balance } = useWallet();
   const [q, setQ] = useState("");
 
   if (!ready || !locReady) {
@@ -75,8 +76,8 @@ function Index() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Link to="/cart" className="flex items-center gap-1 rounded-xl bg-card px-3 py-2 text-sm font-bold shadow-pop">
-                <Wallet className="h-4 w-4 text-primary" /> {formatINR(subtotal)}
+              <Link to="/menu" aria-label="Kartigo Cash wallet" className="flex items-center gap-1 rounded-xl bg-card px-3 py-2 text-sm font-bold shadow-pop">
+                <Wallet className="h-4 w-4 text-primary" /> {formatINR(balance)}
               </Link>
               <Link to="/menu" aria-label="Account" className="grid h-10 w-10 place-items-center rounded-full bg-card shadow-pop">
                 <User2 className="h-5 w-5" />

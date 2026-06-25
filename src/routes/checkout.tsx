@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { Header } from "@/components/Header";
-import { useAuth, useCart, useCatalog, useOrders, useLocation } from "@/lib/store";
+import { useAuth, useCart, useCatalog, useOrders, useLocation, useWallet } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { toast } from "sonner";
-import { Banknote, Smartphone, MapPin, Plus, Check, Trash2, X, Tag } from "lucide-react";
+import { Banknote, Smartphone, Wallet, MapPin, Plus, Check, Trash2, X, Tag } from "lucide-react";
 
 export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
@@ -34,12 +34,13 @@ function CheckoutPage() {
   const { products } = useCatalog();
   const { place } = useOrders();
   const { savedAddresses, deliveryAddresses, addDeliveryAddress, removeDeliveryAddress, removeSavedAddress } = useLocation();
+  const { balance: walletBalance, spend: walletSpend } = useWallet();
   const nav = useNavigate();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
-  const [payment, setPayment] = useState<"cash" | "upi">("cash");
+  const [payment, setPayment] = useState<"cash" | "upi" | "wallet">("cash");
   const [placing, setPlacing] = useState(false);
 
   // Promo code state.
@@ -99,6 +100,12 @@ function CheckoutPage() {
   const discount = useMemo(() => computeDiscount(appliedCode, subtotal), [appliedCode, subtotal]);
   const total = Math.max(0, subtotal + fee - discount);
 
+  // If wallet was chosen but no longer covers the total, fall back to cash.
+  useEffect(() => {
+    if (payment === "wallet" && walletBalance < total) setPayment("cash");
+  }, [payment, walletBalance, total]);
+
+
   const applyPromo = () => {
     const code = promoInput.trim().toUpperCase();
     if (!code) { toast.error("Enter a promo code"); return; }
@@ -157,8 +164,17 @@ function CheckoutPage() {
   const handlePlace = async () => {
     const selected = addressOptions.find(a => a.id === selectedId);
     if (!selected) { toast.error("Please select a delivery address"); return; }
+    if (payment === "wallet" && walletBalance < total) {
+      toast.error(`Not enough wallet balance. Add ${formatINR(total - walletBalance)} more.`);
+      return;
+    }
     setPlacing(true);
     try {
+      // Deduct from wallet first so a failed debit blocks the order.
+      if (payment === "wallet") {
+        const ok = walletSpend(total, "Order payment");
+        if (!ok) { toast.error("Could not charge wallet"); setPlacing(false); return; }
+      }
       const order = await place({
         customerPhone: user.phone,
         customerName: selected.name,
@@ -178,6 +194,7 @@ function CheckoutPage() {
       setPlacing(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -335,7 +352,19 @@ function CheckoutPage() {
               <div className="grid gap-2 sm:grid-cols-2">
                 <PaymentOption icon={<Banknote className="h-5 w-5" />} title="Cash on delivery" desc="Pay rider in cash" selected={payment === "cash"} onClick={() => setPayment("cash")} />
                 <PaymentOption icon={<Smartphone className="h-5 w-5" />} title="UPI on delivery" desc="GPay / PhonePe / Paytm" selected={payment === "upi"} onClick={() => setPayment("upi")} />
+                <PaymentOption
+                  icon={<Wallet className="h-5 w-5" />}
+                  title="Kartigo Cash"
+                  desc={walletBalance >= total ? `Balance ${formatINR(walletBalance)}` : `Low balance ${formatINR(walletBalance)}`}
+                  selected={payment === "wallet"}
+                  disabled={walletBalance < total}
+                  onClick={() => { if (walletBalance >= total) setPayment("wallet"); }}
+                />
               </div>
+              {walletBalance < total && (
+                <p className="mt-2 text-xs text-muted-foreground">Add money to your wallet from your profile to pay with Kartigo Cash.</p>
+              )}
+
             </section>
           </div>
 
@@ -403,9 +432,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function Row({ label, value }: { label: string; value: string }) {
   return <div className="flex justify-between"><span className="text-muted-foreground">{label}</span><span className="font-semibold">{value}</span></div>;
 }
-function PaymentOption({ icon, title, desc, selected, onClick }: { icon: React.ReactNode; title: string; desc: string; selected: boolean; onClick: () => void }) {
+function PaymentOption({ icon, title, desc, selected, onClick, disabled }: { icon: React.ReactNode; title: string; desc: string; selected: boolean; onClick: () => void; disabled?: boolean }) {
   return (
-    <button onClick={onClick} className={`flex items-start gap-3 rounded-xl border p-3 text-left transition ${selected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}>
+    <button onClick={onClick} disabled={disabled} className={`flex items-start gap-3 rounded-xl border p-3 text-left transition disabled:opacity-50 ${selected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}>
       <div className={`grid h-9 w-9 place-items-center rounded-lg ${selected ? "bg-primary text-primary-foreground" : "bg-secondary"}`}>{icon}</div>
       <div>
         <div className="font-semibold">{title}</div>
