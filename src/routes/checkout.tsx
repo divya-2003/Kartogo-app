@@ -175,15 +175,15 @@ function CheckoutPage() {
         const ok = walletSpend(total, "Order payment");
         if (!ok) { toast.error("Could not charge wallet"); setPlacing(false); return; }
       }
+      // Only raw items + address are sent. The server recomputes subtotal,
+      // delivery fee, promo discount and total from its own catalog so prices
+      // can never be tampered with from the browser.
       const order = await place({
-        customerPhone: user.phone,
         customerName: selected.name,
         address: selected.address,
-        items: items.map(i => {
-          const p = products.find(p => p.id === i.productId)!;
-          return { productId: p.id, name: p.name, qty: i.qty, price: p.price };
-        }),
-        subtotal, deliveryFee: fee, discount, promoCode: appliedCode ?? undefined, total, paymentMethod: payment,
+        items: items.map(i => ({ productId: i.productId, qty: i.qty })),
+        promoCode: appliedCode ?? undefined,
+        paymentMethod: payment,
       });
       clear();
       toast.success(`Order ${order.id} placed!`);

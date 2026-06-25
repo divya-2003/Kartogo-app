@@ -1,12 +1,16 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { PRODUCTS, DELIVERY_BOYS, type Product } from "./data";
-import { supabase } from "@/integrations/supabase/client";
+import { requestOtpFn, verifyOtpFn, adminLoginFn } from "./auth.functions";
+import {
+  listOrdersFn,
+  placeOrderFn,
+  setOrderStatusFn,
+  assignOrderFn,
+  markRefundedFn,
+  cancelOrderFn,
+} from "./orders.functions";
 
-// ---------------- Allow list (server/mock layer) ----------------
-// In a real app this lives on the server. Roles are always derived from this
-// list — never from anything the client sends.
-export const ADMIN_PHONES: readonly string[] = ["9110310034"];
-export const isAdminPhone = (phone: string) => ADMIN_PHONES.includes(phone);
+
 
 // ---------------- Cart ----------------
 export type CartItem = { productId: string; qty: number };
@@ -65,7 +69,10 @@ export const useCart = () => {
   return c;
 };
 
-// ---------------- Auth (mock OTP) ----------------
+// ---------------- Auth (server-verified OTP + signed tokens) ----------------
+// OTPs are generated, hashed and verified entirely on the server, then delivered
+// by SMS. The browser only ever holds short signed tokens that prove identity —
+// it can no longer fabricate a role or a verified phone number.
 type User = { phone: string; name?: string; email?: string; address?: string; password?: string; role: "customer" | "admin" };
 export type AdminAuditEntry = { phone: string; at: number };
 
@@ -73,11 +80,16 @@ type AuthCtx = {
   user: User | null;
   /** False until the persisted session has been restored from storage. */
   ready: boolean;
-  sendOtp: (phone: string) => Promise<string>; // returns the otp for demo
-  /** Verify OTP for a customer login. Rejects admin allow-listed numbers. */
-  verifyOtp: (phone: string, otp: string) => Promise<User>;
-  /** Verify OTP for the admin portal. Rejects any phone not on the allow list. */
-  verifyAdminOtp: (phone: string, otp: string) => Promise<User>;
+  /** Signed customer token (proves phone ownership) used for server calls. */
+  customerToken: string | null;
+  /** Signed admin token issued after passcode verification. */
+  adminToken: string | null;
+  /** Request an SMS OTP. The code is never returned to the client. */
+  sendOtp: (phone: string) => Promise<void>;
+  /** Verify the SMS OTP. Returns whether the number is admin-eligible (still needs a passcode). */
+  verifyOtp: (phone: string, otp: string) => Promise<{ user: User; isAdminPhone: boolean }>;
+  /** Exchange the secret admin passcode for a signed admin token. */
+  adminLogin: (passcode: string) => Promise<User>;
   setName: (name: string) => void;
   updateProfile: (patch: Partial<Pick<User, "name" | "email" | "address" | "password">>) => void;
   logout: () => void;
@@ -87,65 +99,60 @@ const AuthContext = createContext<AuthCtx | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [pendingOtp, setPendingOtp] = useState<Record<string, string>>({});
+  const [customerToken, setCustomerToken] = useState<string | null>(null);
+  const [adminToken, setAdminToken] = useState<string | null>(null);
   const [adminAudit, setAdminAudit] = useState<AdminAuditEntry[]>([]);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     setUser(read<User | null>("qk_user", null));
+    setCustomerToken(read<string | null>("qk_customer_token", null));
+    setAdminToken(read<string | null>("qk_admin_token", null));
     setAdminAudit(read<AdminAuditEntry[]>("qk_admin_audit", []));
     setReady(true);
   }, []);
   useEffect(() => { write("qk_user", user); }, [user]);
+  useEffect(() => { write("qk_customer_token", customerToken); }, [customerToken]);
+  useEffect(() => { write("qk_admin_token", adminToken); }, [adminToken]);
   useEffect(() => { write("qk_admin_audit", adminAudit); }, [adminAudit]);
-
-  // Always derive role from the server-side allow list — never trust callers.
-  const roleFor = (phone: string): User["role"] => (isAdminPhone(phone) ? "admin" : "customer");
-
-  const checkOtp = (phone: string, otp: string) => {
-    const expected = pendingOtp[phone];
-    if (!expected) throw new Error("Please request a new OTP");
-    if (otp !== expected) throw new Error("Incorrect OTP");
-  };
 
   const value: AuthCtx = {
     user,
     ready,
+    customerToken,
+    adminToken,
     adminAudit,
     sendOtp: async (phone) => {
-      const otp = "1234"; // demo OTP — replace with a real SMS provider via Lovable Cloud later
-      setPendingOtp(p => ({ ...p, [phone]: otp }));
-      return otp;
+      await requestOtpFn({ data: { phone } });
     },
     verifyOtp: async (phone, otp) => {
-      checkOtp(phone, otp);
-      const role = roleFor(phone);
-      const u: User = { phone, role };
+      const res = await verifyOtpFn({ data: { phone, code: otp } });
+      const u: User = { phone, role: "customer" };
       setUser(u);
-      setPendingOtp(p => { const { [phone]: _, ...rest } = p; return rest; });
-      if (role === "admin") {
-        setAdminAudit(prev => [{ phone, at: Date.now() }, ...prev].slice(0, 100));
-      }
-      return u;
+      setCustomerToken(res.token);
+      // A new login is not yet an admin session until the passcode is provided.
+      setAdminToken(null);
+      return { user: u, isAdminPhone: res.isAdminPhone };
     },
-    verifyAdminOtp: async (phone, otp) => {
-      checkOtp(phone, otp);
-      if (!isAdminPhone(phone)) {
-        throw new Error("This number is not authorized for admin access.");
-      }
-      const u: User = { phone, role: "admin" };
+    adminLogin: async (passcode) => {
+      const res = await adminLoginFn({ data: { passcode } });
+      setAdminToken(res.token);
+      const u: User = { ...(user ?? { phone: "" }), role: "admin" } as User;
       setUser(u);
-      setPendingOtp(p => { const { [phone]: _, ...rest } = p; return rest; });
-      setAdminAudit(prev => [{ phone, at: Date.now() }, ...prev].slice(0, 100));
+      if (u.phone) setAdminAudit(prev => [{ phone: u.phone, at: Date.now() }, ...prev].slice(0, 100));
       return u;
     },
     setName: (name) => setUser(u => u ? { ...u, name } : u),
     updateProfile: (patch) => setUser(u => u ? { ...u, ...patch } : u),
     logout: () => {
       setUser(null);
+      setCustomerToken(null);
+      setAdminToken(null);
       if (typeof window !== "undefined") {
         try {
           localStorage.removeItem("qk_user");
+          localStorage.removeItem("qk_customer_token");
+          localStorage.removeItem("qk_admin_token");
           localStorage.removeItem("qk_cart");
         } catch { /* noop */ }
       }
@@ -157,6 +164,7 @@ export const useAuth = () => {
   const c = useContext(AuthContext);
   if (!c) throw new Error("AuthProvider missing");
   return c;
+
 };
 
 // ---------------- Wallet (Kartigo Cash) ----------------
@@ -309,12 +317,24 @@ export type Order = {
 type OrdersCtx = {
   orders: Order[];
   refresh: (customerPhone?: string) => Promise<void>;
-  place: (o: Omit<Order, "id" | "createdAt" | "status">) => Promise<Order>;
+  place: (o: PlaceOrderInput) => Promise<Order>;
   setStatus: (id: string, status: OrderStatus, cancelReason?: string) => Promise<void>;
   assign: (id: string, deliveryBoyId: string) => Promise<void>;
   markRefunded: (id: string, refunded: boolean) => Promise<void>;
+  /** Customer-scoped cancellation (only the order owner, only while "placed"). */
+  cancel: (id: string, reason: string) => Promise<Order>;
+};
+
+/** What checkout passes in — raw items only; the server computes all money. */
+export type PlaceOrderInput = {
+  items: { productId: string; qty: number }[];
+  customerName: string;
+  address: string;
+  paymentMethod: Order["paymentMethod"];
+  promoCode?: string;
 };
 const OrdersContext = createContext<OrdersCtx | null>(null);
+
 
 // Maps a database row (snake_case) to the in-app Order shape.
 type OrderRow = {
@@ -363,13 +383,6 @@ function rowToOrder(r: OrderRow): Order {
 const sortOrders = (orders: Order[]) => [...orders].sort((a, b) => b.createdAt - a.createdAt);
 const ORDERS_SYNC_KEY = "qk_orders_sync";
 
-// Postgres errors from RAISE EXCEPTION come back prefixed; strip noise so the
-// admin sees just the human-readable validation message.
-function cleanDbError(message?: string | null): string | undefined {
-  if (!message) return undefined;
-  return message.replace(/^.*?(?:ERROR:|error:)\s*/i, "").trim() || undefined;
-}
-
 function announceOrdersSync(id: string, status?: OrderStatus) {
   if (typeof window === "undefined") return;
   try {
@@ -377,68 +390,50 @@ function announceOrdersSync(id: string, status?: OrderStatus) {
   } catch { /* noop */ }
 }
 
-async function fetchOrdersFromBackend(customerPhone?: string) {
-  let query = supabase
-    .from("app_orders")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (customerPhone) query = query.eq("customer_phone", customerPhone);
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.error("Failed to load orders", error);
-    throw new Error("Orders could not be refreshed. Please try again.");
-  }
-
-  return ((data ?? []) as unknown as OrderRow[]).map(rowToOrder);
-}
-
 export function OrdersProvider({ children }: { children: ReactNode }) {
+  const { customerToken, adminToken } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
 
-  const refresh = useCallback(async (customerPhone?: string) => {
-    const latest = await fetchOrdersFromBackend(customerPhone);
-    setOrders(prev => {
-      if (!customerPhone) return sortOrders(latest);
-      const otherOrders = prev.filter(o => o.customerPhone !== customerPhone);
-      return sortOrders([...latest, ...otherOrders]);
+  // Keep the freshest tokens available to the polling loop without re-creating it.
+  const tokensRef = useRef({ customerToken, adminToken });
+  useEffect(() => { tokensRef.current = { customerToken, adminToken }; }, [customerToken, adminToken]);
+
+  // All order reads go through the server function, which scopes the result to
+  // the caller's identity (admin => all, customer => own). The browser no longer
+  // talks to the orders table directly.
+  const fetchOrders = useCallback(async (): Promise<Order[]> => {
+    const { customerToken: ct, adminToken: at } = tokensRef.current;
+    if (!ct && !at) return [];
+    const rows = await listOrdersFn({
+      data: { customerToken: ct ?? undefined, adminToken: at ?? undefined },
     });
+    return sortOrders((rows as unknown as OrderRow[]).map(rowToOrder));
   }, []);
 
-  // Load all orders from the shared backend and keep them live across devices.
+  // `customerPhone` is accepted for call-site compatibility but ignored — the
+  // server decides scope from the signed token, not from anything the client says.
+  const refresh = useCallback(async (_customerPhone?: string) => {
+    try {
+      const latest = await fetchOrders();
+      setOrders(latest);
+    } catch {
+      // Keep the last good state on transient errors.
+    }
+  }, [fetchOrders]);
+
+  // Keep order screens in sync via a lightweight foreground poll plus refetch on
+  // focus/online/cross-tab sync. (Realtime broadcast of order PII is disabled.)
   useEffect(() => {
     let active = true;
-
     const refetch = async () => {
       try {
-        const latest = await fetchOrdersFromBackend();
-        if (active) setOrders(sortOrders(latest));
-      } catch {
-        // Keep the last good state on transient network errors.
-      }
+        const latest = await fetchOrders();
+        if (active) setOrders(latest);
+      } catch { /* keep last good */ }
     };
 
     void refetch();
 
-    const channel = supabase
-      .channel("app_orders_changes")
-      .on("postgres_changes", { event: "*", schema: "public", table: "app_orders" }, payload => {
-        setOrders(prev => {
-          if (payload.eventType === "DELETE") {
-            return prev.filter(o => o.id !== (payload.old as unknown as OrderRow).id);
-          }
-          const next = rowToOrder(payload.new as unknown as OrderRow);
-          const rest = prev.filter(o => o.id !== next.id);
-          return [next, ...rest].sort((a, b) => b.createdAt - a.createdAt);
-        });
-      })
-      .subscribe();
-
-    // Background tabs throttle websockets, so a realtime event can be missed
-    // while the customer/admin tab is hidden. Re-pull the latest on focus so
-    // status changes made elsewhere always show up.
     const onFocus = () => { if (document.visibilityState === "visible") void refetch(); };
     window.addEventListener("focus", onFocus);
     window.addEventListener("online", onFocus);
@@ -448,12 +443,9 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
     };
     window.addEventListener("storage", onStorage);
 
-    // Realtime can arrive late on some browsers/networks. A lightweight
-    // foreground poll keeps admin and customer order screens in sync within a
-    // few seconds even if a websocket event is delayed or dropped.
     const poll = window.setInterval(() => {
       if (document.visibilityState === "visible") void refetch();
-    }, 1500);
+    }, 2000);
 
     return () => {
       active = false;
@@ -462,110 +454,86 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
       document.removeEventListener("visibilitychange", onFocus);
       window.removeEventListener("storage", onStorage);
       window.clearInterval(poll);
-      supabase.removeChannel(channel);
     };
-  }, []);
+  }, [fetchOrders, customerToken, adminToken]);
 
+  const upsertLocal = (saved: Order) =>
+    setOrders(prev => sortOrders([saved, ...prev.filter(o => o.id !== saved.id)]));
 
   const value: OrdersCtx = {
     orders,
     refresh,
     place: async (o) => {
-      const order: Order = { ...o, id: `OK${Date.now().toString().slice(-6)}`, createdAt: Date.now(), status: "placed" };
-      const { data, error } = await supabase.from("app_orders").insert({
-        id: order.id,
-        customer_phone: order.customerPhone,
-        customer_name: order.customerName,
-        address: order.address,
-        items: order.items,
-        subtotal: order.subtotal,
-        delivery_fee: order.deliveryFee,
-        discount: order.discount,
-        promo_code: order.promoCode ?? null,
-        total: order.total,
-        payment_method: order.paymentMethod,
-        status: order.status,
-        delivery_boy_id: order.deliveryBoyId ?? null,
-      }).select("*").single();
-
-      if (error) {
-        console.error("Failed to save order", error);
-        throw new Error("Order could not be saved. Please try again.");
-      }
-
-      const saved = rowToOrder(data as unknown as OrderRow);
-      // Add immediately so customer and admin pages update even before the
-      // realtime event arrives. The realtime listener will de-duplicate later.
-      setOrders(prev => sortOrders([saved, ...prev.filter(o => o.id !== saved.id)]));
+      const ct = tokensRef.current.customerToken;
+      if (!ct) throw new Error("Please log in to place an order");
+      const row = await placeOrderFn({
+        data: {
+          token: ct,
+          items: o.items,
+          name: o.customerName,
+          address: o.address,
+          paymentMethod: o.paymentMethod,
+          promoCode: o.promoCode,
+        },
+      });
+      const saved = rowToOrder(row as unknown as OrderRow);
+      upsertLocal(saved);
+      announceOrdersSync(saved.id, saved.status);
       return saved;
     },
     setStatus: async (id, status, cancelReason) => {
+      const at = tokensRef.current.adminToken;
+      if (!at) throw new Error("Admin authorization required");
       const previous = orders;
       setOrders(prev => prev.map(o => o.id === id ? { ...o, status, cancelReason: cancelReason ?? o.cancelReason } : o));
-      const update: { status: OrderStatus; updated_at: string; cancel_reason?: string } = { status, updated_at: new Date().toISOString() };
-      if (status === "cancelled" && cancelReason) update.cancel_reason = cancelReason;
-      const { data, error } = await supabase
-        .from("app_orders")
-        .update(update)
-        .eq("id", id)
-        .select("*")
-        .maybeSingle();
-
-      if (error || !data) {
-        console.error("Failed to update order status", error);
+      try {
+        const row = await setOrderStatusFn({ data: { adminToken: at, id, status, cancelReason } });
+        const saved = rowToOrder(row as unknown as OrderRow);
+        upsertLocal(saved);
+        announceOrdersSync(saved.id, saved.status);
+      } catch (e) {
         setOrders(previous);
-        // The server-side transition trigger raises a clear message for invalid
-        // jumps (e.g. moving backwards or changing a delivered order). Surface
-        // it so admins understand why the change was blocked.
-        throw new Error(cleanDbError(error?.message) ?? "Order status could not be updated. Please try again.");
+        throw e;
       }
-
-
-      const saved = rowToOrder(data as unknown as OrderRow);
-      setOrders(prev => sortOrders([saved, ...prev.filter(o => o.id !== saved.id)]));
-      announceOrdersSync(saved.id, saved.status);
     },
     assign: async (id, deliveryBoyId) => {
+      const at = tokensRef.current.adminToken;
+      if (!at) throw new Error("Admin authorization required");
       const previous = orders;
-      const nextDeliveryBoyId = deliveryBoyId || undefined;
-      setOrders(prev => prev.map(o => o.id === id ? { ...o, deliveryBoyId: nextDeliveryBoyId } : o));
-      const { data, error } = await supabase
-        .from("app_orders")
-        .update({ delivery_boy_id: deliveryBoyId || null, updated_at: new Date().toISOString() })
-        .eq("id", id)
-        .select("*")
-        .maybeSingle();
-
-      if (error || !data) {
-        console.error("Failed to assign delivery partner", error);
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, deliveryBoyId: deliveryBoyId || undefined } : o));
+      try {
+        const row = await assignOrderFn({ data: { adminToken: at, id, deliveryBoyId } });
+        const saved = rowToOrder(row as unknown as OrderRow);
+        upsertLocal(saved);
+        announceOrdersSync(saved.id, saved.status);
+      } catch (e) {
         setOrders(previous);
-        throw new Error("Delivery partner could not be assigned. Please try again.");
+        throw e;
       }
-
-      const saved = rowToOrder(data as unknown as OrderRow);
-      setOrders(prev => sortOrders([saved, ...prev.filter(o => o.id !== saved.id)]));
-      announceOrdersSync(saved.id, saved.status);
     },
     markRefunded: async (id, refunded) => {
+      const at = tokensRef.current.adminToken;
+      if (!at) throw new Error("Admin authorization required");
       const previous = orders;
-      const refundedAt = refunded ? Date.now() : undefined;
-      setOrders(prev => prev.map(o => o.id === id ? { ...o, refunded, refundedAt } : o));
-      const { data, error } = await supabase
-        .from("app_orders")
-        .update({ refunded, refunded_at: refunded ? new Date().toISOString() : null, updated_at: new Date().toISOString() })
-        .eq("id", id)
-        .select("*")
-        .maybeSingle();
-
-      if (error || !data) {
-        console.error("Failed to update refund status", error);
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, refunded, refundedAt: refunded ? Date.now() : undefined } : o));
+      try {
+        const row = await markRefundedFn({ data: { adminToken: at, id, refunded } });
+        const saved = rowToOrder(row as unknown as OrderRow);
+        upsertLocal(saved);
+        announceOrdersSync(saved.id, saved.status);
+      } catch (e) {
         setOrders(previous);
-        throw new Error("Refund status could not be updated. Please try again.");
+        throw e;
       }
-
-      const saved = rowToOrder(data as unknown as OrderRow);
-      setOrders(prev => sortOrders([saved, ...prev.filter(o => o.id !== saved.id)]));
+    },
+    cancel: async (id, reason) => {
+      const ct = tokensRef.current.customerToken;
+      if (!ct) throw new Error("Please log in to cancel an order");
+      const row = await cancelOrderFn({ data: { token: ct, id, reason } });
+      const saved = rowToOrder(row as unknown as OrderRow);
+      upsertLocal(saved);
       announceOrdersSync(saved.id, saved.status);
+      return saved;
     },
   };
   return <OrdersContext.Provider value={value}>{children}</OrdersContext.Provider>;
