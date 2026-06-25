@@ -119,9 +119,9 @@ function Dashboard() {
 
 function Stat({ icon, label, value, accent, warn }: { icon: React.ReactNode; label: string; value: string; accent?: boolean; warn?: boolean }) {
   return (
-    <div className={`rounded-2xl border p-4 ${warn ? "border-saffron bg-saffron/10" : accent ? "border-primary/40 bg-primary/5" : "border-border bg-card"}`}>
-      <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">{icon} {label}</div>
-      <div className="mt-2 font-display text-2xl font-bold">{value}</div>
+    <div className={`rounded-2xl border p-3 md:p-4 ${warn ? "border-saffron bg-saffron/10" : accent ? "border-primary/40 bg-primary/5" : "border-border bg-card"}`}>
+      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground md:text-xs">{icon} {label}</div>
+      <div className="mt-1.5 font-display text-xl font-bold md:mt-2 md:text-2xl">{value}</div>
     </div>
   );
 }
