@@ -69,7 +69,10 @@ export const useCart = () => {
   return c;
 };
 
-// ---------------- Auth (mock OTP) ----------------
+// ---------------- Auth (server-verified OTP + signed tokens) ----------------
+// OTPs are generated, hashed and verified entirely on the server, then delivered
+// by SMS. The browser only ever holds short signed tokens that prove identity —
+// it can no longer fabricate a role or a verified phone number.
 type User = { phone: string; name?: string; email?: string; address?: string; password?: string; role: "customer" | "admin" };
 export type AdminAuditEntry = { phone: string; at: number };
 
@@ -77,11 +80,16 @@ type AuthCtx = {
   user: User | null;
   /** False until the persisted session has been restored from storage. */
   ready: boolean;
-  sendOtp: (phone: string) => Promise<string>; // returns the otp for demo
-  /** Verify OTP for a customer login. Rejects admin allow-listed numbers. */
-  verifyOtp: (phone: string, otp: string) => Promise<User>;
-  /** Verify OTP for the admin portal. Rejects any phone not on the allow list. */
-  verifyAdminOtp: (phone: string, otp: string) => Promise<User>;
+  /** Signed customer token (proves phone ownership) used for server calls. */
+  customerToken: string | null;
+  /** Signed admin token issued after passcode verification. */
+  adminToken: string | null;
+  /** Request an SMS OTP. The code is never returned to the client. */
+  sendOtp: (phone: string) => Promise<void>;
+  /** Verify the SMS OTP. Returns whether the number is admin-eligible (still needs a passcode). */
+  verifyOtp: (phone: string, otp: string) => Promise<{ user: User; isAdminPhone: boolean }>;
+  /** Exchange the secret admin passcode for a signed admin token. */
+  adminLogin: (passcode: string) => Promise<User>;
   setName: (name: string) => void;
   updateProfile: (patch: Partial<Pick<User, "name" | "email" | "address" | "password">>) => void;
   logout: () => void;
@@ -91,65 +99,60 @@ const AuthContext = createContext<AuthCtx | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [pendingOtp, setPendingOtp] = useState<Record<string, string>>({});
+  const [customerToken, setCustomerToken] = useState<string | null>(null);
+  const [adminToken, setAdminToken] = useState<string | null>(null);
   const [adminAudit, setAdminAudit] = useState<AdminAuditEntry[]>([]);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     setUser(read<User | null>("qk_user", null));
+    setCustomerToken(read<string | null>("qk_customer_token", null));
+    setAdminToken(read<string | null>("qk_admin_token", null));
     setAdminAudit(read<AdminAuditEntry[]>("qk_admin_audit", []));
     setReady(true);
   }, []);
   useEffect(() => { write("qk_user", user); }, [user]);
+  useEffect(() => { write("qk_customer_token", customerToken); }, [customerToken]);
+  useEffect(() => { write("qk_admin_token", adminToken); }, [adminToken]);
   useEffect(() => { write("qk_admin_audit", adminAudit); }, [adminAudit]);
-
-  // Always derive role from the server-side allow list — never trust callers.
-  const roleFor = (phone: string): User["role"] => (isAdminPhone(phone) ? "admin" : "customer");
-
-  const checkOtp = (phone: string, otp: string) => {
-    const expected = pendingOtp[phone];
-    if (!expected) throw new Error("Please request a new OTP");
-    if (otp !== expected) throw new Error("Incorrect OTP");
-  };
 
   const value: AuthCtx = {
     user,
     ready,
+    customerToken,
+    adminToken,
     adminAudit,
     sendOtp: async (phone) => {
-      const otp = "1234"; // demo OTP — replace with a real SMS provider via Lovable Cloud later
-      setPendingOtp(p => ({ ...p, [phone]: otp }));
-      return otp;
+      await requestOtpFn({ data: { phone } });
     },
     verifyOtp: async (phone, otp) => {
-      checkOtp(phone, otp);
-      const role = roleFor(phone);
-      const u: User = { phone, role };
+      const res = await verifyOtpFn({ data: { phone, code: otp } });
+      const u: User = { phone, role: "customer" };
       setUser(u);
-      setPendingOtp(p => { const { [phone]: _, ...rest } = p; return rest; });
-      if (role === "admin") {
-        setAdminAudit(prev => [{ phone, at: Date.now() }, ...prev].slice(0, 100));
-      }
-      return u;
+      setCustomerToken(res.token);
+      // A new login is not yet an admin session until the passcode is provided.
+      setAdminToken(null);
+      return { user: u, isAdminPhone: res.isAdminPhone };
     },
-    verifyAdminOtp: async (phone, otp) => {
-      checkOtp(phone, otp);
-      if (!isAdminPhone(phone)) {
-        throw new Error("This number is not authorized for admin access.");
-      }
-      const u: User = { phone, role: "admin" };
+    adminLogin: async (passcode) => {
+      const res = await adminLoginFn({ data: { passcode } });
+      setAdminToken(res.token);
+      const u: User = { ...(user ?? { phone: "" }), role: "admin" } as User;
       setUser(u);
-      setPendingOtp(p => { const { [phone]: _, ...rest } = p; return rest; });
-      setAdminAudit(prev => [{ phone, at: Date.now() }, ...prev].slice(0, 100));
+      if (u.phone) setAdminAudit(prev => [{ phone: u.phone, at: Date.now() }, ...prev].slice(0, 100));
       return u;
     },
     setName: (name) => setUser(u => u ? { ...u, name } : u),
     updateProfile: (patch) => setUser(u => u ? { ...u, ...patch } : u),
     logout: () => {
       setUser(null);
+      setCustomerToken(null);
+      setAdminToken(null);
       if (typeof window !== "undefined") {
         try {
           localStorage.removeItem("qk_user");
+          localStorage.removeItem("qk_customer_token");
+          localStorage.removeItem("qk_admin_token");
           localStorage.removeItem("qk_cart");
         } catch { /* noop */ }
       }
@@ -161,6 +164,7 @@ export const useAuth = () => {
   const c = useContext(AuthContext);
   if (!c) throw new Error("AuthProvider missing");
   return c;
+
 };
 
 // ---------------- Wallet (Kartigo Cash) ----------------
