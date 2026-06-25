@@ -4,6 +4,7 @@ import { DeliveryProgress } from "@/components/DeliveryProgress";
 import { useAuth, useOrders, useCart, useCatalog, DELIVERY_BOYS, type OrderStatus, type Order } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { etaText, formatDeliveryDuration } from "@/lib/eta";
+import { paymentBreakdown, PAYMENT_LABELS } from "@/lib/payment";
 import { CheckCircle2, Package, Truck, Clock, XCircle, ChevronRight, Zap } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
