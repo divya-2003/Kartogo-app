@@ -6,9 +6,13 @@ import { LayoutDashboard, Package2, Boxes, ClipboardList, Bike, ArrowLeft, Packa
 export const Route = createFileRoute("/admin")({
   beforeLoad: () => {
     if (typeof window === "undefined") return;
-    let u: { role?: string } | null = null;
-    try { u = JSON.parse(localStorage.getItem("qk_user") || "null"); } catch { u = null; }
-    if (!u || u.role !== "admin") throw redirect({ to: "/login" });
+    // This is only a UI gate. Real protection is server-side: every admin data
+    // read/write requires a valid signed admin token, so spoofing localStorage
+    // grants access to nothing. We still require the token here to avoid showing
+    // the admin shell to non-admins.
+    let token: string | null = null;
+    try { token = JSON.parse(localStorage.getItem("qk_admin_token") || "null"); } catch { token = null; }
+    if (!token) throw redirect({ to: "/login" });
   },
   component: AdminLayout,
   head: () => ({ meta: [{ title: "Admin — Kartigo" }] }),
