@@ -159,50 +159,34 @@ function OrdersPage() {
     return () => window.clearInterval(id);
   }, [hasActiveOrders, refresh, userPhone]);
 
-  useEffect(() => {
-    if (!userPhone) return;
-
-    const channel = supabase
-      .channel(`customer_order_updates_${userPhone}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "app_orders",
-          filter: `customer_phone=eq.${userPhone}`,
-        },
-        payload => {
-          const next = payload.new as { id?: string; status?: OrderStatus; delivery_boy_id?: string | null; updated_at?: string; created_at?: string } | null;
-          if ((payload.eventType === "UPDATE" || payload.eventType === "INSERT") && next?.id) {
-            const previous = previousOrdersRef.current.get(next.id);
-            const nextDeliveryBoyId = next.delivery_boy_id ?? undefined;
-
-            if (next.status && (!previous || previous.status !== next.status)) {
-              const placedAt = next.created_at ? new Date(next.created_at).getTime() : undefined;
-              const deliveredAt = next.updated_at ? new Date(next.updated_at).getTime() : undefined;
-              notifyStatus(next.id, next.status, nextDeliveryBoyId, placedAt, deliveredAt);
-            }
-
-            if (nextDeliveryBoyId && (!previous || previous.deliveryBoyId !== nextDeliveryBoyId)) {
-              notifyDriver(next.id, nextDeliveryBoyId);
-            }
-          }
-
-          void refresh(userPhone);
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [refresh, userPhone]);
-
   const mine = useMemo(
     () => orders.filter(o => o.customerPhone === userPhone),
     [orders, userPhone],
   );
+
+  // Detect status/driver changes from the polled order list (order PII is no
+  // longer broadcast over realtime). Notify once per transition, then remember
+  // the latest state so we don't re-notify on the next poll.
+  useEffect(() => {
+    if (!userPhone) return;
+    const prevMap = previousOrdersRef.current;
+    for (const o of mine) {
+      const previous = prevMap.get(o.id);
+      // Skip the very first observation of an order to avoid replaying history.
+      if (notificationReadyRef.current) {
+        if (o.status && (!previous || previous.status !== o.status)) {
+          notifyStatus(o.id, o.status, o.deliveryBoyId, o.createdAt, o.updatedAt ?? Date.now());
+        }
+        if (o.deliveryBoyId && (!previous || previous.deliveryBoyId !== o.deliveryBoyId)) {
+          notifyDriver(o.id, o.deliveryBoyId);
+        }
+      }
+      prevMap.set(o.id, { status: o.status, deliveryBoyId: o.deliveryBoyId });
+    }
+    notificationReadyRef.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mine, userPhone]);
+
 
   // When each order entered its CURRENT status (from the order status log).
   // Used to estimate arrival time. Keyed by order id.
