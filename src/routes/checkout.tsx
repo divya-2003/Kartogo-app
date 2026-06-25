@@ -96,6 +96,12 @@ function CheckoutPage() {
     }
   }, [addressOptions, selectedId]);
 
+  // If wallet was chosen but no longer covers the total, fall back to cash.
+  useEffect(() => {
+    if (payment === "wallet" && walletBalance < total) setPayment("cash");
+  }, [payment, walletBalance, total]);
+
+
   const fee = subtotal === 0 ? 0 : subtotal >= 199 ? 0 : 25;
   const discount = useMemo(() => computeDiscount(appliedCode, subtotal), [appliedCode, subtotal]);
   const total = Math.max(0, subtotal + fee - discount);
