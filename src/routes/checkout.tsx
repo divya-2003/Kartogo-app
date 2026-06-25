@@ -34,12 +34,13 @@ function CheckoutPage() {
   const { products } = useCatalog();
   const { place } = useOrders();
   const { savedAddresses, deliveryAddresses, addDeliveryAddress, removeDeliveryAddress, removeSavedAddress } = useLocation();
+  const { balance: walletBalance, spend: walletSpend } = useWallet();
   const nav = useNavigate();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
-  const [payment, setPayment] = useState<"cash" | "upi">("cash");
+  const [payment, setPayment] = useState<"cash" | "upi" | "wallet">("cash");
   const [placing, setPlacing] = useState(false);
 
   // Promo code state.
