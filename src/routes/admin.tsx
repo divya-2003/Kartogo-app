@@ -65,7 +65,7 @@ function AdminLayout() {
 
       {/* Mobile: sticky bottom tab bar */}
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur md:hidden">
-        <div className="mx-auto grid max-w-lg grid-cols-6">
+        <div className="mx-auto flex max-w-lg">
           {NAV.map(n => {
             const active = isActive(n.to);
             const badge = n.to === "/admin/cancellations" && cancelledCount > 0 ? cancelledCount : null;
@@ -73,7 +73,7 @@ function AdminLayout() {
               <Link
                 key={n.to}
                 to={n.to}
-                className={`relative flex flex-col items-center gap-1 py-2 text-[10px] font-semibold transition ${active ? "text-primary" : "text-muted-foreground"}`}
+                className={`relative flex flex-1 flex-col items-center gap-1 py-2 text-[10px] font-semibold transition ${active ? "text-primary" : "text-muted-foreground"}`}
               >
                 <span className={`grid h-8 w-8 place-items-center rounded-xl transition ${active ? "bg-primary/10" : ""}`}>
                   <n.icon className="h-[18px] w-[18px]" />
