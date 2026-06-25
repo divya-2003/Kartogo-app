@@ -442,12 +442,42 @@ function OrdersPage() {
                               ? <span className="font-semibold">{formatINR(o.deliveryFee)}</span>
                               : <span className="font-semibold text-leaf">FREE</span>
                           } />
+                          {o.discount > 0 && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-muted-foreground">Discount{o.promoCode ? ` (${o.promoCode})` : ""}</span>
+                              <span className="font-semibold text-primary">−{formatINR(o.discount)}</span>
+                            </div>
+                          )}
                           <div className="mt-2 flex items-center justify-between border-t border-border pt-2 text-base font-bold">
                             <span>Total Bill</span>
                             <span>{formatINR(o.total)}</span>
                           </div>
                         </div>
+
+                        {/* Payment breakdown */}
+                        {(() => {
+                          const b = paymentBreakdown(o);
+                          return (
+                            <div className="mt-3 border-t border-border pt-3">
+                              <div className="mb-2 text-sm font-bold">Payment</div>
+                              <div className="space-y-1.5 text-sm">
+                                <Row label="Method" value={<span className="font-semibold">{PAYMENT_LABELS[o.paymentMethod]}</span>} />
+                                {b.walletUsed > 0 && (
+                                  <Row label="Kartigo Cash used" value={<span className="font-semibold text-primary">{formatINR(b.walletUsed)}</span>} />
+                                )}
+                                {b.otherUsed > 0 && (
+                                  <Row label={`${b.otherLabel}`} value={<span className="font-semibold">{formatINR(b.otherUsed)}</span>} />
+                                )}
+                                <div className="mt-1 flex items-center justify-between border-t border-border pt-1.5 font-bold">
+                                  <span>Total paid</span>
+                                  <span>{formatINR(o.total)}</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
+
 
                       <div className="mt-3 text-xs text-muted-foreground">Deliver to: {o.address}</div>
                     </div>
