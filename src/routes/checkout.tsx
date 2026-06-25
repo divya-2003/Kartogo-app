@@ -346,7 +346,19 @@ function CheckoutPage() {
               <div className="grid gap-2 sm:grid-cols-2">
                 <PaymentOption icon={<Banknote className="h-5 w-5" />} title="Cash on delivery" desc="Pay rider in cash" selected={payment === "cash"} onClick={() => setPayment("cash")} />
                 <PaymentOption icon={<Smartphone className="h-5 w-5" />} title="UPI on delivery" desc="GPay / PhonePe / Paytm" selected={payment === "upi"} onClick={() => setPayment("upi")} />
+                <PaymentOption
+                  icon={<Wallet className="h-5 w-5" />}
+                  title="Kartigo Cash"
+                  desc={walletBalance >= total ? `Balance ${formatINR(walletBalance)}` : `Low balance ${formatINR(walletBalance)}`}
+                  selected={payment === "wallet"}
+                  disabled={walletBalance < total}
+                  onClick={() => { if (walletBalance >= total) setPayment("wallet"); }}
+                />
               </div>
+              {walletBalance < total && (
+                <p className="mt-2 text-xs text-muted-foreground">Add money to your wallet from your profile to pay with Kartigo Cash.</p>
+              )}
+
             </section>
           </div>
 
