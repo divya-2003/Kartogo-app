@@ -1,8 +1,8 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useAuth } from "@/lib/store";
 import { toast } from "sonner";
-import { Phone, KeyRound } from "lucide-react";
+import { Phone, KeyRound, ShieldCheck } from "lucide-react";
 import kartigoLogo from "@/assets/kartigo-logo.png.asset.json";
 
 export const Route = createFileRoute("/login")({
@@ -14,13 +14,13 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
-  const { sendOtp, verifyOtp } = useAuth();
+  const { sendOtp, verifyOtp, adminLogin } = useAuth();
   const nav = useNavigate();
   const { redirect } = Route.useSearch();
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
-  const [stage, setStage] = useState<"phone" | "otp">("phone");
-  const [sentOtp, setSentOtp] = useState<string | null>(null);
+  const [passcode, setPasscode] = useState("");
+  const [stage, setStage] = useState<"phone" | "otp" | "passcode">("phone");
   const [loading, setLoading] = useState(false);
 
   const handleSend = async (e: React.FormEvent) => {
@@ -28,10 +28,11 @@ function LoginPage() {
     if (!/^\d{10}$/.test(phone)) { toast.error("Enter a valid 10-digit mobile"); return; }
     setLoading(true);
     try {
-      const code = await sendOtp(phone);
-      setSentOtp(code);
+      await sendOtp(phone);
       setStage("otp");
       toast.success(`OTP sent to +91 ${phone}`);
+    } catch (err) {
+      toast.error((err as Error).message);
     } finally { setLoading(false); }
   };
 
@@ -39,9 +40,28 @@ function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const u = await verifyOtp(phone, otp);
+      const { isAdminPhone } = await verifyOtp(phone, otp);
+      if (isAdminPhone) {
+        // Admin numbers must also clear the secret passcode before any admin
+        // token is issued — OTP alone never grants admin access.
+        setStage("passcode");
+        toast.success("Identity verified. Enter your admin passcode.");
+        return;
+      }
       toast.success("Welcome to Kartigo!");
-      nav({ to: u.role === "admin" ? "/admin" : (redirect ?? "/") });
+      nav({ to: redirect ?? "/" });
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally { setLoading(false); }
+  };
+
+  const handlePasscode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await adminLogin(passcode);
+      toast.success("Welcome back, admin!");
+      nav({ to: "/admin" });
     } catch (err) {
       toast.error((err as Error).message);
     } finally { setLoading(false); }
@@ -65,7 +85,7 @@ function LoginPage() {
           <h2 className="font-display text-xl font-bold">Login or sign up</h2>
           <p className="mt-1 text-sm text-muted-foreground">We'll send an OTP to your mobile.</p>
 
-          {stage === "phone" ? (
+          {stage === "phone" && (
             <form onSubmit={handleSend} className="mt-6 space-y-4">
               <div>
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Mobile number</label>
@@ -83,19 +103,18 @@ function LoginPage() {
                 {loading ? "Sending..." : "Send OTP"}
               </button>
             </form>
-          ) : (
+          )}
+
+          {stage === "otp" && (
             <form onSubmit={handleVerify} className="mt-6 space-y-4">
-              <div className="rounded-lg bg-saffron/15 px-3 py-2 text-sm">
-                Demo OTP: <span className="font-mono font-bold">{sentOtp}</span>
-              </div>
               <div>
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Enter OTP sent to +91 {phone}</label>
                 <div className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-2 focus-within:ring-2 focus-within:ring-ring">
                   <KeyRound className="h-4 w-4 text-muted-foreground" />
                   <input
-                    autoFocus inputMode="numeric" maxLength={4}
+                    autoFocus inputMode="numeric" maxLength={6}
                     value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, ""))}
-                    placeholder="4-digit OTP" className="w-full bg-transparent text-base tracking-[0.5em] outline-none"
+                    placeholder="6-digit OTP" className="w-full bg-transparent text-base tracking-[0.5em] outline-none"
                   />
                 </div>
               </div>
@@ -103,6 +122,26 @@ function LoginPage() {
                 {loading ? "Verifying..." : "Verify & continue"}
               </button>
               <button type="button" onClick={() => { setStage("phone"); setOtp(""); }} className="w-full text-center text-sm text-muted-foreground hover:text-foreground">Change number</button>
+            </form>
+          )}
+
+          {stage === "passcode" && (
+            <form onSubmit={handlePasscode} className="mt-6 space-y-4">
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Admin passcode</label>
+                <div className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-2 focus-within:ring-2 focus-within:ring-ring">
+                  <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                  <input
+                    autoFocus type="password"
+                    value={passcode} onChange={e => setPasscode(e.target.value)}
+                    placeholder="Enter admin passcode" className="w-full bg-transparent text-base outline-none"
+                  />
+                </div>
+              </div>
+              <button disabled={loading} className="w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
+                {loading ? "Verifying..." : "Enter admin portal"}
+              </button>
+              <button type="button" onClick={() => { setStage("otp"); setPasscode(""); }} className="w-full text-center text-sm text-muted-foreground hover:text-foreground">Back</button>
             </form>
           )}
         </div>
