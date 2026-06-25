@@ -426,9 +426,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function Row({ label, value }: { label: string; value: string }) {
   return <div className="flex justify-between"><span className="text-muted-foreground">{label}</span><span className="font-semibold">{value}</span></div>;
 }
-function PaymentOption({ icon, title, desc, selected, onClick }: { icon: React.ReactNode; title: string; desc: string; selected: boolean; onClick: () => void }) {
+function PaymentOption({ icon, title, desc, selected, onClick, disabled }: { icon: React.ReactNode; title: string; desc: string; selected: boolean; onClick: () => void; disabled?: boolean }) {
   return (
-    <button onClick={onClick} className={`flex items-start gap-3 rounded-xl border p-3 text-left transition ${selected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}>
+    <button onClick={onClick} disabled={disabled} className={`flex items-start gap-3 rounded-xl border p-3 text-left transition disabled:opacity-50 ${selected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}>
       <div className={`grid h-9 w-9 place-items-center rounded-lg ${selected ? "bg-primary text-primary-foreground" : "bg-secondary"}`}>{icon}</div>
       <div>
         <div className="font-semibold">{title}</div>
