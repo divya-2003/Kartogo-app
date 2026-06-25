@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useOrders } from "@/lib/store";
+import { useOrders, useWallet } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { toast } from "sonner";
 import { AlertTriangle, BadgeIndianRupee, CheckCircle2, PackageX, RotateCcw } from "lucide-react";
@@ -10,8 +10,12 @@ export const Route = createFileRoute("/admin/cancellations")({
   head: () => ({ meta: [{ title: "Cancelled orders — Kartigo" }] }),
 });
 
+// Prepaid orders (UPI or Kartigo Cash) require a refund; cash-on-delivery never does.
+const isPrepaid = (method: string) => method === "upi" || method === "wallet";
+
 function Cancellations() {
   const { orders, markRefunded } = useOrders();
+  const { refundToPhone } = useWallet();
   const [filter, setFilter] = useState<"all" | "pending" | "refunded">("all");
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -20,12 +24,12 @@ function Cancellations() {
     [orders],
   );
 
-  const pendingRefunds = cancelled.filter(o => o.paymentMethod === "upi" && !o.refunded);
+  const pendingRefunds = cancelled.filter(o => isPrepaid(o.paymentMethod) && !o.refunded);
   const refundedCount = cancelled.filter(o => o.refunded).length;
   const refundAmount = pendingRefunds.reduce((s, o) => s + o.total, 0);
 
   const shown = useMemo(() => {
-    if (filter === "pending") return cancelled.filter(o => o.paymentMethod === "upi" && !o.refunded);
+    if (filter === "pending") return cancelled.filter(o => isPrepaid(o.paymentMethod) && !o.refunded);
     if (filter === "refunded") return cancelled.filter(o => o.refunded);
     return cancelled;
   }, [cancelled, filter]);
@@ -34,6 +38,11 @@ function Cancellations() {
     setBusy(id);
     try {
       await markRefunded(id, next);
+      // Reverse Kartigo Cash payments back into the customer's wallet on refund.
+      const order = cancelled.find(o => o.id === id);
+      if (next && order && order.paymentMethod === "wallet" && order.total > 0) {
+        refundToPhone(order.customerPhone, order.total, `Refund for cancelled order ${order.id}`);
+      }
       toast.success(next ? "Marked as refunded" : "Refund reverted");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not update refund");

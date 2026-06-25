@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { DeliveryProgress } from "@/components/DeliveryProgress";
-import { useAuth, useOrders, useCart, useCatalog, DELIVERY_BOYS, type OrderStatus, type Order } from "@/lib/store";
+import { useAuth, useOrders, useCart, useCatalog, useWallet, DELIVERY_BOYS, type OrderStatus, type Order } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { etaText, formatDeliveryDuration } from "@/lib/eta";
 import { paymentBreakdown, PAYMENT_LABELS } from "@/lib/payment";
-import { CheckCircle2, Package, Truck, Clock, XCircle, ChevronRight, Zap } from "lucide-react";
+import { CheckCircle2, Package, Truck, Clock, XCircle, ChevronRight, Zap, Download } from "lucide-react";
+import { downloadInvoice } from "@/lib/invoice";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -51,7 +52,8 @@ const ACTIVE_TITLE: Record<Exclude<OrderStatus, "delivered" | "cancelled">, stri
 
 function OrdersPage() {
   const { user } = useAuth();
-  const { orders, refresh, setStatus } = useOrders();
+  const { orders, refresh, setStatus, markRefunded } = useOrders();
+  const { refundToPhone } = useWallet();
   const [cancelling, setCancelling] = useState<string | null>(null);
   const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
 
@@ -61,7 +63,14 @@ function OrdersPage() {
     setCancelling(o.id);
     try {
       await setStatus(o.id, "cancelled", reason);
-      toast.success("Order cancelled");
+      // Reverse any wallet payment and record the refund in wallet history.
+      if (o.paymentMethod === "wallet" && o.total > 0 && !o.refunded) {
+        refundToPhone(o.customerPhone, o.total, `Refund for cancelled order ${o.id}`);
+        try { await markRefunded(o.id, true); } catch { /* refund still credited to wallet */ }
+        toast.success(`Order cancelled · ${formatINR(o.total)} refunded to Kartigo Cash`);
+      } else {
+        toast.success("Order cancelled");
+      }
       setCancelTarget(null);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not cancel order");
@@ -480,6 +489,13 @@ function OrdersPage() {
 
 
                       <div className="mt-3 text-xs text-muted-foreground">Deliver to: {o.address}</div>
+
+                      <button
+                        onClick={() => downloadInvoice(o)}
+                        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/10"
+                      >
+                        <Download className="h-4 w-4" /> Download invoice
+                      </button>
                     </div>
                   )}
 
