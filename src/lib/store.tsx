@@ -285,7 +285,7 @@ export type Order = {
   discount: number;
   promoCode?: string;
   total: number;
-  paymentMethod: "cash" | "upi";
+  paymentMethod: "cash" | "upi" | "wallet";
   status: OrderStatus;
   deliveryBoyId?: string;
   cancelReason?: string;
