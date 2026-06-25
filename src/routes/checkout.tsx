@@ -362,7 +362,9 @@ function CheckoutPage() {
                 />
               </div>
               {walletBalance < total && (
-                <p className="mt-2 text-xs text-muted-foreground">Add money to your wallet from your profile to pay with Kartigo Cash.</p>
+                <p className="mt-2 flex items-center gap-1.5 rounded-lg bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive">
+                  <X className="h-3.5 w-3.5" /> Insufficient Kartigo Cash — you need {formatINR(total - walletBalance)} more. Add money from your profile to pay with the wallet.
+                </p>
               )}
 
             </section>
