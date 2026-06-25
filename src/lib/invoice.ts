@@ -1,4 +1,3 @@
-import { jsPDF } from "jspdf";
 import type { Order } from "./store";
 import { paymentBreakdown, PAYMENT_LABELS } from "./payment";
 
