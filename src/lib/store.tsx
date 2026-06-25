@@ -214,10 +214,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     const refundToPhone: WalletCtx["refundToPhone"] = (toPhone, amount, note = "Refund") => {
       if (!toPhone || !amount || amount <= 0) return;
       const amt = Math.round(amount);
+      const txn: WalletTxn = { id: `w${Date.now()}`, type: "credit", amount: amt, note, at: Date.now() };
       setBalances(prev => ({ ...prev, [toPhone]: (prev[toPhone] ?? 0) + amt }));
       setAllTxns(prev => ({
         ...prev,
-        [toPhone]: [{ id: `w${Date.now()}`, type: "credit", amount: amt, note, at: Date.now() }, ...(prev[toPhone] ?? [])].slice(0, 50),
+        [toPhone]: [txn, ...(prev[toPhone] ?? [])].slice(0, 50),
       }));
     };
 
