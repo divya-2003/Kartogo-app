@@ -135,6 +135,7 @@ function MenuPage() {
         {/* Your Information */}
         <h2 className="mb-3 mt-8 font-display text-xl font-bold">Your Information</h2>
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-pop">
+          <Row to="/wallet" icon={<Wallet className="h-5 w-5" />} label="Kartigo Cash" sub={formatINR(balance)} />
           <Row onClick={() => soon("Your Refunds")} icon={<IndianRupee className="h-5 w-5" />} label="Your Refunds" />
           <Row onClick={() => soon("Your Wishlist")} icon={<Heart className="h-5 w-5" />} label="Your Wishlist" />
           <Row onClick={() => soon("E-Gift Cards")} icon={<CreditCard className="h-5 w-5" />} label="E-Gift Cards" />
