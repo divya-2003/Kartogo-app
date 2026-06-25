@@ -76,8 +76,8 @@ function Index() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Link to="/cart" className="flex items-center gap-1 rounded-xl bg-card px-3 py-2 text-sm font-bold shadow-pop">
-                <Wallet className="h-4 w-4 text-primary" /> {formatINR(subtotal)}
+              <Link to="/menu" aria-label="Kartigo Cash wallet" className="flex items-center gap-1 rounded-xl bg-card px-3 py-2 text-sm font-bold shadow-pop">
+                <Wallet className="h-4 w-4 text-primary" /> {formatINR(balance)}
               </Link>
               <Link to="/menu" aria-label="Account" className="grid h-10 w-10 place-items-center rounded-full bg-card shadow-pop">
                 <User2 className="h-5 w-5" />
