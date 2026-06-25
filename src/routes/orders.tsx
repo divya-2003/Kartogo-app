@@ -52,7 +52,7 @@ const ACTIVE_TITLE: Record<Exclude<OrderStatus, "delivered" | "cancelled">, stri
 
 function OrdersPage() {
   const { user } = useAuth();
-  const { orders, refresh, setStatus, markRefunded } = useOrders();
+  const { orders, refresh, cancel } = useOrders();
   const { refundToPhone } = useWallet();
   const [cancelling, setCancelling] = useState<string | null>(null);
   const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
@@ -62,11 +62,11 @@ function OrdersPage() {
     if (!o || o.status !== "placed") return;
     setCancelling(o.id);
     try {
-      await setStatus(o.id, "cancelled", reason);
-      // Reverse any wallet payment and record the refund in wallet history.
+      // Server verifies ownership + that the order is still cancellable, and
+      // flags wallet refunds itself. The client only credits the local wallet.
+      await cancel(o.id, reason);
       if (o.paymentMethod === "wallet" && o.total > 0 && !o.refunded) {
         refundToPhone(o.customerPhone, o.total, `Refund for cancelled order ${o.id}`);
-        try { await markRefunded(o.id, true); } catch { /* refund still credited to wallet */ }
         toast.success(`Order cancelled · ${formatINR(o.total)} refunded to Kartigo Cash`);
       } else {
         toast.success("Order cancelled");
