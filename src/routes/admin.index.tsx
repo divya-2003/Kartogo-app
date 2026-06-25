@@ -20,11 +20,11 @@ function Dashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-3xl font-bold">Dashboard</h1>
+        <h1 className="font-display text-2xl font-bold md:text-3xl">Dashboard</h1>
         <p className="text-sm text-muted-foreground">Today's snapshot for Kartigo Ongole</p>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat icon={<IndianRupee className="h-5 w-5" />} label="Today's revenue" value={formatINR(revenue)} />
         <Stat icon={<ShoppingBag className="h-5 w-5" />} label="Today's orders" value={String(todays.length)} />
         <Stat icon={<Truck className="h-5 w-5" />} label="Pending orders" value={String(pending.length)} accent />
