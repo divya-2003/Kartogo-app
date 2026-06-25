@@ -87,7 +87,11 @@ function MenuPage() {
             <span className="text-sm text-muted-foreground">Available Balance <span className="font-bold text-foreground">{formatINR(balance)}</span></span>
             <button onClick={() => { setAmount(""); setShowAdd(true); }} className="rounded-lg bg-card px-4 py-2 text-sm font-bold shadow-pop">Add Balance</button>
           </div>
+          <Link to="/wallet" className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
+            View transaction history <ChevronRight className="h-4 w-4" />
+          </Link>
         </div>
+
 
         {showAdd && (
           <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center" onClick={() => setShowAdd(false)}>

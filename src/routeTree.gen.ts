@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as MenuRouteImport } from './routes/menu'
@@ -27,6 +28,11 @@ import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
 import { Route as AdminDeliveryRouteImport } from './routes/admin.delivery'
 import { Route as AdminCancellationsRouteImport } from './routes/admin.cancellations'
 
+const WalletRoute = WalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/menu': typeof MenuRoute
   '/orders': typeof OrdersRoute
   '/search': typeof SearchRoute
+  '/wallet': typeof WalletRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/inventory': typeof AdminInventoryRoute
@@ -141,6 +148,7 @@ export interface FileRoutesByTo {
   '/menu': typeof MenuRoute
   '/orders': typeof OrdersRoute
   '/search': typeof SearchRoute
+  '/wallet': typeof WalletRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/inventory': typeof AdminInventoryRoute
@@ -161,6 +169,7 @@ export interface FileRoutesById {
   '/menu': typeof MenuRoute
   '/orders': typeof OrdersRoute
   '/search': typeof SearchRoute
+  '/wallet': typeof WalletRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/inventory': typeof AdminInventoryRoute
@@ -182,6 +191,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/orders'
     | '/search'
+    | '/wallet'
     | '/admin/cancellations'
     | '/admin/delivery'
     | '/admin/inventory'
@@ -200,6 +210,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/orders'
     | '/search'
+    | '/wallet'
     | '/admin/cancellations'
     | '/admin/delivery'
     | '/admin/inventory'
@@ -219,6 +230,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/orders'
     | '/search'
+    | '/wallet'
     | '/admin/cancellations'
     | '/admin/delivery'
     | '/admin/inventory'
@@ -239,12 +251,20 @@ export interface RootRouteChildren {
   MenuRoute: typeof MenuRoute
   OrdersRoute: typeof OrdersRoute
   SearchRoute: typeof SearchRoute
+  WalletRoute: typeof WalletRoute
   CategorySlugRoute: typeof CategorySlugRoute
   ProductIdRoute: typeof ProductIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wallet': {
+      id: '/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof WalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/search': {
       id: '/search'
       path: '/search'
@@ -397,6 +417,7 @@ const rootRouteChildren: RootRouteChildren = {
   MenuRoute: MenuRoute,
   OrdersRoute: OrdersRoute,
   SearchRoute: SearchRoute,
+  WalletRoute: WalletRoute,
   CategorySlugRoute: CategorySlugRoute,
   ProductIdRoute: ProductIdRoute,
 }
