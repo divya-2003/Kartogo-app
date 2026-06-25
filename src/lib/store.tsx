@@ -211,7 +211,17 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       return true;
     };
 
-    return { balance, txns, addMoney, spend };
+    const refundToPhone: WalletCtx["refundToPhone"] = (toPhone, amount, note = "Refund") => {
+      if (!toPhone || !amount || amount <= 0) return;
+      const amt = Math.round(amount);
+      setBalances(prev => ({ ...prev, [toPhone]: (prev[toPhone] ?? 0) + amt }));
+      setAllTxns(prev => ({
+        ...prev,
+        [toPhone]: [{ id: `w${Date.now()}`, type: "credit", amount: amt, note, at: Date.now() }, ...(prev[toPhone] ?? [])].slice(0, 50),
+      }));
+    };
+
+    return { balance, txns, addMoney, spend, refundToPhone };
   }, [phone, balances, allTxns]);
 
   return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
