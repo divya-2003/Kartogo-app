@@ -169,6 +169,8 @@ type WalletCtx = {
   txns: WalletTxn[];
   addMoney: (amount: number) => void;
   spend: (amount: number, note?: string) => boolean;
+  /** Credit a refund back to a specific phone's wallet (e.g. on cancellation). */
+  refundToPhone: (phone: string, amount: number, note?: string) => void;
 };
 const WalletContext = createContext<WalletCtx | null>(null);
 
