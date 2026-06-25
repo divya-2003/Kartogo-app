@@ -489,6 +489,13 @@ function OrdersPage() {
 
 
                       <div className="mt-3 text-xs text-muted-foreground">Deliver to: {o.address}</div>
+
+                      <button
+                        onClick={() => downloadInvoice(o)}
+                        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/5 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/10"
+                      >
+                        <Download className="h-4 w-4" /> Download invoice
+                      </button>
                     </div>
                   )}
 
