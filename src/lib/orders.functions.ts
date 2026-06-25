@@ -153,7 +153,10 @@ export const setOrderStatusFn = createServerFn({ method: "POST" })
     const { verifyAdminToken } = await import("./auth-tokens.server");
     if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
 
-    const update: Record<string, unknown> = { status: data.status, updated_at: new Date().toISOString() };
+    const update: { status: OrderStatus; updated_at: string; cancel_reason?: string } = {
+      status: data.status,
+      updated_at: new Date().toISOString(),
+    };
     if (data.status === "cancelled" && data.cancelReason) update.cancel_reason = data.cancelReason;
 
     const { data: row, error } = await supabaseAdmin
