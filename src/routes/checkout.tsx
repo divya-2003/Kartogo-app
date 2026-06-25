@@ -362,7 +362,9 @@ function CheckoutPage() {
                 />
               </div>
               {walletBalance < total && (
-                <p className="mt-2 text-xs text-muted-foreground">Add money to your wallet from your profile to pay with Kartigo Cash.</p>
+                <p className="mt-2 flex items-center gap-1.5 rounded-lg bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive">
+                  <X className="h-3.5 w-3.5" /> Insufficient Kartigo Cash — you need {formatINR(total - walletBalance)} more. Add money from your profile to pay with the wallet.
+                </p>
               )}
 
             </section>
@@ -415,7 +417,22 @@ function CheckoutPage() {
                 <div className="flex justify-between"><span className="text-muted-foreground">Discount ({appliedCode})</span><span className="font-semibold text-primary">−{formatINR(discount)}</span></div>
               )}
               <div className="mt-2 flex justify-between border-t border-border pt-2 text-base font-bold"><span>Total</span><span>{formatINR(total)}</span></div>
+
+              {/* Payment split */}
+              {payment === "wallet" ? (
+                <div className="mt-3 space-y-1 rounded-xl bg-primary/5 p-3">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Paid via Kartigo Cash</span><span className="font-semibold text-primary">−{formatINR(total)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Wallet balance after</span><span className="font-semibold">{formatINR(walletBalance - total)}</span></div>
+                  <div className="mt-1 flex justify-between border-t border-primary/15 pt-1.5 font-bold"><span>Payable now</span><span className="text-leaf">{formatINR(0)}</span></div>
+                </div>
+              ) : (
+                <div className="mt-3 space-y-1 rounded-xl bg-secondary/40 p-3">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Pay on delivery ({payment === "upi" ? "UPI" : "Cash"})</span><span className="font-semibold">{formatINR(total)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Wallet used</span><span className="font-semibold">{formatINR(0)}</span></div>
+                </div>
+              )}
             </div>
+
             <button disabled={placing || !selectedId} onClick={handlePlace} className="mt-5 w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
               {placing ? "Placing order..." : "Place order"}
             </button>
