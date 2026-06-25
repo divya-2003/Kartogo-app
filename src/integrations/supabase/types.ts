@@ -77,6 +77,27 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_wallets: {
+        Row: {
+          balance: number
+          created_at: string
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          phone: string
+          updated_at?: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           created_at: string
@@ -347,12 +368,47 @@ export type Database = {
           },
         ]
       }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          note: string
+          phone: string
+          type: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          note?: string
+          phone: string
+          type: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          note?: string
+          phone?: string
+          type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      adjust_wallet: {
+        Args: {
+          p_amount: number
+          p_note: string
+          p_phone: string
+          p_type: string
+        }
+        Returns: number
+      }
     }
     Enums: {
       order_status:

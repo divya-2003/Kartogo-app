@@ -105,6 +105,26 @@ export const placeOrderFn = createServerFn({ method: "POST" })
     const total = Math.max(0, subtotal + fee - discount);
     const id = `OK${Date.now().toString().slice(-6)}`;
 
+    // Wallet payments are charged against the AUTHORITATIVE server-side balance.
+    // The deduction is validated and recorded in the database before the order is
+    // saved, so a client can never get a free order by faking a balance.
+    let walletCharged = false;
+    if (data.paymentMethod === "wallet" && total > 0) {
+      const { error: payErr } = await supabaseAdmin.rpc("adjust_wallet", {
+        p_phone: session.phone,
+        p_amount: total,
+        p_type: "debit",
+        p_note: `Order payment ${id}`,
+      });
+      if (payErr) {
+        const msg = cleanDbError(payErr.message) ?? "";
+        if (/insufficient/i.test(msg)) throw new Error("Not enough Kartigo Cash to pay for this order");
+        console.error("Wallet charge failed", payErr);
+        throw new Error("Could not charge your wallet. Please try again.");
+      }
+      walletCharged = true;
+    }
+
     const { data: row, error } = await supabaseAdmin
       .from("app_orders")
       .insert({
@@ -126,6 +146,16 @@ export const placeOrderFn = createServerFn({ method: "POST" })
 
     if (error) {
       console.error("Failed to save order", error);
+      // Roll the wallet charge back so the customer is never debited for an
+      // order that did not persist.
+      if (walletCharged) {
+        await supabaseAdmin.rpc("adjust_wallet", {
+          p_phone: session.phone,
+          p_amount: total,
+          p_type: "credit",
+          p_note: `Refund — order ${id} failed`,
+        });
+      }
       throw new Error("Order could not be saved. Please try again.");
     }
     return row;
@@ -211,6 +241,13 @@ export const markRefundedFn = createServerFn({ method: "POST" })
     const { verifyAdminToken } = await import("./auth-tokens.server");
     if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
 
+    const { data: existing, error: readErr } = await supabaseAdmin
+      .from("app_orders")
+      .select("*")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (readErr || !existing) throw new Error("Order not found");
+
     const { data: row, error } = await supabaseAdmin
       .from("app_orders")
       .update({
@@ -226,6 +263,27 @@ export const markRefundedFn = createServerFn({ method: "POST" })
       console.error("Failed to update refund status", error);
       throw new Error("Refund status could not be updated. Please try again.");
     }
+
+    // Reverse the Kartigo Cash payment server-side when a wallet order is marked
+    // refunded (and pull it back if the refund is reverted). Guarded by the
+    // previous refunded state so the wallet is never double-credited.
+    const wasWallet = existing.payment_method === "wallet" && Number(existing.total) > 0;
+    if (wasWallet && data.refunded && !existing.refunded) {
+      await supabaseAdmin.rpc("adjust_wallet", {
+        p_phone: existing.customer_phone,
+        p_amount: Number(existing.total),
+        p_type: "credit",
+        p_note: `Refund for cancelled order ${existing.id}`,
+      });
+    } else if (wasWallet && !data.refunded && existing.refunded) {
+      await supabaseAdmin.rpc("adjust_wallet", {
+        p_phone: existing.customer_phone,
+        p_amount: Number(existing.total),
+        p_type: "debit",
+        p_note: `Refund reverted for order ${existing.id}`,
+      });
+    }
+
     return row;
   });
 
@@ -253,7 +311,7 @@ export const cancelOrderFn = createServerFn({ method: "POST" })
     if (existing.customer_phone !== session.phone) throw new Error("You can only cancel your own orders");
     if (existing.status !== "placed") throw new Error("This order can no longer be cancelled");
 
-    const wasWallet = existing.payment_method === "wallet";
+    const wasWallet = existing.payment_method === "wallet" && Number(existing.total) > 0 && !existing.refunded;
     const { data: row, error } = await supabaseAdmin
       .from("app_orders")
       .update({
@@ -272,5 +330,17 @@ export const cancelOrderFn = createServerFn({ method: "POST" })
       console.error("Failed to cancel order", error);
       throw new Error(cleanDbError(error?.message) ?? "Order could not be cancelled. Please try again.");
     }
+
+    // Reverse the wallet payment authoritatively on the server so refunds can't
+    // be faked or skipped from the client.
+    if (wasWallet) {
+      await supabaseAdmin.rpc("adjust_wallet", {
+        p_phone: existing.customer_phone,
+        p_amount: Number(existing.total),
+        p_type: "credit",
+        p_note: `Refund for cancelled order ${existing.id}`,
+      });
+    }
+
     return row;
   });

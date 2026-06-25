@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { PRODUCTS, DELIVERY_BOYS, type Product } from "./data";
 import { requestOtpFn, verifyOtpFn, adminLoginFn } from "./auth.functions";
+import { getWalletFn, addMoneyFn, type WalletTxnRow } from "./wallet.functions";
 import {
   listOrdersFn,
   placeOrderFn,
@@ -73,7 +74,7 @@ export const useCart = () => {
 // OTPs are generated, hashed and verified entirely on the server, then delivered
 // by SMS. The browser only ever holds short signed tokens that prove identity —
 // it can no longer fabricate a role or a verified phone number.
-type User = { phone: string; name?: string; email?: string; address?: string; password?: string; role: "customer" | "admin" };
+type User = { phone: string; name?: string; email?: string; address?: string; role: "customer" | "admin" };
 export type AdminAuditEntry = { phone: string; at: number };
 
 type AuthCtx = {
@@ -91,7 +92,7 @@ type AuthCtx = {
   /** Exchange the secret admin passcode for a signed admin token. */
   adminLogin: (passcode: string) => Promise<User>;
   setName: (name: string) => void;
-  updateProfile: (patch: Partial<Pick<User, "name" | "email" | "address" | "password">>) => void;
+  updateProfile: (patch: Partial<Pick<User, "name" | "email" | "address">>) => void;
   logout: () => void;
   adminAudit: AdminAuditEntry[];
 };
@@ -168,70 +169,67 @@ export const useAuth = () => {
 };
 
 // ---------------- Wallet (Kartigo Cash) ----------------
-// Real stored-value wallet. Balance changes ONLY when the user tops up money
-// or spends it on an order — it is never tied to the cart subtotal. Balances
-// are kept per phone number so each account has its own wallet.
+// The wallet is now SERVER-AUTHORITATIVE. Balance and transactions live in the
+// database and are only read/changed through token-scoped server functions, so a
+// client can no longer fabricate a balance via localStorage to pay for free.
+// Order spends and refunds are applied entirely on the server (in placeOrderFn /
+// cancelOrderFn / markRefundedFn); the client just refreshes after those calls.
 export type WalletTxn = { id: string; type: "credit" | "debit"; amount: number; note: string; at: number };
 type WalletCtx = {
   balance: number;
   txns: WalletTxn[];
-  addMoney: (amount: number) => void;
-  spend: (amount: number, note?: string) => boolean;
-  /** Credit a refund back to a specific phone's wallet (e.g. on cancellation). */
-  refundToPhone: (phone: string, amount: number, note?: string) => void;
+  /** Top up money (server-side credit). Resolves once the new balance is loaded. */
+  addMoney: (amount: number) => Promise<void>;
+  /** Re-read the authoritative balance + history from the server. */
+  refresh: () => Promise<void>;
 };
 const WalletContext = createContext<WalletCtx | null>(null);
 
+function rowToWalletTxn(r: WalletTxnRow): WalletTxn {
+  return {
+    id: r.id,
+    type: r.type,
+    amount: Number(r.amount),
+    note: r.note,
+    at: new Date(r.created_at).getTime(),
+  };
+}
+
 export function WalletProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
-  const phone = user?.phone ?? null;
-  const [balances, setBalances] = useState<Record<string, number>>({});
-  const [allTxns, setAllTxns] = useState<Record<string, WalletTxn[]>>({});
+  const { customerToken } = useAuth();
+  const [balance, setBalance] = useState(0);
+  const [txns, setTxns] = useState<WalletTxn[]>([]);
 
-  useEffect(() => {
-    setBalances(read<Record<string, number>>("qk_wallet", {}));
-    setAllTxns(read<Record<string, WalletTxn[]>>("qk_wallet_txns", {}));
+  const tokenRef = useRef(customerToken);
+  useEffect(() => { tokenRef.current = customerToken; }, [customerToken]);
+
+  const refresh = useCallback(async () => {
+    const token = tokenRef.current;
+    if (!token) { setBalance(0); setTxns([]); return; }
+    try {
+      const res = await getWalletFn({ data: { token } });
+      setBalance(Number(res.balance));
+      setTxns((res.txns as WalletTxnRow[]).map(rowToWalletTxn));
+    } catch {
+      // Keep last good state on transient errors.
+    }
   }, []);
-  useEffect(() => { write("qk_wallet", balances); }, [balances]);
-  useEffect(() => { write("qk_wallet_txns", allTxns); }, [allTxns]);
 
-  const value = useMemo<WalletCtx>(() => {
-    const balance = phone ? (balances[phone] ?? 0) : 0;
-    const txns = phone ? (allTxns[phone] ?? []) : [];
+  // Load the wallet whenever the signed-in customer changes.
+  useEffect(() => { void refresh(); }, [refresh, customerToken]);
 
-    const pushTxn = (txn: WalletTxn) =>
-      setAllTxns(prev => ({ ...prev, [phone!]: [txn, ...(prev[phone!] ?? [])].slice(0, 50) }));
-
-    const addMoney: WalletCtx["addMoney"] = (amount) => {
-      if (!phone || !amount || amount <= 0) return;
-      const amt = Math.round(amount);
-      setBalances(prev => ({ ...prev, [phone]: (prev[phone] ?? 0) + amt }));
-      pushTxn({ id: `w${Date.now()}`, type: "credit", amount: amt, note: "Added to wallet", at: Date.now() });
-    };
-
-    const spend: WalletCtx["spend"] = (amount, note = "Order payment") => {
-      if (!phone || !amount || amount <= 0) return false;
-      const current = balances[phone] ?? 0;
-      const amt = Math.round(amount);
-      if (amt > current) return false;
-      setBalances(prev => ({ ...prev, [phone]: (prev[phone] ?? 0) - amt }));
-      pushTxn({ id: `w${Date.now()}`, type: "debit", amount: amt, note, at: Date.now() });
-      return true;
-    };
-
-    const refundToPhone: WalletCtx["refundToPhone"] = (toPhone, amount, note = "Refund") => {
-      if (!toPhone || !amount || amount <= 0) return;
-      const amt = Math.round(amount);
-      const txn: WalletTxn = { id: `w${Date.now()}`, type: "credit", amount: amt, note, at: Date.now() };
-      setBalances(prev => ({ ...prev, [toPhone]: (prev[toPhone] ?? 0) + amt }));
-      setAllTxns(prev => ({
-        ...prev,
-        [toPhone]: [txn, ...(prev[toPhone] ?? [])].slice(0, 50),
-      }));
-    };
-
-    return { balance, txns, addMoney, spend, refundToPhone };
-  }, [phone, balances, allTxns]);
+  const value = useMemo<WalletCtx>(() => ({
+    balance,
+    txns,
+    addMoney: async (amount) => {
+      const token = tokenRef.current;
+      if (!token || !amount || amount <= 0) return;
+      const res = await addMoneyFn({ data: { token, amount: Math.round(amount) } });
+      setBalance(Number(res.balance));
+      setTxns((res.txns as WalletTxnRow[]).map(rowToWalletTxn));
+    },
+    refresh,
+  }), [balance, txns, refresh]);
 
   return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
 }
