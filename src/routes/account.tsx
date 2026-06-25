@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { useAuth } from "@/lib/store";
 import { toast } from "sonner";
-import { User2, Phone, Mail, MapPin, KeyRound } from "lucide-react";
+import { User2, Phone, Mail, MapPin } from "lucide-react";
 
 export const Route = createFileRoute("/account")({
   component: AccountPage,
@@ -17,8 +17,6 @@ function AccountPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
 
   useEffect(() => {
     if (!user) return;
@@ -45,14 +43,6 @@ function AccountPage() {
     toast.success("Profile updated");
   };
 
-  const savePassword = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password.length < 4) { toast.error("Password must be at least 4 characters"); return; }
-    if (password !== confirm) { toast.error("Passwords don't match"); return; }
-    updateProfile({ password });
-    setPassword(""); setConfirm("");
-    toast.success(user.password ? "Password updated" : "Password created");
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -91,24 +81,6 @@ function AccountPage() {
           </div>
 
           <button className="mt-5 w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90">Save details</button>
-        </form>
-
-        <form onSubmit={savePassword} className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-pop">
-          <h2 className="mb-1 font-display text-lg font-bold">{user.password ? "Change password" : "Create password"}</h2>
-          <p className="mb-4 text-xs text-muted-foreground">Optional — you can still login using OTP.</p>
-
-          <div className="space-y-4">
-            <Field icon={<KeyRound className="h-4 w-4 text-muted-foreground" />} label="New password">
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min 4 characters" className="w-full bg-transparent text-base outline-none" />
-            </Field>
-            <Field icon={<KeyRound className="h-4 w-4 text-muted-foreground" />} label="Confirm password">
-              <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Re-enter password" className="w-full bg-transparent text-base outline-none" />
-            </Field>
-          </div>
-
-          <button className="mt-5 w-full rounded-xl bg-secondary py-3 font-bold text-secondary-foreground hover:bg-secondary/80">
-            {user.password ? "Update password" : "Create password"}
-          </button>
         </form>
 
       </div>

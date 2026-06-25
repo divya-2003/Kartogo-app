@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useOrders, useWallet } from "@/lib/store";
+import { useOrders } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { toast } from "sonner";
 import { AlertTriangle, BadgeIndianRupee, CheckCircle2, PackageX, RotateCcw } from "lucide-react";
@@ -15,7 +15,6 @@ const isPrepaid = (method: string) => method === "upi" || method === "wallet";
 
 function Cancellations() {
   const { orders, markRefunded } = useOrders();
-  const { refundToPhone } = useWallet();
   const [filter, setFilter] = useState<"all" | "pending" | "refunded">("all");
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -37,12 +36,9 @@ function Cancellations() {
   const toggleRefund = async (id: string, next: boolean) => {
     setBusy(id);
     try {
+      // The server reverses Kartigo Cash payments back into the customer's
+      // wallet (and pulls them back on revert) when the refund flag is toggled.
       await markRefunded(id, next);
-      // Reverse Kartigo Cash payments back into the customer's wallet on refund.
-      const order = cancelled.find(o => o.id === id);
-      if (next && order && order.paymentMethod === "wallet" && order.total > 0) {
-        refundToPhone(order.customerPhone, order.total, `Refund for cancelled order ${order.id}`);
-      }
       toast.success(next ? "Marked as refunded" : "Refund reverted");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not update refund");

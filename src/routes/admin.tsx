@@ -1,22 +1,32 @@
-import { createFileRoute, Outlet, Link, useRouterState, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link, useRouterState, redirect, isRedirect } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { useOrders } from "@/lib/store";
+import { verifyAdminTokenFn } from "@/lib/auth.functions";
 import { LayoutDashboard, Package2, Boxes, ClipboardList, Bike, ArrowLeft, PackageX } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
-  beforeLoad: () => {
+  beforeLoad: async () => {
     if (typeof window === "undefined") return;
-    // This is only a UI gate. Real protection is server-side: every admin data
-    // read/write requires a valid signed admin token, so spoofing localStorage
-    // grants access to nothing. We still require the token here to avoid showing
-    // the admin shell to non-admins.
+    // The admin shell is gated on a SERVER-CONFIRMED identity check: we read the
+    // token from localStorage but never trust it — the server cryptographically
+    // verifies its HMAC signature. A spoofed value fails verification and the
+    // user is redirected to /login before the admin UI is ever rendered.
     let token: string | null = null;
     try { token = JSON.parse(localStorage.getItem("qk_admin_token") || "null"); } catch { token = null; }
     if (!token) throw redirect({ to: "/login" });
+    try {
+      const { valid } = await verifyAdminTokenFn({ data: { token } });
+      if (!valid) throw redirect({ to: "/login" });
+    } catch (e) {
+      // Re-throw redirects; treat any other failure as unauthorized.
+      if (isRedirect(e)) throw e;
+      throw redirect({ to: "/login" });
+    }
   },
   component: AdminLayout,
   head: () => ({ meta: [{ title: "Admin — Kartigo" }] }),
 });
+
 
 const NAV = [
   { to: "/admin", label: "Dashboard", short: "Home", icon: LayoutDashboard },

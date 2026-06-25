@@ -34,7 +34,7 @@ function CheckoutPage() {
   const { products } = useCatalog();
   const { place } = useOrders();
   const { savedAddresses, deliveryAddresses, addDeliveryAddress, removeDeliveryAddress, removeSavedAddress } = useLocation();
-  const { balance: walletBalance, spend: walletSpend } = useWallet();
+  const { balance: walletBalance, refresh: refreshWallet } = useWallet();
   const nav = useNavigate();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -170,14 +170,11 @@ function CheckoutPage() {
     }
     setPlacing(true);
     try {
-      // Deduct from wallet first so a failed debit blocks the order.
-      if (payment === "wallet") {
-        const ok = walletSpend(total, "Order payment");
-        if (!ok) { toast.error("Could not charge wallet"); setPlacing(false); return; }
-      }
       // Only raw items + address are sent. The server recomputes subtotal,
       // delivery fee, promo discount and total from its own catalog so prices
-      // can never be tampered with from the browser.
+      // can never be tampered with from the browser. When paying with Kartigo
+      // Cash, the server also validates and deducts the authoritative wallet
+      // balance — the client never charges the wallet itself.
       const order = await place({
         customerName: selected.name,
         address: selected.address,
@@ -186,6 +183,7 @@ function CheckoutPage() {
         paymentMethod: payment,
       });
       clear();
+      if (payment === "wallet") void refreshWallet();
       toast.success(`Order ${order.id} placed!`);
       nav({ to: "/orders", search: { open: order.id } });
     } catch (err) {

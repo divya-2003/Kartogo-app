@@ -110,3 +110,16 @@ export const adminLoginFn = createServerFn({ method: "POST" })
     }
     return { ok: true as const, token: issueAdminToken() };
   });
+
+// ---------------- Verify admin token (server-side gate) ----------------
+// Cryptographically validates a signed admin token. The admin route's
+// beforeLoad calls this so the admin shell is only rendered after a
+// server-confirmed identity check — a spoofed localStorage value verifies to
+// false and never reaches the admin UI.
+export const verifyAdminTokenFn = createServerFn({ method: "POST" })
+  .inputValidator((data: { token?: string }) => ({ token: data?.token ? String(data.token) : "" }))
+  .handler(async ({ data }) => {
+    const { verifyAdminToken } = await import("./auth-tokens.server");
+    return { valid: verifyAdminToken(data.token) };
+  });
+
