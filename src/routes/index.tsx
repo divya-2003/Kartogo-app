@@ -4,7 +4,7 @@ import { Zap, Search, Wallet, User2, Home, LayoutGrid, ShoppingBag, TrendingUp, 
 import { LocationPicker } from "@/components/LocationPicker";
 import { ProductCard } from "@/components/ProductCard";
 import { CATEGORIES, formatINR } from "@/lib/data";
-import { useCatalog, useAuth, useLocation, useCart } from "@/lib/store";
+import { useCatalog, useAuth, useLocation, useCart, useWallet } from "@/lib/store";
 import promoBanner from "@/assets/promo-banner.jpg";
 
 export const Route = createFileRoute("/")({
