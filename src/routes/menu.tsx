@@ -1,5 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useAuth, useLocation } from "@/lib/store";
+import { useState } from "react";
+import { useAuth, useLocation, useWallet } from "@/lib/store";
+import { formatINR } from "@/lib/data";
 import { toast } from "sonner";
 import {
   ChevronLeft,
