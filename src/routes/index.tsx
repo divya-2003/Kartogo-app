@@ -36,6 +36,7 @@ function Index() {
   const nav = useNavigate();
   const { products } = useCatalog();
   const { count, subtotal } = useCart();
+  const { balance } = useWallet();
   const [q, setQ] = useState("");
 
   if (!ready || !locReady) {
