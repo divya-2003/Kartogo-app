@@ -21,6 +21,7 @@ export const requestOtpFn = createServerFn({ method: "POST" })
       .from("otp_codes")
       .select("id", { count: "exact", head: true })
       .eq("phone", phone)
+      .eq("consumed", false)
       .gte("created_at", hourAgo);
     if ((count ?? 0) >= 5) throw new Error("Too many OTP requests. Please try again later.");
 
