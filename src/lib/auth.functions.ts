@@ -33,7 +33,7 @@ export const requestOtpFn = createServerFn({ method: "POST" })
 
     const { data: otpRow, error } = await supabaseAdmin
       .from("otp_codes")
-      .insert({ phone, code_hash: codeHash, expires_at: expiresAt });
+      .insert({ phone, code_hash: codeHash, expires_at: expiresAt })
       .select("id")
       .single();
     if (error) {
