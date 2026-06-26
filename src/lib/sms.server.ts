@@ -35,6 +35,20 @@ export async function sendSms(to: string, body: string): Promise<void> {
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
     console.error("Twilio send failed", res.status, detail);
+
+    try {
+      const payload = JSON.parse(detail) as { code?: number; message?: string };
+      if (payload.code === 21608) {
+        throw new Error(
+          "SMS can only be sent to verified phone numbers until SMS sending is upgraded.",
+        );
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message.includes("verified phone numbers")) {
+        throw err;
+      }
+    }
+
     throw new Error("Could not send the verification code. Please try again.");
   }
 }
