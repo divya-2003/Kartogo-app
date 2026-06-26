@@ -21,6 +21,7 @@ export const requestOtpFn = createServerFn({ method: "POST" })
       .from("otp_codes")
       .select("id", { count: "exact", head: true })
       .eq("phone", phone)
+      .eq("consumed", false)
       .gte("created_at", hourAgo);
     if ((count ?? 0) >= 5) throw new Error("Too many OTP requests. Please try again later.");
 
@@ -31,15 +32,24 @@ export const requestOtpFn = createServerFn({ method: "POST" })
     // Invalidate any earlier unused codes for this phone.
     await supabaseAdmin.from("otp_codes").update({ consumed: true }).eq("phone", phone).eq("consumed", false);
 
-    const { error } = await supabaseAdmin
+    const { data: otpRow, error } = await supabaseAdmin
       .from("otp_codes")
-      .insert({ phone, code_hash: codeHash, expires_at: expiresAt });
+      .insert({ phone, code_hash: codeHash, expires_at: expiresAt })
+      .select("id")
+      .single();
     if (error) {
       console.error("Failed to store OTP", error);
       throw new Error("Could not generate a verification code. Please try again.");
     }
 
-    await sendSms(`+91${phone}`, `Your Kartigo verification code is ${code}. It expires in 5 minutes.`);
+    try {
+      await sendSms(`+91${phone}`, `Your Kartigo verification code is ${code}. It expires in 5 minutes.`);
+    } catch (err) {
+      if (otpRow?.id) {
+        await supabaseAdmin.from("otp_codes").update({ consumed: true }).eq("id", otpRow.id);
+      }
+      throw err;
+    }
     return { ok: true as const };
   });
 
