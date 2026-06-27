@@ -68,9 +68,11 @@ function Index() {
           {/* row: delivery time + wallet + profile */}
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5 font-display text-xl font-extrabold tracking-tight text-foreground">
-                <Zap className="h-5 w-5 fill-saffron text-saffron" /> 15 minutes
-              </div>
+              {location && (
+                <div className="flex items-center gap-1.5 font-display text-xl font-extrabold tracking-tight text-foreground">
+                  <Zap className="h-5 w-5 fill-saffron text-saffron" /> 15 minutes
+                </div>
+              )}
               <div className="mt-0.5 max-w-[220px]">
                 <LocationPicker />
               </div>
