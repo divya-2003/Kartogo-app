@@ -150,7 +150,7 @@ function LocationPickerClient({
       >
         <MapPin className="h-3.5 w-3.5 text-primary" />
         <span className="max-w-[140px] truncate">
-          {location ? `${location.area} · 15 min` : "Set your location"}
+          {location ? location.area : "Set your location"}
         </span>
         <ChevronDown className="h-3 w-3 opacity-60" />
       </button>
