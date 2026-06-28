@@ -214,7 +214,8 @@ function RefundReturnsPage() {
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="q3">
-              <AccordionTrigger>Can I get a refund instead of a replacement?</AccordionContent>
+              <AccordionTrigger>Can I get a refund instead of a replacement?</AccordionTrigger>
+              <AccordionContent>
                 Refunds are issued when a replacement is not available or when you choose refund during the issue-reporting flow.
               </AccordionContent>
             </AccordionItem>
