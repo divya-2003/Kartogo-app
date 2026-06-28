@@ -73,6 +73,22 @@ function RefundReturnsPage() {
           </div>
         </div>
 
+        {/* Report issue CTA */}
+        <Link
+          to="/orders"
+          search={{ report: "1" }}
+          className="mt-4 flex items-center gap-3 overflow-hidden rounded-2xl bg-saffron p-4 text-saffron-foreground shadow-pop transition hover:opacity-95"
+        >
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/20">
+            <MessageSquareWarning className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="font-display font-bold">Report an issue with your order</div>
+            <div className="text-xs opacity-90">Open My Orders and request a refund or replacement.</div>
+          </div>
+          <ChevronRight className="h-5 w-5 shrink-0" />
+        </Link>
+
         {/* Section 1 — Fresh Products */}
         <SectionCard
           icon={<Leaf className="h-5 w-5 text-white" />}
