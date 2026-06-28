@@ -93,13 +93,19 @@ function LocationPickerClient({
     [query],
   );
 
-  // Move to the "exact location" step for a confirmed serviceable area.
+  // Selecting/confirming an area saves the location immediately. We no longer
+  // ask for the exact address (door no., apartment, landmark) here — those are
+  // collected mandatorily at checkout.
   const startDetails = (p: { query: string; area: string; etaMinutes?: number }) => {
-    setPending(p);
-    setEditingQuery(null);
-    setDoorNumber("");
-    setApartment("");
-    setLandmark("");
+    setLocation({
+      query: p.query,
+      area: p.area,
+      serviceable: true,
+      etaMinutes: p.etaMinutes,
+      baseQuery: p.query,
+    });
+    toast.success(`Delivering to ${p.area} in ${deliveryWindow(p.etaMinutes)}`);
+    setOpen(false);
   };
 
   const startEditSaved = (addr: SavedLocation) => {
