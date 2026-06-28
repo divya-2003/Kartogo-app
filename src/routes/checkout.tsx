@@ -56,7 +56,9 @@ function CheckoutPage() {
   // New-address form state.
   const [label, setLabel] = useState("Home");
   const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
+  const [newDoor, setNewDoor] = useState("");
+  const [newApartment, setNewApartment] = useState("");
+  const [newLandmark, setNewLandmark] = useState("");
 
   const userName = user?.name?.trim() || "Kartigo User";
   const addressOptions = useMemo(() => {
