@@ -44,11 +44,13 @@ function LocationPickerClient({
   savedAddresses,
   setLocation,
   removeSavedAddress,
+  updateSavedAddress,
 }: {
   location: SavedLocation | null;
   savedAddresses: SavedLocation[];
   setLocation: (loc: SavedLocation) => void;
   removeSavedAddress: (query: string) => void;
+  updateSavedAddress: (query: string, patch: Partial<Pick<SavedLocation, "doorNumber" | "apartment" | "landmark" | "baseQuery">>) => void;
 }) {
   const check = useServerFn(checkServiceability);
   const locate = useServerFn(locateByCoords);
