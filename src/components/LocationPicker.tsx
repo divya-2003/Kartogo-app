@@ -80,7 +80,7 @@ function LocationPickerClient({
 
   const selectArea = (area: ServiceableArea) => {
     setLocation({
-      query: `${area.name}, ${DARK_STORE_CITY} ${area.pincode}`,
+      query: `${area.name}, ${DARK_STORE.city} ${area.pincode}`,
       area: area.name,
       serviceable: true,
       etaMinutes: area.etaMinutes,
