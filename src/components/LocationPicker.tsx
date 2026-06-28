@@ -69,12 +69,14 @@ function LocationPickerClient({
   const [doorNumber, setDoorNumber] = useState("");
   const [apartment, setApartment] = useState("");
   const [landmark, setLandmark] = useState("");
+  const [editingQuery, setEditingQuery] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
       setQuery("");
       setDenied(null);
       setPending(null);
+      setEditingQuery(null);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [open]);
