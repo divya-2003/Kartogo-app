@@ -85,8 +85,8 @@ type AuthCtx = {
   customerToken: string | null;
   /** Signed admin token issued after passcode verification. */
   adminToken: string | null;
-  /** Request an SMS OTP. The code is never returned to the client. */
-  sendOtp: (phone: string) => Promise<void>;
+  /** Request an SMS OTP. Returns demo-mode info when SMS is bypassed. */
+  sendOtp: (phone: string) => Promise<{ demo: boolean; demoCode?: string }>;
   /** Verify the SMS OTP. Returns whether the number is admin-eligible (still needs a passcode). */
   verifyOtp: (phone: string, otp: string) => Promise<{ user: User; isAdminPhone: boolean }>;
   /** Exchange the secret admin passcode for a signed admin token. */
