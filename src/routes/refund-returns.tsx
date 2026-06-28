@@ -30,7 +30,11 @@ export const Route = createFileRoute("/refund-returns")({
   head: () => ({
     meta: [
       { title: "Refund & Returns Policy — Kartigo" },
-      { name: "description", content: "Kartigo's Refund & Returns Policy. Learn about eligible returns, replacement process, refund timelines, and how to report issues with your quick commerce order." },
+      {
+        name: "description",
+        content:
+          "Kartigo's Refund & Returns Policy. Learn about eligible returns, replacement process, refund timelines, and how to report issues with your quick commerce order.",
+      },
     ],
   }),
 });
@@ -54,9 +58,12 @@ function RefundReturnsPage() {
             <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-bold">
               <ShieldCheck className="h-4 w-4" /> Customer First
             </div>
-            <h1 className="font-display text-3xl font-bold leading-tight">Refund & Returns Policy</h1>
+            <h1 className="font-display text-3xl font-bold leading-tight">
+              Refund & Returns Policy
+            </h1>
             <p className="mt-2 max-w-md text-sm opacity-90">
-              At Kartigo, customer satisfaction is our priority. If you receive a damaged, expired, missing, or incorrect product, we're here to help.
+              At Kartigo, customer satisfaction is our priority. If you receive a damaged, expired,
+              missing, or incorrect product, we're here to help.
             </p>
           </div>
         </div>
@@ -69,14 +76,25 @@ function RefundReturnsPage() {
           body="Fruits, vegetables, dairy, bakery, frozen foods, and other perishable products cannot be returned after delivery unless:"
         >
           <ul className="mt-3 space-y-2">
-            <Bullet icon={<CheckCircle2 className="h-4 w-4 text-leaf" />} text="Product is damaged" />
-            <Bullet icon={<CheckCircle2 className="h-4 w-4 text-leaf" />} text="Product is expired" />
-            <Bullet icon={<CheckCircle2 className="h-4 w-4 text-leaf" />} text="Wrong item was delivered" />
+            <Bullet
+              icon={<CheckCircle2 className="h-4 w-4 text-leaf" />}
+              text="Product is damaged"
+            />
+            <Bullet
+              icon={<CheckCircle2 className="h-4 w-4 text-leaf" />}
+              text="Product is expired"
+            />
+            <Bullet
+              icon={<CheckCircle2 className="h-4 w-4 text-leaf" />}
+              text="Wrong item was delivered"
+            />
             <Bullet icon={<CheckCircle2 className="h-4 w-4 text-leaf" />} text="Item is missing" />
           </ul>
           <div className="mt-4 flex items-center gap-2 rounded-xl bg-saffron/10 p-3 text-sm">
             <AlertCircle className="h-4 w-4 shrink-0 text-saffron" />
-            <span className="font-semibold text-foreground">Report issues within 2 hours of delivery.</span>
+            <span className="font-semibold text-foreground">
+              Report issues within 2 hours of delivery.
+            </span>
           </div>
         </SectionCard>
 
@@ -88,9 +106,18 @@ function RefundReturnsPage() {
           body="Snacks, beverages, groceries, toiletries, and household essentials can be returned within 24 hours only if:"
         >
           <ul className="mt-3 space-y-2">
-            <Bullet icon={<CheckCircle2 className="h-4 w-4 text-leaf" />} text="Product remains unopened" />
-            <Bullet icon={<CheckCircle2 className="h-4 w-4 text-leaf" />} text="Original packaging is intact" />
-            <Bullet icon={<CheckCircle2 className="h-4 w-4 text-leaf" />} text="Product is damaged, defective, or incorrect" />
+            <Bullet
+              icon={<CheckCircle2 className="h-4 w-4 text-leaf" />}
+              text="Product remains unopened"
+            />
+            <Bullet
+              icon={<CheckCircle2 className="h-4 w-4 text-leaf" />}
+              text="Original packaging is intact"
+            />
+            <Bullet
+              icon={<CheckCircle2 className="h-4 w-4 text-leaf" />}
+              text="Product is damaged, defective, or incorrect"
+            />
           </ul>
         </SectionCard>
 
@@ -102,9 +129,18 @@ function RefundReturnsPage() {
           body="Returns are accepted within 3 days if:"
         >
           <ul className="mt-3 space-y-2">
-            <Bullet icon={<CheckCircle2 className="h-4 w-4 text-leaf" />} text="Product is unused" />
-            <Bullet icon={<CheckCircle2 className="h-4 w-4 text-leaf" />} text="Original packaging is available" />
-            <Bullet icon={<CheckCircle2 className="h-4 w-4 text-leaf" />} text="Product is not damaged by customer" />
+            <Bullet
+              icon={<CheckCircle2 className="h-4 w-4 text-leaf" />}
+              text="Product is unused"
+            />
+            <Bullet
+              icon={<CheckCircle2 className="h-4 w-4 text-leaf" />}
+              text="Original packaging is available"
+            />
+            <Bullet
+              icon={<CheckCircle2 className="h-4 w-4 text-leaf" />}
+              text="Product is not damaged by customer"
+            />
           </ul>
         </SectionCard>
 
@@ -116,11 +152,26 @@ function RefundReturnsPage() {
           body="The following cannot be returned:"
         >
           <ul className="mt-3 space-y-2">
-            <Bullet icon={<XCircle className="h-4 w-4 text-destructive" />} text="Opened food items" />
-            <Bullet icon={<XCircle className="h-4 w-4 text-destructive" />} text="Used personal care products" />
-            <Bullet icon={<XCircle className="h-4 w-4 text-destructive" />} text="Products damaged after delivery" />
-            <Bullet icon={<XCircle className="h-4 w-4 text-destructive" />} text="Products without original packaging" />
-            <Bullet icon={<XCircle className="h-4 w-4 text-destructive" />} text="Customized or special order items" />
+            <Bullet
+              icon={<XCircle className="h-4 w-4 text-destructive" />}
+              text="Opened food items"
+            />
+            <Bullet
+              icon={<XCircle className="h-4 w-4 text-destructive" />}
+              text="Used personal care products"
+            />
+            <Bullet
+              icon={<XCircle className="h-4 w-4 text-destructive" />}
+              text="Products damaged after delivery"
+            />
+            <Bullet
+              icon={<XCircle className="h-4 w-4 text-destructive" />}
+              text="Products without original packaging"
+            />
+            <Bullet
+              icon={<XCircle className="h-4 w-4 text-destructive" />}
+              text="Customized or special order items"
+            />
           </ul>
         </SectionCard>
 
@@ -132,10 +183,22 @@ function RefundReturnsPage() {
           body="Kartigo will provide a free replacement if:"
         >
           <ul className="mt-3 space-y-2">
-            <Bullet icon={<CheckCircle2 className="h-4 w-4 text-leaf" />} text="Wrong product delivered" />
-            <Bullet icon={<CheckCircle2 className="h-4 w-4 text-leaf" />} text="Damaged product received" />
-            <Bullet icon={<CheckCircle2 className="h-4 w-4 text-leaf" />} text="Expired product delivered" />
-            <Bullet icon={<CheckCircle2 className="h-4 w-4 text-leaf" />} text="Missing item in order" />
+            <Bullet
+              icon={<CheckCircle2 className="h-4 w-4 text-leaf" />}
+              text="Wrong product delivered"
+            />
+            <Bullet
+              icon={<CheckCircle2 className="h-4 w-4 text-leaf" />}
+              text="Damaged product received"
+            />
+            <Bullet
+              icon={<CheckCircle2 className="h-4 w-4 text-leaf" />}
+              text="Expired product delivered"
+            />
+            <Bullet
+              icon={<CheckCircle2 className="h-4 w-4 text-leaf" />}
+              text="Missing item in order"
+            />
           </ul>
         </SectionCard>
 
@@ -147,17 +210,8 @@ function RefundReturnsPage() {
           body="After approval, refunds are processed as follows:"
         >
           <div className="mt-4 space-y-4">
-            <TimelineItem
-              title="UPI Refund"
-              desc="1–3 Business Days"
-              status="fast"
-              first
-            />
-            <TimelineItem
-              title="Debit / Credit Card"
-              desc="3–7 Business Days"
-              status="standard"
-            />
+            <TimelineItem title="UPI Refund" desc="1–3 Business Days" status="fast" first />
+            <TimelineItem title="Debit / Credit Card" desc="3–7 Business Days" status="standard" />
             <TimelineItem
               title="Cash on Delivery Orders"
               desc="Refund via UPI or Bank Transfer within 3–5 Business Days"
@@ -192,8 +246,18 @@ function RefundReturnsPage() {
           body="For support, contact our team:"
         >
           <div className="mt-4 space-y-3">
-            <ContactRow icon={<Mail className="h-5 w-5" />} label="Email" value="support@kartigo.in" href="mailto:support@kartigo.in" />
-            <ContactRow icon={<Phone className="h-5 w-5" />} label="Phone" value="+91-9110310034" href="tel:+919110310034" />
+            <ContactRow
+              icon={<Mail className="h-5 w-5" />}
+              label="Email"
+              value="support@kartigo.in"
+              href="mailto:support@kartigo.in"
+            />
+            <ContactRow
+              icon={<Phone className="h-5 w-5" />}
+              label="Phone"
+              value="+91-9110310034"
+              href="tel:+919110310034"
+            />
           </div>
         </SectionCard>
 
@@ -204,25 +268,29 @@ function RefundReturnsPage() {
             <AccordionItem value="q1">
               <AccordionTrigger>What if I miss the 2-hour reporting window?</AccordionTrigger>
               <AccordionContent>
-                For fresh and perishable items, we need to verify the issue within 2 hours of delivery. After this window, returns may not be accepted.
+                For fresh and perishable items, we need to verify the issue within 2 hours of
+                delivery. After this window, returns may not be accepted.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="q2">
               <AccordionTrigger>Do I need to return the damaged product?</AccordionTrigger>
               <AccordionContent>
-                In most cases, our delivery partner will collect the damaged or incorrect item during replacement. For some issues, a photo may be enough.
+                In most cases, our delivery partner will collect the damaged or incorrect item
+                during replacement. For some issues, a photo may be enough.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="q3">
               <AccordionTrigger>Can I get a refund instead of a replacement?</AccordionTrigger>
               <AccordionContent>
-                Refunds are issued when a replacement is not available or when you choose refund during the issue-reporting flow.
+                Refunds are issued when a replacement is not available or when you choose refund
+                during the issue-reporting flow.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="q4">
               <AccordionTrigger>How will I know my refund status?</AccordionTrigger>
               <AccordionContent>
-                You will receive updates via SMS and email. You can also check the order details in the My Orders section.
+                You will receive updates via SMS and email. You can also check the order details in
+                the My Orders section.
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -244,7 +312,11 @@ function RefundReturnsPage() {
                 : "border-border bg-card hover:bg-secondary"
             }`}
           >
-            {understood ? <CheckCircle2 className="h-4 w-4" /> : <div className="h-4 w-4 rounded-full border border-muted-foreground" />}
+            {understood ? (
+              <CheckCircle2 className="h-4 w-4" />
+            ) : (
+              <div className="h-4 w-4 rounded-full border border-muted-foreground" />
+            )}
             I Understand
           </button>
           <button
@@ -263,7 +335,11 @@ function TopBar() {
   return (
     <div className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3 md:px-6">
-        <Link to="/" aria-label="Back" className="grid h-9 w-9 place-items-center rounded-full border border-border hover:bg-secondary">
+        <Link
+          to="/"
+          aria-label="Back"
+          className="grid h-9 w-9 place-items-center rounded-full border border-border hover:bg-secondary"
+        >
           <ChevronLeft className="h-5 w-5" />
         </Link>
         <h1 className="font-display text-xl font-bold">Refund & Returns</h1>
@@ -288,7 +364,9 @@ function SectionCard({
   return (
     <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-pop">
       <div className="flex items-start gap-3">
-        <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${iconBg}`}>{icon}</div>
+        <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${iconBg}`}>
+          {icon}
+        </div>
         <div>
           <h2 className="font-display text-lg font-bold leading-tight">{title}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{body}</p>
