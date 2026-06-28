@@ -58,10 +58,20 @@ function LocationPickerClient({
   const [denied, setDenied] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Second step: capture the exact address (door no, apartment, landmark) for a
+  // confirmed serviceable area before we save the location.
+  const [pending, setPending] = useState<
+    { query: string; area: string; etaMinutes?: number } | null
+  >(null);
+  const [doorNumber, setDoorNumber] = useState("");
+  const [apartment, setApartment] = useState("");
+  const [landmark, setLandmark] = useState("");
+
   useEffect(() => {
     if (open) {
       setQuery("");
       setDenied(null);
+      setPending(null);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [open]);
@@ -78,16 +88,48 @@ function LocationPickerClient({
     [query],
   );
 
+  // Move to the "exact location" step for a confirmed serviceable area.
+  const startDetails = (p: { query: string; area: string; etaMinutes?: number }) => {
+    setPending(p);
+    setDoorNumber("");
+    setApartment("");
+    setLandmark("");
+  };
+
   const selectArea = (area: ServiceableArea) => {
-    setLocation({
+    startDetails({
       query: `${area.name}, ${DARK_STORE.city} ${area.pincode}`,
       area: area.name,
-      serviceable: true,
       etaMinutes: area.etaMinutes,
     });
-    toast.success(`Delivering to ${area.name} in ${deliveryWindow(area.etaMinutes)}`);
+  };
+
+  const saveDetails = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pending) return;
+    if (!doorNumber.trim()) {
+      toast.error("Please add your door / flat number");
+      return;
+    }
+    const parts = [
+      doorNumber.trim(),
+      apartment.trim(),
+      pending.query,
+      landmark.trim() ? `Near ${landmark.trim()}` : "",
+    ].filter(Boolean);
+    setLocation({
+      query: parts.join(", "),
+      area: pending.area,
+      serviceable: true,
+      etaMinutes: pending.etaMinutes,
+      doorNumber: doorNumber.trim(),
+      apartment: apartment.trim() || undefined,
+      landmark: landmark.trim() || undefined,
+    });
+    toast.success(`Delivering to ${pending.area} in ${deliveryWindow(pending.etaMinutes)}`);
     setOpen(false);
   };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
