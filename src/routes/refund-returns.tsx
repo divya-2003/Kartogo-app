@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -46,9 +46,14 @@ const LAST_UPDATED = "June 28, 2026";
 function RefundReturnsPage() {
   const nav = useNavigate();
   const [understood, setUnderstood] = useState(false);
-  const [faqOpen, setFaqOpen] = useState<string | undefined>(() =>
-    typeof window !== "undefined" ? (sessionStorage.getItem("refund-faq") ?? undefined) : undefined,
-  );
+  // Start undefined on both server and client to avoid a hydration mismatch,
+  // then restore the last-opened FAQ from sessionStorage after mount.
+  const [faqOpen, setFaqOpen] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    const saved = sessionStorage.getItem("refund-faq");
+    if (saved) setFaqOpen(saved);
+  }, []);
+
 
   return (
     <div className="min-h-screen bg-secondary/40">

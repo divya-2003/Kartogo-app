@@ -11,9 +11,10 @@ import {
   type OrderStatus,
   type Order,
 } from "@/lib/store";
-import { formatINR } from "@/lib/data";
+import { formatINR, type Product } from "@/lib/data";
 import { etaText, formatDeliveryDuration } from "@/lib/eta";
 import { paymentBreakdown, PAYMENT_LABELS } from "@/lib/payment";
+import { refundEligibility } from "@/lib/refund";
 import {
   CheckCircle2,
   Package,
@@ -741,6 +742,8 @@ function OrdersPage() {
       {reportTarget && (
         <ReportIssueModal
           order={reportTarget}
+          deliveredAt={statusSince[reportTarget.id] ?? reportTarget.updatedAt}
+          products={products}
           onClose={() => setReportTarget(null)}
           onSubmit={(data) => {
             toast.success(
@@ -750,6 +753,7 @@ function OrdersPage() {
           }}
         />
       )}
+
 
       {rateTarget && (
         <RateOrderModal
@@ -891,10 +895,14 @@ function refundTimeline(method: Order["paymentMethod"]): { destination: string; 
 
 function ReportIssueModal({
   order,
+  deliveredAt,
+  products,
   onClose,
   onSubmit,
 }: {
   order: Order;
+  deliveredAt?: number;
+  products: Product[];
   onClose: () => void;
   onSubmit: (data: ReportIssueData) => void;
 }) {
@@ -902,6 +910,12 @@ function ReportIssueModal({
   const [resolution, setResolution] = useState<"Refund" | "Replacement" | null>(null);
   const [details, setDetails] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
+  const eligibility = useMemo(
+    () => refundEligibility(order, products, deliveredAt, Date.now()),
+    [order, products, deliveredAt],
+  );
+  // Refunds only apply once delivered; the window must still be open.
+  const refundClosed = order.status === "delivered" && !eligibility.eligible;
 
   return (
     <div
@@ -931,6 +945,31 @@ function ReportIssueModal({
           </div>
         </div>
 
+        {/* Refund window status per the Refund & Returns Policy time limits. */}
+        {order.status === "delivered" &&
+          (eligibility.eligible ? (
+            <div className="mb-4 flex items-start gap-2 rounded-xl bg-leaf/10 px-3 py-2.5 text-sm text-leaf">
+              <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>
+                <span className="font-bold">Refund window open</span> —{" "}
+                {eligibility.hoursLeft > 0
+                  ? `${eligibility.hoursLeft}h ${eligibility.minutesLeft}m`
+                  : `${eligibility.minutesLeft}m`}{" "}
+                left to request a refund (within {eligibility.windowLabel} of delivery).
+              </span>
+            </div>
+          ) : (
+            <div className="mb-4 flex items-start gap-2 rounded-xl bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
+              <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>
+                <span className="font-bold">Refund window closed</span> — the{" "}
+                {eligibility.windowLabel} return window for this order has passed. You can still
+                report the issue for support.
+              </span>
+            </div>
+          ))}
+
+
         <div className="space-y-2">
           {ISSUE_TYPES.map((t) => (
             <button
@@ -956,8 +995,10 @@ function ReportIssueModal({
           <div className="mb-2 text-sm font-bold">What would you prefer?</div>
           <div className="grid grid-cols-2 gap-3">
             <button
-              onClick={() => setResolution("Refund")}
-              className={`rounded-xl border py-2.5 text-sm font-bold transition ${
+              onClick={() => !refundClosed && setResolution("Refund")}
+              disabled={refundClosed}
+              title={refundClosed ? "Refund window has closed for this order" : undefined}
+              className={`rounded-xl border py-2.5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${
                 resolution === "Refund"
                   ? "border-primary bg-primary/5 text-primary"
                   : "border-border hover:bg-secondary"
