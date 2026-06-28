@@ -1,25 +1,88 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useCatalog, useOrders, useAuth } from "@/lib/store";
+import type { Order } from "@/lib/store";
 import { formatINR } from "@/lib/data";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { IndianRupee, ShoppingBag, AlertTriangle, Truck, ShieldCheck, PackageX } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({ component: Dashboard });
+
+// --- Financial assumptions used to derive the P&L breakdown ---------------
+// These rates make the cost/profit estimate transparent. Adjust here to match
+// the real business numbers whenever they are known.
+const COGS_RATE = 0.72;             // cost of goods = 72% of product sales
+const DELIVERY_COST_PER_ORDER = 30; // ₹ logistics cost to fulfil each order
+const GST_RATE = 0.05;              // 5% GST on net taxable profit
+const INTEREST_RATE = 0;            // monthly interest on business debt (none by default)
+
+type Breakdown = {
+  orders: number;
+  grossRevenue: number;
+  productSales: number;
+  deliveryFees: number;
+  discounts: number;
+  cogs: number;
+  deliveryCost: number;
+  operatingProfit: number;
+  interest: number;
+  profitBeforeTax: number;
+  tax: number;
+  netProfit: number;
+};
+
+function computeBreakdown(orders: Order[]): Breakdown {
+  // Only fulfilled (non-cancelled) orders count toward earnings.
+  const earned = orders.filter((o) => o.status !== "cancelled");
+  const grossRevenue = earned.reduce((s, o) => s + o.total, 0);
+  const productSales = earned.reduce((s, o) => s + o.subtotal, 0);
+  const deliveryFees = earned.reduce((s, o) => s + o.deliveryFee, 0);
+  const discounts = earned.reduce((s, o) => s + o.discount, 0);
+  const cogs = Math.round(productSales * COGS_RATE);
+  const deliveryCost = earned.length * DELIVERY_COST_PER_ORDER;
+  const operatingProfit = grossRevenue - cogs - deliveryCost;
+  const interest = Math.round(Math.max(0, operatingProfit) * INTEREST_RATE);
+  const profitBeforeTax = operatingProfit - interest;
+  const tax = Math.round(Math.max(0, profitBeforeTax) * GST_RATE);
+  const netProfit = profitBeforeTax - tax;
+  return {
+    orders: earned.length,
+    grossRevenue,
+    productSales,
+    deliveryFees,
+    discounts,
+    cogs,
+    deliveryCost,
+    operatingProfit,
+    interest,
+    profitBeforeTax,
+    tax,
+    netProfit,
+  };
+}
 
 function Dashboard() {
   const { products } = useCatalog();
   const { orders } = useOrders();
   const { adminAudit } = useAuth();
+  const [openPeriod, setOpenPeriod] = useState<null | "today" | "month" | "year">(null);
   const today = new Date(); today.setHours(0,0,0,0);
   const monthStart = new Date(); monthStart.setHours(0,0,0,0); monthStart.setDate(1);
   const yearStart = new Date(); yearStart.setHours(0,0,0,0); yearStart.setMonth(0, 1);
   const todays = orders.filter(o => o.createdAt >= today.getTime());
+  const monthOrders = orders.filter(o => o.createdAt >= monthStart.getTime());
+  const yearOrders = orders.filter(o => o.createdAt >= yearStart.getTime());
   const revenue = todays.reduce((s, o) => s + o.total, 0);
-  const monthlyRevenue = orders.filter(o => o.createdAt >= monthStart.getTime()).reduce((s, o) => s + o.total, 0);
-  const yearlyRevenue = orders.filter(o => o.createdAt >= yearStart.getTime()).reduce((s, o) => s + o.total, 0);
+  const monthlyRevenue = monthOrders.reduce((s, o) => s + o.total, 0);
+  const yearlyRevenue = yearOrders.reduce((s, o) => s + o.total, 0);
   const lowStock = products.filter(p => p.stock > 0 && p.stock <= 5);
   const pending = orders.filter(o => o.status !== "delivered" && o.status !== "cancelled");
   const cancelled = orders.filter(o => o.status === "cancelled");
   const refundsDue = cancelled.filter(o => o.paymentMethod === "upi" && !o.refunded);
+
+  const periodLabel = openPeriod === "today" ? "Today" : openPeriod === "month" ? "This month" : "This year";
+  const periodOrders = openPeriod === "today" ? todays : openPeriod === "month" ? monthOrders : yearOrders;
+  const breakdown = openPeriod ? computeBreakdown(periodOrders) : null;
 
   return (
     <div className="space-y-6">
