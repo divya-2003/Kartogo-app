@@ -119,7 +119,31 @@ function OrdersPage() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [reportTarget, setReportTarget] = useState<Order | null>(null);
   const [rateTarget, setRateTarget] = useState<Order | null>(null);
-  const [ratings, setRatings] = useState<Record<string, number>>({});
+  const [ratedOrderIds, setRatedOrderIds] = useState<Set<string>>(new Set());
+  const [ratedLoaded, setRatedLoaded] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("kartigo-rated-orders");
+      if (raw) {
+        const ids = JSON.parse(raw) as string[];
+        setRatedOrderIds(new Set(ids));
+      }
+    } catch {}
+    setRatedLoaded(true);
+  }, []);
+
+  const markRated = (id: string) => {
+    setRatedOrderIds((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      try {
+        localStorage.setItem("kartigo-rated-orders", JSON.stringify([...next]));
+      } catch {}
+      return next;
+    });
+  };
   const { open: openParam, report: reportParam } = Route.useSearch();
   useEffect(() => {
     if (openParam) setOpenId(openParam);
@@ -651,49 +675,29 @@ function OrdersPage() {
                   )}
 
                   {/* Footer actions — kept side by side */}
-                  <div
-                    className={`grid border-t border-border ${cancelled ? "grid-cols-2" : "grid-cols-3"}`}
-                  >
+                  <div className="flex border-t border-border divide-x divide-border">
                     {!cancelled && (
                       <button
                         onClick={() => setReportTarget(o)}
-                        className="border-r border-border py-3 text-sm font-bold text-destructive transition hover:bg-destructive/10"
+                        className="flex-1 py-3 text-sm font-bold text-destructive transition hover:bg-destructive/10"
                       >
                         Report Issue
                       </button>
                     )}
                     <button
                       onClick={() => orderAgain(o)}
-                      className="border-r border-border py-3 text-sm font-bold text-primary transition hover:bg-secondary"
+                      className="flex-1 py-3 text-sm font-bold text-primary transition hover:bg-secondary"
                     >
                       Order Again
                     </button>
-                    <button
-                      onClick={() => setRateTarget(o)}
-                      className="flex items-center justify-center gap-1.5 py-3 text-sm font-bold text-saffron transition hover:bg-saffron/10"
-                    >
-                      {ratings[o.id] ? (
-                        <>
-                          <span className="flex items-center gap-0.5">
-                            {Array.from({ length: 5 }).map((_, idx) => (
-                              <Star
-                                key={idx}
-                                className={`h-3.5 w-3.5 ${
-                                  idx < ratings[o.id]
-                                    ? "fill-saffron text-saffron"
-                                    : "text-muted-foreground/40"
-                                }`}
-                              />
-                            ))}
-                          </span>
-                          Rated
-                        </>
-                      ) : (
-                        <>
-                          <Star className="h-4 w-4" /> Rate order
-                        </>
-                      )}
-                    </button>
+                    {ratedLoaded && !ratedOrderIds.has(o.id) && (
+                      <button
+                        onClick={() => setRateTarget(o)}
+                        className="flex flex-1 items-center justify-center gap-1.5 py-3 text-sm font-bold text-saffron transition hover:bg-saffron/10"
+                      >
+                        <Star className="h-4 w-4" /> Rate order
+                      </button>
+                    )}
                   </div>
 
 
@@ -750,10 +754,10 @@ function OrdersPage() {
       {rateTarget && (
         <RateOrderModal
           order={rateTarget}
-          initialRating={ratings[rateTarget.id] ?? 0}
+          initialRating={0}
           onClose={() => setRateTarget(null)}
           onSubmit={({ rating, feedback }) => {
-            setRatings((prev) => ({ ...prev, [rateTarget.id]: rating }));
+            markRated(rateTarget.id);
             toast.success(
               rating >= 5
                 ? `Thanks for the ${rating}★ rating!`
