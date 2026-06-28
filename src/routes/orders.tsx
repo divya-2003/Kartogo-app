@@ -11,9 +11,10 @@ import {
   type OrderStatus,
   type Order,
 } from "@/lib/store";
-import { formatINR } from "@/lib/data";
+import { formatINR, type Product } from "@/lib/data";
 import { etaText, formatDeliveryDuration } from "@/lib/eta";
 import { paymentBreakdown, PAYMENT_LABELS } from "@/lib/payment";
+import { refundEligibility } from "@/lib/refund";
 import {
   CheckCircle2,
   Package,
