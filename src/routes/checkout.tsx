@@ -56,7 +56,9 @@ function CheckoutPage() {
   // New-address form state.
   const [label, setLabel] = useState("Home");
   const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
+  const [newDoor, setNewDoor] = useState("");
+  const [newApartment, setNewApartment] = useState("");
+  const [newLandmark, setNewLandmark] = useState("");
 
   const userName = user?.name?.trim() || "Kartigo User";
   const addressOptions = useMemo(() => {
@@ -155,13 +157,20 @@ function CheckoutPage() {
   }
 
   const saveNewAddress = () => {
-    if (!name.trim() || !address.trim()) { toast.error("Please fill name & address"); return; }
-    const created = addDeliveryAddress({ label: label.trim() || "Home", name: name.trim(), address: address.trim() });
+    if (!name.trim()) { toast.error("Please enter your name"); return; }
+    if (!newDoor.trim() || !newApartment.trim() || !newLandmark.trim()) {
+      toast.error("Please add your door number, apartment name and landmark");
+      return;
+    }
+    const composed = `${newDoor.trim()}, ${newApartment.trim()}, Ongole (Near ${newLandmark.trim()})`;
+    const created = addDeliveryAddress({ label: label.trim() || "Home", name: name.trim(), address: composed });
     setSelectedId(`delivery:${created.id}`);
     setShowForm(false);
     setShowPicker(false);
     setLabel("Home");
-    setAddress("");
+    setNewDoor("");
+    setNewApartment("");
+    setNewLandmark("");
     toast.success("Address saved");
   };
 
@@ -176,20 +185,23 @@ function CheckoutPage() {
 
   const saveLocationEdit = () => {
     if (!editLocationId) return;
-    if (!editDoorNumber.trim()) { toast.error("Please add your door / flat number"); return; }
+    if (!editDoorNumber.trim() || !editApartment.trim() || !editLandmark.trim()) {
+      toast.error("Please add your door number, apartment name and landmark");
+      return;
+    }
     const existing = savedAddresses.find(a => a.query.toLowerCase() === editLocationId.toLowerCase());
     if (!existing) return;
     const updated: SavedLocation = {
       ...existing,
       doorNumber: editDoorNumber.trim(),
-      apartment: editApartment.trim() || undefined,
-      landmark: editLandmark.trim() || undefined,
+      apartment: editApartment.trim(),
+      landmark: editLandmark.trim(),
     };
     const newQuery = buildLocationQuery(updated);
     updateSavedAddress(editLocationId, {
       doorNumber: editDoorNumber.trim(),
-      apartment: editApartment.trim() || undefined,
-      landmark: editLandmark.trim() || undefined,
+      apartment: editApartment.trim(),
+      landmark: editLandmark.trim(),
     });
     setSelectedId(`location:${newQuery}`);
     setEditLocationId(null);
@@ -199,6 +211,17 @@ function CheckoutPage() {
   const handlePlace = async () => {
     const selected = addressOptions.find(a => a.id === selectedId);
     if (!selected) { toast.error("Please select a delivery address"); return; }
+    // Require complete exact-address details (door no., apartment, landmark)
+    // before placing. Saved-area addresses may be missing them — prompt to edit.
+    if (selected.kind === "location") {
+      const saved = savedAddresses.find(a => a.query.toLowerCase() === selected.removableId.toLowerCase());
+      if (!saved?.doorNumber?.trim() || !saved?.apartment?.trim() || !saved?.landmark?.trim()) {
+        toast.error("Please add your door number, apartment name and landmark");
+        setShowPicker(true);
+        startEditLocation(selected.removableId);
+        return;
+      }
+    }
     if (payment === "wallet" && walletBalance < total) {
       toast.error(`Not enough wallet balance. Add ${formatINR(total - walletBalance)} more.`);
       return;
@@ -322,10 +345,10 @@ function CheckoutPage() {
                         <Field label="Door / Flat number">
                           <input value={editDoorNumber} onChange={e => setEditDoorNumber(e.target.value)} placeholder="e.g. 12-3-45, Flat 201" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
                         </Field>
-                        <Field label="Apartment / Building name (optional)">
+                        <Field label="Apartment / Building name">
                           <input value={editApartment} onChange={e => setEditApartment(e.target.value)} placeholder="e.g. Sai Residency" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
                         </Field>
-                        <Field label="Landmark (optional)">
+                        <Field label="Landmark">
                           <input value={editLandmark} onChange={e => setEditLandmark(e.target.value)} placeholder="e.g. Opposite SBI ATM" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
                         </Field>
                         <div className="flex gap-2">
@@ -407,7 +430,9 @@ function CheckoutPage() {
                         </Field>
                         <Field label="Full name"><input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" /></Field>
                         <Field label="Mobile"><input value={user.phone} disabled className="w-full rounded-lg border border-input bg-secondary px-3 py-2 text-muted-foreground" /></Field>
-                        <Field label="Delivery address"><textarea value={address} onChange={e => setAddress(e.target.value)} rows={3} placeholder="House no., street, landmark, Ongole" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" /></Field>
+                        <Field label="Door / Flat number"><input value={newDoor} onChange={e => setNewDoor(e.target.value)} placeholder="e.g. 12-3-45, Flat 201" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" /></Field>
+                        <Field label="Apartment / Building name"><input value={newApartment} onChange={e => setNewApartment(e.target.value)} placeholder="e.g. Sai Residency" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" /></Field>
+                        <Field label="Landmark"><input value={newLandmark} onChange={e => setNewLandmark(e.target.value)} placeholder="e.g. Opposite SBI ATM" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" /></Field>
                         <div className="flex gap-2">
                           {addressOptions.length > 0 && (
                             <button onClick={() => setShowForm(false)} className="flex-1 rounded-xl border border-border py-2.5 font-bold hover:bg-secondary">Back</button>
