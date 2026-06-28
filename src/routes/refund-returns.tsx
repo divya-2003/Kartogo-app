@@ -285,7 +285,18 @@ function RefundReturnsPage() {
         {/* FAQ accordion */}
         <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-pop">
           <h2 className="mb-4 font-display text-lg font-bold">Frequently Asked Questions</h2>
-          <Accordion type="single" collapsible className="w-full">
+          <Accordion
+            type="single"
+            collapsible
+            value={faqOpen}
+            onValueChange={(v) => {
+              setFaqOpen(v);
+              if (v && typeof window !== "undefined") {
+                sessionStorage.setItem("refund-faq", v);
+              }
+            }}
+            className="w-full"
+          >
             <AccordionItem value="q1">
               <AccordionTrigger>What if I miss the 2-hour reporting window?</AccordionTrigger>
               <AccordionContent>
