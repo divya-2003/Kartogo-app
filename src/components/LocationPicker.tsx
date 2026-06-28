@@ -73,6 +73,22 @@ function LocationPickerClient({
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
+  const suggestions = useMemo<ServiceableArea[]>(
+    () => searchServiceableAreas(query, 6),
+    [query],
+  );
+
+  const selectArea = (area: ServiceableArea) => {
+    setLocation({
+      query: `${area.name}, ${DARK_STORE_CITY} ${area.pincode}`,
+      area: area.name,
+      serviceable: true,
+      etaMinutes: area.etaMinutes,
+    });
+    toast.success(`Delivering to ${area.name} in ${deliveryWindow(area.etaMinutes)}`);
+    setOpen(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) {
@@ -84,7 +100,12 @@ function LocationPickerClient({
     try {
       const result = await check({ data: { location: query } });
       if (result.serviceable) {
-        setLocation({ query: query.trim(), area: result.area ?? query.trim() });
+        setLocation({
+          query: query.trim(),
+          area: result.area ?? query.trim(),
+          serviceable: true,
+          etaMinutes: result.etaMinutes ?? undefined,
+        });
         toast.success(result.reason);
         setOpen(false);
       } else {
