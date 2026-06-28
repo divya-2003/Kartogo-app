@@ -23,7 +23,12 @@ export function LocationGate() {
     try {
       const result = await check({ data: { location: query } });
       if (result.serviceable) {
-        setLocation({ query: query.trim(), area: result.area ?? query.trim() });
+        setLocation({
+          query: query.trim(),
+          area: result.area ?? query.trim(),
+          serviceable: true,
+          etaMinutes: result.etaMinutes ?? undefined,
+        });
         toast.success(result.reason);
       } else {
         setDenied(result.reason);
