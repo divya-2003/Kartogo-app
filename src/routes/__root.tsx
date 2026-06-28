@@ -87,6 +87,7 @@ function RootComponent() {
               <OrdersProvider>
                 <CartProvider>
                   <Outlet />
+                  <FloatingCartBar />
                   <Toaster position="top-center" richColors />
                 </CartProvider>
               </OrdersProvider>
