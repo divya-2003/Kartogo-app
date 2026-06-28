@@ -553,6 +553,17 @@ function OrdersPage() {
           onConfirm={confirmCancel}
         />
       )}
+
+      {reportTarget && (
+        <ReportIssueModal
+          order={reportTarget}
+          onClose={() => setReportTarget(null)}
+          onSubmit={(data) => {
+            toast.success(`Issue reported for ${reportTarget.id}: ${data.type} · ${data.resolution}`);
+            setReportTarget(null);
+          }}
+        />
+      )}
     </div>
   );
 }
