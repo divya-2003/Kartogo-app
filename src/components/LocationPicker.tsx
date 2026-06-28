@@ -8,7 +8,7 @@ import { searchServiceableAreas, deliveryWindow, DARK_STORE, type ServiceableAre
 import { useLocation, buildLocationQuery, type SavedLocation } from "@/lib/store";
 
 export function LocationPicker() {
-  const { location, savedAddresses, setLocation, removeSavedAddress } = useLocation();
+  const { location, savedAddresses, setLocation, removeSavedAddress, updateSavedAddress } = useLocation();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -34,6 +34,7 @@ export function LocationPicker() {
       savedAddresses={savedAddresses}
       setLocation={setLocation}
       removeSavedAddress={removeSavedAddress}
+      updateSavedAddress={updateSavedAddress}
     />
   );
 }
