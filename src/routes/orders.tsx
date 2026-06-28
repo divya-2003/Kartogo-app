@@ -945,6 +945,31 @@ function ReportIssueModal({
           </div>
         </div>
 
+        {/* Refund window status per the Refund & Returns Policy time limits. */}
+        {order.status === "delivered" &&
+          (eligibility.eligible ? (
+            <div className="mb-4 flex items-start gap-2 rounded-xl bg-leaf/10 px-3 py-2.5 text-sm text-leaf">
+              <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>
+                <span className="font-bold">Refund window open</span> —{" "}
+                {eligibility.hoursLeft > 0
+                  ? `${eligibility.hoursLeft}h ${eligibility.minutesLeft}m`
+                  : `${eligibility.minutesLeft}m`}{" "}
+                left to request a refund (within {eligibility.windowLabel} of delivery).
+              </span>
+            </div>
+          ) : (
+            <div className="mb-4 flex items-start gap-2 rounded-xl bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
+              <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>
+                <span className="font-bold">Refund window closed</span> — the{" "}
+                {eligibility.windowLabel} return window for this order has passed. You can still
+                report the issue for support.
+              </span>
+            </div>
+          ))}
+
+
         <div className="space-y-2">
           {ISSUE_TYPES.map((t) => (
             <button
