@@ -895,10 +895,14 @@ function refundTimeline(method: Order["paymentMethod"]): { destination: string; 
 
 function ReportIssueModal({
   order,
+  deliveredAt,
+  products,
   onClose,
   onSubmit,
 }: {
   order: Order;
+  deliveredAt?: number;
+  products: Product[];
   onClose: () => void;
   onSubmit: (data: ReportIssueData) => void;
 }) {
@@ -906,6 +910,12 @@ function ReportIssueModal({
   const [resolution, setResolution] = useState<"Refund" | "Replacement" | null>(null);
   const [details, setDetails] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
+  const eligibility = useMemo(
+    () => refundEligibility(order, products, deliveredAt, Date.now()),
+    [order, products, deliveredAt],
+  );
+  // Refunds only apply once delivered; the window must still be open.
+  const refundClosed = order.status === "delivered" && !eligibility.eligible;
 
   return (
     <div
