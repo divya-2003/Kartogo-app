@@ -142,14 +142,11 @@ function LocationPickerClient({
     try {
       const result = await check({ data: { location: query } });
       if (result.serviceable) {
-        setLocation({
+        startDetails({
           query: query.trim(),
           area: result.area ?? query.trim(),
-          serviceable: true,
           etaMinutes: result.etaMinutes ?? undefined,
         });
-        toast.success(result.reason);
-        setOpen(false);
       } else {
         setDenied(result.reason);
       }
