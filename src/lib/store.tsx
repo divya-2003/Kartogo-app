@@ -124,7 +124,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     adminToken,
     adminAudit,
     sendOtp: async (phone) => {
-      await requestOtpFn({ data: { phone } });
+      const res = await requestOtpFn({ data: { phone } });
+      return { demo: Boolean(res.demo), demoCode: "demoCode" in res ? res.demoCode : undefined };
     },
     verifyOtp: async (phone, otp) => {
       const res = await verifyOtpFn({ data: { phone, code: otp } });
