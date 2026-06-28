@@ -165,6 +165,37 @@ function CheckoutPage() {
     toast.success("Address saved");
   };
 
+  const startEditLocation = (query: string) => {
+    const addr = savedAddresses.find(a => a.query.toLowerCase() === query.toLowerCase());
+    if (!addr) return;
+    setEditLocationId(query);
+    setEditDoorNumber(addr.doorNumber ?? "");
+    setEditApartment(addr.apartment ?? "");
+    setEditLandmark(addr.landmark ?? "");
+  };
+
+  const saveLocationEdit = () => {
+    if (!editLocationId) return;
+    if (!editDoorNumber.trim()) { toast.error("Please add your door / flat number"); return; }
+    const existing = savedAddresses.find(a => a.query.toLowerCase() === editLocationId.toLowerCase());
+    if (!existing) return;
+    const updated: SavedLocation = {
+      ...existing,
+      doorNumber: editDoorNumber.trim(),
+      apartment: editApartment.trim() || undefined,
+      landmark: editLandmark.trim() || undefined,
+    };
+    const newQuery = buildLocationQuery(updated);
+    updateSavedAddress(editLocationId, {
+      doorNumber: editDoorNumber.trim(),
+      apartment: editApartment.trim() || undefined,
+      landmark: editLandmark.trim() || undefined,
+    });
+    setSelectedId(`location:${newQuery}`);
+    setEditLocationId(null);
+    toast.success("Address updated");
+  };
+
   const handlePlace = async () => {
     const selected = addressOptions.find(a => a.id === selectedId);
     if (!selected) { toast.error("Please select a delivery address"); return; }
