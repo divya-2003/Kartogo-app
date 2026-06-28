@@ -100,10 +100,8 @@ function CheckoutPage() {
   const discount = useMemo(() => computeDiscount(appliedCode, subtotal), [appliedCode, subtotal]);
   const total = Math.max(0, subtotal + fee - discount);
 
-  // If wallet was chosen but no longer covers the total, fall back to cash.
-  useEffect(() => {
-    if (payment === "wallet" && walletBalance < total) setPayment("cash");
-  }, [payment, walletBalance, total]);
+  // Show wallet warning only when the wallet method is actively selected.
+
 
 
   const applyPromo = () => {
