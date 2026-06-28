@@ -117,6 +117,8 @@ function OrdersPage() {
   const navigate = useNavigate();
   const [openId, setOpenId] = useState<string | null>(null);
   const [reportTarget, setReportTarget] = useState<Order | null>(null);
+  const [rateTarget, setRateTarget] = useState<Order | null>(null);
+  const [ratings, setRatings] = useState<Record<string, number>>({});
   const { open: openParam, report: reportParam } = Route.useSearch();
   useEffect(() => {
     if (openParam) setOpenId(openParam);
