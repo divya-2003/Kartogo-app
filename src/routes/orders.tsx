@@ -928,6 +928,37 @@ function ReportIssueModal({
           </div>
         </div>
 
+        {/* Policy-aware refund details — shown once a refund is requested. */}
+        {resolution === "Refund" &&
+          (() => {
+            const t = refundTimeline(order.paymentMethod);
+            return (
+              <div className="mt-3 rounded-xl border border-primary/25 bg-primary/5 p-3">
+                <div className="flex items-center gap-2 text-sm font-bold text-primary">
+                  <Clock className="h-4 w-4" /> Refund details
+                </div>
+                <div className="mt-2 space-y-1 text-sm">
+                  <Row
+                    label="Refund to"
+                    value={<span className="font-semibold">{t.destination}</span>}
+                  />
+                  <Row
+                    label="Estimated time"
+                    value={<span className="font-semibold">{t.eta}</span>}
+                  />
+                </div>
+                <Link
+                  to="/refund-returns"
+                  className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                >
+                  View Refund &amp; Returns Policy
+                  <ChevronRight className="h-3 w-3" />
+                </Link>
+              </div>
+            );
+          })()}
+
+
         <div className="mt-4">
           <div className="mb-2 text-sm font-bold">Add details (optional)</div>
           <textarea
