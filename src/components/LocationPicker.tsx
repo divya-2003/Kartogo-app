@@ -291,7 +291,7 @@ function LocationPickerClient({
               <form onSubmit={saveDetails} className="mt-5 space-y-3">
                 <div>
                   <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                    Door / Flat number
+                    Door / Flat number <span className="font-normal normal-case">(optional)</span>
                   </label>
                   <input
                     autoFocus
