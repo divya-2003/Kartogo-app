@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   ChevronLeft,
+  ChevronRight,
   CheckCircle2,
   AlertCircle,
   XCircle,
@@ -17,6 +18,7 @@ import {
   Phone,
   ShieldCheck,
   ChevronDown,
+  MessageSquareWarning,
 } from "lucide-react";
 import {
   Accordion,
@@ -44,6 +46,9 @@ const LAST_UPDATED = "June 28, 2026";
 function RefundReturnsPage() {
   const nav = useNavigate();
   const [understood, setUnderstood] = useState(false);
+  const [faqOpen, setFaqOpen] = useState<string | undefined>(() =>
+    typeof window !== "undefined" ? (sessionStorage.getItem("refund-faq") ?? undefined) : undefined,
+  );
 
   return (
     <div className="min-h-screen bg-secondary/40">
@@ -67,6 +72,24 @@ function RefundReturnsPage() {
             </p>
           </div>
         </div>
+
+        {/* Report issue CTA */}
+        <Link
+          to="/orders"
+          search={{ report: 1 }}
+          className="mt-4 flex items-center gap-3 overflow-hidden rounded-2xl bg-saffron p-4 text-saffron-foreground shadow-pop transition hover:opacity-95"
+        >
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/20">
+            <MessageSquareWarning className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="font-display font-bold">Report an issue with your order</div>
+            <div className="text-xs opacity-90">
+              Open My Orders and request a refund or replacement.
+            </div>
+          </div>
+          <ChevronRight className="h-5 w-5 shrink-0" />
+        </Link>
 
         {/* Section 1 — Fresh Products */}
         <SectionCard
@@ -264,7 +287,18 @@ function RefundReturnsPage() {
         {/* FAQ accordion */}
         <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-pop">
           <h2 className="mb-4 font-display text-lg font-bold">Frequently Asked Questions</h2>
-          <Accordion type="single" collapsible className="w-full">
+          <Accordion
+            type="single"
+            collapsible
+            value={faqOpen}
+            onValueChange={(v) => {
+              setFaqOpen(v);
+              if (v && typeof window !== "undefined") {
+                sessionStorage.setItem("refund-faq", v);
+              }
+            }}
+            className="w-full"
+          >
             <AccordionItem value="q1">
               <AccordionTrigger>What if I miss the 2-hour reporting window?</AccordionTrigger>
               <AccordionContent>
