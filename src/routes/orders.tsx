@@ -676,6 +676,35 @@ function OrdersPage() {
                     )}
                   </div>
 
+                  {/* Rate order — available for every order */}
+                  <button
+                    onClick={() => setRateTarget(o)}
+                    className="flex w-full items-center justify-center gap-2 border-t border-border py-3 text-sm font-bold text-saffron transition hover:bg-saffron/10"
+                  >
+                    {ratings[o.id] ? (
+                      <>
+                        <span className="flex items-center gap-0.5">
+                          {Array.from({ length: 5 }).map((_, idx) => (
+                            <Star
+                              key={idx}
+                              className={`h-4 w-4 ${
+                                idx < ratings[o.id]
+                                  ? "fill-saffron text-saffron"
+                                  : "text-muted-foreground/40"
+                              }`}
+                            />
+                          ))}
+                        </span>
+                        Rated · Tap to change
+                      </>
+                    ) : (
+                      <>
+                        <Star className="h-4 w-4" /> Rate order
+                      </>
+                    )}
+                  </button>
+
+
                   {/* Cancellation — only allowed while the order is still "Placed".
                       Once packed it is locked to avoid wasted store effort/inventory. */}
                   {active &&
