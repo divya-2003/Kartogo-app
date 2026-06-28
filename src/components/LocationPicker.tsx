@@ -327,7 +327,7 @@ function LocationPickerClient({
                 </div>
 
                 <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90">
-                  <Check className="h-4 w-4" /> Save & deliver here
+                  <Check className="h-4 w-4" /> {editingQuery ? "Save changes" : "Save & deliver here"}
                 </button>
                 <button
                   type="button"
