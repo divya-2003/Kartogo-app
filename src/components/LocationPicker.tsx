@@ -253,7 +253,9 @@ function LocationPickerClient({
           <div className="flex items-center justify-between border-b border-border px-4 py-4">
             <div>
               <h2 className="font-display text-lg font-bold">
-                {pending ? "Add your exact location" : "Select your location"}
+                {pending
+                  ? (editingQuery ? "Edit exact address" : "Add your exact location")
+                  : "Select your location"}
               </h2>
               <p className="text-xs text-muted-foreground">
                 {pending
@@ -262,7 +264,14 @@ function LocationPickerClient({
               </p>
             </div>
             <button
-              onClick={() => (pending ? setPending(null) : setOpen(false))}
+              onClick={() => {
+                if (pending) {
+                  setPending(null);
+                  setEditingQuery(null);
+                } else {
+                  setOpen(false);
+                }
+              }}
               aria-label="Close"
               className="grid h-9 w-9 place-items-center rounded-full hover:bg-secondary"
             >
