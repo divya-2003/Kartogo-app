@@ -497,20 +497,29 @@ function OrdersPage() {
 
                   {/* Footer actions */}
                   <div className="grid grid-cols-2 border-t border-border">
-                    {!cancelled && (
+                    {!cancelled ? (
+                      <>
+                        <button
+                          onClick={() => setReportTarget(o)}
+                          className="border-r border-border py-3 text-sm font-bold text-destructive transition hover:bg-destructive/10"
+                        >
+                          Report Issue
+                        </button>
+                        <button
+                          onClick={() => orderAgain(o)}
+                          className="py-3 text-sm font-bold text-primary transition hover:bg-secondary"
+                        >
+                          Order Again
+                        </button>
+                      </>
+                    ) : (
                       <button
-                        onClick={() => toast.success("Thanks for rating your order!")}
-                        className="border-r border-border py-3 text-sm font-bold transition hover:bg-secondary"
+                        onClick={() => orderAgain(o)}
+                        className="col-span-2 py-3 text-sm font-bold text-primary transition hover:bg-secondary"
                       >
-                        Rate Order
+                        Order Again
                       </button>
                     )}
-                    <button
-                      onClick={() => orderAgain(o)}
-                      className={`py-3 text-sm font-bold text-primary transition hover:bg-secondary ${cancelled ? "col-span-2" : ""}`}
-                    >
-                      Order Again
-                    </button>
                   </div>
 
                   {/* Cancellation — only allowed while the order is still "Placed".
