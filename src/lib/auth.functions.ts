@@ -134,7 +134,7 @@ export const adminLoginFn = createServerFn({ method: "POST" })
     const a = createHash("sha256").update(data.passcode).digest();
     const b = createHash("sha256").update(expected).digest();
     if (a.length !== b.length || !timingSafeEqual(a, b)) {
-      throw new Error("Incorrect admin passcode");
+      return { ok: false as const, error: "Incorrect admin passcode" };
     }
     return { ok: true as const, token: issueAdminToken() };
   });

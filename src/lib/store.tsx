@@ -138,6 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     adminLogin: async (passcode) => {
       const res = await adminLoginFn({ data: { passcode } });
+      if (!res.ok) throw new Error(res.error ?? "Incorrect admin passcode");
       setAdminToken(res.token);
       const u: User = { ...(user ?? { phone: "" }), role: "admin" } as User;
       setUser(u);
