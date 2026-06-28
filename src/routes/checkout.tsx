@@ -157,13 +157,20 @@ function CheckoutPage() {
   }
 
   const saveNewAddress = () => {
-    if (!name.trim() || !address.trim()) { toast.error("Please fill name & address"); return; }
-    const created = addDeliveryAddress({ label: label.trim() || "Home", name: name.trim(), address: address.trim() });
+    if (!name.trim()) { toast.error("Please enter your name"); return; }
+    if (!newDoor.trim() || !newApartment.trim() || !newLandmark.trim()) {
+      toast.error("Please add your door number, apartment name and landmark");
+      return;
+    }
+    const composed = `${newDoor.trim()}, ${newApartment.trim()}, Ongole (Near ${newLandmark.trim()})`;
+    const created = addDeliveryAddress({ label: label.trim() || "Home", name: name.trim(), address: composed });
     setSelectedId(`delivery:${created.id}`);
     setShowForm(false);
     setShowPicker(false);
     setLabel("Home");
-    setAddress("");
+    setNewDoor("");
+    setNewApartment("");
+    setNewLandmark("");
     toast.success("Address saved");
   };
 
