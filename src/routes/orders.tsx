@@ -750,7 +750,25 @@ function OrdersPage() {
           }}
         />
       )}
+
+      {rateTarget && (
+        <RateOrderModal
+          order={rateTarget}
+          initialRating={ratings[rateTarget.id] ?? 0}
+          onClose={() => setRateTarget(null)}
+          onSubmit={({ rating, feedback }) => {
+            setRatings((prev) => ({ ...prev, [rateTarget.id]: rating }));
+            toast.success(
+              rating >= 5
+                ? `Thanks for the ${rating}★ rating!`
+                : `Thanks for rating ${rateTarget.id}${feedback ? " — we'll work on it" : ""}`,
+            );
+            setRateTarget(null);
+          }}
+        />
+      )}
     </div>
+
   );
 }
 
