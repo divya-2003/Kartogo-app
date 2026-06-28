@@ -133,7 +133,12 @@ function LocationPickerClient({
           });
           if (result.serviceable) {
             const label = result.area ?? result.address ?? "Current location";
-            setLocation({ query: result.address ?? label, area: label });
+            setLocation({
+              query: result.address ?? label,
+              area: label,
+              serviceable: true,
+              etaMinutes: result.etaMinutes ?? undefined,
+            });
             toast.success(result.reason);
             setOpen(false);
           } else {
