@@ -223,13 +223,17 @@ function LocationPickerClient({
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border px-4 py-4">
             <div>
-              <h2 className="font-display text-lg font-bold">Select your location</h2>
+              <h2 className="font-display text-lg font-bold">
+                {pending ? "Add your exact location" : "Select your location"}
+              </h2>
               <p className="text-xs text-muted-foreground">
-                We'll check if we deliver to your area.
+                {pending
+                  ? `${pending.area} · delivery in ${deliveryWindow(pending.etaMinutes)}`
+                  : "We'll check if we deliver to your area."}
               </p>
             </div>
             <button
-              onClick={() => setOpen(false)}
+              onClick={() => (pending ? setPending(null) : setOpen(false))}
               aria-label="Close"
               className="grid h-9 w-9 place-items-center rounded-full hover:bg-secondary"
             >
@@ -237,8 +241,69 @@ function LocationPickerClient({
             </button>
           </div>
 
-          {/* Body */}
+          {pending ? (
+            /* Step 2: exact address details */
+            <div className="mx-auto w-full max-w-lg flex-1 overflow-y-auto px-4 py-5">
+              <div className="flex items-start gap-2 rounded-xl border border-leaf/30 bg-leaf/10 p-3 text-sm">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-leaf" />
+                <span>
+                  <span className="block font-semibold">{pending.area}</span>
+                  <span className="block text-xs text-muted-foreground">{pending.query}</span>
+                </span>
+              </div>
+
+              <form onSubmit={saveDetails} className="mt-5 space-y-3">
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    Door / Flat number
+                  </label>
+                  <input
+                    autoFocus
+                    value={doorNumber}
+                    onChange={(e) => setDoorNumber(e.target.value)}
+                    placeholder="e.g. 12-3-45, Flat 201"
+                    className="w-full rounded-xl border border-input bg-background px-3 py-3 text-base outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    Apartment / Building name <span className="font-normal normal-case">(optional)</span>
+                  </label>
+                  <input
+                    value={apartment}
+                    onChange={(e) => setApartment(e.target.value)}
+                    placeholder="e.g. Sai Residency"
+                    className="w-full rounded-xl border border-input bg-background px-3 py-3 text-base outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    Landmark <span className="font-normal normal-case">(optional)</span>
+                  </label>
+                  <input
+                    value={landmark}
+                    onChange={(e) => setLandmark(e.target.value)}
+                    placeholder="e.g. Opposite SBI ATM"
+                    className="w-full rounded-xl border border-input bg-background px-3 py-3 text-base outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+
+                <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90">
+                  <Check className="h-4 w-4" /> Save & deliver here
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPending(null)}
+                  className="w-full rounded-xl py-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
+                >
+                  Change area
+                </button>
+              </form>
+            </div>
+          ) : (
+          /* Body */
           <div className="mx-auto w-full max-w-lg flex-1 overflow-y-auto px-4 py-5">
+
             <form onSubmit={handleSubmit} className="space-y-3">
               <div className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-3 focus-within:ring-2 focus-within:ring-ring">
                 <Search className="h-4 w-4 text-muted-foreground" />
