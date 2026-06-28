@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useServerFn } from "@tanstack/react-start";
-import { MapPin, Search, X, ChevronDown, Loader2, XCircle, Clock, Check, Trash2, LocateFixed, Zap } from "lucide-react";
+import { MapPin, Search, X, ChevronDown, Loader2, XCircle, Clock, Check, Trash2, LocateFixed, Zap, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { checkServiceability, locateByCoords } from "@/lib/serviceability.functions";
 import { searchServiceableAreas, deliveryWindow, DARK_STORE, type ServiceableArea } from "@/lib/serviceability";
-import { useLocation, type SavedLocation } from "@/lib/store";
+import { useLocation, buildLocationQuery, type SavedLocation } from "@/lib/store";
 
 export function LocationPicker() {
-  const { location, savedAddresses, setLocation, removeSavedAddress } = useLocation();
+  const { location, savedAddresses, setLocation, removeSavedAddress, updateSavedAddress } = useLocation();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -34,6 +34,7 @@ export function LocationPicker() {
       savedAddresses={savedAddresses}
       setLocation={setLocation}
       removeSavedAddress={removeSavedAddress}
+      updateSavedAddress={updateSavedAddress}
     />
   );
 }
@@ -43,11 +44,13 @@ function LocationPickerClient({
   savedAddresses,
   setLocation,
   removeSavedAddress,
+  updateSavedAddress,
 }: {
   location: SavedLocation | null;
   savedAddresses: SavedLocation[];
   setLocation: (loc: SavedLocation) => void;
   removeSavedAddress: (query: string) => void;
+  updateSavedAddress: (query: string, patch: Partial<Pick<SavedLocation, "doorNumber" | "apartment" | "landmark" | "baseQuery">>) => void;
 }) {
   const check = useServerFn(checkServiceability);
   const locate = useServerFn(locateByCoords);
@@ -66,12 +69,14 @@ function LocationPickerClient({
   const [doorNumber, setDoorNumber] = useState("");
   const [apartment, setApartment] = useState("");
   const [landmark, setLandmark] = useState("");
+  const [editingQuery, setEditingQuery] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
       setQuery("");
       setDenied(null);
       setPending(null);
+      setEditingQuery(null);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [open]);
@@ -91,9 +96,22 @@ function LocationPickerClient({
   // Move to the "exact location" step for a confirmed serviceable area.
   const startDetails = (p: { query: string; area: string; etaMinutes?: number }) => {
     setPending(p);
+    setEditingQuery(null);
     setDoorNumber("");
     setApartment("");
     setLandmark("");
+  };
+
+  const startEditSaved = (addr: SavedLocation) => {
+    setPending({
+      query: addr.baseQuery ?? addr.query,
+      area: addr.area,
+      etaMinutes: addr.etaMinutes,
+    });
+    setEditingQuery(addr.query);
+    setDoorNumber(addr.doorNumber ?? "");
+    setApartment(addr.apartment ?? "");
+    setLandmark(addr.landmark ?? "");
   };
 
   const selectArea = (area: ServiceableArea) => {
@@ -109,6 +127,16 @@ function LocationPickerClient({
     if (!pending) return;
     if (!doorNumber.trim()) {
       toast.error("Please add your door / flat number");
+      return;
+    }
+    if (editingQuery) {
+      updateSavedAddress(editingQuery, {
+        doorNumber: doorNumber.trim(),
+        apartment: apartment.trim() || undefined,
+        landmark: landmark.trim() || undefined,
+      });
+      toast.success("Address updated");
+      setOpen(false);
       return;
     }
     const parts = [
@@ -225,7 +253,9 @@ function LocationPickerClient({
           <div className="flex items-center justify-between border-b border-border px-4 py-4">
             <div>
               <h2 className="font-display text-lg font-bold">
-                {pending ? "Add your exact location" : "Select your location"}
+                {pending
+                  ? (editingQuery ? "Edit exact address" : "Add your exact location")
+                  : "Select your location"}
               </h2>
               <p className="text-xs text-muted-foreground">
                 {pending
@@ -234,7 +264,14 @@ function LocationPickerClient({
               </p>
             </div>
             <button
-              onClick={() => (pending ? setPending(null) : setOpen(false))}
+              onClick={() => {
+                if (pending) {
+                  setPending(null);
+                  setEditingQuery(null);
+                } else {
+                  setOpen(false);
+                }
+              }}
               aria-label="Close"
               className="grid h-9 w-9 place-items-center rounded-full hover:bg-secondary"
             >
@@ -290,11 +327,11 @@ function LocationPickerClient({
                 </div>
 
                 <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90">
-                  <Check className="h-4 w-4" /> Save & deliver here
+                  <Check className="h-4 w-4" /> {editingQuery ? "Save changes" : "Save & deliver here"}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPending(null)}
+                  onClick={() => { setPending(null); setEditingQuery(null); }}
                   className="w-full rounded-xl py-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
                 >
                   Change area
@@ -408,9 +445,15 @@ function LocationPickerClient({
                             <span className="block truncate text-xs text-muted-foreground">{addr.query}</span>
                           </span>
                         </button>
-                        {active ? (
-                          <Check className="h-4 w-4 shrink-0 text-primary" />
-                        ) : (
+                        <div className="flex items-center gap-1">
+                          {active && <Check className="h-4 w-4 shrink-0 text-primary" />}
+                          <button
+                            onClick={() => startEditSaved(addr)}
+                            aria-label="Edit exact address"
+                            className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-primary"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
                           <button
                             onClick={() => removeSavedAddress(addr.query)}
                             aria-label="Remove address"
@@ -418,7 +461,7 @@ function LocationPickerClient({
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
-                        )}
+                        </div>
                       </li>
                     );
                   })}
