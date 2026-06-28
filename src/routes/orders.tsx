@@ -650,60 +650,52 @@ function OrdersPage() {
                     </div>
                   )}
 
-                  {/* Footer actions */}
-                  <div className="grid grid-cols-2 border-t border-border">
-                    {!cancelled ? (
-                      <>
-                        <button
-                          onClick={() => setReportTarget(o)}
-                          className="border-r border-border py-3 text-sm font-bold text-destructive transition hover:bg-destructive/10"
-                        >
-                          Report Issue
-                        </button>
-                        <button
-                          onClick={() => orderAgain(o)}
-                          className="py-3 text-sm font-bold text-primary transition hover:bg-secondary"
-                        >
-                          Order Again
-                        </button>
-                      </>
-                    ) : (
+                  {/* Footer actions — kept side by side */}
+                  <div
+                    className={`grid border-t border-border ${cancelled ? "grid-cols-2" : "grid-cols-3"}`}
+                  >
+                    {!cancelled && (
                       <button
-                        onClick={() => orderAgain(o)}
-                        className="col-span-2 py-3 text-sm font-bold text-primary transition hover:bg-secondary"
+                        onClick={() => setReportTarget(o)}
+                        className="border-r border-border py-3 text-sm font-bold text-destructive transition hover:bg-destructive/10"
                       >
-                        Order Again
+                        Report Issue
                       </button>
                     )}
+                    <button
+                      onClick={() => orderAgain(o)}
+                      className="border-r border-border py-3 text-sm font-bold text-primary transition hover:bg-secondary"
+                    >
+                      Order Again
+                    </button>
+                    <button
+                      onClick={() => setRateTarget(o)}
+                      className="flex items-center justify-center gap-1.5 py-3 text-sm font-bold text-saffron transition hover:bg-saffron/10"
+                    >
+                      {ratings[o.id] ? (
+                        <>
+                          <span className="flex items-center gap-0.5">
+                            {Array.from({ length: 5 }).map((_, idx) => (
+                              <Star
+                                key={idx}
+                                className={`h-3.5 w-3.5 ${
+                                  idx < ratings[o.id]
+                                    ? "fill-saffron text-saffron"
+                                    : "text-muted-foreground/40"
+                                }`}
+                              />
+                            ))}
+                          </span>
+                          Rated
+                        </>
+                      ) : (
+                        <>
+                          <Star className="h-4 w-4" /> Rate order
+                        </>
+                      )}
+                    </button>
                   </div>
 
-                  {/* Rate order — available for every order */}
-                  <button
-                    onClick={() => setRateTarget(o)}
-                    className="flex w-full items-center justify-center gap-2 border-t border-border py-3 text-sm font-bold text-saffron transition hover:bg-saffron/10"
-                  >
-                    {ratings[o.id] ? (
-                      <>
-                        <span className="flex items-center gap-0.5">
-                          {Array.from({ length: 5 }).map((_, idx) => (
-                            <Star
-                              key={idx}
-                              className={`h-4 w-4 ${
-                                idx < ratings[o.id]
-                                  ? "fill-saffron text-saffron"
-                                  : "text-muted-foreground/40"
-                              }`}
-                            />
-                          ))}
-                        </span>
-                        Rated · Tap to change
-                      </>
-                    ) : (
-                      <>
-                        <Star className="h-4 w-4" /> Rate order
-                      </>
-                    )}
-                  </button>
 
 
                   {/* Cancellation — only allowed while the order is still "Placed".
