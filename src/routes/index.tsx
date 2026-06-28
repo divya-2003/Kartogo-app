@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Zap, Search, Wallet, User2, Home, LayoutGrid, ShoppingBag, TrendingUp, Ticket } from "lucide-react";
+import { Zap, Search, Wallet, User2, Home, LayoutGrid, ShoppingBag, TrendingUp, Ticket, CheckCircle2 } from "lucide-react";
+import { deliveryWindow } from "@/lib/serviceability";
 import { LocationPicker } from "@/components/LocationPicker";
 import { ProductCard } from "@/components/ProductCard";
 import { CATEGORIES, formatINR } from "@/lib/data";
