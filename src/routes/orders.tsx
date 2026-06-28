@@ -89,12 +89,6 @@ function OrdersPage() {
   useEffect(() => {
     if (openParam) setOpenId(openParam);
   }, [openParam]);
-  useEffect(() => {
-    if (reportParam && mine.length > 0 && !reportTarget) {
-      setReportTarget(mine[0]);
-      navigate({ to: "/orders", search: {}, replace: true });
-    }
-  }, [reportParam, mine, navigate, reportTarget]);
   const [notices, setNotices] = useState<{ id: string; title: string; description: string }[]>([]);
   const userPhone = user?.phone;
   const previousOrdersRef = useRef(new Map<string, { status: OrderStatus; deliveryBoyId?: string }>());
