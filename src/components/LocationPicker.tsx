@@ -425,6 +425,7 @@ function LocationPickerClient({
               )}
             </div>
           </div>
+          )}
         </div>,
         document.body
       )}
