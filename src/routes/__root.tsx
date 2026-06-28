@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 import { CartProvider, AuthProvider, CatalogProvider, OrdersProvider, LocationProvider, WalletProvider } from "@/lib/store";
+import { FloatingCartBar } from "@/components/FloatingCartBar";
 
 import appCss from "../styles.css?url";
 
@@ -86,6 +87,7 @@ function RootComponent() {
               <OrdersProvider>
                 <CartProvider>
                   <Outlet />
+                  <FloatingCartBar />
                   <Toaster position="top-center" richColors />
                 </CartProvider>
               </OrdersProvider>
