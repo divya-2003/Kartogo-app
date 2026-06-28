@@ -114,6 +114,14 @@ function LocationPickerClient({
     setLandmark(addr.landmark ?? "");
   };
 
+  const selectArea = (area: ServiceableArea) => {
+    startDetails({
+      query: `${area.name}, ${DARK_STORE.city} ${area.pincode}`,
+      area: area.name,
+      etaMinutes: area.etaMinutes,
+    });
+  };
+
   const saveDetails = (e: React.FormEvent) => {
     e.preventDefault();
     if (!pending) return;
