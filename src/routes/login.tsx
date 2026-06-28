@@ -22,15 +22,23 @@ function LoginPage() {
   const [passcode, setPasscode] = useState("");
   const [stage, setStage] = useState<"phone" | "otp" | "passcode">("phone");
   const [loading, setLoading] = useState(false);
+  const [demoCode, setDemoCode] = useState<string | null>(null);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!/^\d{10}$/.test(phone)) { toast.error("Enter a valid 10-digit mobile"); return; }
     setLoading(true);
     try {
-      await sendOtp(phone);
+      const { demo, demoCode } = await sendOtp(phone);
       setStage("otp");
-      toast.success(`OTP sent to +91 ${phone}`);
+      if (demo && demoCode) {
+        setDemoCode(demoCode);
+        setOtp(demoCode);
+        toast.success(`Demo mode: use OTP ${demoCode}`);
+      } else {
+        setDemoCode(null);
+        toast.success(`OTP sent to +91 ${phone}`);
+      }
     } catch (err) {
       toast.error((err as Error).message);
     } finally { setLoading(false); }
