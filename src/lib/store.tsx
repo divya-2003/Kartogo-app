@@ -645,6 +645,25 @@ export function LocationProvider({ children }: { children: ReactNode }) {
         return next;
       });
     },
+    updateSavedAddress: (query, patch) => {
+      const idx = savedAddresses.findIndex(a => a.query.toLowerCase() === query.toLowerCase());
+      if (idx === -1) return;
+      const existing = savedAddresses[idx];
+      const baseQuery = patch.baseQuery ?? existing.baseQuery ?? inferBaseQuery(existing);
+      const updated: SavedLocation = {
+        ...existing,
+        ...patch,
+        baseQuery,
+        query: buildLocationQuery({ ...existing, ...patch, baseQuery }),
+      };
+      const next = [updated, ...savedAddresses.filter((_, i) => i !== idx)].slice(0, 8);
+      setSaved(next);
+      write("qk_addresses", next);
+      if (location?.query.toLowerCase() === query.toLowerCase()) {
+        setLoc(updated);
+        write("qk_location", updated);
+      }
+    },
     addDeliveryAddress: (addr) => {
       const created: DeliveryAddress = {
         ...addr,
