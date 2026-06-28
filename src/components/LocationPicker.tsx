@@ -331,7 +331,7 @@ function LocationPickerClient({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPending(null)}
+                  onClick={() => { setPending(null); setEditingQuery(null); }}
                   className="w-full rounded-xl py-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
                 >
                   Change area
