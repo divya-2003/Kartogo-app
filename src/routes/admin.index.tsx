@@ -92,16 +92,58 @@ function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat icon={<IndianRupee className="h-5 w-5" />} label="Today's revenue" value={formatINR(revenue)} />
+        <Stat icon={<IndianRupee className="h-5 w-5" />} label="Today's revenue" value={formatINR(revenue)} onClick={() => setOpenPeriod("today")} />
         <Stat icon={<ShoppingBag className="h-5 w-5" />} label="Today's orders" value={String(todays.length)} />
         <Stat icon={<Truck className="h-5 w-5" />} label="Pending orders" value={String(pending.length)} accent />
         <Stat icon={<AlertTriangle className="h-5 w-5" />} label="Low stock" value={String(lowStock.length)} warn />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <Stat icon={<IndianRupee className="h-5 w-5" />} label="This month's revenue" value={formatINR(monthlyRevenue)} accent />
-        <Stat icon={<IndianRupee className="h-5 w-5" />} label="This year's revenue" value={formatINR(yearlyRevenue)} accent />
+        <Stat icon={<IndianRupee className="h-5 w-5" />} label="This month's revenue" value={formatINR(monthlyRevenue)} accent onClick={() => setOpenPeriod("month")} />
+        <Stat icon={<IndianRupee className="h-5 w-5" />} label="This year's revenue" value={formatINR(yearlyRevenue)} accent onClick={() => setOpenPeriod("year")} />
       </div>
+
+      <Dialog open={openPeriod !== null} onOpenChange={(o) => !o && setOpenPeriod(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{periodLabel}'s revenue breakdown</DialogTitle>
+            <DialogDescription>
+              {breakdown ? `Based on ${breakdown.orders} fulfilled order${breakdown.orders === 1 ? "" : "s"}` : ""}
+            </DialogDescription>
+          </DialogHeader>
+          {breakdown && (
+            <div className="space-y-4 text-sm">
+              <section className="rounded-xl border border-border bg-card p-3">
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Revenue collected</p>
+                <Row label="Product sales" value={formatINR(breakdown.productSales)} />
+                <Row label="Delivery fees" value={formatINR(breakdown.deliveryFees)} />
+                <Row label="Discounts given" value={`– ${formatINR(breakdown.discounts)}`} muted />
+                <Row label="Gross revenue" value={formatINR(breakdown.grossRevenue)} strong />
+              </section>
+
+              <section className="rounded-xl border border-border bg-card p-3">
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Costs</p>
+                <Row label={`Cost of goods (${Math.round(COGS_RATE * 100)}%)`} value={`– ${formatINR(breakdown.cogs)}`} muted />
+                <Row label={`Delivery / logistics (₹${DELIVERY_COST_PER_ORDER}/order)`} value={`– ${formatINR(breakdown.deliveryCost)}`} muted />
+                <Row label="Operating profit (EBIT)" value={formatINR(breakdown.operatingProfit)} strong />
+              </section>
+
+              <section className="rounded-xl border border-border bg-card p-3">
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">After interest & tax</p>
+                <Row label={`Interest${INTEREST_RATE === 0 ? " (none)" : ""}`} value={`– ${formatINR(breakdown.interest)}`} muted />
+                <Row label="Profit before tax" value={formatINR(breakdown.profitBeforeTax)} />
+                <Row label={`GST / tax (${Math.round(GST_RATE * 100)}%)`} value={`– ${formatINR(breakdown.tax)}`} muted />
+                <Row label="Net profit after tax" value={formatINR(breakdown.netProfit)} strong accent />
+              </section>
+
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                Cost, interest and tax figures are estimates derived from configurable rates, since per-item purchase costs aren't recorded in the system.
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
 
 
       {cancelled.length > 0 && (
