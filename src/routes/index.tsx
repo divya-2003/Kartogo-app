@@ -128,7 +128,7 @@ function Index() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-2xl px-4 lg:max-w-7xl lg:px-8">
+      <div className="mx-auto max-w-2xl px-4 pb-40 lg:max-w-7xl lg:px-8">
         {/* ---------- Category icon row ---------- */}
         <div className="flex gap-4 overflow-x-auto py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {CATEGORIES.map(c => (
