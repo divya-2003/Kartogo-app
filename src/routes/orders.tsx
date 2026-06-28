@@ -167,6 +167,15 @@ function OrdersPage() {
     [orders, userPhone],
   );
 
+  // If the user lands here from the Refund & Returns CTA, open the report
+  // issue modal for their most recent order and clean the search param.
+  useEffect(() => {
+    if (reportParam && mine.length > 0 && !reportTarget) {
+      setReportTarget(mine[0]);
+      navigate({ to: "/orders", search: {}, replace: true });
+    }
+  }, [reportParam, mine, navigate, reportTarget]);
+
   // Detect status/driver changes from the polled order list (order PII is no
   // longer broadcast over realtime). Notify once per transition, then remember
   // the latest state so we don't re-notify on the next poll.
