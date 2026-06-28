@@ -46,6 +46,9 @@ const LAST_UPDATED = "June 28, 2026";
 function RefundReturnsPage() {
   const nav = useNavigate();
   const [understood, setUnderstood] = useState(false);
+  const [faqOpen, setFaqOpen] = useState<string | undefined>(() =>
+    typeof window !== "undefined" ? (sessionStorage.getItem("refund-faq") ?? undefined) : undefined
+  );
 
   return (
     <div className="min-h-screen bg-secondary/40">
