@@ -66,6 +66,10 @@ function Dashboard() {
   const { orders } = useOrders();
   const { adminAudit } = useAuth();
   const [openPeriod, setOpenPeriod] = useState<null | "today" | "month" | "year">(null);
+  const [cancelSeen, setCancelSeen] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("kartigo_cancel_seen") === "true";
+  });
   const today = new Date(); today.setHours(0,0,0,0);
   const monthStart = new Date(); monthStart.setHours(0,0,0,0); monthStart.setDate(1);
   const yearStart = new Date(); yearStart.setHours(0,0,0,0); yearStart.setMonth(0, 1);
@@ -151,18 +155,29 @@ function Dashboard() {
 
 
       {cancelled.length > 0 && (
-        <Link to="/admin/cancellations" className="block rounded-2xl border border-destructive/40 bg-destructive/10 p-4 transition hover:bg-destructive/15">
+        <Link
+          to="/admin/cancellations"
+          onClick={() => {
+            localStorage.setItem("kartigo_cancel_seen", "true");
+            setCancelSeen(true);
+          }}
+          className="block rounded-2xl border border-destructive/40 bg-destructive/10 p-4 transition hover:bg-destructive/15"
+        >
           <div className="flex flex-wrap items-center gap-3">
             <PackageX className="h-6 w-6 shrink-0 text-destructive" />
             <div className="min-w-0">
-              <p className="font-display font-bold text-destructive">
-                {cancelled.length} cancelled order{cancelled.length > 1 ? "s" : ""} — do not pack
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {refundsDue.length > 0
-                  ? `${refundsDue.length} prepaid refund${refundsDue.length > 1 ? "s" : ""} pending · ${formatINR(refundsDue.reduce((s, o) => s + o.total, 0))}`
-                  : "No refunds pending."}
-              </p>
+              {!cancelSeen ? (
+                <p className="font-display text-3xl font-bold text-destructive">{cancelled.length}</p>
+              ) : (
+                <>
+                  <p className="font-display font-bold text-destructive">Cancelled orders — do not pack</p>
+                  <p className="text-xs text-muted-foreground">
+                    {refundsDue.length > 0
+                      ? `${refundsDue.length} prepaid refund${refundsDue.length > 1 ? "s" : ""} pending · ${formatINR(refundsDue.reduce((s, o) => s + o.total, 0))}`
+                      : "No refunds pending."}
+                  </p>
+                </>
+              )}
             </div>
             <span className="ml-auto rounded-lg bg-destructive px-3 py-1.5 text-xs font-bold text-destructive-foreground">Review</span>
           </div>
