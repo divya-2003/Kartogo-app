@@ -430,7 +430,9 @@ function CheckoutPage() {
                         </Field>
                         <Field label="Full name"><input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" /></Field>
                         <Field label="Mobile"><input value={user.phone} disabled className="w-full rounded-lg border border-input bg-secondary px-3 py-2 text-muted-foreground" /></Field>
-                        <Field label="Delivery address"><textarea value={address} onChange={e => setAddress(e.target.value)} rows={3} placeholder="House no., street, landmark, Ongole" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" /></Field>
+                        <Field label="Door / Flat number"><input value={newDoor} onChange={e => setNewDoor(e.target.value)} placeholder="e.g. 12-3-45, Flat 201" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" /></Field>
+                        <Field label="Apartment / Building name"><input value={newApartment} onChange={e => setNewApartment(e.target.value)} placeholder="e.g. Sai Residency" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" /></Field>
+                        <Field label="Landmark"><input value={newLandmark} onChange={e => setNewLandmark(e.target.value)} placeholder="e.g. Opposite SBI ATM" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" /></Field>
                         <div className="flex gap-2">
                           {addressOptions.length > 0 && (
                             <button onClick={() => setShowForm(false)} className="flex-1 rounded-xl border border-border py-2.5 font-bold hover:bg-secondary">Back</button>
