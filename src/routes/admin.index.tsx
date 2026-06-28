@@ -85,7 +85,7 @@ function Dashboard() {
   const refundsDue = cancelled.filter(o => o.paymentMethod === "upi" && !o.refunded);
 
   const periodLabel = openPeriod === "today" ? "Today" : openPeriod === "month" ? "This month" : "This year";
-  const periodOrders = openPeriod === "today" ? todays : openPeriod === "month" ? monthOrders : yearOrders;
+  const periodOrders = openPeriod === "today" ? todaysRevenue : openPeriod === "month" ? monthRevenueOrders : yearRevenueOrders;
   const breakdown = openPeriod ? computeBreakdown(periodOrders) : null;
 
   return (
