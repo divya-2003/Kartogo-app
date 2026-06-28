@@ -43,6 +43,12 @@ function CheckoutPage() {
   const [payment, setPayment] = useState<"cash" | "upi" | "wallet">("cash");
   const [placing, setPlacing] = useState(false);
 
+  // Edit a saved location's exact address without changing its area.
+  const [editLocationId, setEditLocationId] = useState<string | null>(null);
+  const [editDoorNumber, setEditDoorNumber] = useState("");
+  const [editApartment, setEditApartment] = useState("");
+  const [editLandmark, setEditLandmark] = useState("");
+
   // Promo code state.
   const [promoInput, setPromoInput] = useState("");
   const [appliedCode, setAppliedCode] = useState<string | null>(null);
