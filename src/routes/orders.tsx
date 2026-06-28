@@ -27,6 +27,7 @@ import {
   MessageSquareWarning,
   Camera,
   X,
+  Star,
 } from "lucide-react";
 import { downloadInvoice } from "@/lib/invoice";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -116,6 +117,8 @@ function OrdersPage() {
   const navigate = useNavigate();
   const [openId, setOpenId] = useState<string | null>(null);
   const [reportTarget, setReportTarget] = useState<Order | null>(null);
+  const [rateTarget, setRateTarget] = useState<Order | null>(null);
+  const [ratings, setRatings] = useState<Record<string, number>>({});
   const { open: openParam, report: reportParam } = Route.useSearch();
   useEffect(() => {
     if (openParam) setOpenId(openParam);
@@ -673,6 +676,35 @@ function OrdersPage() {
                     )}
                   </div>
 
+                  {/* Rate order — available for every order */}
+                  <button
+                    onClick={() => setRateTarget(o)}
+                    className="flex w-full items-center justify-center gap-2 border-t border-border py-3 text-sm font-bold text-saffron transition hover:bg-saffron/10"
+                  >
+                    {ratings[o.id] ? (
+                      <>
+                        <span className="flex items-center gap-0.5">
+                          {Array.from({ length: 5 }).map((_, idx) => (
+                            <Star
+                              key={idx}
+                              className={`h-4 w-4 ${
+                                idx < ratings[o.id]
+                                  ? "fill-saffron text-saffron"
+                                  : "text-muted-foreground/40"
+                              }`}
+                            />
+                          ))}
+                        </span>
+                        Rated · Tap to change
+                      </>
+                    ) : (
+                      <>
+                        <Star className="h-4 w-4" /> Rate order
+                      </>
+                    )}
+                  </button>
+
+
                   {/* Cancellation — only allowed while the order is still "Placed".
                       Once packed it is locked to avoid wasted store effort/inventory. */}
                   {active &&
@@ -718,7 +750,25 @@ function OrdersPage() {
           }}
         />
       )}
+
+      {rateTarget && (
+        <RateOrderModal
+          order={rateTarget}
+          initialRating={ratings[rateTarget.id] ?? 0}
+          onClose={() => setRateTarget(null)}
+          onSubmit={({ rating, feedback }) => {
+            setRatings((prev) => ({ ...prev, [rateTarget.id]: rating }));
+            toast.success(
+              rating >= 5
+                ? `Thanks for the ${rating}★ rating!`
+                : `Thanks for rating ${rateTarget.id}${feedback ? " — we'll work on it" : ""}`,
+            );
+            setRateTarget(null);
+          }}
+        />
+      )}
     </div>
+
   );
 }
 
@@ -1019,3 +1069,112 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
     </div>
   );
 }
+
+function RateOrderModal({
+  order,
+  initialRating,
+  onClose,
+  onSubmit,
+}: {
+  order: Order;
+  initialRating: number;
+  onClose: () => void;
+  onSubmit: (data: { rating: number; feedback: string }) => void;
+}) {
+  const [rating, setRating] = useState(initialRating);
+  const [hover, setHover] = useState(0);
+  const [feedback, setFeedback] = useState("");
+  const needsImprovement = rating > 0 && rating <= 4;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center"
+      onClick={onClose}
+    >
+      <div
+        className="flex w-full max-w-md flex-col rounded-t-2xl bg-card p-5 shadow-xl max-h-[90vh] overflow-y-auto sm:rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h2 className="font-display text-lg font-bold">Rate your order</h2>
+            <p className="text-xs text-muted-foreground">Order {order.id}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-secondary"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="flex items-center justify-center gap-2 py-2">
+          {Array.from({ length: 5 }).map((_, idx) => {
+            const value = idx + 1;
+            const active = (hover || rating) >= value;
+            return (
+              <button
+                key={value}
+                type="button"
+                aria-label={`${value} star${value > 1 ? "s" : ""}`}
+                onClick={() => setRating(value)}
+                onMouseEnter={() => setHover(value)}
+                onMouseLeave={() => setHover(0)}
+                className="transition-transform hover:scale-110"
+              >
+                <Star
+                  className={`h-9 w-9 ${
+                    active ? "fill-saffron text-saffron" : "text-muted-foreground/40"
+                  }`}
+                />
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-center text-sm text-muted-foreground">
+          {rating === 0
+            ? "Tap a star to rate"
+            : rating >= 5
+              ? "Loved it! Thanks 🎉"
+              : "Thanks — tell us how we can improve"}
+        </p>
+
+        {needsImprovement && (
+          <div className="mt-4">
+            <div className="mb-2 text-sm font-bold">
+              What improvement should we make?{" "}
+              <span className="font-normal text-muted-foreground">(optional)</span>
+            </div>
+            <textarea
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value.slice(0, 300))}
+              placeholder="Tell us what could be better…"
+              rows={3}
+              className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+            />
+          </div>
+        )}
+
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <button
+            onClick={onClose}
+            className="rounded-xl border border-border py-2.5 text-sm font-bold transition hover:bg-secondary"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              if (rating === 0) return;
+              onSubmit({ rating, feedback: feedback.trim() });
+            }}
+            disabled={rating === 0}
+            className="rounded-xl bg-saffron py-2.5 text-sm font-bold text-saffron-foreground transition hover:opacity-90 disabled:opacity-50"
+          >
+            Submit rating
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
