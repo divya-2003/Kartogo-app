@@ -47,7 +47,7 @@ function RefundReturnsPage() {
   const nav = useNavigate();
   const [understood, setUnderstood] = useState(false);
   const [faqOpen, setFaqOpen] = useState<string | undefined>(() =>
-    typeof window !== "undefined" ? (sessionStorage.getItem("refund-faq") ?? undefined) : undefined
+    typeof window !== "undefined" ? (sessionStorage.getItem("refund-faq") ?? undefined) : undefined,
   );
 
   return (
@@ -84,7 +84,9 @@ function RefundReturnsPage() {
           </div>
           <div className="min-w-0 flex-1">
             <div className="font-display font-bold">Report an issue with your order</div>
-            <div className="text-xs opacity-90">Open My Orders and request a refund or replacement.</div>
+            <div className="text-xs opacity-90">
+              Open My Orders and request a refund or replacement.
+            </div>
           </div>
           <ChevronRight className="h-5 w-5 shrink-0" />
         </Link>
