@@ -824,6 +824,21 @@ const ISSUE_TYPES = [
   "Other",
 ];
 
+// Refund destination + timeline per the Refund & Returns Policy. Wallet orders
+// are returned instantly to Kartigo Cash; UPI/COD follow the policy windows.
+function refundTimeline(method: Order["paymentMethod"]): { destination: string; eta: string } {
+  switch (method) {
+    case "wallet":
+      return { destination: "Kartigo Cash (Wallet)", eta: "Instantly after approval" };
+    case "upi":
+      return { destination: "Original UPI account", eta: "1–3 business days" };
+    case "cash":
+    default:
+      return { destination: "UPI or bank transfer", eta: "3–5 business days" };
+  }
+}
+
+
 function ReportIssueModal({
   order,
   onClose,
