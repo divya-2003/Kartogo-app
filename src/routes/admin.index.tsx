@@ -10,8 +10,12 @@ function Dashboard() {
   const { orders } = useOrders();
   const { adminAudit } = useAuth();
   const today = new Date(); today.setHours(0,0,0,0);
+  const monthStart = new Date(); monthStart.setHours(0,0,0,0); monthStart.setDate(1);
+  const yearStart = new Date(); yearStart.setHours(0,0,0,0); yearStart.setMonth(0, 1);
   const todays = orders.filter(o => o.createdAt >= today.getTime());
   const revenue = todays.reduce((s, o) => s + o.total, 0);
+  const monthlyRevenue = orders.filter(o => o.createdAt >= monthStart.getTime()).reduce((s, o) => s + o.total, 0);
+  const yearlyRevenue = orders.filter(o => o.createdAt >= yearStart.getTime()).reduce((s, o) => s + o.total, 0);
   const lowStock = products.filter(p => p.stock > 0 && p.stock <= 5);
   const pending = orders.filter(o => o.status !== "delivered" && o.status !== "cancelled");
   const cancelled = orders.filter(o => o.status === "cancelled");
