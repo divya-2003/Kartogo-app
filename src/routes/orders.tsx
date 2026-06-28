@@ -995,8 +995,10 @@ function ReportIssueModal({
           <div className="mb-2 text-sm font-bold">What would you prefer?</div>
           <div className="grid grid-cols-2 gap-3">
             <button
-              onClick={() => setResolution("Refund")}
-              className={`rounded-xl border py-2.5 text-sm font-bold transition ${
+              onClick={() => !refundClosed && setResolution("Refund")}
+              disabled={refundClosed}
+              title={refundClosed ? "Refund window has closed for this order" : undefined}
+              className={`rounded-xl border py-2.5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${
                 resolution === "Refund"
                   ? "border-primary bg-primary/5 text-primary"
                   : "border-border hover:bg-secondary"
