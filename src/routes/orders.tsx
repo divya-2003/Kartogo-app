@@ -13,8 +13,9 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/orders")({
   component: OrdersPage,
-  validateSearch: (search: Record<string, unknown>): { open?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { open?: string; report?: string } => ({
     open: typeof search.open === "string" ? search.open : undefined,
+    report: typeof search.report === "string" ? search.report : undefined,
   }),
   head: () => ({ meta: [{ title: "My orders — Kartigo" }] }),
 });
