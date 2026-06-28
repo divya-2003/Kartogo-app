@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   ChevronLeft,
+  ChevronRight,
   CheckCircle2,
   AlertCircle,
   XCircle,
@@ -17,6 +18,7 @@ import {
   Phone,
   ShieldCheck,
   ChevronDown,
+  MessageSquareWarning,
 } from "lucide-react";
 import {
   Accordion,
