@@ -551,6 +551,10 @@ export type SavedLocation = {
   serviceable?: boolean;
   /** Expected door delivery time in minutes. */
   etaMinutes?: number;
+  /** Exact address details captured after the area is confirmed. */
+  doorNumber?: string;
+  apartment?: string;
+  landmark?: string;
 };
 
 /** A full delivery address the customer can reuse at checkout. */
