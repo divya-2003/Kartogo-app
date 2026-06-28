@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, Link, useRouterState, redirect, isRedirect } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { useOrders } from "@/lib/store";
 import { verifyAdminTokenFn } from "@/lib/auth.functions";
@@ -40,8 +41,18 @@ const NAV = [
 function AdminLayout() {
   const path = useRouterState({ select: s => s.location.pathname });
   const { orders } = useOrders();
+  const [cancelSeen, setCancelSeen] = useState(false);
   const cancelledCount = orders.filter(o => o.status === "cancelled").length;
   const isActive = (to: string) => (to === "/admin" ? path === "/admin" : path.startsWith(to));
+
+  useEffect(() => {
+    setCancelSeen(localStorage.getItem("kartigo_cancel_seen") === "true");
+  }, [path]);
+
+  const markCancellationsSeen = () => {
+    localStorage.setItem("kartigo_cancel_seen", "true");
+    setCancelSeen(true);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -54,9 +65,9 @@ function AdminLayout() {
           <nav className="flex flex-col gap-1">
             {NAV.map(n => {
               const active = isActive(n.to);
-              const badge = n.to === "/admin/cancellations" && cancelledCount > 0 ? cancelledCount : null;
+              const badge = n.to === "/admin/cancellations" && !cancelSeen && cancelledCount > 0 ? cancelledCount : null;
               return (
-                <Link key={n.to} to={n.to} className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition ${active ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}>
+                <Link key={n.to} to={n.to} onClick={n.to === "/admin/cancellations" ? markCancellationsSeen : undefined} className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition ${active ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}>
                   <n.icon className="h-4 w-4" /> {n.label}
                   {badge !== null && (
                     <span className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold ${active ? "bg-primary-foreground text-primary" : "bg-destructive text-destructive-foreground"}`}>{badge}</span>
@@ -75,11 +86,12 @@ function AdminLayout() {
         <div className="mx-auto flex max-w-lg">
           {NAV.map(n => {
             const active = isActive(n.to);
-            const badge = n.to === "/admin/cancellations" && cancelledCount > 0 ? cancelledCount : null;
+            const badge = n.to === "/admin/cancellations" && !cancelSeen && cancelledCount > 0 ? cancelledCount : null;
             return (
               <Link
                 key={n.to}
                 to={n.to}
+                onClick={n.to === "/admin/cancellations" ? markCancellationsSeen : undefined}
                 className={`relative flex flex-1 flex-col items-center gap-1 py-2 text-[10px] font-semibold transition ${active ? "text-primary" : "text-muted-foreground"}`}
               >
                 <span className={`grid h-8 w-8 place-items-center rounded-xl transition ${active ? "bg-primary/10" : ""}`}>
