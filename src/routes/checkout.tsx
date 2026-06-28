@@ -296,13 +296,45 @@ function CheckoutPage() {
                   onClick={e => e.stopPropagation()}
                 >
                   <div className="mb-4 flex items-center justify-between">
-                    <h3 className="font-display text-lg font-bold">{showForm ? "Add a new address" : "Select delivery address"}</h3>
+                    <h3 className="font-display text-lg font-bold">
+                      {editLocationId ? "Edit exact address" : showForm ? "Add a new address" : "Select delivery address"}
+                    </h3>
                     <button onClick={() => setShowPicker(false)} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full hover:bg-secondary">
                       <X className="h-4 w-4" />
                     </button>
                   </div>
 
-                  {!showForm && (
+                  {editLocationId ? (
+                    <div className="rounded-xl border border-border bg-background p-4">
+                      {(() => {
+                        const addr = savedAddresses.find(a => a.query.toLowerCase() === editLocationId.toLowerCase());
+                        return addr ? (
+                          <div className="mb-3 flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-2">
+                            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                            <div>
+                              <div className="text-sm font-bold">{addr.area}</div>
+                              <div className="text-xs text-muted-foreground">{addr.baseQuery ?? addr.query}</div>
+                            </div>
+                          </div>
+                        ) : null;
+                      })()}
+                      <div className="grid gap-3">
+                        <Field label="Door / Flat number">
+                          <input value={editDoorNumber} onChange={e => setEditDoorNumber(e.target.value)} placeholder="e.g. 12-3-45, Flat 201" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+                        </Field>
+                        <Field label="Apartment / Building name (optional)">
+                          <input value={editApartment} onChange={e => setEditApartment(e.target.value)} placeholder="e.g. Sai Residency" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+                        </Field>
+                        <Field label="Landmark (optional)">
+                          <input value={editLandmark} onChange={e => setEditLandmark(e.target.value)} placeholder="e.g. Opposite SBI ATM" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+                        </Field>
+                        <div className="flex gap-2">
+                          <button onClick={() => setEditLocationId(null)} className="flex-1 rounded-xl border border-border py-2.5 font-bold hover:bg-secondary">Cancel</button>
+                          <button onClick={saveLocationEdit} className="flex-1 rounded-xl bg-primary py-2.5 font-bold text-primary-foreground hover:bg-primary/90">Save changes</button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : !showForm && (
                     <>
                       {addressOptions.length > 0 && (
                         <ul className="grid gap-2">
