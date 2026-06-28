@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { Header } from "@/components/Header";
-import { useAuth, useCart, useCatalog, useOrders, useLocation, useWallet } from "@/lib/store";
+import { useAuth, useCart, useCatalog, useOrders, useLocation, useWallet, buildLocationQuery, type SavedLocation } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { toast } from "sonner";
-import { Banknote, Smartphone, Wallet, MapPin, Plus, Check, Trash2, X, Tag } from "lucide-react";
+import { Banknote, Smartphone, Wallet, MapPin, Plus, Check, Trash2, X, Tag, Pencil } from "lucide-react";
 
 export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
