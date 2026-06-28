@@ -555,7 +555,34 @@ export type SavedLocation = {
   doorNumber?: string;
   apartment?: string;
   landmark?: string;
+  /** The area/city/pincode part of the address, kept separate so we can edit the exact details without touching the selected area. */
+  baseQuery?: string;
 };
+
+function regexEscape(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Reconstruct the area/city base string from a legacy saved query that didn't store baseQuery separately. */
+function inferBaseQuery(loc: SavedLocation): string {
+  let base = loc.query;
+  if (loc.doorNumber) base = base.replace(new RegExp(`^${regexEscape(loc.doorNumber)}\\s*,?\\s*`), "");
+  if (loc.apartment) base = base.replace(new RegExp(`${regexEscape(loc.apartment)}\\s*,?\\s*`), "");
+  if (loc.landmark) base = base.replace(new RegExp(`,?\\s*Near\\s+${regexEscape(loc.landmark)}$`), "");
+  return base.replace(/^,\\s*|\\s*,$/g, "").trim();
+}
+
+/** Build the full display query from the area base plus exact address details. */
+export function buildLocationQuery(loc: SavedLocation): string {
+  const base = loc.baseQuery ?? inferBaseQuery(loc);
+  const parts = [
+    loc.doorNumber,
+    loc.apartment,
+    base,
+    loc.landmark ? `Near ${loc.landmark}` : "",
+  ].filter(Boolean);
+  return parts.join(", ");
+}
 
 /** A full delivery address the customer can reuse at checkout. */
 export type DeliveryAddress = {
@@ -575,6 +602,8 @@ type LocationCtx = {
   ready: boolean;
   setLocation: (loc: SavedLocation) => void;
   removeSavedAddress: (query: string) => void;
+  /** Update only the exact address details (door / apartment / landmark) of a saved area without changing its city/area. */
+  updateSavedAddress: (query: string, patch: Partial<Pick<SavedLocation, "doorNumber" | "apartment" | "landmark" | "baseQuery">>) => void;
   addDeliveryAddress: (addr: Omit<DeliveryAddress, "id">) => DeliveryAddress;
   removeDeliveryAddress: (id: string) => void;
   clearLocation: () => void;
