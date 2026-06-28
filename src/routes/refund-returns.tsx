@@ -76,7 +76,7 @@ function RefundReturnsPage() {
         {/* Report issue CTA */}
         <Link
           to="/orders"
-          search={{ report: "1" }}
+          search={{ report: 1 }}
           className="mt-4 flex items-center gap-3 overflow-hidden rounded-2xl bg-saffron p-4 text-saffron-foreground shadow-pop transition hover:opacity-95"
         >
           <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/20">
