@@ -646,6 +646,151 @@ function CancelReasonModal({
   );
 }
 
+type ReportIssueData = {
+  type: string;
+  resolution: "Refund" | "Replacement";
+  details: string;
+  photo?: File;
+};
+
+const ISSUE_TYPES = [
+  "Damaged product",
+  "Expired product",
+  "Wrong item delivered",
+  "Missing item",
+  "Other",
+];
+
+function ReportIssueModal({
+  order,
+  onClose,
+  onSubmit,
+}: {
+  order: Order;
+  onClose: () => void;
+  onSubmit: (data: ReportIssueData) => void;
+}) {
+  const [type, setType] = useState<string | null>(null);
+  const [resolution, setResolution] = useState<"Refund" | "Replacement" | null>(null);
+  const [details, setDetails] = useState("");
+  const [photo, setPhoto] = useState<File | null>(null);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center" onClick={onClose}>
+      <div
+        className="flex w-full max-w-md flex-col rounded-t-2xl bg-card p-5 shadow-xl max-h-[90vh] overflow-y-auto sm:rounded-2xl"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h2 className="font-display text-lg font-bold">Report an issue</h2>
+            <p className="text-xs text-muted-foreground">Order {order.id}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-secondary"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mb-4 rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <div className="flex items-center gap-2 font-semibold">
+            <AlertTriangle className="h-4 w-4" /> Tell us what went wrong
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {ISSUE_TYPES.map(t => (
+            <button
+              key={t}
+              onClick={() => setType(t)}
+              className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-sm transition ${
+                type === t ? "border-destructive bg-destructive/5 font-semibold" : "border-border hover:bg-secondary"
+              }`}
+            >
+              <span className={`grid h-4 w-4 place-items-center rounded-full border ${type === t ? "border-destructive" : "border-muted-foreground/40"}`}>
+                {type === t && <span className="h-2 w-2 rounded-full bg-destructive" />}
+              </span>
+              {t}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-4">
+          <div className="mb-2 text-sm font-bold">What would you prefer?</div>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => setResolution("Refund")}
+              className={`rounded-xl border py-2.5 text-sm font-bold transition ${
+                resolution === "Refund" ? "border-primary bg-primary/5 text-primary" : "border-border hover:bg-secondary"
+              }`}
+            >
+              Refund
+            </button>
+            <button
+              onClick={() => setResolution("Replacement")}
+              className={`rounded-xl border py-2.5 text-sm font-bold transition ${
+                resolution === "Replacement" ? "border-leaf bg-leaf/10 text-leaf" : "border-border hover:bg-secondary"
+              }`}
+            >
+              Replacement
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <div className="mb-2 text-sm font-bold">Add details (optional)</div>
+          <textarea
+            value={details}
+            onChange={e => setDetails(e.target.value.slice(0, 300))}
+            placeholder="Describe the issue…"
+            rows={3}
+            className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+          />
+        </div>
+
+        <div className="mt-4">
+          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-background px-3 py-2.5 text-sm transition hover:bg-secondary">
+            <Camera className="h-4 w-4 text-muted-foreground" />
+            <span className="min-w-0 flex-1 truncate">
+              {photo ? photo.name : "Upload product photo (optional)"}
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={e => {
+                const f = e.target.files?.[0];
+                if (f) setPhoto(f);
+              }}
+            />
+          </label>
+        </div>
+
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <button
+            onClick={onClose}
+            className="rounded-xl border border-border py-2.5 text-sm font-bold transition hover:bg-secondary"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              if (!type || !resolution) return;
+              onSubmit({ type, resolution, details, photo: photo ?? undefined });
+            }}
+            disabled={!type || !resolution}
+            className="rounded-xl bg-destructive py-2.5 text-sm font-bold text-destructive-foreground transition hover:opacity-90 disabled:opacity-50"
+          >
+            Submit report
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between">
