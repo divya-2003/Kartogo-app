@@ -125,10 +125,8 @@ function LocationPickerClient({
   const saveDetails = (e: React.FormEvent) => {
     e.preventDefault();
     if (!pending) return;
-    if (!doorNumber.trim()) {
-      toast.error("Please add your door / flat number");
-      return;
-    }
+    // Exact details (door no., apartment, landmark) are optional here — we ask
+    // for them mandatorily at checkout instead.
     if (editingQuery) {
       updateSavedAddress(editingQuery, {
         doorNumber: doorNumber.trim(),
