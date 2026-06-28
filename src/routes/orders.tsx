@@ -754,10 +754,10 @@ function OrdersPage() {
       {rateTarget && (
         <RateOrderModal
           order={rateTarget}
-          initialRating={ratings[rateTarget.id] ?? 0}
+          initialRating={0}
           onClose={() => setRateTarget(null)}
           onSubmit={({ rating, feedback }) => {
-            setRatings((prev) => ({ ...prev, [rateTarget.id]: rating }));
+            markRated(rateTarget.id);
             toast.success(
               rating >= 5
                 ? `Thanks for the ${rating}★ rating!`
