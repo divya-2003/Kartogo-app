@@ -185,20 +185,23 @@ function CheckoutPage() {
 
   const saveLocationEdit = () => {
     if (!editLocationId) return;
-    if (!editDoorNumber.trim()) { toast.error("Please add your door / flat number"); return; }
+    if (!editDoorNumber.trim() || !editApartment.trim() || !editLandmark.trim()) {
+      toast.error("Please add your door number, apartment name and landmark");
+      return;
+    }
     const existing = savedAddresses.find(a => a.query.toLowerCase() === editLocationId.toLowerCase());
     if (!existing) return;
     const updated: SavedLocation = {
       ...existing,
       doorNumber: editDoorNumber.trim(),
-      apartment: editApartment.trim() || undefined,
-      landmark: editLandmark.trim() || undefined,
+      apartment: editApartment.trim(),
+      landmark: editLandmark.trim(),
     };
     const newQuery = buildLocationQuery(updated);
     updateSavedAddress(editLocationId, {
       doorNumber: editDoorNumber.trim(),
-      apartment: editApartment.trim() || undefined,
-      landmark: editLandmark.trim() || undefined,
+      apartment: editApartment.trim(),
+      landmark: editLandmark.trim(),
     });
     setSelectedId(`location:${newQuery}`);
     setEditLocationId(null);
@@ -208,6 +211,17 @@ function CheckoutPage() {
   const handlePlace = async () => {
     const selected = addressOptions.find(a => a.id === selectedId);
     if (!selected) { toast.error("Please select a delivery address"); return; }
+    // Require complete exact-address details (door no., apartment, landmark)
+    // before placing. Saved-area addresses may be missing them — prompt to edit.
+    if (selected.kind === "location") {
+      const saved = savedAddresses.find(a => a.query.toLowerCase() === selected.removableId.toLowerCase());
+      if (!saved?.doorNumber?.trim() || !saved?.apartment?.trim() || !saved?.landmark?.trim()) {
+        toast.error("Please add your door number, apartment name and landmark");
+        setShowPicker(true);
+        startEditLocation(selected.removableId);
+        return;
+      }
+    }
     if (payment === "wallet" && walletBalance < total) {
       toast.error(`Not enough wallet balance. Add ${formatINR(total - walletBalance)} more.`);
       return;
