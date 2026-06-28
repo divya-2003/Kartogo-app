@@ -33,7 +33,7 @@ type Breakdown = {
 
 function computeBreakdown(orders: Order[]): Breakdown {
   // Only fulfilled (non-cancelled) orders count toward earnings.
-  const earned = orders.filter((o) => o.status !== "cancelled");
+  const earned = orders.filter((o) => o.status !== "cancelled" && !o.refunded);
   const grossRevenue = earned.reduce((s, o) => s + o.total, 0);
   const productSales = earned.reduce((s, o) => s + o.subtotal, 0);
   const deliveryFees = earned.reduce((s, o) => s + o.deliveryFee, 0);
