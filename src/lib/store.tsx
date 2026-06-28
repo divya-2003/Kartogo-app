@@ -629,10 +629,11 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     deliveryAddresses,
     ready,
     setLocation: (loc) => {
-      setLoc(loc);
-      write("qk_location", loc);
+      const stored: SavedLocation = { ...loc, baseQuery: loc.baseQuery ?? inferBaseQuery(loc) };
+      setLoc(stored);
+      write("qk_location", stored);
       setSaved(prev => {
-        const next = [loc, ...prev.filter(a => a.query.toLowerCase() !== loc.query.toLowerCase())].slice(0, 8);
+        const next = [stored, ...prev.filter(a => a.query.toLowerCase() !== stored.query.toLowerCase())].slice(0, 8);
         write("qk_addresses", next);
         return next;
       });
