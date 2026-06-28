@@ -35,6 +35,12 @@ function Dashboard() {
         <Stat icon={<AlertTriangle className="h-5 w-5" />} label="Low stock" value={String(lowStock.length)} warn />
       </div>
 
+      <div className="grid grid-cols-2 gap-3">
+        <Stat icon={<IndianRupee className="h-5 w-5" />} label="This month's revenue" value={formatINR(monthlyRevenue)} accent />
+        <Stat icon={<IndianRupee className="h-5 w-5" />} label="This year's revenue" value={formatINR(yearlyRevenue)} accent />
+      </div>
+
+
       {cancelled.length > 0 && (
         <Link to="/admin/cancellations" className="block rounded-2xl border border-destructive/40 bg-destructive/10 p-4 transition hover:bg-destructive/15">
           <div className="flex flex-wrap items-center gap-3">
