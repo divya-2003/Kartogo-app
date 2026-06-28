@@ -741,6 +741,8 @@ function OrdersPage() {
       {reportTarget && (
         <ReportIssueModal
           order={reportTarget}
+          deliveredAt={statusSince[reportTarget.id] ?? reportTarget.updatedAt}
+          products={products}
           onClose={() => setReportTarget(null)}
           onSubmit={(data) => {
             toast.success(
@@ -750,6 +752,7 @@ function OrdersPage() {
           }}
         />
       )}
+
 
       {rateTarget && (
         <RateOrderModal
