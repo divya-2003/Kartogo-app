@@ -5,7 +5,7 @@ import { useAuth, useOrders, useCart, useCatalog, useWallet, DELIVERY_BOYS, type
 import { formatINR } from "@/lib/data";
 import { etaText, formatDeliveryDuration } from "@/lib/eta";
 import { paymentBreakdown, PAYMENT_LABELS } from "@/lib/payment";
-import { CheckCircle2, Package, Truck, Clock, XCircle, ChevronRight, Zap, Download } from "lucide-react";
+import { CheckCircle2, Package, Truck, Clock, XCircle, ChevronRight, Zap, Download, AlertTriangle, MessageSquareWarning, Camera, X } from "lucide-react";
 import { downloadInvoice } from "@/lib/invoice";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
