@@ -125,6 +125,7 @@ function LocationPickerClient({
       doorNumber: doorNumber.trim(),
       apartment: apartment.trim() || undefined,
       landmark: landmark.trim() || undefined,
+      baseQuery: pending.query,
     });
     toast.success(`Delivering to ${pending.area} in ${deliveryWindow(pending.etaMinutes)}`);
     setOpen(false);

@@ -555,7 +555,34 @@ export type SavedLocation = {
   doorNumber?: string;
   apartment?: string;
   landmark?: string;
+  /** The area/city/pincode part of the address, kept separate so we can edit the exact details without touching the selected area. */
+  baseQuery?: string;
 };
+
+function regexEscape(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Reconstruct the area/city base string from a legacy saved query that didn't store baseQuery separately. */
+function inferBaseQuery(loc: SavedLocation): string {
+  let base = loc.query;
+  if (loc.doorNumber) base = base.replace(new RegExp(`^${regexEscape(loc.doorNumber)}\\s*,?\\s*`), "");
+  if (loc.apartment) base = base.replace(new RegExp(`${regexEscape(loc.apartment)}\\s*,?\\s*`), "");
+  if (loc.landmark) base = base.replace(new RegExp(`,?\\s*Near\\s+${regexEscape(loc.landmark)}$`), "");
+  return base.replace(/^,\\s*|\\s*,$/g, "").trim();
+}
+
+/** Build the full display query from the area base plus exact address details. */
+export function buildLocationQuery(loc: SavedLocation): string {
+  const base = loc.baseQuery ?? inferBaseQuery(loc);
+  const parts = [
+    loc.doorNumber,
+    loc.apartment,
+    base,
+    loc.landmark ? `Near ${loc.landmark}` : "",
+  ].filter(Boolean);
+  return parts.join(", ");
+}
 
 /** A full delivery address the customer can reuse at checkout. */
 export type DeliveryAddress = {
@@ -575,6 +602,8 @@ type LocationCtx = {
   ready: boolean;
   setLocation: (loc: SavedLocation) => void;
   removeSavedAddress: (query: string) => void;
+  /** Update only the exact address details (door / apartment / landmark) of a saved area without changing its city/area. */
+  updateSavedAddress: (query: string, patch: Partial<Pick<SavedLocation, "doorNumber" | "apartment" | "landmark" | "baseQuery">>) => void;
   addDeliveryAddress: (addr: Omit<DeliveryAddress, "id">) => DeliveryAddress;
   removeDeliveryAddress: (id: string) => void;
   clearLocation: () => void;
@@ -600,10 +629,11 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     deliveryAddresses,
     ready,
     setLocation: (loc) => {
-      setLoc(loc);
-      write("qk_location", loc);
+      const stored: SavedLocation = { ...loc, baseQuery: loc.baseQuery ?? inferBaseQuery(loc) };
+      setLoc(stored);
+      write("qk_location", stored);
       setSaved(prev => {
-        const next = [loc, ...prev.filter(a => a.query.toLowerCase() !== loc.query.toLowerCase())].slice(0, 8);
+        const next = [stored, ...prev.filter(a => a.query.toLowerCase() !== stored.query.toLowerCase())].slice(0, 8);
         write("qk_addresses", next);
         return next;
       });
@@ -614,6 +644,25 @@ export function LocationProvider({ children }: { children: ReactNode }) {
         write("qk_addresses", next);
         return next;
       });
+    },
+    updateSavedAddress: (query, patch) => {
+      const idx = savedAddresses.findIndex(a => a.query.toLowerCase() === query.toLowerCase());
+      if (idx === -1) return;
+      const existing = savedAddresses[idx];
+      const baseQuery = patch.baseQuery ?? existing.baseQuery ?? inferBaseQuery(existing);
+      const updated: SavedLocation = {
+        ...existing,
+        ...patch,
+        baseQuery,
+        query: buildLocationQuery({ ...existing, ...patch, baseQuery }),
+      };
+      const next = [updated, ...savedAddresses.filter((_, i) => i !== idx)].slice(0, 8);
+      setSaved(next);
+      write("qk_addresses", next);
+      if (location?.query.toLowerCase() === query.toLowerCase()) {
+        setLoc(updated);
+        write("qk_location", updated);
+      }
     },
     addDeliveryAddress: (addr) => {
       const created: DeliveryAddress = {

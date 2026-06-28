@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { Header } from "@/components/Header";
-import { useAuth, useCart, useCatalog, useOrders, useLocation, useWallet } from "@/lib/store";
+import { useAuth, useCart, useCatalog, useOrders, useLocation, useWallet, buildLocationQuery, type SavedLocation } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { toast } from "sonner";
-import { Banknote, Smartphone, Wallet, MapPin, Plus, Check, Trash2, X, Tag } from "lucide-react";
+import { Banknote, Smartphone, Wallet, MapPin, Plus, Check, Trash2, X, Tag, Pencil } from "lucide-react";
 
 export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
@@ -33,7 +33,7 @@ function CheckoutPage() {
   const { items, subtotal, clear } = useCart();
   const { products } = useCatalog();
   const { place } = useOrders();
-  const { savedAddresses, deliveryAddresses, addDeliveryAddress, removeDeliveryAddress, removeSavedAddress } = useLocation();
+  const { savedAddresses, deliveryAddresses, addDeliveryAddress, removeDeliveryAddress, removeSavedAddress, updateSavedAddress } = useLocation();
   const { balance: walletBalance, refresh: refreshWallet } = useWallet();
   const nav = useNavigate();
 
@@ -42,6 +42,12 @@ function CheckoutPage() {
   const [showPicker, setShowPicker] = useState(false);
   const [payment, setPayment] = useState<"cash" | "upi" | "wallet">("cash");
   const [placing, setPlacing] = useState(false);
+
+  // Edit a saved location's exact address without changing its area.
+  const [editLocationId, setEditLocationId] = useState<string | null>(null);
+  const [editDoorNumber, setEditDoorNumber] = useState("");
+  const [editApartment, setEditApartment] = useState("");
+  const [editLandmark, setEditLandmark] = useState("");
 
   // Promo code state.
   const [promoInput, setPromoInput] = useState("");
@@ -159,6 +165,37 @@ function CheckoutPage() {
     toast.success("Address saved");
   };
 
+  const startEditLocation = (query: string) => {
+    const addr = savedAddresses.find(a => a.query.toLowerCase() === query.toLowerCase());
+    if (!addr) return;
+    setEditLocationId(query);
+    setEditDoorNumber(addr.doorNumber ?? "");
+    setEditApartment(addr.apartment ?? "");
+    setEditLandmark(addr.landmark ?? "");
+  };
+
+  const saveLocationEdit = () => {
+    if (!editLocationId) return;
+    if (!editDoorNumber.trim()) { toast.error("Please add your door / flat number"); return; }
+    const existing = savedAddresses.find(a => a.query.toLowerCase() === editLocationId.toLowerCase());
+    if (!existing) return;
+    const updated: SavedLocation = {
+      ...existing,
+      doorNumber: editDoorNumber.trim(),
+      apartment: editApartment.trim() || undefined,
+      landmark: editLandmark.trim() || undefined,
+    };
+    const newQuery = buildLocationQuery(updated);
+    updateSavedAddress(editLocationId, {
+      doorNumber: editDoorNumber.trim(),
+      apartment: editApartment.trim() || undefined,
+      landmark: editLandmark.trim() || undefined,
+    });
+    setSelectedId(`location:${newQuery}`);
+    setEditLocationId(null);
+    toast.success("Address updated");
+  };
+
   const handlePlace = async () => {
     const selected = addressOptions.find(a => a.id === selectedId);
     if (!selected) { toast.error("Please select a delivery address"); return; }
@@ -259,13 +296,45 @@ function CheckoutPage() {
                   onClick={e => e.stopPropagation()}
                 >
                   <div className="mb-4 flex items-center justify-between">
-                    <h3 className="font-display text-lg font-bold">{showForm ? "Add a new address" : "Select delivery address"}</h3>
+                    <h3 className="font-display text-lg font-bold">
+                      {editLocationId ? "Edit exact address" : showForm ? "Add a new address" : "Select delivery address"}
+                    </h3>
                     <button onClick={() => setShowPicker(false)} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full hover:bg-secondary">
                       <X className="h-4 w-4" />
                     </button>
                   </div>
 
-                  {!showForm && (
+                  {editLocationId ? (
+                    <div className="rounded-xl border border-border bg-background p-4">
+                      {(() => {
+                        const addr = savedAddresses.find(a => a.query.toLowerCase() === editLocationId.toLowerCase());
+                        return addr ? (
+                          <div className="mb-3 flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-2">
+                            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                            <div>
+                              <div className="text-sm font-bold">{addr.area}</div>
+                              <div className="text-xs text-muted-foreground">{addr.baseQuery ?? addr.query}</div>
+                            </div>
+                          </div>
+                        ) : null;
+                      })()}
+                      <div className="grid gap-3">
+                        <Field label="Door / Flat number">
+                          <input value={editDoorNumber} onChange={e => setEditDoorNumber(e.target.value)} placeholder="e.g. 12-3-45, Flat 201" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+                        </Field>
+                        <Field label="Apartment / Building name (optional)">
+                          <input value={editApartment} onChange={e => setEditApartment(e.target.value)} placeholder="e.g. Sai Residency" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+                        </Field>
+                        <Field label="Landmark (optional)">
+                          <input value={editLandmark} onChange={e => setEditLandmark(e.target.value)} placeholder="e.g. Opposite SBI ATM" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+                        </Field>
+                        <div className="flex gap-2">
+                          <button onClick={() => setEditLocationId(null)} className="flex-1 rounded-xl border border-border py-2.5 font-bold hover:bg-secondary">Cancel</button>
+                          <button onClick={saveLocationEdit} className="flex-1 rounded-xl bg-primary py-2.5 font-bold text-primary-foreground hover:bg-primary/90">Save changes</button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : !showForm && (
                     <>
                       {addressOptions.length > 0 && (
                         <ul className="grid gap-2">
@@ -288,6 +357,15 @@ function CheckoutPage() {
                                     <div className="text-sm text-muted-foreground">{addr.address}</div>
                                   </div>
                                 </button>
+                                {addr.kind === "location" && (
+                                  <button
+                                    onClick={() => startEditLocation(addr.removableId)}
+                                    aria-label="Edit exact address"
+                                    className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-primary"
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => addr.kind === "delivery" ? removeDeliveryAddress(addr.removableId) : removeSavedAddress(addr.removableId)}
                                   aria-label="Remove address"
