@@ -345,10 +345,10 @@ function CheckoutPage() {
                         <Field label="Door / Flat number">
                           <input value={editDoorNumber} onChange={e => setEditDoorNumber(e.target.value)} placeholder="e.g. 12-3-45, Flat 201" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
                         </Field>
-                        <Field label="Apartment / Building name (optional)">
+                        <Field label="Apartment / Building name">
                           <input value={editApartment} onChange={e => setEditApartment(e.target.value)} placeholder="e.g. Sai Residency" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
                         </Field>
-                        <Field label="Landmark (optional)">
+                        <Field label="Landmark">
                           <input value={editLandmark} onChange={e => setEditLandmark(e.target.value)} placeholder="e.g. Opposite SBI ATM" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
                         </Field>
                         <div className="flex gap-2">
