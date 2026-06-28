@@ -27,6 +27,7 @@ import {
   MessageSquareWarning,
   Camera,
   X,
+  Star,
 } from "lucide-react";
 import { downloadInvoice } from "@/lib/invoice";
 import { useEffect, useMemo, useRef, useState } from "react";
