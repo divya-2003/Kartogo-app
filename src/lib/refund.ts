@@ -68,7 +68,7 @@ export function refundEligibility(
 ): RefundEligibility {
   const delivered = order.status === "delivered";
 
-  const windowHours = order.items.reduce((max, item) => {
+  const windowHours = order.items.reduce<number>((max, item) => {
     const product = products.find((p) => p.id === item.productId);
     const kind = categoryWindowKind(product?.category ?? "");
     return Math.max(max, REFUND_WINDOW_HOURS[kind]);
