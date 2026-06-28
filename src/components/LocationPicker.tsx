@@ -58,10 +58,20 @@ function LocationPickerClient({
   const [denied, setDenied] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Second step: capture the exact address (door no, apartment, landmark) for a
+  // confirmed serviceable area before we save the location.
+  const [pending, setPending] = useState<
+    { query: string; area: string; etaMinutes?: number } | null
+  >(null);
+  const [doorNumber, setDoorNumber] = useState("");
+  const [apartment, setApartment] = useState("");
+  const [landmark, setLandmark] = useState("");
+
   useEffect(() => {
     if (open) {
       setQuery("");
       setDenied(null);
+      setPending(null);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [open]);
@@ -78,16 +88,48 @@ function LocationPickerClient({
     [query],
   );
 
+  // Move to the "exact location" step for a confirmed serviceable area.
+  const startDetails = (p: { query: string; area: string; etaMinutes?: number }) => {
+    setPending(p);
+    setDoorNumber("");
+    setApartment("");
+    setLandmark("");
+  };
+
   const selectArea = (area: ServiceableArea) => {
-    setLocation({
+    startDetails({
       query: `${area.name}, ${DARK_STORE.city} ${area.pincode}`,
       area: area.name,
-      serviceable: true,
       etaMinutes: area.etaMinutes,
     });
-    toast.success(`Delivering to ${area.name} in ${deliveryWindow(area.etaMinutes)}`);
+  };
+
+  const saveDetails = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pending) return;
+    if (!doorNumber.trim()) {
+      toast.error("Please add your door / flat number");
+      return;
+    }
+    const parts = [
+      doorNumber.trim(),
+      apartment.trim(),
+      pending.query,
+      landmark.trim() ? `Near ${landmark.trim()}` : "",
+    ].filter(Boolean);
+    setLocation({
+      query: parts.join(", "),
+      area: pending.area,
+      serviceable: true,
+      etaMinutes: pending.etaMinutes,
+      doorNumber: doorNumber.trim(),
+      apartment: apartment.trim() || undefined,
+      landmark: landmark.trim() || undefined,
+    });
+    toast.success(`Delivering to ${pending.area} in ${deliveryWindow(pending.etaMinutes)}`);
     setOpen(false);
   };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,14 +142,11 @@ function LocationPickerClient({
     try {
       const result = await check({ data: { location: query } });
       if (result.serviceable) {
-        setLocation({
+        startDetails({
           query: query.trim(),
           area: result.area ?? query.trim(),
-          serviceable: true,
           etaMinutes: result.etaMinutes ?? undefined,
         });
-        toast.success(result.reason);
-        setOpen(false);
       } else {
         setDenied(result.reason);
       }
@@ -133,14 +172,11 @@ function LocationPickerClient({
           });
           if (result.serviceable) {
             const label = result.area ?? result.address ?? "Current location";
-            setLocation({
+            startDetails({
               query: result.address ?? label,
               area: label,
-              serviceable: true,
               etaMinutes: result.etaMinutes ?? undefined,
             });
-            toast.success(result.reason);
-            setOpen(false);
           } else {
             if (result.address) setQuery(result.address);
             setDenied(result.reason);
@@ -187,13 +223,17 @@ function LocationPickerClient({
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border px-4 py-4">
             <div>
-              <h2 className="font-display text-lg font-bold">Select your location</h2>
+              <h2 className="font-display text-lg font-bold">
+                {pending ? "Add your exact location" : "Select your location"}
+              </h2>
               <p className="text-xs text-muted-foreground">
-                We'll check if we deliver to your area.
+                {pending
+                  ? `${pending.area} · delivery in ${deliveryWindow(pending.etaMinutes)}`
+                  : "We'll check if we deliver to your area."}
               </p>
             </div>
             <button
-              onClick={() => setOpen(false)}
+              onClick={() => (pending ? setPending(null) : setOpen(false))}
               aria-label="Close"
               className="grid h-9 w-9 place-items-center rounded-full hover:bg-secondary"
             >
@@ -201,8 +241,69 @@ function LocationPickerClient({
             </button>
           </div>
 
-          {/* Body */}
+          {pending ? (
+            /* Step 2: exact address details */
+            <div className="mx-auto w-full max-w-lg flex-1 overflow-y-auto px-4 py-5">
+              <div className="flex items-start gap-2 rounded-xl border border-leaf/30 bg-leaf/10 p-3 text-sm">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-leaf" />
+                <span>
+                  <span className="block font-semibold">{pending.area}</span>
+                  <span className="block text-xs text-muted-foreground">{pending.query}</span>
+                </span>
+              </div>
+
+              <form onSubmit={saveDetails} className="mt-5 space-y-3">
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    Door / Flat number
+                  </label>
+                  <input
+                    autoFocus
+                    value={doorNumber}
+                    onChange={(e) => setDoorNumber(e.target.value)}
+                    placeholder="e.g. 12-3-45, Flat 201"
+                    className="w-full rounded-xl border border-input bg-background px-3 py-3 text-base outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    Apartment / Building name <span className="font-normal normal-case">(optional)</span>
+                  </label>
+                  <input
+                    value={apartment}
+                    onChange={(e) => setApartment(e.target.value)}
+                    placeholder="e.g. Sai Residency"
+                    className="w-full rounded-xl border border-input bg-background px-3 py-3 text-base outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    Landmark <span className="font-normal normal-case">(optional)</span>
+                  </label>
+                  <input
+                    value={landmark}
+                    onChange={(e) => setLandmark(e.target.value)}
+                    placeholder="e.g. Opposite SBI ATM"
+                    className="w-full rounded-xl border border-input bg-background px-3 py-3 text-base outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+
+                <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90">
+                  <Check className="h-4 w-4" /> Save & deliver here
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPending(null)}
+                  className="w-full rounded-xl py-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
+                >
+                  Change area
+                </button>
+              </form>
+            </div>
+          ) : (
+          /* Body */
           <div className="mx-auto w-full max-w-lg flex-1 overflow-y-auto px-4 py-5">
+
             <form onSubmit={handleSubmit} className="space-y-3">
               <div className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-3 focus-within:ring-2 focus-within:ring-ring">
                 <Search className="h-4 w-4 text-muted-foreground" />
@@ -324,6 +425,7 @@ function LocationPickerClient({
               )}
             </div>
           </div>
+          )}
         </div>,
         document.body
       )}
