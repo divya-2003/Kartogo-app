@@ -232,11 +232,25 @@ function Dashboard() {
   );
 }
 
-function Stat({ icon, label, value, accent, warn }: { icon: React.ReactNode; label: string; value: string; accent?: boolean; warn?: boolean }) {
-  return (
-    <div className={`rounded-2xl border p-3 md:p-4 ${warn ? "border-saffron bg-saffron/10" : accent ? "border-primary/40 bg-primary/5" : "border-border bg-card"}`}>
+function Stat({ icon, label, value, accent, warn, onClick }: { icon: React.ReactNode; label: string; value: string; accent?: boolean; warn?: boolean; onClick?: () => void }) {
+  const cls = `rounded-2xl border p-3 text-left md:p-4 ${warn ? "border-saffron bg-saffron/10" : accent ? "border-primary/40 bg-primary/5" : "border-border bg-card"} ${onClick ? "cursor-pointer transition hover:border-primary hover:shadow-sm" : ""}`;
+  const inner = (
+    <>
       <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground md:text-xs">{icon} {label}</div>
       <div className="mt-1.5 font-display text-xl font-bold md:mt-2 md:text-2xl">{value}</div>
+      {onClick && <div className="mt-1 text-[10px] font-semibold text-primary">Tap for breakdown →</div>}
+    </>
+  );
+  if (onClick) return <button type="button" onClick={onClick} className={`${cls} w-full`}>{inner}</button>;
+  return <div className={cls}>{inner}</div>;
+}
+
+function Row({ label, value, strong, muted, accent }: { label: string; value: string; strong?: boolean; muted?: boolean; accent?: boolean }) {
+  return (
+    <div className={`flex items-center justify-between gap-3 py-1 ${strong ? "mt-1 border-t border-border pt-2" : ""}`}>
+      <span className={`${muted ? "text-muted-foreground" : ""} ${strong ? "font-semibold" : ""}`}>{label}</span>
+      <span className={`font-display tabular-nums ${strong ? "font-bold" : "font-semibold"} ${accent ? "text-primary" : ""}`}>{value}</span>
     </div>
   );
 }
+
