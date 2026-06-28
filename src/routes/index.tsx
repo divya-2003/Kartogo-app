@@ -207,15 +207,37 @@ function Index() {
           </div>
         </div>
 
-        {/* ---------- Free delivery strip ---------- */}
-        <div className="mt-6 flex items-center gap-3 rounded-2xl bg-ink px-4 py-3 text-background">
-          <div className="grid h-9 w-9 place-items-center rounded-full bg-background/10">
-            <Zap className="h-4 w-4 text-saffron" />
+      </div>
+
+      {/* ---------- Floating free-delivery + cart bar ---------- */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-[72px] z-40 px-4">
+        <div className="mx-auto flex max-w-2xl items-stretch gap-2 lg:max-w-7xl">
+          <div className="pointer-events-auto flex flex-1 items-center gap-3 rounded-2xl bg-ink px-4 py-3 text-background shadow-pop">
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-background/10">
+              <Zap className="h-4 w-4 text-saffron" />
+            </div>
+            <div className="min-w-0">
+              <div className="truncate text-sm font-bold">
+                {subtotal >= 199 ? "Free delivery unlocked 🎉" : "Unlock free delivery"}
+              </div>
+              <div className="truncate text-xs opacity-80">
+                {subtotal >= 199 ? "Applied to this order" : `Shop for ${formatINR(199 - subtotal)} more`}
+              </div>
+            </div>
           </div>
-          <div>
-            <div className="text-sm font-bold">Unlock free delivery</div>
-            <div className="text-xs opacity-80">Shop for ₹199</div>
-          </div>
+
+          {count > 0 && (
+            <Link
+              to="/cart"
+              className="pointer-events-auto flex shrink-0 items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-primary-foreground shadow-pop hover:bg-primary/90"
+            >
+              <ShoppingBag className="h-5 w-5" />
+              <div className="leading-tight">
+                <div className="text-sm font-bold">Cart</div>
+                <div className="text-xs opacity-90">{count} item{count > 1 ? "s" : ""}</div>
+              </div>
+            </Link>
+          )}
         </div>
       </div>
 
