@@ -357,6 +357,15 @@ function CheckoutPage() {
                                     <div className="text-sm text-muted-foreground">{addr.address}</div>
                                   </div>
                                 </button>
+                                {addr.kind === "location" && (
+                                  <button
+                                    onClick={() => startEditLocation(addr.removableId)}
+                                    aria-label="Edit exact address"
+                                    className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-primary"
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => addr.kind === "delivery" ? removeDeliveryAddress(addr.removableId) : removeSavedAddress(addr.removableId)}
                                   aria-label="Remove address"
