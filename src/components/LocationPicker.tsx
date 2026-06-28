@@ -96,17 +96,22 @@ function LocationPickerClient({
   // Move to the "exact location" step for a confirmed serviceable area.
   const startDetails = (p: { query: string; area: string; etaMinutes?: number }) => {
     setPending(p);
+    setEditingQuery(null);
     setDoorNumber("");
     setApartment("");
     setLandmark("");
   };
 
-  const selectArea = (area: ServiceableArea) => {
-    startDetails({
-      query: `${area.name}, ${DARK_STORE.city} ${area.pincode}`,
-      area: area.name,
-      etaMinutes: area.etaMinutes,
+  const startEditSaved = (addr: SavedLocation) => {
+    setPending({
+      query: addr.baseQuery ?? addr.query,
+      area: addr.area,
+      etaMinutes: addr.etaMinutes,
     });
+    setEditingQuery(addr.query);
+    setDoorNumber(addr.doorNumber ?? "");
+    setApartment(addr.apartment ?? "");
+    setLandmark(addr.landmark ?? "");
   };
 
   const saveDetails = (e: React.FormEvent) => {
@@ -114,6 +119,16 @@ function LocationPickerClient({
     if (!pending) return;
     if (!doorNumber.trim()) {
       toast.error("Please add your door / flat number");
+      return;
+    }
+    if (editingQuery) {
+      updateSavedAddress(editingQuery, {
+        doorNumber: doorNumber.trim(),
+        apartment: apartment.trim() || undefined,
+        landmark: landmark.trim() || undefined,
+      });
+      toast.success("Address updated");
+      setOpen(false);
       return;
     }
     const parts = [
