@@ -119,7 +119,31 @@ function OrdersPage() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [reportTarget, setReportTarget] = useState<Order | null>(null);
   const [rateTarget, setRateTarget] = useState<Order | null>(null);
-  const [ratings, setRatings] = useState<Record<string, number>>({});
+  const [ratedOrderIds, setRatedOrderIds] = useState<Set<string>>(new Set());
+  const [ratedLoaded, setRatedLoaded] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("kartigo-rated-orders");
+      if (raw) {
+        const ids = JSON.parse(raw) as string[];
+        setRatedOrderIds(new Set(ids));
+      }
+    } catch {}
+    setRatedLoaded(true);
+  }, []);
+
+  const markRated = (id: string) => {
+    setRatedOrderIds((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      try {
+        localStorage.setItem("kartigo-rated-orders", JSON.stringify([...next]));
+      } catch {}
+      return next;
+    });
+  };
   const { open: openParam, report: reportParam } = Route.useSearch();
   useEffect(() => {
     if (openParam) setOpenId(openParam);
