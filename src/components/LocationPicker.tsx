@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useServerFn } from "@tanstack/react-start";
-import { MapPin, Search, X, ChevronDown, Loader2, XCircle, Clock, Check, Trash2, LocateFixed } from "lucide-react";
+import { MapPin, Search, X, ChevronDown, Loader2, XCircle, Clock, Check, Trash2, LocateFixed, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { checkServiceability, locateByCoords } from "@/lib/serviceability.functions";
+import { searchServiceableAreas, deliveryWindow, DARK_STORE, type ServiceableArea } from "@/lib/serviceability";
 import { useLocation, type SavedLocation } from "@/lib/store";
 
 export function LocationPicker() {
@@ -72,6 +73,22 @@ function LocationPickerClient({
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
+  const suggestions = useMemo<ServiceableArea[]>(
+    () => searchServiceableAreas(query, 6),
+    [query],
+  );
+
+  const selectArea = (area: ServiceableArea) => {
+    setLocation({
+      query: `${area.name}, ${DARK_STORE.city} ${area.pincode}`,
+      area: area.name,
+      serviceable: true,
+      etaMinutes: area.etaMinutes,
+    });
+    toast.success(`Delivering to ${area.name} in ${deliveryWindow(area.etaMinutes)}`);
+    setOpen(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) {
@@ -83,7 +100,12 @@ function LocationPickerClient({
     try {
       const result = await check({ data: { location: query } });
       if (result.serviceable) {
-        setLocation({ query: query.trim(), area: result.area ?? query.trim() });
+        setLocation({
+          query: query.trim(),
+          area: result.area ?? query.trim(),
+          serviceable: true,
+          etaMinutes: result.etaMinutes ?? undefined,
+        });
         toast.success(result.reason);
         setOpen(false);
       } else {
@@ -111,7 +133,12 @@ function LocationPickerClient({
           });
           if (result.serviceable) {
             const label = result.area ?? result.address ?? "Current location";
-            setLocation({ query: result.address ?? label, area: label });
+            setLocation({
+              query: result.address ?? label,
+              area: label,
+              serviceable: true,
+              etaMinutes: result.etaMinutes ?? undefined,
+            });
             toast.success(result.reason);
             setOpen(false);
           } else {
@@ -213,6 +240,41 @@ function LocationPickerClient({
               {locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
               {locating ? "Detecting your location..." : "Use my current location"}
             </button>
+
+            {/* Autocomplete suggestions */}
+            <div className="mt-6">
+              <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                <MapPin className="h-3.5 w-3.5" /> {query.trim() ? "Matching areas" : "Popular areas we deliver to"}
+              </h3>
+              {suggestions.length === 0 ? (
+                <p className="mt-3 rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+                  No serviceable area matches “{query.trim()}”. We currently deliver only in Ongole.
+                </p>
+              ) : (
+                <ul className="mt-3 space-y-2">
+                  {suggestions.map((area) => (
+                    <li key={area.keyword}>
+                      <button
+                        type="button"
+                        onClick={() => selectArea(area)}
+                        className="flex w-full items-center gap-3 rounded-xl border border-border bg-card p-3 text-left hover:border-primary hover:bg-primary/5"
+                      >
+                        <MapPin className="h-4 w-4 shrink-0 text-primary" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-semibold">{area.name}</span>
+                          <span className="block truncate text-xs text-muted-foreground">Ongole · {area.pincode}</span>
+                        </span>
+                        <span className="flex shrink-0 items-center gap-1 rounded-full bg-leaf/10 px-2 py-1 text-[11px] font-bold text-leaf">
+                          <Zap className="h-3 w-3" /> {deliveryWindow(area.etaMinutes)}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+
 
 
             {/* Saved addresses */}

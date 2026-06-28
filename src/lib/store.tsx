@@ -543,7 +543,14 @@ export const useOrders = () => {
 };
 
 // ---------------- Delivery location ----------------
-export type SavedLocation = { query: string; area: string };
+export type SavedLocation = {
+  query: string;
+  area: string;
+  /** Whether the dark store delivers to this location. */
+  serviceable?: boolean;
+  /** Expected door delivery time in minutes. */
+  etaMinutes?: number;
+};
 
 /** A full delivery address the customer can reuse at checkout. */
 export type DeliveryAddress = {

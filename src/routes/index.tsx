@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Zap, Search, Wallet, User2, Home, LayoutGrid, ShoppingBag, TrendingUp, Ticket } from "lucide-react";
+import { Zap, Search, Wallet, User2, Home, LayoutGrid, ShoppingBag, TrendingUp, Ticket, CheckCircle2 } from "lucide-react";
+import { deliveryWindow } from "@/lib/serviceability";
 import { LocationPicker } from "@/components/LocationPicker";
 import { ProductCard } from "@/components/ProductCard";
 import { CATEGORIES, formatINR } from "@/lib/data";
@@ -69,9 +70,14 @@ function Index() {
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               {location && (
-                <div className="flex items-center gap-1.5 font-display text-xl font-extrabold tracking-tight text-foreground">
-                  <Zap className="h-5 w-5 fill-saffron text-saffron" /> 15 minutes
-                </div>
+                <>
+                  <div className="flex items-center gap-1.5 font-display text-xl font-extrabold tracking-tight text-foreground">
+                    <Zap className="h-5 w-5 fill-saffron text-saffron" /> Delivery in {deliveryWindow(location.etaMinutes)}
+                  </div>
+                  <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-leaf/10 px-2 py-0.5 text-[11px] font-bold text-leaf">
+                    <CheckCircle2 className="h-3 w-3" /> Delivery available
+                  </div>
+                </>
               )}
               <div className="mt-0.5 max-w-[220px]">
                 <LocationPicker />
