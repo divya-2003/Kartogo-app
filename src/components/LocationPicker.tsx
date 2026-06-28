@@ -445,26 +445,23 @@ function LocationPickerClient({
                             <span className="block truncate text-xs text-muted-foreground">{addr.query}</span>
                           </span>
                         </button>
-                        {active ? (
-                          <Check className="h-4 w-4 shrink-0 text-primary" />
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => startEditSaved(addr)}
-                              aria-label="Edit exact address"
-                              className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-primary"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() => removeSavedAddress(addr.query)}
-                              aria-label="Remove address"
-                              className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-1">
+                          {active && <Check className="h-4 w-4 shrink-0 text-primary" />}
+                          <button
+                            onClick={() => startEditSaved(addr)}
+                            aria-label="Edit exact address"
+                            className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-primary"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => removeSavedAddress(addr.query)}
+                            aria-label="Remove address"
+                            className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       </li>
                     );
                   })}
