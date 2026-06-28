@@ -22,15 +22,23 @@ function LoginPage() {
   const [passcode, setPasscode] = useState("");
   const [stage, setStage] = useState<"phone" | "otp" | "passcode">("phone");
   const [loading, setLoading] = useState(false);
+  const [demoCode, setDemoCode] = useState<string | null>(null);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!/^\d{10}$/.test(phone)) { toast.error("Enter a valid 10-digit mobile"); return; }
     setLoading(true);
     try {
-      await sendOtp(phone);
+      const { demo, demoCode } = await sendOtp(phone);
       setStage("otp");
-      toast.success(`OTP sent to +91 ${phone}`);
+      if (demo && demoCode) {
+        setDemoCode(demoCode);
+        setOtp(demoCode);
+        toast.success(`Demo mode: use OTP ${demoCode}`);
+      } else {
+        setDemoCode(null);
+        toast.success(`OTP sent to +91 ${phone}`);
+      }
     } catch (err) {
       toast.error((err as Error).message);
     } finally { setLoading(false); }
@@ -107,6 +115,12 @@ function LoginPage() {
 
           {stage === "otp" && (
             <form onSubmit={handleVerify} className="mt-6 space-y-4">
+              {demoCode && (
+                <div className="rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
+                  <span className="font-semibold">Demo mode:</span> SMS isn't live yet, so use OTP{" "}
+                  <span className="font-bold tracking-[0.2em] text-primary">{demoCode}</span> for any number.
+                </div>
+              )}
               <div>
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Enter OTP sent to +91 {phone}</label>
                 <div className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-2 focus-within:ring-2 focus-within:ring-ring">
