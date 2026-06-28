@@ -100,10 +100,8 @@ function CheckoutPage() {
   const discount = useMemo(() => computeDiscount(appliedCode, subtotal), [appliedCode, subtotal]);
   const total = Math.max(0, subtotal + fee - discount);
 
-  // If wallet was chosen but no longer covers the total, fall back to cash.
-  useEffect(() => {
-    if (payment === "wallet" && walletBalance < total) setPayment("cash");
-  }, [payment, walletBalance, total]);
+  // Show wallet warning only when the wallet method is actively selected.
+
 
 
   const applyPromo = () => {
@@ -355,11 +353,10 @@ function CheckoutPage() {
                   title="Kartigo Cash"
                   desc={walletBalance >= total ? `Balance ${formatINR(walletBalance)}` : `Low balance ${formatINR(walletBalance)}`}
                   selected={payment === "wallet"}
-                  disabled={walletBalance < total}
-                  onClick={() => { if (walletBalance >= total) setPayment("wallet"); }}
+                  onClick={() => setPayment("wallet")}
                 />
               </div>
-              {walletBalance < total && (
+              {payment === "wallet" && walletBalance < total && (
                 <p className="mt-2 flex items-center gap-1.5 rounded-lg bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive">
                   <X className="h-3.5 w-3.5" /> Insufficient Kartigo Cash — you need {formatINR(total - walletBalance)} more. Add money from your profile to pay with the wallet.
                 </p>
