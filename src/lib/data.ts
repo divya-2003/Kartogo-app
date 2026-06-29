@@ -53,6 +53,7 @@ export const CATEGORIES: Category[] = [
   { slug: "pooja", name: "Pooja Items", emoji: "🪔", tint: "bg-saffron/25" },
   { slug: "tiffin-batter", name: "Tiffin Batter", emoji: "🥞", tint: "bg-primary/15" },
   { slug: "beverages", name: "Beverages", emoji: "☕", tint: "bg-leaf/15" },
+  { slug: "pharmacy", name: "Pharmacy", emoji: "💊", tint: "bg-leaf/20" },
 ];
 
 const RAW_PRODUCTS: Product[] = [
@@ -76,6 +77,16 @@ const RAW_PRODUCTS: Product[] = [
   { id: "p18", name: "Lays Classic Salted", category: "snacks", price: 20, mrp: 30, unit: "52g", stock: 80, emoji: "🥔", description: "Crispy salted potato chips." },
   { id: "p19", name: "Bru Coffee Powder", category: "beverages", price: 85, mrp: 140, unit: "50g jar", stock: 55, emoji: "☕", description: "Rich, aromatic instant coffee — perfect morning brew." },
   { id: "p20", name: "Tetley Tea Powder", category: "beverages", price: 95, mrp: 150, unit: "250g pack", stock: 48, emoji: "🍵", description: "Premium tea powder for a refreshing cup every day." },
+  { id: "p21", name: "Paracetamol 500mg", category: "pharmacy", price: 25, mrp: 35, unit: "10 tablets", stock: 80, emoji: "💊", description: "Fever and pain relief tablets. For OTC use as directed." },
+  { id: "p22", name: "Dettol Antiseptic Liquid", category: "pharmacy", price: 95, mrp: 130, unit: "125ml", stock: 40, emoji: "🧴", description: "Trusted antiseptic for cuts, wounds and first aid." },
+  { id: "p23", name: "Band-Aid Strips", category: "pharmacy", price: 45, mrp: 60, unit: "20 strips", stock: 70, emoji: "🩹", description: "Sterile adhesive bandages for minor cuts." },
+  { id: "p24", name: "Digital Thermometer", category: "pharmacy", price: 180, mrp: 250, unit: "1 unit", stock: 25, emoji: "🌡️", description: "Fast and accurate body temperature reading." },
+  { id: "p25", name: "ORS Hydration Powder", category: "pharmacy", price: 22, mrp: 30, unit: "21.8g sachet", stock: 90, emoji: "🥤", description: "Oral rehydration salts to restore electrolytes." },
+  { id: "p26", name: "Vitamin C Tablets", category: "pharmacy", price: 110, mrp: 150, unit: "20 tablets", stock: 50, emoji: "🍊", description: "Immunity-boosting chewable vitamin C." },
+  { id: "p27", name: "Hand Sanitizer Gel", category: "pharmacy", price: 60, mrp: 85, unit: "100ml", stock: 65, emoji: "🧼", description: "70% alcohol gel that kills germs instantly." },
+  { id: "p28", name: "Cough Syrup", category: "pharmacy", price: 85, mrp: 115, unit: "100ml", stock: 35, emoji: "🍶", description: "Soothing relief for dry and chesty cough." },
+  { id: "p29", name: "Pain Relief Balm", category: "pharmacy", price: 55, mrp: 75, unit: "25g", stock: 48, emoji: "🫙", description: "Fast-acting balm for headaches and body pain." },
+  { id: "p30", name: "Surgical Face Mask", category: "pharmacy", price: 50, mrp: 80, unit: "10 pack", stock: 100, emoji: "😷", description: "3-ply disposable protective face masks." },
 ];
 
 export const PRODUCTS: Product[] = RAW_PRODUCTS.map(p => ({ ...p, image: IMG[p.id] }));
