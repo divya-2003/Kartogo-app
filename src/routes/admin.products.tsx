@@ -25,15 +25,16 @@ function ProductsAdmin() {
           <h1 className="font-display text-3xl font-bold">Products</h1>
           <p className="text-sm text-muted-foreground">{products.length} items in catalogue</p>
         </div>
-        <div className="flex gap-2">
-          <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Search..." className="rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-          <button onClick={() => setEditing({ ...EMPTY, id: `p${Date.now()}` })} className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90">
+        <div className="flex w-full gap-2 sm:w-auto">
+          <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Search..." className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring sm:flex-none" />
+          <button onClick={() => setEditing({ ...EMPTY, id: `p${Date.now()}` })} className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90">
             <Plus className="h-4 w-4" /> New product
           </button>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-border bg-card">
+      {/* Desktop / laptop: table */}
+      <div className="hidden overflow-hidden rounded-2xl border border-border bg-card md:block">
         <table className="w-full text-sm">
           <thead className="bg-secondary text-left text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
@@ -59,6 +60,29 @@ function ProductsAdmin() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile: cards */}
+      <div className="space-y-3 md:hidden">
+        {list.map(p => (
+          <div key={p.id} className="rounded-2xl border border-border bg-card p-4">
+            <div className="flex items-center gap-3">
+              {p.image ? <img src={p.image} alt={p.name} loading="lazy" className="h-12 w-12 shrink-0 rounded-lg object-cover" /> : <span className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-secondary text-xl">{p.emoji}</span>}
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-semibold">{p.name}</div>
+                <div className="text-xs text-muted-foreground">{CATEGORIES.find(c => c.slug === p.category)?.name ?? p.category} · {p.unit}</div>
+              </div>
+              <span className={`shrink-0 rounded-md px-2 py-0.5 text-xs font-bold ${p.stock === 0 ? "bg-destructive/15 text-destructive" : p.stock <= 5 ? "bg-saffron/30" : "bg-primary/10 text-primary"}`}>{p.stock}</span>
+            </div>
+            <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3">
+              <div className="font-display font-bold">{formatINR(p.price)}</div>
+              <div className="flex gap-2">
+                <button onClick={() => setEditing(p)} className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-semibold hover:bg-secondary"><Pencil className="h-3 w-3" /> Edit</button>
+                <button onClick={() => { if (confirm(`Delete ${p.name}?`)) { remove(p.id); toast.success("Product removed"); } }} className="inline-flex items-center gap-1 rounded-md border border-destructive/30 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/10"><Trash2 className="h-3 w-3" /> Delete</button>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {editing && (
