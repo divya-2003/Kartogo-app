@@ -13,7 +13,8 @@ function InventoryAdmin() {
         <h1 className="font-display text-3xl font-bold">Inventory & prices</h1>
         <p className="text-sm text-muted-foreground">Quick edit — changes save instantly.</p>
       </div>
-      <div className="overflow-hidden rounded-2xl border border-border bg-card">
+      {/* Desktop / laptop: table */}
+      <div className="hidden overflow-hidden rounded-2xl border border-border bg-card md:block">
         <table className="w-full text-sm">
           <thead className="bg-secondary text-left text-xs uppercase tracking-wider text-muted-foreground">
             <tr><th className="p-3">Product</th><th className="p-3">Category</th><th className="p-3 w-32">Price (₹)</th><th className="p-3 w-32">Stock</th><th className="p-3">Status</th></tr>
@@ -34,6 +35,34 @@ function InventoryAdmin() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile: cards */}
+      <div className="space-y-3 md:hidden">
+        {products.map(p => (
+          <div key={p.id} className="rounded-2xl border border-border bg-card p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="shrink-0 text-xl">{p.emoji}</span>
+                <div className="min-w-0">
+                  <div className="truncate font-semibold">{p.name}</div>
+                  <div className="text-xs text-muted-foreground">{CATEGORIES.find(c => c.slug === p.category)?.name ?? p.category} · {p.unit}</div>
+                </div>
+              </div>
+              <span className={`shrink-0 rounded-md px-2 py-0.5 text-xs font-bold ${p.stock === 0 ? "bg-destructive/15 text-destructive" : p.stock <= 5 ? "bg-saffron/30" : "bg-primary/10 text-primary"}`}>{p.stock === 0 ? "Out" : p.stock <= 5 ? "Low" : "OK"}</span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <label className="block">
+                <span className="mb-1 block text-xs font-semibold text-muted-foreground">Price (₹)</span>
+                <input type="number" defaultValue={p.price} onBlur={(e) => { const v = Number(e.target.value); if (v !== p.price) { setPrice(p.id, v); toast.success(`${p.name} → ${formatINR(v)}`); } }} className="w-full rounded-md border border-input bg-background px-2 py-1.5 outline-none focus:ring-2 focus:ring-ring" />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs font-semibold text-muted-foreground">Stock</span>
+                <input type="number" defaultValue={p.stock} onBlur={(e) => { const v = Number(e.target.value); if (v !== p.stock) { setStock(p.id, v); toast.success(`${p.name} stock → ${v}`); } }} className="w-full rounded-md border border-input bg-background px-2 py-1.5 outline-none focus:ring-2 focus:ring-ring" />
+              </label>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
