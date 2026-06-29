@@ -35,20 +35,25 @@ function CartPage() {
                 const p = products.find(p => p.id === i.productId);
                 if (!p) return null;
                 return (
-                  <div key={i.productId} className="flex items-center gap-3 p-4">
-                    <div className="grid h-16 w-16 place-items-center overflow-hidden rounded-xl bg-cream bg-grain text-3xl">{p.image ? <img src={p.image} alt={p.name} loading="lazy" className="h-full w-full object-cover" /> : p.emoji}</div>
-                    <div className="flex-1">
-                      <div className="font-semibold leading-tight">{p.name}</div>
-                      <div className="text-xs text-muted-foreground">{p.unit} · {formatINR(p.price)}</div>
+                  <div key={i.productId} className="flex items-start gap-3 p-4">
+                    <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl bg-cream bg-grain text-3xl">{p.image ? <img src={p.image} alt={p.name} loading="lazy" className="h-full w-full object-cover" /> : p.emoji}</div>
+                    <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center">
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold leading-tight">{p.name}</div>
+                        <div className="text-xs text-muted-foreground">{p.unit} · {formatINR(p.price)}</div>
+                      </div>
+                      <div className="flex items-center justify-between gap-3 sm:justify-end">
+                        <div className="flex items-center gap-1 rounded-lg border border-border">
+                          <button onClick={() => setQty(p.id, i.qty - 1)} className="grid h-8 w-8 place-items-center hover:bg-secondary"><Minus className="h-3 w-3" /></button>
+                          <span className="min-w-6 text-center text-sm font-bold">{i.qty}</span>
+                          <button onClick={() => setQty(p.id, i.qty + 1)} className="grid h-8 w-8 place-items-center hover:bg-secondary"><Plus className="h-3 w-3" /></button>
+                        </div>
+                        <div className="w-20 text-right font-bold">{formatINR(p.price * i.qty)}</div>
+                        <button onClick={() => remove(p.id)} className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1 rounded-lg border border-border">
-                      <button onClick={() => setQty(p.id, i.qty - 1)} className="grid h-8 w-8 place-items-center hover:bg-secondary"><Minus className="h-3 w-3" /></button>
-                      <span className="min-w-6 text-center text-sm font-bold">{i.qty}</span>
-                      <button onClick={() => setQty(p.id, i.qty + 1)} className="grid h-8 w-8 place-items-center hover:bg-secondary"><Plus className="h-3 w-3" /></button>
-                    </div>
-                    <div className="w-20 text-right font-bold">{formatINR(p.price * i.qty)}</div>
-                    <button onClick={() => remove(p.id)} className="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
                   </div>
+
                 );
               })}
             </div>
