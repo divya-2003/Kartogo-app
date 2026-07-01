@@ -42,7 +42,9 @@ function AccountPage() {
     e.preventDefault();
     updateProfile({ name, email, address });
     toast.success("Profile updated");
+    router.history.back();
   };
+
 
 
   return (
