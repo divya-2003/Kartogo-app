@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as WalletRouteImport } from './routes/wallet'
+import { Route as TopupRouteImport } from './routes/topup'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as RefundsRouteImport } from './routes/refunds'
@@ -40,6 +41,11 @@ const WishlistRoute = WishlistRouteImport.update({
 const WalletRoute = WalletRouteImport.update({
   id: '/wallet',
   path: '/wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TopupRoute = TopupRouteImport.update({
+  id: '/topup',
+  path: '/topup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SupportRoute = SupportRouteImport.update({
@@ -156,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/refunds': typeof RefundsRoute
   '/search': typeof SearchRoute
   '/support': typeof SupportRoute
+  '/topup': typeof TopupRoute
   '/wallet': typeof WalletRoute
   '/wishlist': typeof WishlistRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
@@ -179,6 +186,7 @@ export interface FileRoutesByTo {
   '/refunds': typeof RefundsRoute
   '/search': typeof SearchRoute
   '/support': typeof SupportRoute
+  '/topup': typeof TopupRoute
   '/wallet': typeof WalletRoute
   '/wishlist': typeof WishlistRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
@@ -204,6 +212,7 @@ export interface FileRoutesById {
   '/refunds': typeof RefundsRoute
   '/search': typeof SearchRoute
   '/support': typeof SupportRoute
+  '/topup': typeof TopupRoute
   '/wallet': typeof WalletRoute
   '/wishlist': typeof WishlistRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
@@ -230,6 +239,7 @@ export interface FileRouteTypes {
     | '/refunds'
     | '/search'
     | '/support'
+    | '/topup'
     | '/wallet'
     | '/wishlist'
     | '/admin/cancellations'
@@ -253,6 +263,7 @@ export interface FileRouteTypes {
     | '/refunds'
     | '/search'
     | '/support'
+    | '/topup'
     | '/wallet'
     | '/wishlist'
     | '/admin/cancellations'
@@ -277,6 +288,7 @@ export interface FileRouteTypes {
     | '/refunds'
     | '/search'
     | '/support'
+    | '/topup'
     | '/wallet'
     | '/wishlist'
     | '/admin/cancellations'
@@ -302,6 +314,7 @@ export interface RootRouteChildren {
   RefundsRoute: typeof RefundsRoute
   SearchRoute: typeof SearchRoute
   SupportRoute: typeof SupportRoute
+  TopupRoute: typeof TopupRoute
   WalletRoute: typeof WalletRoute
   WishlistRoute: typeof WishlistRoute
   CategorySlugRoute: typeof CategorySlugRoute
@@ -322,6 +335,13 @@ declare module '@tanstack/react-router' {
       path: '/wallet'
       fullPath: '/wallet'
       preLoaderRoute: typeof WalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/topup': {
+      id: '/topup'
+      path: '/topup'
+      fullPath: '/topup'
+      preLoaderRoute: typeof TopupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/support': {
@@ -500,6 +520,7 @@ const rootRouteChildren: RootRouteChildren = {
   RefundsRoute: RefundsRoute,
   SearchRoute: SearchRoute,
   SupportRoute: SupportRoute,
+  TopupRoute: TopupRoute,
   WalletRoute: WalletRoute,
   WishlistRoute: WishlistRoute,
   CategorySlugRoute: CategorySlugRoute,
