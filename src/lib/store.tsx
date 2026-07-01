@@ -70,6 +70,39 @@ export const useCart = () => {
   return c;
 };
 
+// ---------------- Wishlist ----------------
+type WishlistCtx = {
+  ids: string[];
+  has: (id: string) => boolean;
+  toggle: (id: string) => void;
+  remove: (id: string) => void;
+  clear: () => void;
+  count: number;
+};
+const WishlistContext = createContext<WishlistCtx | null>(null);
+
+export function WishlistProvider({ children }: { children: ReactNode }) {
+  const [ids, setIds] = useState<string[]>([]);
+  useEffect(() => { setIds(read<string[]>("qk_wishlist", [])); }, []);
+  useEffect(() => { write("qk_wishlist", ids); }, [ids]);
+
+  const value = useMemo<WishlistCtx>(() => ({
+    ids,
+    has: (id) => ids.includes(id),
+    toggle: (id) => setIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]),
+    remove: (id) => setIds(prev => prev.filter(x => x !== id)),
+    clear: () => setIds([]),
+    count: ids.length,
+  }), [ids]);
+
+  return <WishlistContext.Provider value={value}>{children}</WishlistContext.Provider>;
+}
+export const useWishlist = () => {
+  const c = useContext(WishlistContext);
+  if (!c) throw new Error("WishlistProvider missing");
+  return c;
+};
+
 // ---------------- Auth (server-verified OTP + signed tokens) ----------------
 // OTPs are generated, hashed and verified entirely on the server, then delivered
 // by SMS. The browser only ever holds short signed tokens that prove identity —

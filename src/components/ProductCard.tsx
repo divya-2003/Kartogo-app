@@ -1,16 +1,25 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Plus, Check } from "lucide-react";
+import { Plus, Check, Heart } from "lucide-react";
 import { toast } from "sonner";
 import type { Product } from "@/lib/data";
 import { formatINR } from "@/lib/data";
-import { useCart, useAuth } from "@/lib/store";
+import { useCart, useAuth, useWishlist } from "@/lib/store";
 
 export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolean }) {
   const { items, add, setQty } = useCart();
   const { user } = useAuth();
+  const { has, toggle } = useWishlist();
   const nav = useNavigate();
   const inCart = items.find(i => i.productId === p.id);
+  const wished = has(p.id);
   const out = p.stock <= 0;
+
+  const handleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggle(p.id);
+    toast.success(wished ? "Removed from wishlist" : "Added to wishlist");
+  };
 
   const handleAdd = () => {
     add(p.id);
@@ -43,7 +52,15 @@ export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolea
             )}
           </div>
         )}
-        {out && <span className="absolute right-2 top-2 rounded-md bg-destructive px-2 py-0.5 text-[11px] font-bold text-destructive-foreground">Out</span>}
+        {out && <span className="absolute right-11 top-2 rounded-md bg-destructive px-2 py-0.5 text-[11px] font-bold text-destructive-foreground">Out</span>}
+        <button
+          onClick={handleWishlist}
+          aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
+          aria-pressed={wished}
+          className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-card/90 shadow-pop backdrop-blur transition hover:bg-card"
+        >
+          <Heart className={`h-4 w-4 ${wished ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+        </button>
       </Link>
       <div className="flex flex-1 flex-col gap-1 p-3">
         <Link to="/product/$id" params={{ id: p.id }} className="line-clamp-2 text-sm font-semibold leading-snug hover:text-primary">

@@ -1,9 +1,9 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Header } from "@/components/Header";
-import { useCart, useCatalog, useAuth } from "@/lib/store";
+import { useCart, useCatalog, useAuth, useWishlist } from "@/lib/store";
 import { formatINR } from "@/lib/data";
-import { Plus, Minus, ShoppingBag } from "lucide-react";
+import { Plus, Minus, ShoppingBag, Heart } from "lucide-react";
 
 export const Route = createFileRoute("/product/$id")({
   component: ProductPage,
@@ -17,9 +17,11 @@ function ProductPage() {
   const p = products.find(x => x.id === id);
   const { add, items, setQty } = useCart();
   const { user } = useAuth();
+  const { has, toggle } = useWishlist();
   const nav = useNavigate();
   if (!p) throw notFound();
   const inCart = items.find(i => i.productId === p.id);
+  const wished = has(p.id);
 
   const handleAdd = () => {
     add(p.id);
@@ -74,6 +76,14 @@ function ProductPage() {
                 </button>
               )}
               <Link to="/cart" className="rounded-xl border border-border px-6 py-3 font-bold hover:bg-secondary">Go to cart</Link>
+              <button
+                onClick={() => { toggle(p.id); toast.success(wished ? "Removed from wishlist" : "Added to wishlist"); }}
+                aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
+                aria-pressed={wished}
+                className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-border hover:bg-secondary"
+              >
+                <Heart className={`h-5 w-5 ${wished ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+              </button>
             </div>
           </div>
         </div>
