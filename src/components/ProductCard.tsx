@@ -52,7 +52,7 @@ export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolea
             )}
           </div>
         )}
-        {out && <span className={`absolute ${wished ? "right-11" : "right-2"} top-2 rounded-md bg-destructive px-2 py-0.5 text-[11px] font-bold text-destructive-foreground`}>Out</span>}
+        {out && <span className="absolute right-11 top-2 rounded-md bg-destructive px-2 py-0.5 text-[11px] font-bold text-destructive-foreground">Out</span>}
         <button
           onClick={handleWishlist}
           aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
