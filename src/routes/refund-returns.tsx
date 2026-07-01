@@ -277,8 +277,8 @@ function RefundReturnsPage() {
             <ContactRow
               icon={<Mail className="h-5 w-5" />}
               label="Email"
-              value="support@kartigo.in"
-              href="mailto:support@kartigo.in"
+              value="support@kartogo.in"
+              href="mailto:support@kartogo.in"
             />
             <ContactRow
               icon={<Phone className="h-5 w-5" />}

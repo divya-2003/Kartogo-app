@@ -39,7 +39,7 @@ function SupportPage() {
             </a>
 
             <a
-              href="mailto:support@kartigo.in"
+              href="mailto:support@kartogo.in"
               className="flex items-center gap-4 rounded-xl border border-border p-4 hover:bg-secondary"
             >
               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
@@ -47,7 +47,7 @@ function SupportPage() {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-sm text-muted-foreground">Email us</div>
-                <div className="truncate font-semibold">support.kartigo.in</div>
+                <div className="truncate font-semibold">support.kartogo.in</div>
               </div>
               <ChevronLeft className="h-5 w-5 rotate-180 text-muted-foreground" />
             </a>
