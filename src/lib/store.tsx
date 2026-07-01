@@ -310,17 +310,22 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const { customerToken } = useAuth();
   const [balance, setBalance] = useState(0);
   const [txns, setTxns] = useState<WalletTxn[]>([]);
+  const [topups, setTopups] = useState<WalletTopup[]>([]);
 
   const tokenRef = useRef(customerToken);
   useEffect(() => { tokenRef.current = customerToken; }, [customerToken]);
 
   const refresh = useCallback(async () => {
     const token = tokenRef.current;
-    if (!token) { setBalance(0); setTxns([]); return; }
+    if (!token) { setBalance(0); setTxns([]); setTopups([]); return; }
     try {
-      const res = await getWalletFn({ data: { token } });
-      setBalance(Number(res.balance));
-      setTxns((res.txns as WalletTxnRow[]).map(rowToWalletTxn));
+      const [wallet, topupRes] = await Promise.all([
+        getWalletFn({ data: { token } }),
+        getTopupsFn({ data: { token } }),
+      ]);
+      setBalance(Number(wallet.balance));
+      setTxns((wallet.txns as WalletTxnRow[]).map(rowToWalletTxn));
+      setTopups((topupRes.topups as TopupRow[]).map(rowToTopup));
     } catch {
       // Keep last good state on transient errors.
     }
@@ -332,15 +337,23 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const value = useMemo<WalletCtx>(() => ({
     balance,
     txns,
+    topups,
     addMoney: async (amount) => {
       const token = tokenRef.current;
       if (!token || !amount || amount <= 0) return;
       const res = await addMoneyFn({ data: { token, amount: Math.round(amount) } });
       setBalance(Number(res.balance));
       setTxns((res.txns as WalletTxnRow[]).map(rowToWalletTxn));
+      if (res.topups) setTopups((res.topups as TopupRow[]).map(rowToTopup));
+    },
+    recordFailedTopup: async (amount) => {
+      const token = tokenRef.current;
+      if (!token || !amount || amount <= 0) return;
+      const res = await recordFailedTopupFn({ data: { token, amount: Math.round(amount) } });
+      setTopups((res.topups as TopupRow[]).map(rowToTopup));
     },
     refresh,
-  }), [balance, txns, refresh]);
+  }), [balance, txns, topups, refresh]);
 
   return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
 }
