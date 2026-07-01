@@ -251,6 +251,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.removeItem("qk_customer_token");
           localStorage.removeItem("qk_admin_token");
           localStorage.removeItem("qk_cart");
+          localStorage.removeItem("qk_wishlist");
         } catch { /* noop */ }
       }
     },
