@@ -17,9 +17,11 @@ function ProductPage() {
   const p = products.find(x => x.id === id);
   const { add, items, setQty } = useCart();
   const { user } = useAuth();
+  const { has, toggle } = useWishlist();
   const nav = useNavigate();
   if (!p) throw notFound();
   const inCart = items.find(i => i.productId === p.id);
+  const wished = has(p.id);
 
   const handleAdd = () => {
     add(p.id);
