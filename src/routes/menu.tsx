@@ -28,7 +28,7 @@ export const Route = createFileRoute("/menu")({
 function MenuPage() {
   const { user, logout } = useAuth();
   const { location, savedAddresses, setLocation, removeSavedAddress } = useLocation();
-  const { balance, addMoney } = useWallet();
+  const { balance } = useWallet();
   const nav = useNavigate();
   const [showAdd, setShowAdd] = useState(false);
   const [amount, setAmount] = useState("");
