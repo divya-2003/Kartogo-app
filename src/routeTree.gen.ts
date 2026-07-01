@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as RefundsRouteImport } from './routes/refunds'
 import { Route as RefundReturnsRouteImport } from './routes/refund-returns'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as MenuRouteImport } from './routes/menu'
@@ -37,6 +38,11 @@ const WalletRoute = WalletRouteImport.update({
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RefundsRoute = RefundsRouteImport.update({
+  id: '/refunds',
+  path: '/refunds',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RefundReturnsRoute = RefundReturnsRouteImport.update({
@@ -135,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/menu': typeof MenuRoute
   '/orders': typeof OrdersRoute
   '/refund-returns': typeof RefundReturnsRoute
+  '/refunds': typeof RefundsRoute
   '/search': typeof SearchRoute
   '/wallet': typeof WalletRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
@@ -155,6 +162,7 @@ export interface FileRoutesByTo {
   '/menu': typeof MenuRoute
   '/orders': typeof OrdersRoute
   '/refund-returns': typeof RefundReturnsRoute
+  '/refunds': typeof RefundsRoute
   '/search': typeof SearchRoute
   '/wallet': typeof WalletRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
@@ -177,6 +185,7 @@ export interface FileRoutesById {
   '/menu': typeof MenuRoute
   '/orders': typeof OrdersRoute
   '/refund-returns': typeof RefundReturnsRoute
+  '/refunds': typeof RefundsRoute
   '/search': typeof SearchRoute
   '/wallet': typeof WalletRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
@@ -200,6 +209,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/orders'
     | '/refund-returns'
+    | '/refunds'
     | '/search'
     | '/wallet'
     | '/admin/cancellations'
@@ -220,6 +230,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/orders'
     | '/refund-returns'
+    | '/refunds'
     | '/search'
     | '/wallet'
     | '/admin/cancellations'
@@ -241,6 +252,7 @@ export interface FileRouteTypes {
     | '/menu'
     | '/orders'
     | '/refund-returns'
+    | '/refunds'
     | '/search'
     | '/wallet'
     | '/admin/cancellations'
@@ -263,6 +275,7 @@ export interface RootRouteChildren {
   MenuRoute: typeof MenuRoute
   OrdersRoute: typeof OrdersRoute
   RefundReturnsRoute: typeof RefundReturnsRoute
+  RefundsRoute: typeof RefundsRoute
   SearchRoute: typeof SearchRoute
   WalletRoute: typeof WalletRoute
   CategorySlugRoute: typeof CategorySlugRoute
@@ -283,6 +296,13 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/refunds': {
+      id: '/refunds'
+      path: '/refunds'
+      fullPath: '/refunds'
+      preLoaderRoute: typeof RefundsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/refund-returns': {
@@ -437,6 +457,7 @@ const rootRouteChildren: RootRouteChildren = {
   MenuRoute: MenuRoute,
   OrdersRoute: OrdersRoute,
   RefundReturnsRoute: RefundReturnsRoute,
+  RefundsRoute: RefundsRoute,
   SearchRoute: SearchRoute,
   WalletRoute: WalletRoute,
   CategorySlugRoute: CategorySlugRoute,

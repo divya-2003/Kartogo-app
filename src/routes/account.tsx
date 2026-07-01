@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { useAuth } from "@/lib/store";
@@ -12,6 +12,7 @@ export const Route = createFileRoute("/account")({
 
 function AccountPage() {
   const { user, updateProfile } = useAuth();
+  const router = useRouter();
   
 
   const [name, setName] = useState("");
@@ -41,7 +42,9 @@ function AccountPage() {
     e.preventDefault();
     updateProfile({ name, email, address });
     toast.success("Profile updated");
+    router.history.back();
   };
+
 
 
   return (
