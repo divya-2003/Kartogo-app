@@ -9,6 +9,7 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
+    "check:brand": "node scripts/check-no-kartigo.mjs",
     "format": "prettier --write ."
   },
   "dependencies": {
