@@ -85,8 +85,10 @@ function RootComponent() {
             <CatalogProvider>
               <OrdersProvider>
                 <CartProvider>
-                  <Outlet />
-                  <Toaster position="top-center" richColors />
+                  <WishlistProvider>
+                    <Outlet />
+                    <Toaster position="top-center" richColors />
+                  </WishlistProvider>
                 </CartProvider>
               </OrdersProvider>
             </CatalogProvider>
