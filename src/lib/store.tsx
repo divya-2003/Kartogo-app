@@ -10,7 +10,7 @@ import {
   markRefundedFn,
   cancelOrderFn,
 } from "./orders.functions";
-import { getWishlistFn, addWishlistFn, removeWishlistFn, mergeWishlistFn } from "./wishlist.functions";
+import { addWishlistFn, removeWishlistFn, mergeWishlistFn } from "./wishlist.functions";
 
 
 
