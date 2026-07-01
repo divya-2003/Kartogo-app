@@ -97,7 +97,7 @@ function Dashboard() {
     <div className="space-y-6">
       <div>
         <h1 className="font-display text-2xl font-bold md:text-3xl">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Today's snapshot for Kartigo Ongole</p>
+        <p className="text-sm text-muted-foreground">Today's snapshot for Kartogo Ongole</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">

@@ -41,7 +41,7 @@ export const Route = createFileRoute("/orders")({
     open: typeof search.open === "string" ? search.open : undefined,
     report: typeof search.report === "number" ? search.report : undefined,
   }),
-  head: () => ({ meta: [{ title: "My orders — Kartigo" }] }),
+  head: () => ({ meta: [{ title: "My orders — Kartogo" }] }),
 });
 
 const STEPS: { key: OrderStatus; label: string; icon: React.ReactNode }[] = [
@@ -97,12 +97,12 @@ function OrdersPage() {
     setCancelling(o.id);
     try {
       // The server verifies ownership, confirms the order is still cancellable,
-      // and reverses any Kartigo Cash payment back into the wallet itself. The
+      // and reverses any Kartogo Cash payment back into the wallet itself. The
       // client only refreshes its view of the authoritative balance.
       const cancelled = await cancel(o.id, reason);
       if (o.paymentMethod === "wallet" && o.total > 0 && cancelled.refunded) {
         void refreshWallet();
-        toast.success(`Order cancelled · ${formatINR(o.total)} refunded to Kartigo Cash`);
+        toast.success(`Order cancelled · ${formatINR(o.total)} refunded to Kartogo Cash`);
       } else {
         toast.success("Order cancelled");
       }
@@ -633,7 +633,7 @@ function OrdersPage() {
                                 />
                                 {b.walletUsed > 0 && (
                                   <Row
-                                    label="Kartigo Cash used"
+                                    label="Kartogo Cash used"
                                     value={
                                       <span className="font-semibold text-primary">
                                         {formatINR(b.walletUsed)}
@@ -875,11 +875,11 @@ const ISSUE_TYPES = [
 ];
 
 // Refund destination + timeline per the Refund & Returns Policy. Wallet orders
-// are returned instantly to Kartigo Cash; UPI/COD follow the policy windows.
+// are returned instantly to Kartogo Cash; UPI/COD follow the policy windows.
 function refundTimeline(method: Order["paymentMethod"]): { destination: string; eta: string } {
   switch (method) {
     case "wallet":
-      return { destination: "Kartigo Cash (Wallet)", eta: "Instantly after approval" };
+      return { destination: "Kartogo Cash (Wallet)", eta: "Instantly after approval" };
     case "upi":
       return { destination: "Original UPI account", eta: "1–3 business days" };
     case "cash":

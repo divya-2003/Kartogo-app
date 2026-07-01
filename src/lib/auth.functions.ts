@@ -60,7 +60,7 @@ export const requestOtpFn = createServerFn({ method: "POST" })
     }
 
     try {
-      await sendSms(`+91${phone}`, `Your Kartigo verification code is ${code}. It expires in 5 minutes.`);
+      await sendSms(`+91${phone}`, `Your Kartogo verification code is ${code}. It expires in 5 minutes.`);
     } catch (err) {
       if (otpRow?.id) {
         await supabaseAdmin.from("otp_codes").update({ consumed: true }).eq("id", otpRow.id);

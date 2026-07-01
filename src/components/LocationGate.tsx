@@ -48,7 +48,7 @@ export function LocationGate() {
           <ShoppingBag className="h-8 w-8" />
         </div>
         <div className="text-center">
-          <h1 className="font-display text-3xl font-bold tracking-tight">Kartigo</h1>
+          <h1 className="font-display text-3xl font-bold tracking-tight">Kartogo</h1>
           <p className="mt-1 text-sm text-muted-foreground">Ongole's 15-min neighbourhood store</p>
         </div>
       </div>

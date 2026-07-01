@@ -7,7 +7,7 @@ import { User2, Phone, Mail, MapPin } from "lucide-react";
 
 export const Route = createFileRoute("/account")({
   component: AccountPage,
-  head: () => ({ meta: [{ title: "My account — Kartigo" }] }),
+  head: () => ({ meta: [{ title: "My account — Kartogo" }] }),
 });
 
 function AccountPage() {

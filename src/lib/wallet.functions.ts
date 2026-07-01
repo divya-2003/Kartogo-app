@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-// Server-authoritative wallet (Kartigo Cash).
+// Server-authoritative wallet (Kartogo Cash).
 // Balances and transaction history live ONLY in the database and are reached
 // through the service-role client. The browser can no longer fabricate or
 // inflate a balance — identity is proven by a signed customer token.

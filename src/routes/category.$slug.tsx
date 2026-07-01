@@ -15,7 +15,7 @@ export const Route = createFileRoute("/category/$slug")({
   errorComponent: ({ error }) => <div className="p-10 text-center text-destructive">{error.message}</div>,
   head: ({ loaderData }) => ({
     meta: [
-      { title: `${loaderData?.cat.name ?? "Category"} — Kartigo Ongole` },
+      { title: `${loaderData?.cat.name ?? "Category"} — Kartogo Ongole` },
       { name: "description", content: `Shop ${loaderData?.cat.name} delivered in 15 minutes across Ongole.` },
     ],
   }),

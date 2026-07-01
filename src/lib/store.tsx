@@ -170,7 +170,7 @@ export const useAuth = () => {
 
 };
 
-// ---------------- Wallet (Kartigo Cash) ----------------
+// ---------------- Wallet (Kartogo Cash) ----------------
 // The wallet is now SERVER-AUTHORITATIVE. Balance and transactions live in the
 // database and are only read/changed through token-scoped server functions, so a
 // client can no longer fabricate a balance via localStorage to pay for free.

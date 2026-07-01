@@ -8,7 +8,7 @@ import { Banknote, Smartphone, Wallet, MapPin, Plus, Check, Trash2, X, Tag, Penc
 
 export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
-  head: () => ({ meta: [{ title: "Checkout — Kartigo" }] }),
+  head: () => ({ meta: [{ title: "Checkout — Kartogo" }] }),
 });
 
 // Available promo codes. `type` "flat" = rupees off, "pct" = percentage off (capped).
@@ -60,7 +60,7 @@ function CheckoutPage() {
   const [newApartment, setNewApartment] = useState("");
   const [newLandmark, setNewLandmark] = useState("");
 
-  const userName = user?.name?.trim() || "Kartigo User";
+  const userName = user?.name?.trim() || "Kartogo User";
   const addressOptions = useMemo(() => {
     const normalizedDelivery = deliveryAddresses.map(addr => ({
       id: `delivery:${addr.id}`,
@@ -230,7 +230,7 @@ function CheckoutPage() {
     try {
       // Only raw items + address are sent. The server recomputes subtotal,
       // delivery fee, promo discount and total from its own catalog so prices
-      // can never be tampered with from the browser. When paying with Kartigo
+      // can never be tampered with from the browser. When paying with Kartogo
       // Cash, the server also validates and deducts the authoritative wallet
       // balance — the client never charges the wallet itself.
       const order = await place({
@@ -453,7 +453,7 @@ function CheckoutPage() {
                 <PaymentOption icon={<Smartphone className="h-5 w-5" />} title="UPI on delivery" desc="GPay / PhonePe / Paytm" selected={payment === "upi"} onClick={() => setPayment("upi")} />
                 <PaymentOption
                   icon={<Wallet className="h-5 w-5" />}
-                  title="Kartigo Cash"
+                  title="Kartogo Cash"
                   desc={walletBalance >= total ? `Balance ${formatINR(walletBalance)}` : `Low balance ${formatINR(walletBalance)}`}
                   selected={payment === "wallet"}
                   onClick={() => setPayment("wallet")}
@@ -461,7 +461,7 @@ function CheckoutPage() {
               </div>
               {payment === "wallet" && walletBalance < total && (
                 <p className="mt-2 flex items-center gap-1.5 rounded-lg bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive">
-                  <X className="h-3.5 w-3.5" /> Insufficient Kartigo Cash — you need {formatINR(total - walletBalance)} more. Add money from your profile to pay with the wallet.
+                  <X className="h-3.5 w-3.5" /> Insufficient Kartogo Cash — you need {formatINR(total - walletBalance)} more. Add money from your profile to pay with the wallet.
                 </p>
               )}
 
@@ -519,7 +519,7 @@ function CheckoutPage() {
               {/* Payment split */}
               {payment === "wallet" ? (
                 <div className="mt-3 space-y-1 rounded-xl bg-primary/5 p-3">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Paid via Kartigo Cash</span><span className="font-semibold text-primary">−{formatINR(total)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Paid via Kartogo Cash</span><span className="font-semibold text-primary">−{formatINR(total)}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Wallet balance after</span><span className="font-semibold">{formatINR(walletBalance - total)}</span></div>
                   <div className="mt-1 flex justify-between border-t border-primary/15 pt-1.5 font-bold"><span>Payable now</span><span className="text-leaf">{formatINR(0)}</span></div>
                 </div>
