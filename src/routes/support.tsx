@@ -47,7 +47,7 @@ function SupportPage() {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-sm text-muted-foreground">Email us</div>
-                <div className="truncate font-semibold">support@kartigo.in</div>
+                <div className="truncate font-semibold">support.kartigo.in</div>
               </div>
               <ChevronLeft className="h-5 w-5 rotate-180 text-muted-foreground" />
             </a>
