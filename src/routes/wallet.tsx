@@ -47,7 +47,7 @@ function WalletPage() {
           </div>
           <div className="mt-2 font-display text-4xl font-bold">{formatINR(balance)}</div>
           <button
-            onClick={() => nav({ to: "/menu" })}
+            onClick={() => nav({ to: "/topup", search: { amount: 0 } })}
             className="mt-4 rounded-lg bg-primary-foreground/15 px-4 py-2 text-sm font-bold backdrop-blur hover:bg-primary-foreground/25"
           >
             Add money
