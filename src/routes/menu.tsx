@@ -141,7 +141,7 @@ function MenuPage() {
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-pop">
           <Row to="/wallet" icon={<Wallet className="h-5 w-5" />} label="Kartogo Cash" sub={formatINR(balance)} />
           <Row to="/refunds" icon={<IndianRupee className="h-5 w-5" />} label="Your Refunds" />
-          <Row to="/wishlist" icon={<Heart className="h-5 w-5" />} label="Your Wishlist" />>
+          <Row to="/wishlist" icon={<Heart className="h-5 w-5" />} label="Your Wishlist" />
           <Row onClick={() => soon("E-Gift Cards")} icon={<CreditCard className="h-5 w-5" />} label="E-Gift Cards" />
           <Row to="/support" icon={<Headphones className="h-5 w-5" />} label="Help & Support" />
           <Row to="/account" icon={<UserCircle2 className="h-5 w-5" />} label="Profile" />
