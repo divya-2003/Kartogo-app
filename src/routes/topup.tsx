@@ -23,7 +23,7 @@ type Stage = "enter" | "pay" | "verifying" | "success" | "failed";
 
 function TopUpPage() {
   const { user } = useAuth();
-  const { balance, addMoney } = useWallet();
+  const { balance, addMoney, recordFailedTopup } = useWallet();
   const nav = useNavigate();
   const { amount: initialAmount } = Route.useSearch();
 
