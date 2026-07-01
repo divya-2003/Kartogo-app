@@ -243,14 +243,15 @@ function LocationPickerClient({
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-semibold hover:bg-secondary"
+        className="flex w-full items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-semibold hover:bg-secondary"
       >
-        <MapPin className="h-3.5 w-3.5 text-primary" />
-        <span className="max-w-[140px] truncate">
+        <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
+        <span className="min-w-0 flex-1 truncate text-left">
           {location ? location.area : "Set your location"}
         </span>
-        <ChevronDown className="h-3 w-3 opacity-60" />
+        <ChevronDown className="h-3 w-3 shrink-0 opacity-60" />
       </button>
+
 
       {open && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-50 flex flex-col bg-background">
