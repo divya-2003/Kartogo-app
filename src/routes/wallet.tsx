@@ -21,7 +21,7 @@ function formatWhen(at: number) {
 
 function WalletPage() {
   const { user } = useAuth();
-  const { balance, txns } = useWallet();
+  const { balance, txns, topups } = useWallet();
   const nav = useNavigate();
 
   if (!user) {
