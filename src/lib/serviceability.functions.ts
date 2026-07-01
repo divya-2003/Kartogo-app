@@ -32,7 +32,7 @@ export const locateByCoords = createServerFn({ method: "POST" })
       const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${data.lat}&lon=${data.lng}&zoom=16&addressdetails=1`;
       const res = await fetch(url, {
         headers: {
-          "User-Agent": "Kartigo/1.0 (delivery serviceability check)",
+          "User-Agent": "Kartogo/1.0 (delivery serviceability check)",
           "Accept-Language": "en",
         },
       });

@@ -10,7 +10,7 @@ export const Route = createFileRoute("/login")({
     redirect: typeof search.redirect === "string" ? search.redirect : undefined,
   }),
   component: LoginPage,
-  head: () => ({ meta: [{ title: "Login — Kartigo" }] }),
+  head: () => ({ meta: [{ title: "Login — Kartogo" }] }),
 });
 
 function LoginPage() {
@@ -56,7 +56,7 @@ function LoginPage() {
         toast.success("Identity verified. Enter your admin passcode.");
         return;
       }
-      toast.success("Welcome to Kartigo!");
+      toast.success("Welcome to Kartogo!");
       nav({ to: redirect ?? "/" });
     } catch (err) {
       toast.error((err as Error).message);
@@ -80,10 +80,10 @@ function LoginPage() {
       {/* Brand */}
       <div className="mb-8 flex flex-col items-center gap-3">
         <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-2xl bg-[#15205a] shadow-pop">
-          <img src={kartigoLogo.url} alt="Kartigo" className="h-full w-full object-cover" />
+          <img src={kartigoLogo.url} alt="Kartogo" className="h-full w-full object-cover" />
         </div>
         <div className="text-center">
-          <h1 className="font-display text-3xl font-bold tracking-tight">Kartigo</h1>
+          <h1 className="font-display text-3xl font-bold tracking-tight">Kartogo</h1>
           <p className="mt-1 text-sm text-muted-foreground">Everything you need, delivered fast</p>
         </div>
       </div>
@@ -160,7 +160,7 @@ function LoginPage() {
           )}
         </div>
         <p className="mt-4 text-center text-xs text-muted-foreground">
-          By continuing, you agree to Kartigo's terms.
+          By continuing, you agree to Kartogo's terms.
         </p>
       </div>
     </div>

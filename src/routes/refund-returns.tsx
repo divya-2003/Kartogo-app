@@ -31,11 +31,11 @@ export const Route = createFileRoute("/refund-returns")({
   component: RefundReturnsPage,
   head: () => ({
     meta: [
-      { title: "Refund & Returns Policy — Kartigo" },
+      { title: "Refund & Returns Policy — Kartogo" },
       {
         name: "description",
         content:
-          "Kartigo's Refund & Returns Policy. Learn about eligible returns, replacement process, refund timelines, and how to report issues with your quick commerce order.",
+          "Kartogo's Refund & Returns Policy. Learn about eligible returns, replacement process, refund timelines, and how to report issues with your quick commerce order.",
       },
     ],
   }),
@@ -72,7 +72,7 @@ function RefundReturnsPage() {
               Refund & Returns Policy
             </h1>
             <p className="mt-2 max-w-md text-sm opacity-90">
-              At Kartigo, customer satisfaction is our priority. If you receive a damaged, expired,
+              At Kartogo, customer satisfaction is our priority. If you receive a damaged, expired,
               missing, or incorrect product, we're here to help.
             </p>
           </div>
@@ -208,7 +208,7 @@ function RefundReturnsPage() {
           icon={<RefreshCw className="h-5 w-5 text-white" />}
           iconBg="bg-leaf"
           title="5. Replacement Policy"
-          body="Kartigo will provide a free replacement if:"
+          body="Kartogo will provide a free replacement if:"
         >
           <ul className="mt-3 space-y-2">
             <Bullet

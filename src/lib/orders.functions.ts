@@ -118,7 +118,7 @@ export const placeOrderFn = createServerFn({ method: "POST" })
       });
       if (payErr) {
         const msg = cleanDbError(payErr.message) ?? "";
-        if (/insufficient/i.test(msg)) throw new Error("Not enough Kartigo Cash to pay for this order");
+        if (/insufficient/i.test(msg)) throw new Error("Not enough Kartogo Cash to pay for this order");
         console.error("Wallet charge failed", payErr);
         throw new Error("Could not charge your wallet. Please try again.");
       }
@@ -264,7 +264,7 @@ export const markRefundedFn = createServerFn({ method: "POST" })
       throw new Error("Refund status could not be updated. Please try again.");
     }
 
-    // Reverse the Kartigo Cash payment server-side when a wallet order is marked
+    // Reverse the Kartogo Cash payment server-side when a wallet order is marked
     // refunded (and pull it back if the refund is reverted). Guarded by the
     // previous refunded state so the wallet is never double-credited.
     const wasWallet = existing.payment_method === "wallet" && Number(existing.total) > 0;

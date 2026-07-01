@@ -12,14 +12,14 @@ export const Route = createFileRoute("/")({
   component: Index,
   head: () => ({
     meta: [
-      { title: "Kartigo — Ongole's 15-min neighbourhood store" },
+      { title: "Kartogo — Ongole's 15-min neighbourhood store" },
       { name: "description", content: "Snacks, pickles, instant food, spices, pooja items, tiffin batter — delivered to your door in 15 minutes across Ongole." },
     ],
   }),
 });
 
 const STORE_TABS = [
-  { label: "Kartigo", tag: null, slug: null },
+  { label: "Kartogo", tag: null, slug: null },
   { label: "Fresh", tag: null, slug: "tiffin-batter" },
   { label: "Pantry", tag: null, slug: "spice-powders" },
   { label: "Pooja", tag: "From ₹35", slug: "pooja" },
@@ -43,7 +43,7 @@ function Index() {
   if (!ready || !locReady) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-center">
-        <div className="font-display text-3xl font-bold tracking-tight text-foreground">Kartigo</div>
+        <div className="font-display text-3xl font-bold tracking-tight text-foreground">Kartogo</div>
         <p className="mt-2 text-sm text-muted-foreground">Loading your store…</p>
       </div>
     );
@@ -84,7 +84,7 @@ function Index() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Link to="/menu" aria-label="Kartigo Cash wallet" className="flex items-center gap-1 rounded-xl bg-card px-3 py-2 text-sm font-bold shadow-pop">
+              <Link to="/menu" aria-label="Kartogo Cash wallet" className="flex items-center gap-1 rounded-xl bg-card px-3 py-2 text-sm font-bold shadow-pop">
                 <Wallet className="h-4 w-4 text-primary" /> {formatINR(balance)}
               </Link>
               <Link to="/menu" aria-label="Account" className="grid h-10 w-10 place-items-center rounded-full bg-card shadow-pop">

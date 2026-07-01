@@ -22,7 +22,7 @@ import {
 
 export const Route = createFileRoute("/menu")({
   component: MenuPage,
-  head: () => ({ meta: [{ title: "Profile — Kartigo" }] }),
+  head: () => ({ meta: [{ title: "Profile — Kartogo" }] }),
 });
 
 function MenuPage() {
@@ -65,7 +65,7 @@ function MenuPage() {
             <UserCircle2 className="h-12 w-12" />
           </div>
           <div>
-            <div className="font-display text-2xl font-bold">{user.name || "Kartigo User"}</div>
+            <div className="font-display text-2xl font-bold">{user.name || "Kartogo User"}</div>
             <div className="text-sm text-muted-foreground">+91 {user.phone}</div>
           </div>
         </div>
@@ -81,7 +81,7 @@ function MenuPage() {
         <div className="mt-4 w-full rounded-2xl bg-primary/10 p-4 text-left">
           <div className="flex items-center gap-3">
             <Wallet className="h-6 w-6 text-primary" />
-            <span className="font-display text-lg font-bold">Kartigo Cash &amp; Gift Card</span>
+            <span className="font-display text-lg font-bold">Kartogo Cash &amp; Gift Card</span>
           </div>
           <div className="mt-3 flex items-center justify-between border-t border-primary/15 pt-3">
             <span className="text-sm text-muted-foreground">Available Balance <span className="font-bold text-foreground">{formatINR(balance)}</span></span>
@@ -139,7 +139,7 @@ function MenuPage() {
         {/* Your Information */}
         <h2 className="mb-3 mt-8 font-display text-xl font-bold">Your Information</h2>
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-pop">
-          <Row to="/wallet" icon={<Wallet className="h-5 w-5" />} label="Kartigo Cash" sub={formatINR(balance)} />
+          <Row to="/wallet" icon={<Wallet className="h-5 w-5" />} label="Kartogo Cash" sub={formatINR(balance)} />
           <Row to="/refunds" icon={<IndianRupee className="h-5 w-5" />} label="Your Refunds" />
           <Row onClick={() => soon("Your Wishlist")} icon={<Heart className="h-5 w-5" />} label="Your Wishlist" />
           <Row onClick={() => soon("E-Gift Cards")} icon={<CreditCard className="h-5 w-5" />} label="E-Gift Cards" />

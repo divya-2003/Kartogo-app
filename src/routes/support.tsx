@@ -3,7 +3,7 @@ import { ChevronLeft, Headphones, Mail, Phone, MessageCircle } from "lucide-reac
 
 export const Route = createFileRoute("/support")({
   component: SupportPage,
-  head: () => ({ meta: [{ title: "Help & Support — Kartigo" }] }),
+  head: () => ({ meta: [{ title: "Help & Support — Kartogo" }] }),
 });
 
 function SupportPage() {

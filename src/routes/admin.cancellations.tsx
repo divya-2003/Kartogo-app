@@ -7,10 +7,10 @@ import { AlertTriangle, BadgeIndianRupee, CheckCircle2, PackageX, RotateCcw } fr
 
 export const Route = createFileRoute("/admin/cancellations")({
   component: Cancellations,
-  head: () => ({ meta: [{ title: "Cancelled orders — Kartigo" }] }),
+  head: () => ({ meta: [{ title: "Cancelled orders — Kartogo" }] }),
 });
 
-// Prepaid orders (UPI or Kartigo Cash) require a refund; cash-on-delivery never does.
+// Prepaid orders (UPI or Kartogo Cash) require a refund; cash-on-delivery never does.
 const isPrepaid = (method: string) => method === "upi" || method === "wallet";
 
 function Cancellations() {
@@ -36,7 +36,7 @@ function Cancellations() {
   const toggleRefund = async (id: string, next: boolean) => {
     setBusy(id);
     try {
-      // The server reverses Kartigo Cash payments back into the customer's
+      // The server reverses Kartogo Cash payments back into the customer's
       // wallet (and pulls them back on revert) when the refund flag is toggled.
       await markRefunded(id, next);
       toast.success(next ? "Marked as refunded" : "Refund reverted");

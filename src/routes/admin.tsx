@@ -25,7 +25,7 @@ export const Route = createFileRoute("/admin")({
     }
   },
   component: AdminLayout,
-  head: () => ({ meta: [{ title: "Admin — Kartigo" }] }),
+  head: () => ({ meta: [{ title: "Admin — Kartogo" }] }),
 });
 
 

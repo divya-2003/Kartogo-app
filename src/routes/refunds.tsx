@@ -6,7 +6,7 @@ import { formatINR } from "@/lib/data";
 
 export const Route = createFileRoute("/refunds")({
   component: RefundsPage,
-  head: () => ({ meta: [{ title: "Your refunds — Kartigo" }] }),
+  head: () => ({ meta: [{ title: "Your refunds — Kartogo" }] }),
 });
 
 function RefundsPage() {

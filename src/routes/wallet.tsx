@@ -5,7 +5,7 @@ import { ChevronLeft, Wallet, ArrowDownLeft, ArrowUpRight } from "lucide-react";
 
 export const Route = createFileRoute("/wallet")({
   component: WalletPage,
-  head: () => ({ meta: [{ title: "Kartigo Cash — Wallet history" }] }),
+  head: () => ({ meta: [{ title: "Kartogo Cash — Wallet history" }] }),
 });
 
 function formatWhen(at: number) {
@@ -43,7 +43,7 @@ function WalletPage() {
         {/* Balance card */}
         <div className="mt-6 rounded-2xl bg-primary p-5 text-primary-foreground shadow-pop">
           <div className="flex items-center gap-2 text-sm opacity-90">
-            <Wallet className="h-5 w-5" /> Kartigo Cash balance
+            <Wallet className="h-5 w-5" /> Kartogo Cash balance
           </div>
           <div className="mt-2 font-display text-4xl font-bold">{formatINR(balance)}</div>
           <button
@@ -58,7 +58,7 @@ function WalletPage() {
         <h2 className="mb-3 mt-8 font-display text-xl font-bold">Transaction history</h2>
         {txns.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-border bg-card p-5 text-sm text-muted-foreground shadow-pop">
-            No wallet transactions yet. Top-ups and order payments made with Kartigo Cash will show up here.
+            No wallet transactions yet. Top-ups and order payments made with Kartogo Cash will show up here.
           </p>
         ) : (
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-pop">
@@ -96,7 +96,7 @@ function TopBar() {
         <Link to="/menu" aria-label="Back" className="grid h-9 w-9 place-items-center rounded-full hover:bg-secondary">
           <ChevronLeft className="h-5 w-5" />
         </Link>
-        <span className="font-display text-lg font-bold">Kartigo Cash</span>
+        <span className="font-display text-lg font-bold">Kartogo Cash</span>
       </div>
     </div>
   );

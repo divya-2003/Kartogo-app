@@ -1,7 +1,7 @@
 import type { Order } from "./store";
 import { paymentBreakdown, PAYMENT_LABELS } from "./payment";
 
-const BRAND = "Kartigo";
+const BRAND = "Kartogo";
 const PRIMARY: [number, number, number] = [15, 107, 122]; // teal #0f6b7a
 const MUTED: [number, number, number] = [110, 110, 110];
 
@@ -139,7 +139,7 @@ export async function downloadInvoice(o: Order) {
     y += 16;
   };
   payRow("Method", PAYMENT_LABELS[o.paymentMethod]);
-  if (b.walletUsed > 0) payRow("Kartigo Cash used", inr(b.walletUsed), PRIMARY);
+  if (b.walletUsed > 0) payRow("Kartogo Cash used", inr(b.walletUsed), PRIMARY);
   if (b.otherUsed > 0) payRow(b.otherLabel, inr(b.otherUsed));
   payRow("Total paid", inr(o.total));
 
@@ -166,5 +166,5 @@ export async function downloadInvoice(o: Order) {
   doc.text(`Thank you for shopping with ${BRAND}.`, M, fy);
   doc.text(`Generated ${when(Date.now())}`, W - M, fy, { align: "right" });
 
-  doc.save(`Kartigo-Invoice-${o.id}.pdf`);
+  doc.save(`Kartogo-Invoice-${o.id}.pdf`);
 }

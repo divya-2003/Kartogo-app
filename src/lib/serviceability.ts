@@ -1,9 +1,9 @@
-// Pure, server-safe serviceability logic for the Kartigo Ongole dark store.
+// Pure, server-safe serviceability logic for the Kartogo Ongole dark store.
 // No asset imports here so it can be bundled into a server function safely and
 // also imported directly by client components (autocomplete suggestions).
 
 export const DARK_STORE = {
-  name: "Kartigo Dark Store",
+  name: "Kartogo Dark Store",
   area: "Magunta Layout",
   city: "Ongole",
   state: "Andhra Pradesh",
