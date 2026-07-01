@@ -1,16 +1,25 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Plus, Check } from "lucide-react";
+import { Plus, Check, Heart } from "lucide-react";
 import { toast } from "sonner";
 import type { Product } from "@/lib/data";
 import { formatINR } from "@/lib/data";
-import { useCart, useAuth } from "@/lib/store";
+import { useCart, useAuth, useWishlist } from "@/lib/store";
 
 export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolean }) {
   const { items, add, setQty } = useCart();
   const { user } = useAuth();
+  const { has, toggle } = useWishlist();
   const nav = useNavigate();
   const inCart = items.find(i => i.productId === p.id);
+  const wished = has(p.id);
   const out = p.stock <= 0;
+
+  const handleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggle(p.id);
+    toast.success(wished ? "Removed from wishlist" : "Added to wishlist");
+  };
 
   const handleAdd = () => {
     add(p.id);
