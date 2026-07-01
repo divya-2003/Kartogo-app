@@ -67,31 +67,33 @@ function Index() {
       <div className="bg-gradient-to-b from-[oklch(0.9_0.07_70)] to-background">
         <div className="mx-auto max-w-2xl px-4 pt-4 lg:max-w-7xl lg:px-8">
           {/* row: delivery time + wallet + profile */}
-          <div className="flex items-start justify-between gap-3">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
             <div className="min-w-0">
               {location && (
                 <>
-                  <div className="flex items-center gap-1.5 font-display text-xl font-extrabold tracking-tight text-foreground">
-                    <Zap className="h-5 w-5 fill-saffron text-saffron" /> Delivery in {deliveryWindow(location.etaMinutes)}
+                  <div className="flex items-center gap-1.5 font-display text-lg font-extrabold leading-tight tracking-tight text-foreground sm:text-xl">
+                    <Zap className="h-5 w-5 shrink-0 fill-saffron text-saffron" />
+                    <span className="min-w-0 truncate">Delivery in {deliveryWindow(location.etaMinutes)}</span>
                   </div>
                   <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-leaf/10 px-2 py-0.5 text-[11px] font-bold text-leaf">
-                    <CheckCircle2 className="h-3 w-3" /> Delivery available
+                    <CheckCircle2 className="h-3 w-3 shrink-0" /> Delivery available
                   </div>
                 </>
               )}
-              <div className="mt-0.5 max-w-[220px]">
+              <div className="mt-0.5 w-full max-w-[220px]">
                 <LocationPicker />
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <Link to="/menu" aria-label="Kartogo Cash wallet" className="flex items-center gap-1 rounded-xl bg-card px-3 py-2 text-sm font-bold shadow-pop">
-                <Wallet className="h-4 w-4 text-primary" /> {formatINR(balance)}
+                <Wallet className="h-4 w-4 shrink-0 text-primary" /> {formatINR(balance)}
               </Link>
-              <Link to="/menu" aria-label="Account" className="grid h-10 w-10 place-items-center rounded-full bg-card shadow-pop">
+              <Link to="/menu" aria-label="Account" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-card shadow-pop">
                 <User2 className="h-5 w-5" />
               </Link>
             </div>
           </div>
+
 
           {/* store tabs */}
           <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
