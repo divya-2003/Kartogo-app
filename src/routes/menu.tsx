@@ -73,7 +73,7 @@ function MenuPage() {
         {/* Quick action cards */}
         <div className="grid grid-cols-3 gap-3">
           <QuickCard to="/orders" icon={<ShoppingBag className="h-6 w-6" />} label="Your Orders" />
-          <QuickCard onClick={() => soon("Help & Support")} icon={<Headphones className="h-6 w-6" />} label="Help & Support" />
+          <QuickCard to="/support" icon={<Headphones className="h-6 w-6" />} label="Help & Support" />
           <QuickCard onClick={() => soon("Your Wishlist")} icon={<Heart className="h-6 w-6" />} label="Your Wishlist" />
         </div>
 
