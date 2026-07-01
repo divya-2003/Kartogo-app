@@ -98,6 +98,27 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_wishlists: {
+        Row: {
+          created_at: string
+          id: string
+          phone: string
+          product_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          phone: string
+          product_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          phone?: string
+          product_id?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           created_at: string
