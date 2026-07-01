@@ -115,20 +115,15 @@ function MenuPage() {
               <div className="mt-4 flex gap-2">
                 <button onClick={() => setShowAdd(false)} className="flex-1 rounded-xl border border-border py-2.5 font-bold hover:bg-secondary">Cancel</button>
                 <button
-                  onClick={async () => {
+                  onClick={() => {
                     const amt = Math.round(Number(amount));
                     if (!amt || amt <= 0) { toast.error("Enter a valid amount"); return; }
-                    try {
-                      await addMoney(amt);
-                      toast.success(`${formatINR(amt)} added to your wallet`);
-                      setShowAdd(false);
-                    } catch (e) {
-                      toast.error(e instanceof Error ? e.message : "Could not add money");
-                    }
+                    setShowAdd(false);
+                    nav({ to: "/topup", search: { amount: amt } });
                   }}
                   className="flex-1 rounded-xl bg-primary py-2.5 font-bold text-primary-foreground hover:bg-primary/90"
                 >
-                  Add money
+                  Proceed to pay
                 </button>
               </div>
             </div>
