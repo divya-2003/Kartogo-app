@@ -272,11 +272,16 @@ export const useAuth = () => {
 // Order spends and refunds are applied entirely on the server (in placeOrderFn /
 // cancelOrderFn / markRefundedFn); the client just refreshes after those calls.
 export type WalletTxn = { id: string; type: "credit" | "debit"; amount: number; note: string; at: number };
+export type WalletTopup = { id: string; amount: number; status: "success" | "failed"; at: number };
 type WalletCtx = {
   balance: number;
   txns: WalletTxn[];
+  /** Past top-up attempts (successful and failed), newest first. */
+  topups: WalletTopup[];
   /** Top up money (server-side credit). Resolves once the new balance is loaded. */
   addMoney: (amount: number) => Promise<void>;
+  /** Record a cancelled / failed top-up attempt so it appears in history. */
+  recordFailedTopup: (amount: number) => Promise<void>;
   /** Re-read the authoritative balance + history from the server. */
   refresh: () => Promise<void>;
 };
@@ -288,6 +293,15 @@ function rowToWalletTxn(r: WalletTxnRow): WalletTxn {
     type: r.type,
     amount: Number(r.amount),
     note: r.note,
+    at: new Date(r.created_at).getTime(),
+  };
+}
+
+function rowToTopup(r: TopupRow): WalletTopup {
+  return {
+    id: r.id,
+    amount: Number(r.amount),
+    status: r.status,
     at: new Date(r.created_at).getTime(),
   };
 }
