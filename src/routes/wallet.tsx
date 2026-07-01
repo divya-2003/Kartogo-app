@@ -84,6 +84,37 @@ function WalletPage() {
             })}
           </div>
         )}
+
+        {/* Top-up history (successful + failed) */}
+        <h2 className="mb-3 mt-8 font-display text-xl font-bold">Top-up history</h2>
+        {topups.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-border bg-card p-5 text-sm text-muted-foreground shadow-pop">
+            No top-ups yet. Your successful and failed add-money attempts will appear here.
+          </p>
+        ) : (
+          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-pop">
+            {topups.map((t, i) => {
+              const ok = t.status === "success";
+              return (
+                <div
+                  key={t.id}
+                  className={`flex items-center gap-3 p-4 ${i < topups.length - 1 ? "border-b border-border" : ""}`}
+                >
+                  <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${ok ? "bg-leaf/15 text-leaf" : "bg-destructive/10 text-destructive"}`}>
+                    {ok ? <CheckCircle2 className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-semibold">{ok ? "Top-up successful" : "Top-up failed"}</div>
+                    <div className="text-xs text-muted-foreground">{formatWhen(t.at)}</div>
+                  </div>
+                  <div className={`shrink-0 font-display text-base font-bold ${ok ? "text-leaf" : "text-muted-foreground line-through"}`}>
+                    {formatINR(t.amount)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
