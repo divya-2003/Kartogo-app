@@ -80,6 +80,8 @@ function TopUpPage() {
   };
 
   const cancelPayment = () => {
+    // Log the cancelled attempt so it shows in the top-up history.
+    void recordFailedTopup(amt).catch(() => { /* non-blocking */ });
     setStage("failed");
   };
 
