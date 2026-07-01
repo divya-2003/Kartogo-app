@@ -12,6 +12,7 @@ export const Route = createFileRoute("/account")({
 
 function AccountPage() {
   const { user, updateProfile } = useAuth();
+  const router = useRouter();
   
 
   const [name, setName] = useState("");
