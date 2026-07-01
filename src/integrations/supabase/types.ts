@@ -389,6 +389,30 @@ export type Database = {
           },
         ]
       }
+      wallet_topups: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          phone: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          phone: string
+          status: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          phone?: string
+          status?: string
+        }
+        Relationships: []
+      }
       wallet_transactions: {
         Row: {
           amount: number

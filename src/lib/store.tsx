@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { PRODUCTS, DELIVERY_BOYS, type Product } from "./data";
 import { requestOtpFn, verifyOtpFn, adminLoginFn } from "./auth.functions";
-import { getWalletFn, addMoneyFn, type WalletTxnRow } from "./wallet.functions";
+import { getWalletFn, addMoneyFn, getTopupsFn, recordFailedTopupFn, type WalletTxnRow, type TopupRow } from "./wallet.functions";
 import {
   listOrdersFn,
   placeOrderFn,
@@ -272,11 +272,16 @@ export const useAuth = () => {
 // Order spends and refunds are applied entirely on the server (in placeOrderFn /
 // cancelOrderFn / markRefundedFn); the client just refreshes after those calls.
 export type WalletTxn = { id: string; type: "credit" | "debit"; amount: number; note: string; at: number };
+export type WalletTopup = { id: string; amount: number; status: "success" | "failed"; at: number };
 type WalletCtx = {
   balance: number;
   txns: WalletTxn[];
+  /** Past top-up attempts (successful and failed), newest first. */
+  topups: WalletTopup[];
   /** Top up money (server-side credit). Resolves once the new balance is loaded. */
   addMoney: (amount: number) => Promise<void>;
+  /** Record a cancelled / failed top-up attempt so it appears in history. */
+  recordFailedTopup: (amount: number) => Promise<void>;
   /** Re-read the authoritative balance + history from the server. */
   refresh: () => Promise<void>;
 };
@@ -292,21 +297,35 @@ function rowToWalletTxn(r: WalletTxnRow): WalletTxn {
   };
 }
 
+function rowToTopup(r: TopupRow): WalletTopup {
+  return {
+    id: r.id,
+    amount: Number(r.amount),
+    status: r.status,
+    at: new Date(r.created_at).getTime(),
+  };
+}
+
 export function WalletProvider({ children }: { children: ReactNode }) {
   const { customerToken } = useAuth();
   const [balance, setBalance] = useState(0);
   const [txns, setTxns] = useState<WalletTxn[]>([]);
+  const [topups, setTopups] = useState<WalletTopup[]>([]);
 
   const tokenRef = useRef(customerToken);
   useEffect(() => { tokenRef.current = customerToken; }, [customerToken]);
 
   const refresh = useCallback(async () => {
     const token = tokenRef.current;
-    if (!token) { setBalance(0); setTxns([]); return; }
+    if (!token) { setBalance(0); setTxns([]); setTopups([]); return; }
     try {
-      const res = await getWalletFn({ data: { token } });
-      setBalance(Number(res.balance));
-      setTxns((res.txns as WalletTxnRow[]).map(rowToWalletTxn));
+      const [wallet, topupRes] = await Promise.all([
+        getWalletFn({ data: { token } }),
+        getTopupsFn({ data: { token } }),
+      ]);
+      setBalance(Number(wallet.balance));
+      setTxns((wallet.txns as WalletTxnRow[]).map(rowToWalletTxn));
+      setTopups((topupRes.topups as TopupRow[]).map(rowToTopup));
     } catch {
       // Keep last good state on transient errors.
     }
@@ -318,15 +337,23 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const value = useMemo<WalletCtx>(() => ({
     balance,
     txns,
+    topups,
     addMoney: async (amount) => {
       const token = tokenRef.current;
       if (!token || !amount || amount <= 0) return;
       const res = await addMoneyFn({ data: { token, amount: Math.round(amount) } });
       setBalance(Number(res.balance));
       setTxns((res.txns as WalletTxnRow[]).map(rowToWalletTxn));
+      if (res.topups) setTopups((res.topups as TopupRow[]).map(rowToTopup));
+    },
+    recordFailedTopup: async (amount) => {
+      const token = tokenRef.current;
+      if (!token || !amount || amount <= 0) return;
+      const res = await recordFailedTopupFn({ data: { token, amount: Math.round(amount) } });
+      setTopups((res.topups as TopupRow[]).map(rowToTopup));
     },
     refresh,
-  }), [balance, txns, refresh]);
+  }), [balance, txns, topups, refresh]);
 
   return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
 }

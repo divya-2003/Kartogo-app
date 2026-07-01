@@ -23,7 +23,7 @@ type Stage = "enter" | "pay" | "verifying" | "success" | "failed";
 
 function TopUpPage() {
   const { user } = useAuth();
-  const { balance, addMoney } = useWallet();
+  const { balance, addMoney, recordFailedTopup } = useWallet();
   const nav = useNavigate();
   const { amount: initialAmount } = Route.useSearch();
 
@@ -80,6 +80,8 @@ function TopUpPage() {
   };
 
   const cancelPayment = () => {
+    // Log the cancelled attempt so it shows in the top-up history.
+    void recordFailedTopup(amt).catch(() => { /* non-blocking */ });
     setStage("failed");
   };
 
