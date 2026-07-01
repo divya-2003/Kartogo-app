@@ -98,22 +98,31 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   // Keep the cache in sync so guest picks survive a reload and offline reads work.
   useEffect(() => { write("qk_wishlist", ids); }, [ids]);
 
-  // On login: fold any guest items into the account, then adopt the server list
-  // as the source of truth. On logout: fall back to a clean guest cache.
+  // React to identity changes:
+  //  - login  → fold any guest items into the account, then adopt the server list.
+  //  - logout → clear the wishlist so the next person on this device starts fresh.
+  const prevTokenRef = useRef<string | null | undefined>(undefined);
   useEffect(() => {
+    const prev = prevTokenRef.current;
+    prevTokenRef.current = customerToken;
     let active = true;
-    (async () => {
-      if (!customerToken) return;
-      try {
-        const guestIds = read<string[]>("qk_wishlist", []);
-        const res = await mergeWishlistFn({ data: { token: customerToken, ids: guestIds } });
-        if (active) setIds(res.ids);
-      } catch {
-        // Keep the local cache on transient errors.
-      }
-    })();
+    if (customerToken) {
+      (async () => {
+        try {
+          const guestIds = read<string[]>("qk_wishlist", []);
+          const res = await mergeWishlistFn({ data: { token: customerToken, ids: guestIds } });
+          if (active) setIds(res.ids);
+        } catch {
+          // Keep the local cache on transient errors.
+        }
+      })();
+    } else if (prev) {
+      // Genuine logout (had a token, now null) — don't wipe on first mount.
+      setIds([]);
+    }
     return () => { active = false; };
   }, [customerToken]);
+
 
   const value = useMemo<WishlistCtx>(() => {
     const optimistic = (next: string[]) => setIds(next);
