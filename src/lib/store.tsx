@@ -70,7 +70,11 @@ export const useCart = () => {
   return c;
 };
 
-// ---------------- Wishlist ----------------
+// ---------------- Wishlist (server-synced across devices) ----------------
+// Saved products persist in the database keyed by the customer's phone, so the
+// wishlist follows them across logins/devices. localStorage is only an offline
+// cache and a holding area for items saved while browsing as a guest — those
+// are merged into the account on the next login.
 type WishlistCtx = {
   ids: string[];
   has: (id: string) => boolean;
@@ -82,18 +86,65 @@ type WishlistCtx = {
 const WishlistContext = createContext<WishlistCtx | null>(null);
 
 export function WishlistProvider({ children }: { children: ReactNode }) {
+  const { customerToken } = useAuth();
   const [ids, setIds] = useState<string[]>([]);
+
+  const tokenRef = useRef(customerToken);
+  useEffect(() => { tokenRef.current = customerToken; }, [customerToken]);
+
+  // Load the offline cache once on mount.
   useEffect(() => { setIds(read<string[]>("qk_wishlist", [])); }, []);
+  // Keep the cache in sync so guest picks survive a reload and offline reads work.
   useEffect(() => { write("qk_wishlist", ids); }, [ids]);
 
-  const value = useMemo<WishlistCtx>(() => ({
-    ids,
-    has: (id) => ids.includes(id),
-    toggle: (id) => setIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]),
-    remove: (id) => setIds(prev => prev.filter(x => x !== id)),
-    clear: () => setIds([]),
-    count: ids.length,
-  }), [ids]);
+  // On login: fold any guest items into the account, then adopt the server list
+  // as the source of truth. On logout: fall back to a clean guest cache.
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      if (!customerToken) return;
+      try {
+        const guestIds = read<string[]>("qk_wishlist", []);
+        const res = await mergeWishlistFn({ data: { token: customerToken, ids: guestIds } });
+        if (active) setIds(res.ids);
+      } catch {
+        // Keep the local cache on transient errors.
+      }
+    })();
+    return () => { active = false; };
+  }, [customerToken]);
+
+  const value = useMemo<WishlistCtx>(() => {
+    const optimistic = (next: string[]) => setIds(next);
+
+    const add = (id: string) => {
+      setIds(prev => prev.includes(id) ? prev : [id, ...prev]);
+      const token = tokenRef.current;
+      if (token) {
+        void addWishlistFn({ data: { token, productId: id } })
+          .then(res => optimistic(res.ids))
+          .catch(() => { /* cache already updated */ });
+      }
+    };
+    const remove = (id: string) => {
+      setIds(prev => prev.filter(x => x !== id));
+      const token = tokenRef.current;
+      if (token) {
+        void removeWishlistFn({ data: { token, productId: id } })
+          .then(res => optimistic(res.ids))
+          .catch(() => { /* cache already updated */ });
+      }
+    };
+
+    return {
+      ids,
+      has: (id) => ids.includes(id),
+      toggle: (id) => { if (ids.includes(id)) remove(id); else add(id); },
+      remove,
+      clear: () => setIds([]),
+      count: ids.length,
+    };
+  }, [ids]);
 
   return <WishlistContext.Provider value={value}>{children}</WishlistContext.Provider>;
 }
