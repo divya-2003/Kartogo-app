@@ -13,6 +13,13 @@ export type WalletTxnRow = {
   created_at: string;
 };
 
+export type TopupRow = {
+  id: string;
+  amount: number;
+  status: "success" | "failed";
+  created_at: string;
+};
+
 async function loadWallet(phone: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -32,6 +39,17 @@ async function loadWallet(phone: string) {
   };
 }
 
+async function loadTopups(phone: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("wallet_topups")
+    .select("id, amount, status, created_at")
+    .eq("phone", phone)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  return (data ?? []) as TopupRow[];
+}
+
 // ---------------- Read balance + history (token-scoped) ----------------
 export const getWalletFn = createServerFn({ method: "POST" })
   .inputValidator((data: { token?: string }) => ({ token: data?.token ? String(data.token) : "" }))
@@ -40,6 +58,16 @@ export const getWalletFn = createServerFn({ method: "POST" })
     const session = verifyCustomerToken(data.token);
     if (!session) return { balance: 0, txns: [] as WalletTxnRow[] };
     return loadWallet(session.phone);
+  });
+
+// ---------------- Read top-up history (token-scoped) ----------------
+export const getTopupsFn = createServerFn({ method: "POST" })
+  .inputValidator((data: { token?: string }) => ({ token: data?.token ? String(data.token) : "" }))
+  .handler(async ({ data }) => {
+    const { verifyCustomerToken } = await import("./auth-tokens.server");
+    const session = verifyCustomerToken(data.token);
+    if (!session) return { topups: [] as TopupRow[] };
+    return { topups: await loadTopups(session.phone) };
   });
 
 // ---------------- Top up money (token-scoped, server-side credit) ----------------
@@ -68,8 +96,42 @@ export const addMoneyFn = createServerFn({ method: "POST" })
     });
     if (error) {
       console.error("Failed to top up wallet", error);
+      // Record the failed attempt so the customer sees it in their history.
+      await supabaseAdmin
+        .from("wallet_topups")
+        .insert({ phone: session.phone, amount: data.amount, status: "failed" });
       throw new Error("Could not add money. Please try again.");
     }
 
-    return loadWallet(session.phone);
+    // Record the successful top-up for history.
+    await supabaseAdmin
+      .from("wallet_topups")
+      .insert({ phone: session.phone, amount: data.amount, status: "success" });
+
+    const wallet = await loadWallet(session.phone);
+    return { ...wallet, topups: await loadTopups(session.phone) };
+  });
+
+// ---------------- Record a failed / cancelled top-up (token-scoped) ----------------
+// Called when the user cancels the UPI payment or it does not complete, so the
+// attempt still shows up in their top-up history.
+export const recordFailedTopupFn = createServerFn({ method: "POST" })
+  .inputValidator((data: { token?: string; amount: number }) => {
+    const amount = Math.round(Number(data?.amount) || 0);
+    if (amount <= 0) throw new Error("Enter a valid amount");
+    if (amount > 100000) throw new Error("Amount is too large");
+    return { token: data?.token ? String(data.token) : "", amount };
+  })
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { verifyCustomerToken } = await import("./auth-tokens.server");
+
+    const session = verifyCustomerToken(data.token);
+    if (!session) return { topups: [] as TopupRow[] };
+
+    await supabaseAdmin
+      .from("wallet_topups")
+      .insert({ phone: session.phone, amount: data.amount, status: "failed" });
+
+    return { topups: await loadTopups(session.phone) };
   });
