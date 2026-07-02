@@ -10,9 +10,9 @@ export type Coupon = {
 };
 
 export const COUPONS: Record<string, Coupon> = {
-  SAVE50: { type: "flat", value: 50, minSubtotal: 299, desc: "₹50 off on orders above ₹299" },
-  KART10: { type: "pct", value: 10, minSubtotal: 199, maxOff: 100, desc: "10% off (up to ₹100) above ₹199" },
-  BIG100: { type: "flat", value: 100, minSubtotal: 599, desc: "₹100 off on orders above ₹599" },
+  SAVE50: { type: "flat", value: 50, minSubtotal: 1000, desc: "₹50 off on orders above ₹1000" },
+  SAVE100: { type: "flat", value: 100, minSubtotal: 1800, desc: "₹100 off on orders above ₹1800" },
+  SAVE150: { type: "flat", value: 150, minSubtotal: 1999, desc: "₹150 off on orders above ₹1999" },
 };
 
 export function computeDiscount(code: string | null, subtotal: number): number {

@@ -26,9 +26,9 @@ const STORE_TABS = [
 ];
 
 const COUPONS = [
-  { flat: "₹50 OFF", above: "above ₹599" },
-  { flat: "₹100 OFF", above: "above ₹1199" },
-  { flat: "₹150 OFF", above: "above ₹1799" },
+  { flat: "₹50 OFF", above: "above ₹1000" },
+  { flat: "₹100 OFF", above: "above ₹1800" },
+  { flat: "₹150 OFF", above: "above ₹1999" },
 ];
 
 function Index() {
