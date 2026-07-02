@@ -443,10 +443,10 @@ function LocationPickerClient({
                       >
                         <button
                           onClick={() => selectSaved(addr)}
-                          className="flex flex-1 items-start gap-3 text-left"
+                          className="flex min-w-0 flex-1 items-start gap-3 text-left"
                         >
                           <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                          <span className="min-w-0">
+                          <span className="min-w-0 flex-1">
                             <span className="block truncate text-sm font-semibold">{addr.area}</span>
                             <span className="block truncate text-xs text-muted-foreground">{addr.query}</span>
                           </span>
