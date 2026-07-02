@@ -249,7 +249,7 @@ function Index() {
           <Link to="/" className="flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-bold text-primary">
             <Home className="h-5 w-5" /> Home
           </Link>
-          <Link to="/menu" className="flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-bold text-muted-foreground">
+          <Link to="/categories" className="flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-bold text-muted-foreground">
             <LayoutGrid className="h-5 w-5" /> Categories
           </Link>
           <Link to="/search" search={{ q: "" }} className="flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-bold text-muted-foreground">
