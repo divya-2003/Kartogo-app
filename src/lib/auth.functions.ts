@@ -85,7 +85,7 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { createHash } = await import("node:crypto");
-    const { issueCustomerToken, isAdminPhone } = await import("./auth-tokens.server");
+    const { issueCustomerToken, isAdminPhone, findDriverByPhone, issueDeliveryToken } = await import("./auth-tokens.server");
 
     const { data: rows } = await supabaseAdmin
       .from("otp_codes")
@@ -113,10 +113,20 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
     }
 
     await supabaseAdmin.from("otp_codes").update({ consumed: true }).eq("id", row.id);
+
+    // Derive the role from server-side registries. A registered, active delivery
+    // partner is issued a signed delivery token in the same step so the unified
+    // login can route them straight to the delivery portal.
+    const driver = findDriverByPhone(data.phone);
+    const delivery = driver && driver.active
+      ? { token: issueDeliveryToken(driver.id, driver.phone), driver: { id: driver.id, name: driver.name, phone: driver.phone } }
+      : null;
+
     return {
       ok: true as const,
       token: issueCustomerToken(data.phone),
       isAdminPhone: isAdminPhone(data.phone),
+      delivery,
     };
   });
 
