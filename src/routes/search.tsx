@@ -21,7 +21,6 @@ export const Route = createFileRoute("/search")({
 function SearchPage() {
   const { q } = Route.useSearch();
   const { products } = useCatalog();
-  const { count } = useCart();
   const nav = useNavigate();
   const [input, setInput] = useState(q ?? "");
 
