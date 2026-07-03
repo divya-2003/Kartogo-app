@@ -4,7 +4,7 @@ import { useCatalog, useOrders, useAuth } from "@/lib/store";
 import type { Order } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { IndianRupee, ShoppingBag, AlertTriangle, Truck, ShieldCheck, PackageX } from "lucide-react";
+import { IndianRupee, ShoppingBag, AlertTriangle, Truck, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({ component: Dashboard });
 
