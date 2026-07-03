@@ -316,7 +316,8 @@ function EarningsSection({ orders, deliveredCount, activeCount }: {
 }) {
   const now = new Date();
   const currentKey = now.getFullYear() * 12 + now.getMonth();
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [monthOpen, setMonthOpen] = useState(true);
 
   // Group delivered orders into calendar months.
   const groups = new Map<number, OrderRow[]>();
@@ -338,79 +339,97 @@ function EarningsSection({ orders, deliveredCount, activeCount }: {
   const current = monthOrdersFor(currentKey);
   const currentTotal = current.length * EARNING_PER_ORDER;
   const previousKeys = keys.filter(k => k !== currentKey);
+  const totalEarnings = deliveredCount * EARNING_PER_ORDER;
 
   return (
     <section>
-      <h2 className="mb-2 flex items-center gap-2 font-display text-lg font-bold">
-        <Wallet className="h-5 w-5 text-primary" /> My earnings
-      </h2>
+      {/* My earnings — clickable header that expands everything inside */}
+      <div className="overflow-hidden rounded-2xl border border-border bg-card">
+        <button
+          onClick={() => setOpen(v => !v)}
+          aria-expanded={open}
+          className="flex w-full items-center gap-3 p-4 text-left hover:bg-secondary/60"
+        >
+          <Wallet className="h-5 w-5 text-primary" />
+          <div className="min-w-0">
+            <div className="font-display text-lg font-bold">My earnings</div>
+            <div className="text-xs text-muted-foreground">{current.length} deliver{current.length === 1 ? "y" : "ies"} this month</div>
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            <span className="font-display text-lg font-bold text-primary">{formatINR(totalEarnings)}</span>
+            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+          </div>
+        </button>
 
-      {/* Delivered / Active quick stats */}
-      <div className="mb-3 grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-border bg-card p-4 text-center">
-          <div className="font-display text-2xl font-bold">{deliveredCount}</div>
-          <div className="mt-1 text-xs text-muted-foreground">Delivered</div>
-        </div>
-        <div className="rounded-2xl border border-border bg-card p-4 text-center">
-          <div className="font-display text-2xl font-bold">{activeCount}</div>
-          <div className="mt-1 text-xs text-muted-foreground">Active</div>
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        {/* This month — clickable, with detailed breakdown inside */}
-        <div className="overflow-hidden rounded-2xl border border-primary/40 bg-card">
-          <button
-            onClick={() => setOpen(v => !v)}
-            aria-expanded={open}
-            className="flex w-full items-center gap-3 p-4 text-left hover:bg-secondary/60"
-          >
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2 font-display font-bold">
-                {labelFor(currentKey)}
-                <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase text-primary">This month</span>
+        {open && (
+          <div className="space-y-3 border-t border-border p-4">
+            {/* Delivered / Active quick stats */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-2xl border border-border bg-background p-4 text-center">
+                <div className="font-display text-2xl font-bold">{deliveredCount}</div>
+                <div className="mt-1 text-xs text-muted-foreground">Delivered</div>
               </div>
-              <div className="text-xs text-muted-foreground">{current.length} deliver{current.length === 1 ? "y" : "ies"}</div>
+              <div className="rounded-2xl border border-border bg-background p-4 text-center">
+                <div className="font-display text-2xl font-bold">{activeCount}</div>
+                <div className="mt-1 text-xs text-muted-foreground">Active</div>
+              </div>
             </div>
-            <div className="ml-auto flex items-center gap-2">
-              <span className="font-display text-lg font-bold text-primary">{formatINR(currentTotal)}</span>
-              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
-            </div>
-          </button>
-          {open && (
-            <div className="border-t border-border">
-              {current.length === 0 ? (
-                <div className="p-4 text-center text-sm text-muted-foreground">No deliveries yet this month.</div>
-              ) : (
-                <ul className="divide-y divide-border">
-                  {current.map(o => (
-                    <li key={o.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-                      <div className="min-w-0">
-                        <div className="font-semibold">{o.id}</div>
-                        <div className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("en-IN")}</div>
-                      </div>
-                      <span className="shrink-0 font-semibold text-primary">+{formatINR(EARNING_PER_ORDER)}</span>
-                    </li>
-                  ))}
-                </ul>
+
+            {/* This month — clickable, with detailed breakdown inside */}
+            <div className="overflow-hidden rounded-2xl border border-primary/40 bg-background">
+              <button
+                onClick={() => setMonthOpen(v => !v)}
+                aria-expanded={monthOpen}
+                className="flex w-full items-center gap-3 p-4 text-left hover:bg-secondary/60"
+              >
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 font-display font-bold">
+                    {labelFor(currentKey)}
+                    <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase text-primary">This month</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">{current.length} deliver{current.length === 1 ? "y" : "ies"}</div>
+                </div>
+                <div className="ml-auto flex items-center gap-2">
+                  <span className="font-display text-lg font-bold text-primary">{formatINR(currentTotal)}</span>
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${monthOpen ? "rotate-180" : ""}`} />
+                </div>
+              </button>
+              {monthOpen && (
+                <div className="border-t border-border">
+                  {current.length === 0 ? (
+                    <div className="p-4 text-center text-sm text-muted-foreground">No deliveries yet this month.</div>
+                  ) : (
+                    <ul className="divide-y divide-border">
+                      {current.map(o => (
+                        <li key={o.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+                          <div className="min-w-0">
+                            <div className="font-semibold">{o.id}</div>
+                            <div className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("en-IN")}</div>
+                          </div>
+                          <span className="shrink-0 font-semibold text-primary">+{formatINR(EARNING_PER_ORDER)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               )}
             </div>
-          )}
-        </div>
 
-        {/* Previous months — total only, no history */}
-        {previousKeys.map(key => {
-          const list = monthOrdersFor(key);
-          return (
-            <div key={key} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
-              <div className="min-w-0">
-                <div className="font-display font-bold">{labelFor(key)}</div>
-                <div className="text-xs text-muted-foreground">{list.length} deliver{list.length === 1 ? "y" : "ies"}</div>
-              </div>
-              <span className="ml-auto font-display text-lg font-bold text-primary">{formatINR(list.length * EARNING_PER_ORDER)}</span>
-            </div>
-          );
-        })}
+            {/* Previous months — total only, no history */}
+            {previousKeys.map(key => {
+              const list = monthOrdersFor(key);
+              return (
+                <div key={key} className="flex items-center gap-3 rounded-2xl border border-border bg-background p-4">
+                  <div className="min-w-0">
+                    <div className="font-display font-bold">{labelFor(key)}</div>
+                    <div className="text-xs text-muted-foreground">{list.length} deliver{list.length === 1 ? "y" : "ies"}</div>
+                  </div>
+                  <span className="ml-auto font-display text-lg font-bold text-primary">{formatINR(list.length * EARNING_PER_ORDER)}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );
