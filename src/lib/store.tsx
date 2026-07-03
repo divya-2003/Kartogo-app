@@ -267,8 +267,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (u.phone) setAdminAudit(prev => [{ phone: u.phone, at: Date.now() }, ...prev].slice(0, 100));
       return u;
     },
-    setName: (name) => setUser(u => u ? { ...u, name } : u),
-    updateProfile: (patch) => setUser(u => u ? { ...u, ...patch } : u),
+    setName: (name) => {
+      setUser(u => u ? { ...u, name } : u);
+      if (customerToken) void saveCustomerProfileFn({ data: { token: customerToken, name } }).catch(() => {});
+    },
+    updateProfile: (patch) => {
+      setUser(u => {
+        const next = u ? { ...u, ...patch } : u;
+        // Persist to the backend so these details follow the phone number across devices.
+        if (next && customerToken) {
+          void saveCustomerProfileFn({
+            data: {
+              token: customerToken,
+              name: next.name ?? "",
+              email: next.email ?? "",
+              address: next.address ?? "",
+            },
+          }).catch(() => {});
+        }
+        return next;
+      });
+    },
     logout: () => {
       setUser(null);
       setCustomerToken(null);
