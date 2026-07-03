@@ -16,6 +16,7 @@ import { Route as SupportRouteImport } from './routes/support'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as RefundsRouteImport } from './routes/refunds'
 import { Route as RefundReturnsRouteImport } from './routes/refund-returns'
+import { Route as PrintRouteImport } from './routes/print'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as MenuRouteImport } from './routes/menu'
 import { Route as LoginRouteImport } from './routes/login'
@@ -67,6 +68,11 @@ const RefundsRoute = RefundsRouteImport.update({
 const RefundReturnsRoute = RefundReturnsRouteImport.update({
   id: '/refund-returns',
   path: '/refund-returns',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrintRoute = PrintRouteImport.update({
+  id: '/print',
+  path: '/print',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrdersRoute = OrdersRouteImport.update({
@@ -165,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
   '/orders': typeof OrdersRoute
+  '/print': typeof PrintRoute
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
   '/search': typeof SearchRoute
@@ -190,6 +197,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
   '/orders': typeof OrdersRoute
+  '/print': typeof PrintRoute
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
   '/search': typeof SearchRoute
@@ -217,6 +225,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
   '/orders': typeof OrdersRoute
+  '/print': typeof PrintRoute
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
   '/search': typeof SearchRoute
@@ -245,6 +254,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/menu'
     | '/orders'
+    | '/print'
     | '/refund-returns'
     | '/refunds'
     | '/search'
@@ -270,6 +280,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/menu'
     | '/orders'
+    | '/print'
     | '/refund-returns'
     | '/refunds'
     | '/search'
@@ -296,6 +307,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/menu'
     | '/orders'
+    | '/print'
     | '/refund-returns'
     | '/refunds'
     | '/search'
@@ -323,6 +335,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MenuRoute: typeof MenuRoute
   OrdersRoute: typeof OrdersRoute
+  PrintRoute: typeof PrintRoute
   RefundReturnsRoute: typeof RefundReturnsRoute
   RefundsRoute: typeof RefundsRoute
   SearchRoute: typeof SearchRoute
@@ -383,6 +396,13 @@ declare module '@tanstack/react-router' {
       path: '/refund-returns'
       fullPath: '/refund-returns'
       preLoaderRoute: typeof RefundReturnsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/print': {
+      id: '/print'
+      path: '/print'
+      fullPath: '/print'
+      preLoaderRoute: typeof PrintRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/orders': {
@@ -537,6 +557,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MenuRoute: MenuRoute,
   OrdersRoute: OrdersRoute,
+  PrintRoute: PrintRoute,
   RefundReturnsRoute: RefundReturnsRoute,
   RefundsRoute: RefundsRoute,
   SearchRoute: SearchRoute,
