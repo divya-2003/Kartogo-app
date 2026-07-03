@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Bike, Phone, Package, Truck, CheckCircle2, MapPin, LogOut, RefreshCw, IndianRupee, HandPlatter, User2, Wallet, ListChecks, Navigation } from "lucide-react";
+import { Bike, Phone, Package, Truck, CheckCircle2, MapPin, LogOut, RefreshCw, IndianRupee, HandPlatter, User2, Wallet, ListChecks, Navigation, ChevronDown } from "lucide-react";
 import { listDeliveryOrdersFn, deliverySetStatusFn, listAvailableOrdersFn, claimOrderFn } from "@/lib/delivery.functions";
 import { formatINR } from "@/lib/data";
 
@@ -148,9 +148,7 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
   const active = orders.filter(o => o.status !== "delivered" && o.status !== "cancelled");
   const done = orders.filter(o => o.status === "delivered" || o.status === "cancelled");
   const delivered = orders.filter(o => o.status === "delivered");
-  // Delivery partners earn a flat ₹25 for every order they deliver.
-  const EARNING_PER_ORDER = 25;
-  const earnings = delivered.length * EARNING_PER_ORDER;
+
 
   const visible = tab === "available" ? available : tab === "active" ? active : done;
 
@@ -179,7 +177,6 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
         {view === "account" ? (
           <AccountView
             driver={driver}
-            earnings={earnings}
             deliveredCount={delivered.length}
             activeCount={active.length}
             orders={orders}
@@ -308,10 +305,121 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
   );
 }
 
+// ---------------- Earnings (monthly, clickable) ----------------
+// Delivery partners earn a flat ₹25 for every order they deliver.
+const EARNING_PER_ORDER = 25;
+
+function EarningsSection({ orders, deliveredCount, activeCount }: {
+  orders: OrderRow[];
+  deliveredCount: number;
+  activeCount: number;
+}) {
+  const now = new Date();
+  const currentKey = now.getFullYear() * 12 + now.getMonth();
+  const [open, setOpen] = useState(true);
+
+  // Group delivered orders into calendar months.
+  const groups = new Map<number, OrderRow[]>();
+  for (const o of orders.filter(o => o.status === "delivered")) {
+    const d = new Date(o.created_at);
+    const key = d.getFullYear() * 12 + d.getMonth();
+    const arr = groups.get(key) ?? [];
+    arr.push(o);
+    groups.set(key, arr);
+  }
+  const keys = [...groups.keys()].sort((a, b) => b - a);
+  if (!keys.includes(currentKey)) keys.unshift(currentKey);
+
+  const labelFor = (key: number) =>
+    new Date(Math.floor(key / 12), key % 12, 1).toLocaleString("en-IN", { month: "long", year: "numeric" });
+  const monthOrdersFor = (key: number) =>
+    (groups.get(key) ?? []).slice().sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+  const current = monthOrdersFor(currentKey);
+  const currentTotal = current.length * EARNING_PER_ORDER;
+  const previousKeys = keys.filter(k => k !== currentKey);
+
+  return (
+    <section>
+      <h2 className="mb-2 flex items-center gap-2 font-display text-lg font-bold">
+        <Wallet className="h-5 w-5 text-primary" /> My earnings
+      </h2>
+
+      {/* Delivered / Active quick stats */}
+      <div className="mb-3 grid grid-cols-2 gap-3">
+        <div className="rounded-2xl border border-border bg-card p-4 text-center">
+          <div className="font-display text-2xl font-bold">{deliveredCount}</div>
+          <div className="mt-1 text-xs text-muted-foreground">Delivered</div>
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-4 text-center">
+          <div className="font-display text-2xl font-bold">{activeCount}</div>
+          <div className="mt-1 text-xs text-muted-foreground">Active</div>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {/* This month — clickable, with detailed breakdown inside */}
+        <div className="overflow-hidden rounded-2xl border border-primary/40 bg-card">
+          <button
+            onClick={() => setOpen(v => !v)}
+            aria-expanded={open}
+            className="flex w-full items-center gap-3 p-4 text-left hover:bg-secondary/60"
+          >
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2 font-display font-bold">
+                {labelFor(currentKey)}
+                <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase text-primary">This month</span>
+              </div>
+              <div className="text-xs text-muted-foreground">{current.length} deliver{current.length === 1 ? "y" : "ies"}</div>
+            </div>
+            <div className="ml-auto flex items-center gap-2">
+              <span className="font-display text-lg font-bold text-primary">{formatINR(currentTotal)}</span>
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+            </div>
+          </button>
+          {open && (
+            <div className="border-t border-border">
+              {current.length === 0 ? (
+                <div className="p-4 text-center text-sm text-muted-foreground">No deliveries yet this month.</div>
+              ) : (
+                <ul className="divide-y divide-border">
+                  {current.map(o => (
+                    <li key={o.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+                      <div className="min-w-0">
+                        <div className="font-semibold">{o.id}</div>
+                        <div className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("en-IN")}</div>
+                      </div>
+                      <span className="shrink-0 font-semibold text-primary">+{formatINR(EARNING_PER_ORDER)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Previous months — total only, no history */}
+        {previousKeys.map(key => {
+          const list = monthOrdersFor(key);
+          return (
+            <div key={key} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
+              <div className="min-w-0">
+                <div className="font-display font-bold">{labelFor(key)}</div>
+                <div className="text-xs text-muted-foreground">{list.length} deliver{list.length === 1 ? "y" : "ies"}</div>
+              </div>
+              <span className="ml-auto font-display text-lg font-bold text-primary">{formatINR(list.length * EARNING_PER_ORDER)}</span>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 // ---------------- Account view ----------------
-function AccountView({ driver, earnings, deliveredCount, activeCount, orders, onLogout }: {
+
+function AccountView({ driver, deliveredCount, activeCount, orders, onLogout }: {
   driver: Driver;
-  earnings: number;
   deliveredCount: number;
   activeCount: number;
   orders: OrderRow[];
@@ -333,25 +441,8 @@ function AccountView({ driver, earnings, deliveredCount, activeCount, orders, on
   return (
     <div className="space-y-5">
       {/* My earnings */}
-      <section>
-        <h2 className="mb-2 flex items-center gap-2 font-display text-lg font-bold">
-          <Wallet className="h-5 w-5 text-primary" /> My earnings
-        </h2>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-2xl border border-border bg-card p-4 text-center">
-            <div className="font-display text-2xl font-bold text-primary">{formatINR(earnings)}</div>
-            <div className="mt-1 text-xs text-muted-foreground">Total earned</div>
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-4 text-center">
-            <div className="font-display text-2xl font-bold">{deliveredCount}</div>
-            <div className="mt-1 text-xs text-muted-foreground">Delivered</div>
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-4 text-center">
-            <div className="font-display text-2xl font-bold">{activeCount}</div>
-            <div className="mt-1 text-xs text-muted-foreground">Active</div>
-          </div>
-        </div>
-      </section>
+      <EarningsSection orders={orders} deliveredCount={deliveredCount} activeCount={activeCount} />
+
 
       {/* Account details */}
       <section>
