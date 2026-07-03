@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useCatalog, useOrders, useAuth } from "@/lib/store";
 import type { Order } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { IndianRupee, ShoppingBag, AlertTriangle, Truck, ShieldCheck, PackageX } from "lucide-react";
+import { IndianRupee, ShoppingBag, AlertTriangle, Truck, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({ component: Dashboard });
 
@@ -66,11 +66,7 @@ function Dashboard() {
   const { orders } = useOrders();
   const { adminAudit } = useAuth();
   const [openPeriod, setOpenPeriod] = useState<null | "today" | "month" | "year">(null);
-  const [cancelSeen, setCancelSeen] = useState(false);
 
-  useEffect(() => {
-    setCancelSeen(localStorage.getItem("kartigo_cancel_seen") === "true");
-  }, []);
   const today = new Date(); today.setHours(0,0,0,0);
   const monthStart = new Date(); monthStart.setHours(0,0,0,0); monthStart.setDate(1);
   const yearStart = new Date(); yearStart.setHours(0,0,0,0); yearStart.setMonth(0, 1);
@@ -86,8 +82,7 @@ function Dashboard() {
   const yearlyRevenue = yearRevenueOrders.reduce((s, o) => s + o.total, 0);
   const lowStock = products.filter(p => p.stock > 0 && p.stock <= 5);
   const pending = orders.filter(o => o.status !== "delivered" && o.status !== "cancelled");
-  const cancelled = orders.filter(o => o.status === "cancelled");
-  const refundsDue = cancelled.filter(o => o.paymentMethod === "upi" && !o.refunded);
+
 
   const periodLabel = openPeriod === "today" ? "Today" : openPeriod === "month" ? "This month" : "This year";
   const periodOrders = openPeriod === "today" ? todaysRevenue : openPeriod === "month" ? monthRevenueOrders : yearRevenueOrders;
@@ -154,36 +149,6 @@ function Dashboard() {
       </Dialog>
 
 
-
-      {cancelled.length > 0 && (
-        <Link
-          to="/admin/cancellations"
-          onClick={() => {
-            localStorage.setItem("kartigo_cancel_seen", "true");
-            setCancelSeen(true);
-          }}
-          className="block rounded-2xl border border-destructive/40 bg-destructive/10 p-4 transition hover:bg-destructive/15"
-        >
-          <div className="flex flex-wrap items-center gap-3">
-            <PackageX className="h-6 w-6 shrink-0 text-destructive" />
-            <div className="min-w-0">
-              {!cancelSeen ? (
-                <p className="font-display text-3xl font-bold text-destructive">{cancelled.length}</p>
-              ) : (
-                <>
-                  <p className="font-display font-bold text-destructive">Cancelled orders — do not pack</p>
-                  <p className="text-xs text-muted-foreground">
-                    {refundsDue.length > 0
-                      ? `${refundsDue.length} prepaid refund${refundsDue.length > 1 ? "s" : ""} pending · ${formatINR(refundsDue.reduce((s, o) => s + o.total, 0))}`
-                      : "No refunds pending."}
-                  </p>
-                </>
-              )}
-            </div>
-            <span className="ml-auto rounded-lg bg-destructive px-3 py-1.5 text-xs font-bold text-destructive-foreground">Review</span>
-          </div>
-        </Link>
-      )}
 
 
 
