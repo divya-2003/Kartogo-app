@@ -147,8 +147,11 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
 
   const active = orders.filter(o => o.status !== "delivered" && o.status !== "cancelled");
   const done = orders.filter(o => o.status === "delivered" || o.status === "cancelled");
+  const delivered = orders.filter(o => o.status === "delivered");
+  const earnings = delivered.reduce((sum, o) => sum + Number(o.delivery_fee || 0), 0);
 
   const visible = tab === "available" ? available : tab === "active" ? active : done;
+
 
   return (
     <div className="min-h-screen bg-background pb-10">
