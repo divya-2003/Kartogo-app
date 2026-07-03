@@ -28,12 +28,29 @@ function DeliveryAdmin() {
       const inProgress = orders.filter(
         o => o.deliveryBoyId === d.id && o.status !== "delivered" && o.status !== "cancelled",
       );
+      const deliveredOrders = orders.filter(o => o.deliveryBoyId === d.id && o.status === "delivered");
+      // Group delivered orders by calendar month → flat ₹25 payout each.
+      const byMonth = new Map<string, { label: string; orders: number; amount: number; sort: number }>();
+      for (const o of deliveredOrders) {
+        const dt = new Date(o.createdAt);
+        const key = `${dt.getFullYear()}-${dt.getMonth()}`;
+        const label = dt.toLocaleString("en-IN", { month: "short", year: "numeric" });
+        const existing = byMonth.get(key);
+        if (existing) {
+          existing.orders += 1;
+          existing.amount += EARNING_PER_ORDER;
+        } else {
+          byMonth.set(key, { label, orders: 1, amount: EARNING_PER_ORDER, sort: dt.getFullYear() * 12 + dt.getMonth() });
+        }
+      }
+      const monthlyEarnings = [...byMonth.values()].sort((a, b) => b.sort - a.sort);
+      const totalEarnings = deliveredOrders.length * EARNING_PER_ORDER;
       const availability: Availability = !d.active
         ? "offline"
         : inProgress.length > 0
           ? "on_delivery"
           : "active";
-      return { ...d, inProgress, availability };
+      return { ...d, inProgress, availability, monthlyEarnings, totalEarnings, deliveredCount: deliveredOrders.length };
     });
   }, [orders, drivers]);
 
