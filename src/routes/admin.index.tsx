@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useCatalog, useOrders, useAuth } from "@/lib/store";
 import type { Order } from "@/lib/store";
 import { formatINR } from "@/lib/data";
