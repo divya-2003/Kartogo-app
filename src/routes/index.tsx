@@ -1,5 +1,5 @@
-import { createFileRoute, Link, useNavigate, redirect, isRedirect } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Zap, Search, Wallet, User2, Home, LayoutGrid, ShoppingBag, TrendingUp, Ticket, CheckCircle2, Printer } from "lucide-react";
 import { deliveryWindow } from "@/lib/serviceability";
 import { LocationPicker } from "@/components/LocationPicker";
@@ -9,22 +9,6 @@ import { useCatalog, useAuth, useLocation, useCart, useWallet } from "@/lib/stor
 import promoBanner from "@/assets/promo-banner.jpg";
 
 export const Route = createFileRoute("/")({
-  beforeLoad: () => {
-    // Delivery partners and admins who reopen the app land on this default URL.
-    // Route them back to their own portal instead of the customer home page so a
-    // saved session on mobile always reopens the right screen.
-    if (typeof window === "undefined") return;
-    try {
-      const deliveryToken = localStorage.getItem("qk_delivery_token");
-      const deliveryDriver = localStorage.getItem("qk_delivery_driver");
-      if (deliveryToken && deliveryDriver) throw redirect({ to: "/delivery" });
-      const adminToken = JSON.parse(localStorage.getItem("qk_admin_token") || "null");
-      if (adminToken) throw redirect({ to: "/admin" });
-    } catch (e) {
-      // Re-throw router redirects; ignore any localStorage/parse failures.
-      if (isRedirect(e)) throw e;
-    }
-  },
   component: Index,
   head: () => ({
     meta: [
@@ -33,6 +17,17 @@ export const Route = createFileRoute("/")({
     ],
   }),
 });
+
+/** Detects a saved admin/delivery session and returns where to send the user. */
+function roleRedirectTarget(): "/delivery" | "/admin" | null {
+  if (typeof window === "undefined") return null;
+  try {
+    if (localStorage.getItem("qk_delivery_token") && localStorage.getItem("qk_delivery_driver")) return "/delivery";
+    if (JSON.parse(localStorage.getItem("qk_admin_token") || "null")) return "/admin";
+  } catch { /* noop */ }
+  return null;
+}
+
 
 
 const STORE_TABS = [
