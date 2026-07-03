@@ -781,10 +781,14 @@ type LocationCtx = {
 const LocationContext = createContext<LocationCtx | null>(null);
 
 export function LocationProvider({ children }: { children: ReactNode }) {
+  const { customerToken } = useAuth();
   const [location, setLoc] = useState<SavedLocation | null>(null);
   const [savedAddresses, setSaved] = useState<SavedLocation[]>([]);
   const [deliveryAddresses, setDelivery] = useState<DeliveryAddress[]>([]);
   const [ready, setReady] = useState(false);
+  // Becomes true once we've reconciled with the server for the current session,
+  // so we don't push an empty local list up before the server copy has loaded.
+  const syncedRef = useRef(false);
 
   useEffect(() => {
     setLoc(read<SavedLocation | null>("qk_location", null));
@@ -792,6 +796,59 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     setDelivery(read<DeliveryAddress[]>("qk_delivery_addresses", []));
     setReady(true);
   }, []);
+
+  // On login, pull the server-stored addresses and merge them with anything saved
+  // locally so the SAME phone number sees its addresses on every device. The
+  // merged result is written back so both sides stay in sync.
+  useEffect(() => {
+    if (!customerToken) { syncedRef.current = false; return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await getCustomerProfileFn({ data: { token: customerToken } });
+        if (cancelled) return;
+        const serverSaved = (res.profile?.savedAddresses ?? []) as unknown as SavedLocation[];
+        const serverDelivery = (res.profile?.deliveryAddresses ?? []) as unknown as DeliveryAddress[];
+
+        const localSaved = read<SavedLocation[]>("qk_addresses", []);
+        const localDelivery = read<DeliveryAddress[]>("qk_delivery_addresses", []);
+
+        // Union saved locations by their display query (server wins on ties so
+        // cross-device edits are respected), capped at 8.
+        const mergedSaved: SavedLocation[] = [...serverSaved];
+        for (const a of localSaved) {
+          if (!mergedSaved.some(s => s.query.toLowerCase() === a.query.toLowerCase())) mergedSaved.push(a);
+        }
+        const nextSaved = mergedSaved.slice(0, 8);
+
+        // Union delivery addresses by id, capped at 12.
+        const mergedDelivery: DeliveryAddress[] = [...serverDelivery];
+        for (const a of localDelivery) {
+          if (!mergedDelivery.some(d => d.id === a.id)) mergedDelivery.push(a);
+        }
+        const nextDelivery = mergedDelivery.slice(0, 12);
+
+        setSaved(nextSaved);
+        setDelivery(nextDelivery);
+        write("qk_addresses", nextSaved);
+        write("qk_delivery_addresses", nextDelivery);
+        syncedRef.current = true;
+        // Push the merged set back up so the server has the union too.
+        void saveCustomerAddressesFn({
+          data: { token: customerToken, savedAddresses: nextSaved as unknown as [], deliveryAddresses: nextDelivery as unknown as [] },
+        }).catch(() => {});
+      } catch { /* offline — keep local copy */ }
+    })();
+    return () => { cancelled = true; };
+  }, [customerToken]);
+
+  // Persist any later address changes to the server (once the initial sync is done).
+  useEffect(() => {
+    if (!customerToken || !syncedRef.current) return;
+    void saveCustomerAddressesFn({
+      data: { token: customerToken, savedAddresses: savedAddresses as unknown as [], deliveryAddresses: deliveryAddresses as unknown as [] },
+    }).catch(() => {});
+  }, [customerToken, savedAddresses, deliveryAddresses]);
 
   const value: LocationCtx = {
     location,
