@@ -216,7 +216,15 @@ function OrdersAdmin() {
                   }
                 }} className="rounded-lg border border-input bg-background px-2 py-1 text-sm">
                   <option value="">— Assign rider —</option>
-                  {availableDrivers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                  {(() => {
+                    const list = availableDrivers.slice();
+                    const assigned = o.deliveryBoyId ? drivers.find(d => d.id === o.deliveryBoyId) : null;
+                    // Keep a currently-assigned rider visible even if now unavailable.
+                    if (assigned && !list.some(d => d.id === assigned.id)) list.push(assigned);
+                    return list.map(d => (
+                      <option key={d.id} value={d.id}>{d.name}{d.active ? "" : " (unavailable)"}</option>
+                    ));
+                  })()}
                 </select>
               </div>
             </article>
