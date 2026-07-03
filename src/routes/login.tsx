@@ -48,7 +48,17 @@ function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { isAdminPhone } = await verifyOtp(phone, otp);
+      const { isAdminPhone, delivery } = await verifyOtp(phone, otp);
+      // Delivery partners are routed straight to their portal.
+      if (delivery) {
+        try {
+          localStorage.setItem("qk_delivery_token", delivery.token);
+          localStorage.setItem("qk_delivery_driver", JSON.stringify(delivery.driver));
+        } catch { /* noop */ }
+        toast.success(`Welcome, ${delivery.driver.name}!`);
+        nav({ to: "/delivery" });
+        return;
+      }
       if (isAdminPhone) {
         // Admin numbers must also clear the secret passcode before any admin
         // token is issued — OTP alone never grants admin access.
