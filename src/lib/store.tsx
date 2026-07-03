@@ -299,6 +299,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.removeItem("qk_admin_token");
           localStorage.removeItem("qk_cart");
           localStorage.removeItem("qk_wishlist");
+          // Clear the local address cache so the next person to log in on this
+          // device starts from their own server-synced addresses, not these.
+          localStorage.removeItem("qk_addresses");
+          localStorage.removeItem("qk_delivery_addresses");
         } catch { /* noop */ }
       }
     },
