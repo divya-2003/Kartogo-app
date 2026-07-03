@@ -137,6 +137,28 @@ function DeliveryAdmin() {
                 </div>
               )}
             </div>
+
+            {/* Monthly earnings — flat ₹25 per delivered order */}
+            <div className="mt-3 border-t border-border pt-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs uppercase tracking-wider text-muted-foreground">
+                  <Wallet className="h-3.5 w-3.5" /> Earnings (₹25/order)
+                </div>
+                <div className="font-display text-lg font-bold text-primary">{formatINR(d.totalEarnings)}</div>
+              </div>
+              {d.monthlyEarnings.length === 0 ? (
+                <div className="mt-1 text-xs text-muted-foreground">No deliveries yet.</div>
+              ) : (
+                <ul className="mt-2 space-y-1 text-sm">
+                  {d.monthlyEarnings.map(m => (
+                    <li key={m.label} className="flex items-center justify-between">
+                      <span className="text-muted-foreground">{m.label} · {m.orders} order{m.orders === 1 ? "" : "s"}</span>
+                      <span className="font-display font-semibold tabular-nums">{formatINR(m.amount)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         ))}
       </div>
