@@ -306,9 +306,8 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
 }
 
 // ---------------- Account view ----------------
-function AccountView({ driver, earnings, deliveredCount, activeCount, orders, onLogout }: {
+function AccountView({ driver, deliveredCount, activeCount, orders, onLogout }: {
   driver: Driver;
-  earnings: number;
   deliveredCount: number;
   activeCount: number;
   orders: OrderRow[];
@@ -330,25 +329,8 @@ function AccountView({ driver, earnings, deliveredCount, activeCount, orders, on
   return (
     <div className="space-y-5">
       {/* My earnings */}
-      <section>
-        <h2 className="mb-2 flex items-center gap-2 font-display text-lg font-bold">
-          <Wallet className="h-5 w-5 text-primary" /> My earnings
-        </h2>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-2xl border border-border bg-card p-4 text-center">
-            <div className="font-display text-2xl font-bold text-primary">{formatINR(earnings)}</div>
-            <div className="mt-1 text-xs text-muted-foreground">Total earned</div>
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-4 text-center">
-            <div className="font-display text-2xl font-bold">{deliveredCount}</div>
-            <div className="mt-1 text-xs text-muted-foreground">Delivered</div>
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-4 text-center">
-            <div className="font-display text-2xl font-bold">{activeCount}</div>
-            <div className="mt-1 text-xs text-muted-foreground">Active</div>
-          </div>
-        </div>
-      </section>
+      <EarningsSection orders={orders} deliveredCount={deliveredCount} activeCount={activeCount} />
+
 
       {/* Account details */}
       <section>
