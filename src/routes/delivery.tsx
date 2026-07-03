@@ -85,9 +85,11 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
   token: string; driver: Driver; onLogout: () => void; onExpired: () => void;
 }) {
   const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [available, setAvailable] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [tab, setTab] = useState<"active" | "done">("active");
+  const [tab, setTab] = useState<"available" | "active" | "done">("available");
+
 
   const load = useCallback(async () => {
     setLoading(true);
