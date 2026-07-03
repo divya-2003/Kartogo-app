@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { Zap, Search, Wallet, User2, Home, LayoutGrid, ShoppingBag, TrendingUp, Ticket, CheckCircle2, Printer } from "lucide-react";
 import { deliveryWindow } from "@/lib/serviceability";
@@ -9,6 +9,23 @@ import { useCatalog, useAuth, useLocation, useCart, useWallet } from "@/lib/stor
 import promoBanner from "@/assets/promo-banner.jpg";
 
 export const Route = createFileRoute("/")({
+  beforeLoad: () => {
+    // Delivery partners and admins who reopen the app land on this default URL.
+    // Route them back to their own portal instead of the customer home page so a
+    // saved session on mobile always reopens the right screen.
+    if (typeof window === "undefined") return;
+    try {
+      const deliveryToken = localStorage.getItem("qk_delivery_token");
+      const deliveryDriver = localStorage.getItem("qk_delivery_driver");
+      if (deliveryToken && deliveryDriver) throw redirect({ to: "/delivery" });
+      const adminToken = JSON.parse(localStorage.getItem("qk_admin_token") || "null");
+      if (adminToken) throw redirect({ to: "/admin" });
+    } catch (e) {
+      // Re-throw router redirects; ignore any localStorage/parse failures.
+      if (e && typeof e === "object" && "isRedirect" in e) throw e;
+      if (e instanceof Error && e.message === "") throw e;
+    }
+  },
   component: Index,
   head: () => ({
     meta: [
@@ -17,6 +34,7 @@ export const Route = createFileRoute("/")({
     ],
   }),
 });
+
 
 const STORE_TABS = [
   { label: "Kartogo", tag: null, slug: null },
