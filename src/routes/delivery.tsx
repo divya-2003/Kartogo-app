@@ -277,7 +277,10 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
             })}
           </div>
         )}
+        </>
+        )}
       </div>
+
     </div>
   );
 }
