@@ -44,28 +44,25 @@ const NEXT: Partial<Record<string, { next: DeliveryStatus; label: string; icon: 
 };
 
 function DeliveryPortal() {
+  const nav = useNavigate();
   const [token, setToken] = useState<string | null>(null);
   const [driver, setDriver] = useState<Driver | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    let t: string | null = null;
+    let d: Driver | null = null;
     try {
-      const t = localStorage.getItem(TOKEN_KEY);
-      const d = localStorage.getItem(DRIVER_KEY);
-      if (t) setToken(t);
-      if (d) setDriver(JSON.parse(d) as Driver);
+      t = localStorage.getItem(TOKEN_KEY);
+      const raw = localStorage.getItem(DRIVER_KEY);
+      if (raw) d = JSON.parse(raw) as Driver;
     } catch { /* noop */ }
+    if (t) setToken(t);
+    if (d) setDriver(d);
     setReady(true);
-  }, []);
-
-  const onLogin = (t: string, d: Driver) => {
-    setToken(t);
-    setDriver(d);
-    try {
-      localStorage.setItem(TOKEN_KEY, t);
-      localStorage.setItem(DRIVER_KEY, JSON.stringify(d));
-    } catch { /* noop */ }
-  };
+    // No delivery session → send them to the unified login.
+    if (!t || !d) nav({ to: "/login" });
+  }, [nav]);
 
   const onLogout = () => {
     setToken(null);
@@ -74,125 +71,12 @@ function DeliveryPortal() {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(DRIVER_KEY);
     } catch { /* noop */ }
+    nav({ to: "/login" });
   };
 
   if (!ready) return null;
-  if (!token || !driver) return <LoginScreen onLogin={onLogin} />;
+  if (!token || !driver) return null;
   return <Dashboard token={token} driver={driver} onLogout={onLogout} onExpired={onLogout} />;
-}
-
-// ---------------- Login ----------------
-function LoginScreen({ onLogin }: { onLogin: (token: string, driver: Driver) => void }) {
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [stage, setStage] = useState<"phone" | "otp">("phone");
-  const [loading, setLoading] = useState(false);
-  const [demoCode, setDemoCode] = useState<string | null>(null);
-
-  const send = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!/^\d{10}$/.test(phone)) { toast.error("Enter a valid 10-digit mobile"); return; }
-    setLoading(true);
-    try {
-      const res = await requestOtpFn({ data: { phone } });
-      setStage("otp");
-      if (res.demo && "demoCode" in res && res.demoCode) {
-        setDemoCode(res.demoCode);
-        setOtp(res.demoCode);
-        toast.success(`Demo mode: use OTP ${res.demoCode}`);
-      } else {
-        setDemoCode(null);
-        toast.success(`OTP sent to +91 ${phone}`);
-      }
-    } catch (err) {
-      toast.error((err as Error).message);
-    } finally { setLoading(false); }
-  };
-
-  const verify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await deliveryLoginFn({ data: { phone, code: otp } });
-      toast.success(`Welcome, ${res.driver.name}!`);
-      onLogin(res.token, res.driver);
-    } catch (err) {
-      toast.error((err as Error).message);
-    } finally { setLoading(false); }
-  };
-
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
-      <div className="mb-8 flex flex-col items-center gap-3">
-        <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-2xl bg-[#15205a] shadow-pop">
-          <img src={kartigoLogo.url} alt="Kartogo" className="h-full w-full object-cover" />
-        </div>
-        <div className="text-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-            <Bike className="h-3.5 w-3.5" /> Delivery Partner
-          </div>
-          <h1 className="mt-2 font-display text-3xl font-bold tracking-tight">Kartogo Partner</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Deliver orders assigned to you</p>
-        </div>
-      </div>
-
-      <div className="w-full max-w-md">
-        <div className="rounded-3xl border border-border bg-card p-6 shadow-pop md:p-8">
-          <h2 className="font-display text-xl font-bold">Partner login</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Use your registered delivery number.</p>
-
-          {stage === "phone" && (
-            <form onSubmit={send} className="mt-6 space-y-4">
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Mobile number</label>
-                <div className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-2 focus-within:ring-2 focus-within:ring-ring">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">+91</span>
-                  <input
-                    autoFocus inputMode="numeric" maxLength={10}
-                    value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, ""))}
-                    placeholder="10-digit mobile" className="w-full bg-transparent text-base outline-none"
-                  />
-                </div>
-              </div>
-              <button disabled={loading} className="w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
-                {loading ? "Sending..." : "Send OTP"}
-              </button>
-            </form>
-          )}
-
-          {stage === "otp" && (
-            <form onSubmit={verify} className="mt-6 space-y-4">
-              {demoCode && (
-                <div className="rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
-                  <span className="font-semibold">Demo mode:</span> use OTP {demoCode}
-                </div>
-              )}
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Enter OTP</label>
-                <input
-                  autoFocus inputMode="numeric" maxLength={6}
-                  value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, ""))}
-                  placeholder="6-digit code"
-                  className="w-full rounded-xl border border-input bg-background px-3 py-2 text-base outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-              <button disabled={loading} className="w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
-                {loading ? "Verifying..." : "Verify & Continue"}
-              </button>
-              <button type="button" onClick={() => setStage("phone")} className="w-full text-center text-xs font-semibold text-muted-foreground hover:text-foreground">
-                ← Change number
-              </button>
-            </form>
-          )}
-
-          <p className="mt-4 text-center text-xs text-muted-foreground">
-            Demo partners: 9876500001 · 9876500002
-          </p>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 // ---------------- Dashboard ----------------
