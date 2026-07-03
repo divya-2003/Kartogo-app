@@ -137,6 +137,67 @@ function MenuPage() {
         <h2 className="mb-3 mt-8 font-display text-xl font-bold">Your Information</h2>
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-pop">
           <Row to="/wallet" icon={<Wallet className="h-5 w-5" />} label="Kartogo Cash" sub={formatINR(balance)} />
+
+          {/* Saved Addresses (expandable) */}
+          <div className="border-b border-border">
+            <button
+              onClick={() => setShowAddr(v => !v)}
+              aria-expanded={showAddr}
+              className="flex w-full items-center gap-3 px-4 py-4 text-left hover:bg-secondary"
+            >
+              <div className="text-muted-foreground"><MapPin className="h-5 w-5" /></div>
+              <div className="flex-1">
+                <div className="font-semibold">Saved Addresses</div>
+                <div className="text-xs text-muted-foreground">{savedAddresses.length} saved</div>
+              </div>
+              <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${showAddr ? "rotate-180" : ""}`} />
+            </button>
+            {showAddr && (
+              <div className="space-y-2 px-4 pb-4">
+                {savedAddresses.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-border bg-background p-4 text-sm text-muted-foreground">
+                    No saved addresses yet. Locations you confirm while setting your delivery area will appear here.
+                  </p>
+                ) : (
+                  savedAddresses.map((addr) => {
+                    const active = location?.query.toLowerCase() === addr.query.toLowerCase();
+                    return (
+                      <div
+                        key={addr.query}
+                        className={`flex items-center gap-3 rounded-xl border p-3 ${active ? "border-primary bg-primary/5" : "border-border bg-background"}`}
+                      >
+                        <button
+                          onClick={() => {
+                            setLocation(addr);
+                            toast.success(`Delivering to ${addr.area}`);
+                          }}
+                          className="flex min-w-0 flex-1 items-start gap-3 text-left"
+                        >
+                          <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate font-semibold">{addr.area}</span>
+                            <span className="block truncate text-xs text-muted-foreground">{addr.query}</span>
+                          </span>
+                        </button>
+                        {active ? (
+                          <Check className="h-5 w-5 shrink-0 text-primary" />
+                        ) : (
+                          <button
+                            onClick={() => removeSavedAddress(addr.query)}
+                            aria-label="Remove address"
+                            className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-destructive"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
+          </div>
+
           <Row to="/refunds" icon={<IndianRupee className="h-5 w-5" />} label="Your Refunds" />
           <Row to="/wishlist" icon={<Heart className="h-5 w-5" />} label="Your Wishlist" />
           <Row onClick={() => soon("E-Gift Cards")} icon={<CreditCard className="h-5 w-5" />} label="E-Gift Cards" />
@@ -145,50 +206,6 @@ function MenuPage() {
           <Row onClick={() => soon("Rewards")} icon={<Gift className="h-5 w-5" />} label="Rewards" last />
         </div>
 
-        {/* Saved Addresses */}
-        <h2 className="mb-3 mt-8 font-display text-xl font-bold">Saved Addresses</h2>
-        {savedAddresses.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-border bg-card p-5 text-sm text-muted-foreground shadow-pop">
-            No saved addresses yet. Locations you confirm while setting your delivery area will appear here.
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {savedAddresses.map((addr) => {
-              const active = location?.query.toLowerCase() === addr.query.toLowerCase();
-              return (
-                <div
-                  key={addr.query}
-                  className={`flex items-center gap-3 rounded-2xl border p-4 shadow-pop ${active ? "border-primary bg-primary/5" : "border-border bg-card"}`}
-                >
-                  <button
-                    onClick={() => {
-                      setLocation(addr);
-                      toast.success(`Delivering to ${addr.area}`);
-                    }}
-                    className="flex flex-1 items-start gap-3 text-left"
-                  >
-                    <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                    <span className="min-w-0">
-                      <span className="block truncate font-semibold">{addr.area}</span>
-                      <span className="block truncate text-xs text-muted-foreground">{addr.query}</span>
-                    </span>
-                  </button>
-                  {active ? (
-                    <Check className="h-5 w-5 shrink-0 text-primary" />
-                  ) : (
-                    <button
-                      onClick={() => removeSavedAddress(addr.query)}
-                      aria-label="Remove address"
-                      className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-destructive"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
 
         {/* Logout */}
         <button
