@@ -825,3 +825,48 @@ export const useLocation = () => {
 
 export { DELIVERY_BOYS };
 
+// ---------------- Drivers (availability toggles) ----------------
+// Admin-managed availability for delivery partners. The roster is static
+// (src/lib/data.ts); availability overrides persist in localStorage and sync
+// across tabs so the Orders "Assign" dropdown only offers available riders.
+export type Driver = { id: string; name: string; phone: string; active: boolean };
+
+type DriversCtx = {
+  drivers: Driver[];
+  available: Driver[];
+  setAvailable: (id: string, active: boolean) => void;
+};
+const DriversContext = createContext<DriversCtx | null>(null);
+const DRIVERS_KEY = "qk_driver_availability";
+
+export function DriversProvider({ children }: { children: ReactNode }) {
+  const [overrides, setOverrides] = useState<Record<string, boolean>>({});
+  useEffect(() => { setOverrides(read<Record<string, boolean>>(DRIVERS_KEY, {})); }, []);
+  useEffect(() => { write(DRIVERS_KEY, overrides); }, [overrides]);
+
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === DRIVERS_KEY) setOverrides(read<Record<string, boolean>>(DRIVERS_KEY, {}));
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  const value = useMemo<DriversCtx>(() => {
+    const drivers: Driver[] = DELIVERY_BOYS.map(d => ({ ...d, active: overrides[d.id] ?? d.active }));
+    return {
+      drivers,
+      available: drivers.filter(d => d.active),
+      setAvailable: (id, active) => setOverrides(prev => ({ ...prev, [id]: active })),
+    };
+  }, [overrides]);
+
+  return <DriversContext.Provider value={value}>{children}</DriversContext.Provider>;
+}
+export const useDrivers = () => {
+  const c = useContext(DriversContext);
+  if (!c) throw new Error("DriversProvider missing");
+  return c;
+};
+
+
