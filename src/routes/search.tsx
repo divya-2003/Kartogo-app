@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ChevronLeft, Home, LayoutGrid, TrendingUp, Printer, Search, Flame, X } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
-import { useCatalog, useCart } from "@/lib/store";
+import { useCatalog } from "@/lib/store";
 import { z } from "zod";
 
 const SearchSchema = z.object({ q: z.string().optional().default("") });
