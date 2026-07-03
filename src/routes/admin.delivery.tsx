@@ -9,6 +9,9 @@ export const Route = createFileRoute("/admin/delivery")({ component: DeliveryAdm
 
 type Availability = "active" | "on_delivery" | "offline";
 
+// Flat payout a delivery partner earns for every order they deliver.
+const EARNING_PER_ORDER = 25;
+
 const META: Record<Availability, { label: string; dot: string; chip: string }> = {
   active: { label: "Available", dot: "text-leaf", chip: "bg-leaf/15 text-leaf" },
   on_delivery: { label: "On Delivery", dot: "text-saffron", chip: "bg-saffron/20 text-saffron-foreground" },
