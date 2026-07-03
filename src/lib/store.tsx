@@ -213,6 +213,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => { write("qk_admin_token", adminToken); }, [adminToken]);
   useEffect(() => { write("qk_admin_audit", adminAudit); }, [adminAudit]);
 
+  // Pull the server-stored profile (name / email / address) whenever a customer
+  // session is present — this is what makes the details a user entered on one
+  // device show up when the SAME phone number logs in on another device.
+  useEffect(() => {
+    if (!customerToken) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await getCustomerProfileFn({ data: { token: customerToken } });
+        const p = res.profile;
+        if (!p || cancelled) return;
+        setUser(u => {
+          if (!u) return u;
+          return {
+            ...u,
+            // Prefer anything the user just typed locally; otherwise fill from server.
+            name: u.name || p.name || undefined,
+            email: u.email || p.email || undefined,
+            address: u.address || p.address || undefined,
+          };
+        });
+      } catch { /* offline / not logged in — keep local values */ }
+    })();
+    return () => { cancelled = true; };
+  }, [customerToken]);
+
   const value: AuthCtx = {
     user,
     ready,
