@@ -315,7 +315,19 @@ function AccountView({ driver, earnings, deliveredCount, activeCount, orders, on
   orders: OrderRow[];
   onLogout: () => void;
 }) {
-  const withLocations = orders.filter(o => o.status !== "cancelled");
+  // Only keep addresses from today — at the end of the day (past midnight) these
+  // drop off automatically, so old delivery locations don't linger on this page.
+  const isToday = (iso: string) => {
+    const d = new Date(iso);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear()
+      && d.getMonth() === now.getMonth()
+      && d.getDate() === now.getDate();
+  };
+  const withLocations = orders
+    .filter(o => o.status !== "cancelled" && isToday(o.created_at))
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 3);
   return (
     <div className="space-y-5">
       {/* My earnings */}
