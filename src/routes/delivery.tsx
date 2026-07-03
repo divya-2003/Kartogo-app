@@ -166,11 +166,12 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
           <button onClick={() => void load()} className="ml-auto grid h-9 w-9 place-items-center rounded-lg border border-border hover:bg-secondary" aria-label="Refresh">
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           </button>
-          <button onClick={onLogout} className="grid h-9 w-9 place-items-center rounded-lg border border-border hover:bg-secondary" aria-label="Log out">
-            <LogOut className="h-4 w-4" />
+          <button onClick={() => setView(v => v === "account" ? "orders" : "account")} className={`grid h-9 w-9 place-items-center rounded-lg border border-border hover:bg-secondary ${view === "account" ? "bg-primary text-primary-foreground" : ""}`} aria-label="Account">
+            <User2 className="h-4 w-4" />
           </button>
         </div>
       </header>
+
 
       <div className="mx-auto max-w-2xl px-4 py-4">
         {/* Tabs */}
