@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Bike, Phone, Package, Truck, CheckCircle2, MapPin, LogOut, RefreshCw, IndianRupee, HandPlatter } from "lucide-react";
+import { Bike, Phone, Package, Truck, CheckCircle2, MapPin, LogOut, RefreshCw, IndianRupee, HandPlatter, User2, Wallet, ListChecks, Navigation } from "lucide-react";
 import { listDeliveryOrdersFn, deliverySetStatusFn, listAvailableOrdersFn, claimOrderFn } from "@/lib/delivery.functions";
 import { formatINR } from "@/lib/data";
 
@@ -21,6 +21,8 @@ type OrderRow = {
   customer_phone: string;
   address: string;
   items: { productId: string; name: string; qty: number; price: number }[];
+  subtotal: number;
+  delivery_fee: number;
   total: number;
   payment_method: string;
   status: string;
@@ -89,6 +91,8 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [tab, setTab] = useState<"available" | "active" | "done">("available");
+  const [view, setView] = useState<"orders" | "account">("orders");
+
 
 
   const load = useCallback(async () => {
@@ -143,8 +147,11 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
 
   const active = orders.filter(o => o.status !== "delivered" && o.status !== "cancelled");
   const done = orders.filter(o => o.status === "delivered" || o.status === "cancelled");
+  const delivered = orders.filter(o => o.status === "delivered");
+  const earnings = delivered.reduce((sum, o) => sum + Number(o.delivery_fee || 0), 0);
 
   const visible = tab === "available" ? available : tab === "active" ? active : done;
+
 
   return (
     <div className="min-h-screen bg-background pb-10">
@@ -159,13 +166,25 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
           <button onClick={() => void load()} className="ml-auto grid h-9 w-9 place-items-center rounded-lg border border-border hover:bg-secondary" aria-label="Refresh">
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           </button>
-          <button onClick={onLogout} className="grid h-9 w-9 place-items-center rounded-lg border border-border hover:bg-secondary" aria-label="Log out">
-            <LogOut className="h-4 w-4" />
+          <button onClick={() => setView(v => v === "account" ? "orders" : "account")} className={`grid h-9 w-9 place-items-center rounded-lg border border-border hover:bg-secondary ${view === "account" ? "bg-primary text-primary-foreground" : ""}`} aria-label="Account">
+            <User2 className="h-4 w-4" />
           </button>
         </div>
       </header>
 
+
       <div className="mx-auto max-w-2xl px-4 py-4">
+        {view === "account" ? (
+          <AccountView
+            driver={driver}
+            earnings={earnings}
+            deliveredCount={delivered.length}
+            activeCount={active.length}
+            orders={orders}
+            onLogout={onLogout}
+          />
+        ) : (
+        <>
         {/* Tabs */}
         <div className="mb-4 flex gap-2">
           <button onClick={() => setTab("available")} className={`rounded-full px-4 py-1.5 text-sm font-semibold ${tab === "available" ? "bg-primary text-primary-foreground" : "border border-border bg-card"}`}>
@@ -258,7 +277,133 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
             })}
           </div>
         )}
+        </>
+        )}
       </div>
+
+    </div>
+  );
+}
+
+// ---------------- Account view ----------------
+function AccountView({ driver, earnings, deliveredCount, activeCount, orders, onLogout }: {
+  driver: Driver;
+  earnings: number;
+  deliveredCount: number;
+  activeCount: number;
+  orders: OrderRow[];
+  onLogout: () => void;
+}) {
+  const withLocations = orders.filter(o => o.status !== "cancelled");
+  return (
+    <div className="space-y-5">
+      {/* My earnings */}
+      <section>
+        <h2 className="mb-2 flex items-center gap-2 font-display text-lg font-bold">
+          <Wallet className="h-5 w-5 text-primary" /> My earnings
+        </h2>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="rounded-2xl border border-border bg-card p-4 text-center">
+            <div className="font-display text-2xl font-bold text-primary">{formatINR(earnings)}</div>
+            <div className="mt-1 text-xs text-muted-foreground">Total earned</div>
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-4 text-center">
+            <div className="font-display text-2xl font-bold">{deliveredCount}</div>
+            <div className="mt-1 text-xs text-muted-foreground">Delivered</div>
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-4 text-center">
+            <div className="font-display text-2xl font-bold">{activeCount}</div>
+            <div className="mt-1 text-xs text-muted-foreground">Active</div>
+          </div>
+        </div>
+      </section>
+
+      {/* Account details */}
+      <section>
+        <h2 className="mb-2 flex items-center gap-2 font-display text-lg font-bold">
+          <User2 className="h-5 w-5 text-primary" /> Account details
+        </h2>
+        <div className="divide-y divide-border rounded-2xl border border-border bg-card">
+          <div className="flex items-center gap-3 p-4">
+            <User2 className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <div className="text-xs text-muted-foreground">Name</div>
+              <div className="font-semibold">{driver.name}</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-4">
+            <Phone className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <div className="text-xs text-muted-foreground">Phone</div>
+              <div className="font-semibold">+91 {driver.phone}</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-4">
+            <Bike className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <div className="text-xs text-muted-foreground">Partner ID</div>
+              <div className="font-semibold">{driver.id}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Delivery locations for every order */}
+      <section>
+        <h2 className="mb-2 flex items-center gap-2 font-display text-lg font-bold">
+          <ListChecks className="h-5 w-5 text-primary" /> Delivery locations
+        </h2>
+        {withLocations.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-muted-foreground">
+            No customer orders yet.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {withLocations.map(o => {
+              const meta = STATUS_META[o.status] ?? STATUS_META.placed;
+              return (
+                <article key={o.id} className="rounded-2xl border border-border bg-card p-4">
+                  <header className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="font-display text-sm font-bold">{o.id}</div>
+                      <div className="text-xs text-muted-foreground">{o.customer_name}</div>
+                    </div>
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${meta.chip}`}>{meta.label}</span>
+                  </header>
+                  <div className="mt-3 flex items-start gap-2 text-sm text-muted-foreground">
+                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <span>{o.address}</span>
+                  </div>
+                  <div className="mt-3 flex items-center gap-2">
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o.address)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-secondary"
+                    >
+                      <Navigation className="h-3.5 w-3.5" /> Directions
+                    </a>
+                    <a
+                      href={`tel:${o.customer_phone}`}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-secondary"
+                    >
+                      <Phone className="h-3.5 w-3.5" /> Call
+                    </a>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* Log out */}
+      <button
+        onClick={onLogout}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-bold text-muted-foreground hover:bg-secondary"
+      >
+        <LogOut className="h-4 w-4" /> Log out
+      </button>
     </div>
   );
 }
