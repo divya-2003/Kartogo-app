@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ChevronLeft, Home, LayoutGrid, TrendingUp, Printer } from "lucide-react";
 import { CATEGORIES } from "@/lib/data";
-import { useCatalog, useCart } from "@/lib/store";
+import { useCatalog } from "@/lib/store";
 
 export const Route = createFileRoute("/categories")({
   component: CategoriesPage,
@@ -15,7 +15,6 @@ export const Route = createFileRoute("/categories")({
 
 function CategoriesPage() {
   const { products } = useCatalog();
-  const { count } = useCart();
 
   const countFor = (slug: string) => products.filter(p => p.category === slug).length;
 
