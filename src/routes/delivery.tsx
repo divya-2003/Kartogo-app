@@ -148,9 +148,7 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
   const active = orders.filter(o => o.status !== "delivered" && o.status !== "cancelled");
   const done = orders.filter(o => o.status === "delivered" || o.status === "cancelled");
   const delivered = orders.filter(o => o.status === "delivered");
-  // Delivery partners earn a flat ₹25 for every order they deliver.
-  const EARNING_PER_ORDER = 25;
-  const earnings = delivered.length * EARNING_PER_ORDER;
+
 
   const visible = tab === "available" ? available : tab === "active" ? active : done;
 
