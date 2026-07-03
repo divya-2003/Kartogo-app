@@ -33,6 +33,7 @@ function MenuPage() {
   const nav = useNavigate();
   const [showAdd, setShowAdd] = useState(false);
   const [amount, setAmount] = useState("");
+  const [showAddr, setShowAddr] = useState(false);
 
 
   if (!user) {
