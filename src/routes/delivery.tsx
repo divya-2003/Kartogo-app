@@ -365,7 +365,7 @@ function EarningsSection({ orders, deliveredCount, activeCount }: {
             {/* Delivered / Active quick stats */}
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl border border-border bg-background p-4 text-center">
-                <div className="font-display text-2xl font-bold">{deliveredCount}</div>
+                <div className="font-display text-2xl font-bold">{current.length}</div>
                 <div className="mt-1 text-xs text-muted-foreground">Delivered</div>
               </div>
               <div className="rounded-2xl border border-border bg-background p-4 text-center">
