@@ -91,6 +91,8 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [tab, setTab] = useState<"available" | "active" | "done">("available");
+  const [view, setView] = useState<"orders" | "account">("orders");
+
 
 
   const load = useCallback(async () => {
