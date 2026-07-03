@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Zap, Search, Wallet, User2, Home, LayoutGrid, ShoppingBag, TrendingUp, Ticket, CheckCircle2, Printer } from "lucide-react";
 import { deliveryWindow } from "@/lib/serviceability";
 import { LocationPicker } from "@/components/LocationPicker";
@@ -17,6 +17,18 @@ export const Route = createFileRoute("/")({
     ],
   }),
 });
+
+/** Detects a saved admin/delivery session and returns where to send the user. */
+function roleRedirectTarget(): "/delivery" | "/admin" | null {
+  if (typeof window === "undefined") return null;
+  try {
+    if (localStorage.getItem("qk_delivery_token") && localStorage.getItem("qk_delivery_driver")) return "/delivery";
+    if (JSON.parse(localStorage.getItem("qk_admin_token") || "null")) return "/admin";
+  } catch { /* noop */ }
+  return null;
+}
+
+
 
 const STORE_TABS = [
   { label: "Kartogo", tag: null, slug: null },
@@ -39,8 +51,15 @@ function Index() {
   const { count, subtotal } = useCart();
   const { balance } = useWallet();
   const [q, setQ] = useState("");
+  // Delivery partners / admins who reopen the app land on this default URL — send
+  // them to their own portal instead of the customer home page.
+  const [roleTarget] = useState(roleRedirectTarget);
 
-  if (!ready || !locReady) {
+  useEffect(() => {
+    if (roleTarget) nav({ to: roleTarget, replace: true });
+  }, [roleTarget, nav]);
+
+  if (roleTarget || !ready || !locReady) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-center">
         <div className="font-display text-3xl font-bold tracking-tight text-foreground">Kartogo</div>
@@ -48,6 +67,7 @@ function Index() {
       </div>
     );
   }
+
 
   const bestsellerIds = new Set(products.slice(0, 10).map(p => p.id));
   const local = products.filter(p => ["pickles", "local-snacks", "tiffin-batter", "spice-powders"].includes(p.category)).slice(0, 8);
