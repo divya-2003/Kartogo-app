@@ -1,24 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { DELIVERY_BOYS, useOrders, type Order } from "@/lib/store";
+import { useDrivers, useOrders, type Order } from "@/lib/store";
+import { Switch } from "@/components/ui/switch";
 import { Bike, Phone, CircleDot } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/delivery")({ component: DeliveryAdmin });
 
 type Availability = "active" | "on_delivery" | "offline";
 
 const META: Record<Availability, { label: string; dot: string; chip: string }> = {
-  active: { label: "Active", dot: "text-leaf", chip: "bg-leaf/15 text-leaf" },
+  active: { label: "Available", dot: "text-leaf", chip: "bg-leaf/15 text-leaf" },
   on_delivery: { label: "On Delivery", dot: "text-saffron", chip: "bg-saffron/20 text-saffron-foreground" },
-  offline: { label: "Offline", dot: "text-muted-foreground", chip: "bg-muted text-muted-foreground" },
+  offline: { label: "Unavailable", dot: "text-muted-foreground", chip: "bg-muted text-muted-foreground" },
 };
 
 function DeliveryAdmin() {
   const { orders } = useOrders();
+  const { drivers, setAvailable } = useDrivers();
   const [filter, setFilter] = useState<"all" | Availability>("all");
 
   const riders = useMemo(() => {
-    return DELIVERY_BOYS.map(d => {
+    return drivers.map(d => {
       const inProgress = orders.filter(
         o => o.deliveryBoyId === d.id && o.status !== "delivered" && o.status !== "cancelled",
       );
@@ -29,7 +32,7 @@ function DeliveryAdmin() {
           : "active";
       return { ...d, inProgress, availability };
     });
-  }, [orders]);
+  }, [orders, drivers]);
 
   const counts = useMemo(
     () => ({
@@ -42,11 +45,16 @@ function DeliveryAdmin() {
 
   const visible = filter === "all" ? riders : riders.filter(r => r.availability === filter);
 
+  const onToggle = (id: string, name: string, next: boolean) => {
+    setAvailable(id, next);
+    toast.success(`${name} marked ${next ? "available" : "unavailable"}`);
+  };
+
   return (
     <div className="space-y-5">
       <div>
         <h1 className="font-display text-3xl font-bold">Delivery team</h1>
-        <p className="text-sm text-muted-foreground">Live rider availability — assign at a glance.</p>
+        <p className="text-sm text-muted-foreground">Toggle availability — only available riders can be assigned to orders.</p>
       </div>
 
       {/* Status summary cards */}
@@ -83,6 +91,17 @@ function DeliveryAdmin() {
                 <CircleDot className="h-3 w-3" /> {META[d.availability].label}
               </span>
             </div>
+
+            {/* Availability toggle */}
+            <div className="mt-3 flex items-center justify-between rounded-xl bg-secondary/50 px-3 py-2">
+              <span className="text-sm font-semibold">{d.active ? "Available for orders" : "Not available"}</span>
+              <Switch
+                checked={d.active}
+                onCheckedChange={next => onToggle(d.id, d.name, next)}
+                aria-label={`Toggle availability for ${d.name}`}
+              />
+            </div>
+
             <div className="mt-3 border-t border-border pt-3 text-sm">
               <div className="text-xs uppercase tracking-wider text-muted-foreground">In-progress orders</div>
               <div className="font-display text-2xl font-bold">{d.inProgress.length}</div>
