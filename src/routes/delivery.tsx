@@ -94,8 +94,12 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const rows = await listDeliveryOrdersFn({ data: { token } });
-      setOrders(rows as unknown as OrderRow[]);
+      const [mine, open] = await Promise.all([
+        listDeliveryOrdersFn({ data: { token } }),
+        listAvailableOrdersFn({ data: { token } }),
+      ]);
+      setOrders(mine as unknown as OrderRow[]);
+      setAvailable(open as unknown as OrderRow[]);
     } catch (err) {
       const msg = (err as Error).message;
       if (/session has expired/i.test(msg)) { toast.error(msg); onExpired(); return; }
@@ -104,7 +108,7 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
   }, [token, onExpired]);
 
   useEffect(() => { void load(); }, [load]);
-  // Keep the list fresh so newly-assigned orders show up automatically.
+  // Keep the list fresh so newly-placed and newly-assigned orders show up automatically.
   useEffect(() => {
     const t = setInterval(() => { void load(); }, 20000);
     return () => clearInterval(t);
@@ -121,8 +125,25 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
     } finally { setBusyId(null); }
   };
 
+  // Self-assign a freshly placed order to this driver.
+  const claim = async (o: OrderRow) => {
+    setBusyId(o.id);
+    try {
+      const row = await claimOrderFn({ data: { token, id: o.id } });
+      setAvailable(prev => prev.filter(x => x.id !== o.id));
+      setOrders(prev => [row as unknown as OrderRow, ...prev]);
+      setTab("active");
+      toast.success(`${o.id} is now assigned to you ✓`);
+    } catch (err) {
+      toast.error((err as Error).message);
+      // Someone else may have grabbed it — refresh the list.
+      void load();
+    } finally { setBusyId(null); }
+  };
+
   const active = orders.filter(o => o.status !== "delivered" && o.status !== "cancelled");
   const done = orders.filter(o => o.status === "delivered" || o.status === "cancelled");
+
   const visible = tab === "active" ? active : done;
 
   return (
