@@ -22,8 +22,7 @@ export const Route = createFileRoute("/")({
       if (adminToken) throw redirect({ to: "/admin" });
     } catch (e) {
       // Re-throw router redirects; ignore any localStorage/parse failures.
-      if (e && typeof e === "object" && "isRedirect" in e) throw e;
-      if (e instanceof Error && e.message === "") throw e;
+      if (isRedirect(e)) throw e;
     }
   },
   component: Index,
