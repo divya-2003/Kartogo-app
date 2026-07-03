@@ -122,3 +122,65 @@ export const deliverySetStatusFn = createServerFn({ method: "POST" })
     }
     return row;
   });
+
+// ---------------- List unassigned (available) orders ----------------
+// Any logged-in driver can see freshly placed orders that no one has claimed
+// yet, so they can pick one up themselves.
+export const listAvailableOrdersFn = createServerFn({ method: "POST" })
+  .inputValidator((data: { token: string }) => ({ token: String(data?.token ?? "") }))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { verifyDeliveryToken } = await import("./auth-tokens.server");
+
+    const session = verifyDeliveryToken(data.token);
+    if (!session) throw new Error("Your session has expired. Please log in again.");
+
+    const { data: rows, error } = await supabaseAdmin
+      .from("app_orders")
+      .select("*")
+      .is("delivery_boy_id", null)
+      .eq("status", "placed")
+      .order("created_at", { ascending: false });
+    if (error) throw new Error("Orders could not be loaded. Please try again.");
+    return rows ?? [];
+  });
+
+// ---------------- Claim an order ("I'm taking this order") ----------------
+// A driver self-assigns an unassigned, placed order to themselves. The update
+// is conditional on the order still being unclaimed so two drivers can't grab
+// the same order — whoever commits first wins.
+export const claimOrderFn = createServerFn({ method: "POST" })
+  .inputValidator((data: { token: string; id: string }) => ({
+    token: String(data?.token ?? ""),
+    id: String(data?.id ?? ""),
+  }))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { verifyDeliveryToken } = await import("./auth-tokens.server");
+
+    const session = verifyDeliveryToken(data.token);
+    if (!session) throw new Error("Your session has expired. Please log in again.");
+
+    const { data: existing, error: readErr } = await supabaseAdmin
+      .from("app_orders")
+      .select("*")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (readErr || !existing) throw new Error("Order not found");
+    if (existing.delivery_boy_id) throw new Error("This order was already taken by another partner");
+    if (existing.status !== "placed") throw new Error("This order is no longer available");
+
+    const { data: row, error } = await supabaseAdmin
+      .from("app_orders")
+      .update({ delivery_boy_id: session.driverId, updated_at: new Date().toISOString() })
+      .eq("id", data.id)
+      .is("delivery_boy_id", null)
+      .select("*")
+      .maybeSingle();
+
+    if (error || !row) {
+      throw new Error("This order was already taken by another partner");
+    }
+    return row;
+  });
+

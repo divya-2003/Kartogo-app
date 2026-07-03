@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Bike, Phone, Package, Truck, CheckCircle2, MapPin, LogOut, RefreshCw, IndianRupee } from "lucide-react";
-import { listDeliveryOrdersFn, deliverySetStatusFn } from "@/lib/delivery.functions";
+import { Bike, Phone, Package, Truck, CheckCircle2, MapPin, LogOut, RefreshCw, IndianRupee, HandPlatter } from "lucide-react";
+import { listDeliveryOrdersFn, deliverySetStatusFn, listAvailableOrdersFn, claimOrderFn } from "@/lib/delivery.functions";
 import { formatINR } from "@/lib/data";
+
 
 export const Route = createFileRoute("/delivery")({
   component: DeliveryPortal,
@@ -84,15 +85,21 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
   token: string; driver: Driver; onLogout: () => void; onExpired: () => void;
 }) {
   const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [available, setAvailable] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [tab, setTab] = useState<"active" | "done">("active");
+  const [tab, setTab] = useState<"available" | "active" | "done">("available");
+
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const rows = await listDeliveryOrdersFn({ data: { token } });
-      setOrders(rows as unknown as OrderRow[]);
+      const [mine, open] = await Promise.all([
+        listDeliveryOrdersFn({ data: { token } }),
+        listAvailableOrdersFn({ data: { token } }),
+      ]);
+      setOrders(mine as unknown as OrderRow[]);
+      setAvailable(open as unknown as OrderRow[]);
     } catch (err) {
       const msg = (err as Error).message;
       if (/session has expired/i.test(msg)) { toast.error(msg); onExpired(); return; }
@@ -101,7 +108,7 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
   }, [token, onExpired]);
 
   useEffect(() => { void load(); }, [load]);
-  // Keep the list fresh so newly-assigned orders show up automatically.
+  // Keep the list fresh so newly-placed and newly-assigned orders show up automatically.
   useEffect(() => {
     const t = setInterval(() => { void load(); }, 20000);
     return () => clearInterval(t);
@@ -118,9 +125,26 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
     } finally { setBusyId(null); }
   };
 
+  // Self-assign a freshly placed order to this driver.
+  const claim = async (o: OrderRow) => {
+    setBusyId(o.id);
+    try {
+      const row = await claimOrderFn({ data: { token, id: o.id } });
+      setAvailable(prev => prev.filter(x => x.id !== o.id));
+      setOrders(prev => [row as unknown as OrderRow, ...prev]);
+      setTab("active");
+      toast.success(`${o.id} is now assigned to you ✓`);
+    } catch (err) {
+      toast.error((err as Error).message);
+      // Someone else may have grabbed it — refresh the list.
+      void load();
+    } finally { setBusyId(null); }
+  };
+
   const active = orders.filter(o => o.status !== "delivered" && o.status !== "cancelled");
   const done = orders.filter(o => o.status === "delivered" || o.status === "cancelled");
-  const visible = tab === "active" ? active : done;
+
+  const visible = tab === "available" ? available : tab === "active" ? active : done;
 
   return (
     <div className="min-h-screen bg-background pb-10">
@@ -144,6 +168,9 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
       <div className="mx-auto max-w-2xl px-4 py-4">
         {/* Tabs */}
         <div className="mb-4 flex gap-2">
+          <button onClick={() => setTab("available")} className={`rounded-full px-4 py-1.5 text-sm font-semibold ${tab === "available" ? "bg-primary text-primary-foreground" : "border border-border bg-card"}`}>
+            Available ({available.length})
+          </button>
           <button onClick={() => setTab("active")} className={`rounded-full px-4 py-1.5 text-sm font-semibold ${tab === "active" ? "bg-primary text-primary-foreground" : "border border-border bg-card"}`}>
             Active ({active.length})
           </button>
@@ -152,13 +179,18 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
           </button>
         </div>
 
-        {loading && orders.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">Loading your orders…</div>
+        {loading && orders.length === 0 && available.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">Loading orders…</div>
         ) : visible.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">
-            {tab === "active" ? "No orders assigned to you yet. New assignments appear here automatically." : "No completed deliveries yet."}
+            {tab === "available"
+              ? "No new orders waiting to be picked up right now. New orders appear here automatically."
+              : tab === "active"
+                ? "No orders assigned to you yet."
+                : "No completed deliveries yet."}
           </div>
         ) : (
+
           <div className="space-y-3">
             {visible.map(o => {
               const meta = STATUS_META[o.status] ?? STATUS_META.placed;
@@ -201,7 +233,16 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
                     </div>
                   </div>
 
-                  {step && (
+                  {tab === "available" ? (
+                    <button
+                      onClick={() => claim(o)}
+                      disabled={busyId === o.id}
+                      className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground shadow-pop transition hover:opacity-90 disabled:opacity-60"
+                    >
+                      <HandPlatter className="h-4 w-4" />
+                      {busyId === o.id ? "Taking…" : "I'm taking this order"}
+                    </button>
+                  ) : step && (
                     <button
                       onClick={() => advance(o, step.next, step.label)}
                       disabled={busyId === o.id}
@@ -211,6 +252,7 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
                       {busyId === o.id ? "Updating…" : step.label}
                     </button>
                   )}
+
                 </article>
               );
             })}
