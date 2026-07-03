@@ -60,3 +60,35 @@ export function verifyAdminToken(token?: string): boolean {
 // admin passcode after OTP — it never grants any access on its own.
 const ADMIN_PHONES: readonly string[] = ["9110310034"];
 export const isAdminPhone = (phone: string) => ADMIN_PHONES.includes(phone);
+
+// ---- Delivery partner tokens ----
+// The delivery roster is defined here on the server. Its ids MUST match the
+// client-side DELIVERY_BOYS list (src/lib/data.ts) since orders are assigned by
+// that id. A driver logs in with the phone number registered here.
+export const DELIVERY_ROSTER: readonly { id: string; name: string; phone: string; active: boolean }[] = [
+  { id: "d1", name: "Ravi Kumar", phone: "9876500001", active: true },
+  { id: "d2", name: "Suresh M.", phone: "9876500002", active: true },
+  { id: "d3", name: "Naveen P.", phone: "9876500003", active: false },
+];
+
+export function findDriverByPhone(phone: string) {
+  return DELIVERY_ROSTER.find((d) => d.phone === phone) ?? null;
+}
+
+function deliverySecret(): string {
+  const s = process.env.DELIVERY_SESSION_SECRET;
+  if (!s) throw new Error("DELIVERY_SESSION_SECRET is not configured");
+  return s;
+}
+
+export function issueDeliveryToken(driverId: string, phone: string): string {
+  return sign({ role: "delivery", driverId, phone, exp: Date.now() + 30 * DAY }, deliverySecret());
+}
+
+export function verifyDeliveryToken(token?: string): { driverId: string; phone: string } | null {
+  const data = verify(token, deliverySecret());
+  if (data && data.role === "delivery" && typeof data.driverId === "string" && typeof data.phone === "string") {
+    return { driverId: data.driverId, phone: data.phone };
+  }
+  return null;
+}
