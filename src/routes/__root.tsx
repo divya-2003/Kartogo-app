@@ -84,12 +84,14 @@ function RootComponent() {
           <LocationProvider>
             <CatalogProvider>
               <OrdersProvider>
-                <CartProvider>
-                  <WishlistProvider>
-                    <Outlet />
-                    <Toaster position="top-center" richColors />
-                  </WishlistProvider>
-                </CartProvider>
+                <DriversProvider>
+                  <CartProvider>
+                    <WishlistProvider>
+                      <Outlet />
+                      <Toaster position="top-center" richColors />
+                    </WishlistProvider>
+                  </CartProvider>
+                </DriversProvider>
               </OrdersProvider>
             </CatalogProvider>
           </LocationProvider>
