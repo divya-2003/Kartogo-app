@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useOrders, DELIVERY_BOYS, type OrderStatus } from "@/lib/store";
+import { useOrders, useDrivers, type OrderStatus } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { toast } from "sonner";
 
@@ -26,6 +26,7 @@ const NEXT_STATUS: Partial<Record<OrderStatus, { next: OrderStatus; label: strin
 
 function OrdersAdmin() {
   const { orders, setStatus, assign } = useOrders();
+  const { drivers, available: availableDrivers } = useDrivers();
   const [tab, setTab] = useState<"all" | OrderStatus>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState<OrderStatus>("packed");
@@ -215,7 +216,15 @@ function OrdersAdmin() {
                   }
                 }} className="rounded-lg border border-input bg-background px-2 py-1 text-sm">
                   <option value="">— Assign rider —</option>
-                  {DELIVERY_BOYS.filter(d => d.active).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                  {(() => {
+                    const list = availableDrivers.slice();
+                    const assigned = o.deliveryBoyId ? drivers.find(d => d.id === o.deliveryBoyId) : null;
+                    // Keep a currently-assigned rider visible even if now unavailable.
+                    if (assigned && !list.some(d => d.id === assigned.id)) list.push(assigned);
+                    return list.map(d => (
+                      <option key={d.id} value={d.id}>{d.name}{d.active ? "" : " (unavailable)"}</option>
+                    ));
+                  })()}
                 </select>
               </div>
             </article>
