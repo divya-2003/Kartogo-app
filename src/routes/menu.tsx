@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import {
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   ShoppingBag,
   Headphones,
   Heart,
