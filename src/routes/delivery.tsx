@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Bike, Phone, Package, Truck, CheckCircle2, MapPin, LogOut, RefreshCw, IndianRupee, HandPlatter } from "lucide-react";
+import { Bike, Phone, Package, Truck, CheckCircle2, MapPin, LogOut, RefreshCw, IndianRupee, HandPlatter, User2, Wallet, ChevronLeft, ListChecks, Navigation } from "lucide-react";
 import { listDeliveryOrdersFn, deliverySetStatusFn, listAvailableOrdersFn, claimOrderFn } from "@/lib/delivery.functions";
 import { formatINR } from "@/lib/data";
 
@@ -21,6 +21,8 @@ type OrderRow = {
   customer_phone: string;
   address: string;
   items: { productId: string; name: string; qty: number; price: number }[];
+  subtotal: number;
+  delivery_fee: number;
   total: number;
   payment_method: string;
   status: string;
