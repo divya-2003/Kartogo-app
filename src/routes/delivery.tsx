@@ -177,7 +177,6 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
         {view === "account" ? (
           <AccountView
             driver={driver}
-            earnings={earnings}
             deliveredCount={delivered.length}
             activeCount={active.length}
             orders={orders}
