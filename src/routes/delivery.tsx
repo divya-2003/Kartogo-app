@@ -1,11 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Bike, Phone, Package, Truck, CheckCircle2, MapPin, LogOut, RefreshCw, IndianRupee } from "lucide-react";
-import { requestOtpFn } from "@/lib/auth.functions";
-import { deliveryLoginFn, listDeliveryOrdersFn, deliverySetStatusFn } from "@/lib/delivery.functions";
+import { listDeliveryOrdersFn, deliverySetStatusFn } from "@/lib/delivery.functions";
 import { formatINR } from "@/lib/data";
-import kartigoLogo from "@/assets/kartigo-logo.png.asset.json";
 
 export const Route = createFileRoute("/delivery")({
   component: DeliveryPortal,
