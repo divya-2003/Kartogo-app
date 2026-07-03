@@ -66,11 +66,7 @@ function Dashboard() {
   const { orders } = useOrders();
   const { adminAudit } = useAuth();
   const [openPeriod, setOpenPeriod] = useState<null | "today" | "month" | "year">(null);
-  const [cancelSeen, setCancelSeen] = useState(false);
 
-  useEffect(() => {
-    setCancelSeen(localStorage.getItem("kartigo_cancel_seen") === "true");
-  }, []);
   const today = new Date(); today.setHours(0,0,0,0);
   const monthStart = new Date(); monthStart.setHours(0,0,0,0); monthStart.setDate(1);
   const yearStart = new Date(); yearStart.setHours(0,0,0,0); yearStart.setMonth(0, 1);
