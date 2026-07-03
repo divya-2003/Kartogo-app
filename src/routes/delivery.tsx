@@ -233,7 +233,16 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
                     </div>
                   </div>
 
-                  {step && (
+                  {tab === "available" ? (
+                    <button
+                      onClick={() => claim(o)}
+                      disabled={busyId === o.id}
+                      className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground shadow-pop transition hover:opacity-90 disabled:opacity-60"
+                    >
+                      <HandPlatter className="h-4 w-4" />
+                      {busyId === o.id ? "Taking…" : "I'm taking this order"}
+                    </button>
+                  ) : step && (
                     <button
                       onClick={() => advance(o, step.next, step.label)}
                       disabled={busyId === o.id}
@@ -243,6 +252,7 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
                       {busyId === o.id ? "Updating…" : step.label}
                     </button>
                   )}
+
                 </article>
               );
             })}
