@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { Json } from "@/integrations/supabase/types";
 
 // Server-authoritative customer profile.
 // Name, email, address and saved delivery locations live in the database keyed
@@ -11,15 +12,15 @@ export type StoredProfile = {
   name: string;
   email: string;
   address: string;
-  savedAddresses: unknown[];
-  deliveryAddresses: unknown[];
+  savedAddresses: Json[];
+  deliveryAddresses: Json[];
 };
 
 const str = (v: unknown, max = 300): string => String(v ?? "").trim().slice(0, max);
 
-const cleanArray = (v: unknown, max = 20): unknown[] => {
+const cleanArray = (v: unknown, max = 20): Json[] => {
   if (!Array.isArray(v)) return [];
-  return v.slice(0, max);
+  return v.slice(0, max) as Json[];
 };
 
 async function loadProfile(phone: string): Promise<StoredProfile | null> {
