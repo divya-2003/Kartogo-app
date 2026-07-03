@@ -753,11 +753,38 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     deliveryAddresses,
     ready,
     setLocation: (loc) => {
-      const stored: SavedLocation = { ...loc, baseQuery: loc.baseQuery ?? inferBaseQuery(loc) };
+      const baseQuery = loc.baseQuery ?? inferBaseQuery(loc);
+      // Once a customer has added a door number / apartment / landmark for an
+      // area, never wipe them when the same area is re-selected. Carry over any
+      // previously saved details the incoming selection doesn't provide.
+      const prior = savedAddresses.find(
+        a => (a.baseQuery ?? inferBaseQuery(a)).toLowerCase() === baseQuery.toLowerCase(),
+      );
+      const merged: SavedLocation = {
+        ...loc,
+        baseQuery,
+        doorNumber: (loc.doorNumber?.trim() || prior?.doorNumber) || undefined,
+        apartment: (loc.apartment?.trim() || prior?.apartment) || undefined,
+        landmark: (loc.landmark?.trim() || prior?.landmark) || undefined,
+      };
+      const stored: SavedLocation = {
+        ...merged,
+        query:
+          merged.doorNumber || merged.apartment || merged.landmark
+            ? buildLocationQuery(merged)
+            : merged.query,
+      };
       setLoc(stored);
       write("qk_location", stored);
       setSaved(prev => {
-        const next = [stored, ...prev.filter(a => a.query.toLowerCase() !== stored.query.toLowerCase())].slice(0, 8);
+        const next = [
+          stored,
+          ...prev.filter(
+            a =>
+              a.query.toLowerCase() !== stored.query.toLowerCase() &&
+              (a.baseQuery ?? inferBaseQuery(a)).toLowerCase() !== baseQuery.toLowerCase(),
+          ),
+        ].slice(0, 8);
         write("qk_addresses", next);
         return next;
       });
@@ -774,11 +801,19 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       if (idx === -1) return;
       const existing = savedAddresses[idx];
       const baseQuery = patch.baseQuery ?? existing.baseQuery ?? inferBaseQuery(existing);
+      // Preserve door number / apartment once set — a blank patch value must not
+      // erase what the customer already entered.
+      const detail = {
+        doorNumber: (patch.doorNumber?.trim() || existing.doorNumber) || undefined,
+        apartment: (patch.apartment?.trim() || existing.apartment) || undefined,
+        landmark: (patch.landmark?.trim() || existing.landmark) || undefined,
+      };
       const updated: SavedLocation = {
         ...existing,
         ...patch,
+        ...detail,
         baseQuery,
-        query: buildLocationQuery({ ...existing, ...patch, baseQuery }),
+        query: buildLocationQuery({ ...existing, ...patch, ...detail, baseQuery }),
       };
       const next = [updated, ...savedAddresses.filter((_, i) => i !== idx)].slice(0, 8);
       setSaved(next);
