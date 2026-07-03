@@ -26,7 +26,7 @@ const NEXT_STATUS: Partial<Record<OrderStatus, { next: OrderStatus; label: strin
 
 function OrdersAdmin() {
   const { orders, setStatus, assign } = useOrders();
-  const { available: availableDrivers } = useDrivers();
+  const { drivers, available: availableDrivers } = useDrivers();
   const [tab, setTab] = useState<"all" | OrderStatus>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState<OrderStatus>("packed");
