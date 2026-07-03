@@ -339,7 +339,6 @@ function EarningsSection({ orders, deliveredCount, activeCount }: {
   const current = monthOrdersFor(currentKey);
   const currentTotal = current.length * EARNING_PER_ORDER;
   const previousKeys = keys.filter(k => k !== currentKey);
-  const totalEarnings = deliveredCount * EARNING_PER_ORDER;
 
   return (
     <section>
@@ -356,7 +355,7 @@ function EarningsSection({ orders, deliveredCount, activeCount }: {
             <div className="text-xs text-muted-foreground">{current.length} deliver{current.length === 1 ? "y" : "ies"} this month</div>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <span className="font-display text-lg font-bold text-primary">{formatINR(totalEarnings)}</span>
+            <span className="font-display text-lg font-bold text-primary">{formatINR(currentTotal)}</span>
             <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
           </div>
         </button>
