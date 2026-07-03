@@ -128,14 +128,8 @@ function SearchPage() {
           <Link to="/search" search={{ q: "" }} className="flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-bold text-primary">
             <TrendingUp className="h-5 w-5" /> Trending
           </Link>
-          <Link to="/cart" className="flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-bold text-muted-foreground">
-            <span className="relative">
-              <ShoppingBag className="h-5 w-5" />
-              {count > 0 && (
-                <span className="absolute -right-2 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-saffron px-1 text-[10px] text-saffron-foreground">{count}</span>
-              )}
-            </span>
-            Cart
+          <Link to="/print" className="flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-bold text-muted-foreground">
+            <Printer className="h-5 w-5" /> Print Store
           </Link>
         </div>
       </nav>
