@@ -12,7 +12,7 @@ export const Route = createFileRoute("/admin/")({ component: Dashboard });
 // These rates make the cost/profit estimate transparent. Adjust here to match
 // the real business numbers whenever they are known.
 const COGS_RATE = 0.72;             // cost of goods = 72% of product sales
-const DELIVERY_COST_PER_ORDER = 30; // ₹ logistics cost to fulfil each order
+const DELIVERY_COST_PER_ORDER = 25; // ₹ logistics cost to fulfil each order
 const GST_RATE = 0.05;              // 5% GST on net taxable profit
 const INTEREST_RATE = 0;            // monthly interest on business debt (none by default)
 
