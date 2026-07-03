@@ -168,6 +168,9 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
       <div className="mx-auto max-w-2xl px-4 py-4">
         {/* Tabs */}
         <div className="mb-4 flex gap-2">
+          <button onClick={() => setTab("available")} className={`rounded-full px-4 py-1.5 text-sm font-semibold ${tab === "available" ? "bg-primary text-primary-foreground" : "border border-border bg-card"}`}>
+            Available ({available.length})
+          </button>
           <button onClick={() => setTab("active")} className={`rounded-full px-4 py-1.5 text-sm font-semibold ${tab === "active" ? "bg-primary text-primary-foreground" : "border border-border bg-card"}`}>
             Active ({active.length})
           </button>
@@ -176,13 +179,18 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
           </button>
         </div>
 
-        {loading && orders.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">Loading your orders…</div>
+        {loading && orders.length === 0 && available.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">Loading orders…</div>
         ) : visible.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">
-            {tab === "active" ? "No orders assigned to you yet. New assignments appear here automatically." : "No completed deliveries yet."}
+            {tab === "available"
+              ? "No new orders waiting to be picked up right now. New orders appear here automatically."
+              : tab === "active"
+                ? "No orders assigned to you yet."
+                : "No completed deliveries yet."}
           </div>
         ) : (
+
           <div className="space-y-3">
             {visible.map(o => {
               const meta = STATUS_META[o.status] ?? STATUS_META.placed;
