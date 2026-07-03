@@ -216,7 +216,7 @@ function OrdersAdmin() {
                   }
                 }} className="rounded-lg border border-input bg-background px-2 py-1 text-sm">
                   <option value="">— Assign rider —</option>
-                  {DELIVERY_BOYS.filter(d => d.active).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                  {availableDrivers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                 </select>
               </div>
             </article>
