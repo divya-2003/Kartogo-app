@@ -174,6 +174,17 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
 
 
       <div className="mx-auto max-w-2xl px-4 py-4">
+        {view === "account" ? (
+          <AccountView
+            driver={driver}
+            earnings={earnings}
+            deliveredCount={delivered.length}
+            activeCount={active.length}
+            orders={orders}
+            onLogout={onLogout}
+          />
+        ) : (
+        <>
         {/* Tabs */}
         <div className="mb-4 flex gap-2">
           <button onClick={() => setTab("available")} className={`rounded-full px-4 py-1.5 text-sm font-semibold ${tab === "available" ? "bg-primary text-primary-foreground" : "border border-border bg-card"}`}>
