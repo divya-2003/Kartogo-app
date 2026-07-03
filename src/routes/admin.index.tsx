@@ -82,8 +82,7 @@ function Dashboard() {
   const yearlyRevenue = yearRevenueOrders.reduce((s, o) => s + o.total, 0);
   const lowStock = products.filter(p => p.stock > 0 && p.stock <= 5);
   const pending = orders.filter(o => o.status !== "delivered" && o.status !== "cancelled");
-  const cancelled = orders.filter(o => o.status === "cancelled");
-  const refundsDue = cancelled.filter(o => o.paymentMethod === "upi" && !o.refunded);
+
 
   const periodLabel = openPeriod === "today" ? "Today" : openPeriod === "month" ? "This month" : "This year";
   const periodOrders = openPeriod === "today" ? todaysRevenue : openPeriod === "month" ? monthRevenueOrders : yearRevenueOrders;
