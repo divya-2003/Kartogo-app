@@ -1,8 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, Home, LayoutGrid, TrendingUp, ShoppingBag, Search, Flame, X } from "lucide-react";
+import { ChevronLeft, Home, LayoutGrid, TrendingUp, Printer, Search, Flame, X } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
-import { useCatalog, useCart } from "@/lib/store";
+import { useCatalog } from "@/lib/store";
 import { z } from "zod";
 
 const SearchSchema = z.object({ q: z.string().optional().default("") });
@@ -21,7 +21,6 @@ export const Route = createFileRoute("/search")({
 function SearchPage() {
   const { q } = Route.useSearch();
   const { products } = useCatalog();
-  const { count } = useCart();
   const nav = useNavigate();
   const [input, setInput] = useState(q ?? "");
 
@@ -128,14 +127,8 @@ function SearchPage() {
           <Link to="/search" search={{ q: "" }} className="flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-bold text-primary">
             <TrendingUp className="h-5 w-5" /> Trending
           </Link>
-          <Link to="/cart" className="flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-bold text-muted-foreground">
-            <span className="relative">
-              <ShoppingBag className="h-5 w-5" />
-              {count > 0 && (
-                <span className="absolute -right-2 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-saffron px-1 text-[10px] text-saffron-foreground">{count}</span>
-              )}
-            </span>
-            Cart
+          <Link to="/print" className="flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-bold text-muted-foreground">
+            <Printer className="h-5 w-5" /> Print Store
           </Link>
         </div>
       </nav>
