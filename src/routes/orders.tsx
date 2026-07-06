@@ -761,13 +761,30 @@ function OrdersPage() {
           order={rateTarget}
           initialRating={0}
           onClose={() => setRateTarget(null)}
-          onSubmit={({ rating, feedback }) => {
-            markRated(rateTarget.id);
-            toast.success(
-              rating >= 5
-                ? `Thanks for the ${rating}★ rating!`
-                : `Thanks for rating ${rateTarget.id}${feedback ? " — we'll work on it" : ""}`,
-            );
+          onSubmit={async ({ rating, feedback }) => {
+            const target = rateTarget;
+            const item = target.items[0];
+            try {
+              if (customerToken && item) {
+                await submitReviewsFn({
+                  data: {
+                    token: customerToken,
+                    orderId: target.id,
+                    ratings: [
+                      { productId: item.productId, productName: item.name, rating, feedback },
+                    ],
+                  },
+                });
+              }
+              markRated(target.id);
+              toast.success(
+                rating >= 5
+                  ? `Thanks for the ${rating}★ rating!`
+                  : `Thanks for rating ${target.id}${feedback ? " — we'll work on it" : ""}`,
+              );
+            } catch (e) {
+              toast.error(e instanceof Error ? e.message : "Could not submit your rating");
+            }
             setRateTarget(null);
           }}
         />
