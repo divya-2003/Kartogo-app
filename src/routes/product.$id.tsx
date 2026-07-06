@@ -39,19 +39,14 @@ function ProductPage() {
   const wished = has(p.id);
 
   const [ratingSummary, setRatingSummary] = useState<{ average: number; count: number }>({ average: 0, count: 0 });
-  const [reviews, setReviews] = useState<ReviewEntry[]>([]);
   useEffect(() => {
     let active = true;
     (async () => {
       try {
-        const [ratingRes, reviewRes] = await Promise.all([
-          getProductRatingsFn({ data: { productIds: [id] } }),
-          getProductReviewsFn({ data: { productId: id } }),
-        ]);
+        const ratingRes = await getProductRatingsFn({ data: { productIds: [id] } });
         if (!active) return;
-        const r = ratingRes.ratings.find((x) => x.productId === id);
+        const r = ratingRes.ratings.find((x: { productId: string }) => x.productId === id);
         setRatingSummary({ average: r?.average ?? 0, count: r?.count ?? 0 });
-        setReviews(reviewRes.reviews);
       } catch { /* keep empty on error */ }
     })();
     return () => { active = false; };
