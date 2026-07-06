@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useServerFn } from "@tanstack/react-start";
-import { MapPin, Search, X, ChevronDown, Loader2, XCircle, Clock, Check, Trash2, LocateFixed, Zap, Pencil } from "lucide-react";
+import { MapPin, Search, X, ChevronDown, Loader2, XCircle, Clock, Check, Trash2, LocateFixed, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { checkServiceability, locateByCoords } from "@/lib/serviceability.functions";
-import { searchServiceableAreas, deliveryWindow, DARK_STORE, type ServiceableArea } from "@/lib/serviceability";
+import { deliveryWindow } from "@/lib/serviceability";
 import { useLocation, buildLocationQuery, type SavedLocation } from "@/lib/store";
 
 export function LocationPicker() {
@@ -89,10 +89,6 @@ function LocationPickerClient({
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
-  const suggestions = useMemo<ServiceableArea[]>(
-    () => searchServiceableAreas(query, 6),
-    [query],
-  );
 
   // Selecting/confirming an area saves the location immediately. We no longer
   // ask for the exact address (door no., apartment, landmark) here — those are
@@ -121,13 +117,6 @@ function LocationPickerClient({
     setLandmark(addr.landmark ?? "");
   };
 
-  const selectArea = (area: ServiceableArea) => {
-    startDetails({
-      query: `${area.name}, ${DARK_STORE.city} ${area.pincode}`,
-      area: area.name,
-      etaMinutes: area.etaMinutes,
-    });
-  };
 
   const saveDetails = (e: React.FormEvent) => {
     e.preventDefault();
