@@ -261,12 +261,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     adminLogin: async (passcode) => {
       const res = await adminLoginFn({ data: { passcode } });
       if (!res.ok) throw new Error(res.error ?? "Incorrect admin passcode");
+      // Persist synchronously BEFORE returning so the admin route's beforeLoad
+      // (which reads localStorage directly) sees the token on the very first
+      // navigation. The state-driven useEffect write runs only after re-render,
+      // which is too late for the immediate nav({ to: "/admin" }) call.
+      write("qk_admin_token", res.token);
       setAdminToken(res.token);
       const u: User = { ...(user ?? { phone: "" }), role: "admin" } as User;
       setUser(u);
       if (u.phone) setAdminAudit(prev => [{ phone: u.phone, at: Date.now() }, ...prev].slice(0, 100));
       return u;
     },
+
     setName: (name) => {
       setUser(u => u ? { ...u, name } : u);
       if (customerToken) void saveCustomerProfileFn({ data: { token: customerToken, name } }).catch(() => {});
