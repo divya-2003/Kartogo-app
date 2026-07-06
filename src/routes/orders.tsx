@@ -693,7 +693,11 @@ function OrdersPage() {
                     </button>
                     {ratedLoaded && !ratedOrderIds.has(o.id) && (
                       <button
-                        onClick={() => setRateTarget(o)}
+                        onClick={() =>
+                          o.items.length > 1
+                            ? navigate({ to: "/rate-order/$orderId", params: { orderId: o.id } })
+                            : setRateTarget(o)
+                        }
                         className="flex flex-1 items-center justify-center gap-1.5 py-3 text-sm font-bold text-saffron transition hover:bg-saffron/10"
                       >
                         <Star className="h-4 w-4" /> Rate order
