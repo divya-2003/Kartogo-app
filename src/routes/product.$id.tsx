@@ -132,7 +132,7 @@ function ProductPage() {
         </div>
 
         <section className="mt-10">
-          <h2 className="font-display text-2xl font-bold">Ratings & reviews</h2>
+          <h2 className="font-display text-2xl font-bold">Customer reviews</h2>
           {ratingSummary.count === 0 ? (
             <p className="mt-3 text-sm text-muted-foreground">No ratings yet. Be the first to rate this product!</p>
           ) : (
