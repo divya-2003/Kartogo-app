@@ -78,7 +78,7 @@ function AdminLayout() {
           <nav className="flex flex-col gap-1">
             {NAV.map(n => {
               const active = isActive(n.to);
-              const badge = n.to === "/admin/cancellations" && !cancelSeen && cancelledCount > 0 ? cancelledCount : null;
+              const badge = n.to === "/admin/cancellations" && unseenCancellations > 0 ? unseenCancellations : null;
               return (
                 <Link key={n.to} to={n.to} onClick={n.to === "/admin/cancellations" ? markCancellationsSeen : undefined} className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition ${active ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}>
                   <n.icon className="h-4 w-4" /> {n.label}
@@ -99,7 +99,7 @@ function AdminLayout() {
         <div className="mx-auto flex max-w-lg">
           {NAV.map(n => {
             const active = isActive(n.to);
-            const badge = n.to === "/admin/cancellations" && !cancelSeen && cancelledCount > 0 ? cancelledCount : null;
+            const badge = n.to === "/admin/cancellations" && unseenCancellations > 0 ? unseenCancellations : null;
             return (
               <Link
                 key={n.to}
