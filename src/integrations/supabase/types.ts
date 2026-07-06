@@ -348,6 +348,45 @@ export type Database = {
         }
         Relationships: []
       }
+      product_reviews: {
+        Row: {
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          feedback: string
+          id: string
+          order_id: string
+          product_id: string
+          product_name: string
+          rating: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_name?: string
+          customer_phone: string
+          feedback?: string
+          id?: string
+          order_id: string
+          product_id: string
+          product_name?: string
+          rating: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string
+          feedback?: string
+          id?: string
+          order_id?: string
+          product_id?: string
+          product_name?: string
+          rating?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category: Database["public"]["Enums"]["product_category"]

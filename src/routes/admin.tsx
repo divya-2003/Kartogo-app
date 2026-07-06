@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { useOrders } from "@/lib/store";
 import { verifyAdminTokenFn } from "@/lib/auth.functions";
-import { LayoutDashboard, Package2, Boxes, ClipboardList, Bike, ArrowLeft, PackageX } from "lucide-react";
+import { LayoutDashboard, Package2, Boxes, ClipboardList, Bike, ArrowLeft, PackageX, Star } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: async () => {
@@ -35,6 +35,7 @@ const NAV = [
   { to: "/admin/inventory", label: "Inventory", short: "Stock", icon: Boxes },
   { to: "/admin/orders", label: "Orders", short: "Orders", icon: ClipboardList },
   { to: "/admin/cancellations", label: "Cancellations", short: "Cancels", icon: PackageX },
+  { to: "/admin/feedback", label: "Feedback", short: "Reviews", icon: Star },
   { to: "/admin/delivery", label: "Delivery", short: "Riders", icon: Bike },
 ] as const;
 

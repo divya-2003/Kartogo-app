@@ -31,6 +31,7 @@ import {
   Star,
 } from "lucide-react";
 import { downloadInvoice } from "@/lib/invoice";
+import { submitReviewsFn } from "@/lib/reviews.functions";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -85,7 +86,7 @@ const ACTIVE_TITLE: Record<Exclude<OrderStatus, "delivered" | "cancelled">, stri
 };
 
 function OrdersPage() {
-  const { user } = useAuth();
+  const { user, customerToken } = useAuth();
   const { orders, refresh, cancel } = useOrders();
   const { refresh: refreshWallet } = useWallet();
   const [cancelling, setCancelling] = useState<string | null>(null);
@@ -692,7 +693,11 @@ function OrdersPage() {
                     </button>
                     {ratedLoaded && !ratedOrderIds.has(o.id) && (
                       <button
-                        onClick={() => setRateTarget(o)}
+                        onClick={() =>
+                          o.items.length > 1
+                            ? navigate({ to: "/rate-order/$orderId", params: { orderId: o.id } })
+                            : setRateTarget(o)
+                        }
                         className="flex flex-1 items-center justify-center gap-1.5 py-3 text-sm font-bold text-saffron transition hover:bg-saffron/10"
                       >
                         <Star className="h-4 w-4" /> Rate order
@@ -756,13 +761,30 @@ function OrdersPage() {
           order={rateTarget}
           initialRating={0}
           onClose={() => setRateTarget(null)}
-          onSubmit={({ rating, feedback }) => {
-            markRated(rateTarget.id);
-            toast.success(
-              rating >= 5
-                ? `Thanks for the ${rating}★ rating!`
-                : `Thanks for rating ${rateTarget.id}${feedback ? " — we'll work on it" : ""}`,
-            );
+          onSubmit={async ({ rating, feedback }) => {
+            const target = rateTarget;
+            const item = target.items[0];
+            try {
+              if (customerToken && item) {
+                await submitReviewsFn({
+                  data: {
+                    token: customerToken,
+                    orderId: target.id,
+                    ratings: [
+                      { productId: item.productId, productName: item.name, rating, feedback },
+                    ],
+                  },
+                });
+              }
+              markRated(target.id);
+              toast.success(
+                rating >= 5
+                  ? `Thanks for the ${rating}★ rating!`
+                  : `Thanks for rating ${target.id}${feedback ? " — we'll work on it" : ""}`,
+              );
+            } catch (e) {
+              toast.error(e instanceof Error ? e.message : "Could not submit your rating");
+            }
             setRateTarget(null);
           }}
         />
