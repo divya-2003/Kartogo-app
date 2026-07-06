@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { useCart, useCatalog, useAuth, useWishlist } from "@/lib/store";
 import { formatINR } from "@/lib/data";
-import { getProductRatingsFn, getProductReviewsFn, type ReviewEntry } from "@/lib/reviews.functions";
+import { getProductRatingsFn } from "@/lib/reviews.functions";
 import { Plus, Minus, ShoppingBag, Heart, Star } from "lucide-react";
 
 function Stars({ value, className = "h-4 w-4" }: { value: number; className?: string }) {
@@ -39,19 +39,14 @@ function ProductPage() {
   const wished = has(p.id);
 
   const [ratingSummary, setRatingSummary] = useState<{ average: number; count: number }>({ average: 0, count: 0 });
-  const [reviews, setReviews] = useState<ReviewEntry[]>([]);
   useEffect(() => {
     let active = true;
     (async () => {
       try {
-        const [ratingRes, reviewRes] = await Promise.all([
-          getProductRatingsFn({ data: { productIds: [id] } }),
-          getProductReviewsFn({ data: { productId: id } }),
-        ]);
+        const ratingRes = await getProductRatingsFn({ data: { productIds: [id] } });
         if (!active) return;
-        const r = ratingRes.ratings.find((x) => x.productId === id);
+        const r = ratingRes.ratings.find((x: { productId: string }) => x.productId === id);
         setRatingSummary({ average: r?.average ?? 0, count: r?.count ?? 0 });
-        setReviews(reviewRes.reviews);
       } catch { /* keep empty on error */ }
     })();
     return () => { active = false; };
@@ -131,38 +126,6 @@ function ProductPage() {
           </div>
         </div>
 
-        <section className="mt-10">
-          <h2 className="font-display text-2xl font-bold">Ratings & reviews</h2>
-          {ratingSummary.count === 0 ? (
-            <p className="mt-3 text-sm text-muted-foreground">No ratings yet. Be the first to rate this product!</p>
-          ) : (
-            <>
-              <div className="mt-3 flex items-center gap-3">
-                <span className="font-display text-4xl font-bold">{ratingSummary.average.toFixed(1)}</span>
-                <div>
-                  <Stars value={Math.round(ratingSummary.average)} className="h-5 w-5" />
-                  <div className="mt-1 text-sm text-muted-foreground">
-                    Based on {ratingSummary.count} rating{ratingSummary.count > 1 ? "s" : ""}
-                  </div>
-                </div>
-              </div>
-              <ul className="mt-5 space-y-3">
-                {reviews.filter((r) => r.feedback || r.rating).map((r) => (
-                  <li key={r.id} className="rounded-2xl border border-border bg-card p-4">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-semibold">{r.customerName || "Customer"}</span>
-                      <Stars value={r.rating} />
-                    </div>
-                    {r.feedback && <p className="mt-2 text-sm text-muted-foreground">{r.feedback}</p>}
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {new Date(r.createdAt).toLocaleDateString("en-IN")}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-        </section>
       </div>
     </div>
   );
