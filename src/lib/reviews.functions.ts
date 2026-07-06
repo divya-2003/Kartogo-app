@@ -103,6 +103,9 @@ export const getProductRatingsFn = createServerFn({ method: "POST" })
       : [],
   }))
   .handler(async ({ data }) => {
+    // Never let a proxy/CDN cache the aggregated ratings — always compute fresh.
+    const { setResponseHeader } = await import("@tanstack/react-start/server");
+    setResponseHeader("Cache-Control", "no-store, max-age=0");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let query = supabaseAdmin.from("product_reviews").select("product_id, rating");
     if (data.productIds.length > 0) query = query.in("product_id", data.productIds);
