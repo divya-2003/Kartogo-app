@@ -23,24 +23,6 @@ function ProductPage() {
   const inCart = items.find(i => i.productId === p.id);
   const wished = has(p.id);
 
-  const [ratingSummary, setRatingSummary] = useState<{ average: number; count: number }>({ average: 0, count: 0 });
-  const [reviews, setReviews] = useState<ReviewEntry[]>([]);
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        const [ratingRes, reviewRes] = await Promise.all([
-          getProductRatingsFn({ data: { productIds: [id] } }),
-          getProductReviewsFn({ data: { productId: id } }),
-        ]);
-        if (!active) return;
-        const r = ratingRes.ratings.find((x) => x.productId === id);
-        setRatingSummary({ average: r?.average ?? 0, count: r?.count ?? 0 });
-        setReviews(reviewRes.reviews);
-      } catch { /* keep empty on error */ }
-    })();
-    return () => { active = false; };
-  }, [id]);
 
   const handleAdd = () => {
     add(p.id);
@@ -70,15 +52,6 @@ function ProductPage() {
           <div className="flex flex-col">
             <h1 className="font-display text-3xl font-bold leading-tight md:text-4xl">{p.name}</h1>
             <div className="mt-1 text-sm text-muted-foreground">{p.unit}</div>
-            {ratingSummary.count > 0 && (
-              <div className="mt-2 flex items-center gap-2">
-                <Stars value={Math.round(ratingSummary.average)} />
-                <span className="text-sm font-bold">{ratingSummary.average.toFixed(1)}</span>
-                <span className="text-sm text-muted-foreground">
-                  ({ratingSummary.count} rating{ratingSummary.count > 1 ? "s" : ""})
-                </span>
-              </div>
-            )}
             <div className="mt-4 flex items-end gap-3">
               <div className="font-display text-3xl font-bold">{formatINR(p.price)}</div>
               {p.mrp && p.mrp > p.price && <div className="text-muted-foreground line-through">{formatINR(p.mrp)}</div>}
@@ -115,39 +88,6 @@ function ProductPage() {
             </div>
           </div>
         </div>
-
-        <section className="mt-10">
-          <h2 className="font-display text-2xl font-bold">Ratings & reviews</h2>
-          {ratingSummary.count === 0 ? (
-            <p className="mt-3 text-sm text-muted-foreground">No ratings yet. Be the first to rate this product!</p>
-          ) : (
-            <>
-              <div className="mt-3 flex items-center gap-3">
-                <span className="font-display text-4xl font-bold">{ratingSummary.average.toFixed(1)}</span>
-                <div>
-                  <Stars value={Math.round(ratingSummary.average)} className="h-5 w-5" />
-                  <div className="mt-1 text-sm text-muted-foreground">
-                    Based on {ratingSummary.count} rating{ratingSummary.count > 1 ? "s" : ""}
-                  </div>
-                </div>
-              </div>
-              <ul className="mt-5 space-y-3">
-                {reviews.filter((r) => r.feedback || r.rating).map((r) => (
-                  <li key={r.id} className="rounded-2xl border border-border bg-card p-4">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-semibold">{r.customerName || "Customer"}</span>
-                      <Stars value={r.rating} />
-                    </div>
-                    {r.feedback && <p className="mt-2 text-sm text-muted-foreground">{r.feedback}</p>}
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {new Date(r.createdAt).toLocaleDateString("en-IN")}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-        </section>
       </div>
     </div>
   );
