@@ -131,38 +131,6 @@ function ProductPage() {
           </div>
         </div>
 
-        <section className="mt-10">
-          <h2 className="font-display text-2xl font-bold">Customer reviews</h2>
-          {ratingSummary.count === 0 ? (
-            <p className="mt-3 text-sm text-muted-foreground">No ratings yet. Be the first to rate this product!</p>
-          ) : (
-            <>
-              <div className="mt-3 flex items-center gap-3">
-                <span className="font-display text-4xl font-bold">{ratingSummary.average.toFixed(1)}</span>
-                <div>
-                  <Stars value={Math.round(ratingSummary.average)} className="h-5 w-5" />
-                  <div className="mt-1 text-sm text-muted-foreground">
-                    Based on {ratingSummary.count} rating{ratingSummary.count > 1 ? "s" : ""}
-                  </div>
-                </div>
-              </div>
-              <ul className="mt-5 space-y-3">
-                {reviews.filter((r) => r.feedback || r.rating).map((r) => (
-                  <li key={r.id} className="rounded-2xl border border-border bg-card p-4">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-semibold">{r.customerName || "Customer"}</span>
-                      <Stars value={r.rating} />
-                    </div>
-                    {r.feedback && <p className="mt-2 text-sm text-muted-foreground">{r.feedback}</p>}
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {new Date(r.createdAt).toLocaleDateString("en-IN")}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-        </section>
       </div>
     </div>
   );
