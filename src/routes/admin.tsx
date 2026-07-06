@@ -41,17 +41,30 @@ const NAV = [
 function AdminLayout() {
   const path = useRouterState({ select: s => s.location.pathname });
   const { orders } = useOrders();
-  const [cancelSeen, setCancelSeen] = useState(false);
+  const [cancelSeenCount, setCancelSeenCount] = useState(0);
   const cancelledCount = orders.filter(o => o.status === "cancelled").length;
   const isActive = (to: string) => (to === "/admin" ? path === "/admin" : path.startsWith(to));
 
+  // Number of cancellations that arrived since the admin last opened the page.
+  const unseenCancellations = Math.max(0, cancelledCount - cancelSeenCount);
+
   useEffect(() => {
-    setCancelSeen(localStorage.getItem("kartigo_cancel_seen") === "true");
+    const stored = Number(localStorage.getItem("kartigo_cancel_seen_count"));
+    setCancelSeenCount(Number.isFinite(stored) ? stored : 0);
   }, [path]);
 
+  // On the cancellations page, treat every current cancellation as seen so the
+  // badge clears — it reappears only when new cancellations come in later.
+  useEffect(() => {
+    if (path.startsWith("/admin/cancellations")) {
+      localStorage.setItem("kartigo_cancel_seen_count", String(cancelledCount));
+      setCancelSeenCount(cancelledCount);
+    }
+  }, [path, cancelledCount]);
+
   const markCancellationsSeen = () => {
-    localStorage.setItem("kartigo_cancel_seen", "true");
-    setCancelSeen(true);
+    localStorage.setItem("kartigo_cancel_seen_count", String(cancelledCount));
+    setCancelSeenCount(cancelledCount);
   };
 
   return (
