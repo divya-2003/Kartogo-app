@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { useCart, useCatalog, useAuth, useWishlist } from "@/lib/store";
 import { formatINR } from "@/lib/data";
-import { getProductRatingsFn, getProductReviewsFn, type ReviewEntry } from "@/lib/reviews.functions";
+import { getProductRatingsFn } from "@/lib/reviews.functions";
 import { Plus, Minus, ShoppingBag, Heart, Star } from "lucide-react";
 
 function Stars({ value, className = "h-4 w-4" }: { value: number; className?: string }) {
