@@ -1,6 +1,5 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { useCart, useCatalog, useAuth, useWishlist } from "@/lib/store";
 import { formatINR } from "@/lib/data";
@@ -22,12 +21,28 @@ function Stars({ value, className = "h-4 w-4" }: { value: number; className?: st
 
 export const Route = createFileRoute("/product/$id")({
   component: ProductPage,
+  // Always fetch the freshest rating summary on the server for this product.
+  // staleTime: 0 + shouldReload guarantees the loader re-runs on every visit,
+  // so the page never renders a cached average/count.
+  loader: async ({ params }) => {
+    try {
+      const res = await getProductRatingsFn({ data: { productIds: [params.id] } });
+      const r = res.ratings.find((x: { productId: string }) => x.productId === params.id);
+      return { rating: { average: r?.average ?? 0, count: r?.count ?? 0 } };
+    } catch {
+      return { rating: { average: 0, count: 0 } };
+    }
+  },
+  staleTime: 0,
+  gcTime: 0,
+  shouldReload: true,
   notFoundComponent: () => <div className="p-10 text-center">Product not found.</div>,
   errorComponent: ({ error }) => <div className="p-10 text-center text-destructive">{error.message}</div>,
 });
 
 function ProductPage() {
   const { id } = Route.useParams();
+  const { rating: ratingSummary } = Route.useLoaderData();
   const { products } = useCatalog();
   const p = products.find(x => x.id === id);
   const { add, items, setQty } = useCart();
@@ -37,20 +52,6 @@ function ProductPage() {
   if (!p) throw notFound();
   const inCart = items.find(i => i.productId === p.id);
   const wished = has(p.id);
-
-  const [ratingSummary, setRatingSummary] = useState<{ average: number; count: number }>({ average: 0, count: 0 });
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        const ratingRes = await getProductRatingsFn({ data: { productIds: [id] } });
-        if (!active) return;
-        const r = ratingRes.ratings.find((x: { productId: string }) => x.productId === id);
-        setRatingSummary({ average: r?.average ?? 0, count: r?.count ?? 0 });
-      } catch { /* keep empty on error */ }
-    })();
-    return () => { active = false; };
-  }, [id]);
 
   const handleAdd = () => {
     add(p.id);
