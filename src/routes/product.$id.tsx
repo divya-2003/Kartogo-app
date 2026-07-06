@@ -1,24 +1,9 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { useCart, useCatalog, useAuth, useWishlist } from "@/lib/store";
 import { formatINR } from "@/lib/data";
-import { getProductRatingsFn, getProductReviewsFn, type ReviewEntry } from "@/lib/reviews.functions";
-import { Plus, Minus, ShoppingBag, Heart, Star } from "lucide-react";
-
-function Stars({ value, className = "h-4 w-4" }: { value: number; className?: string }) {
-  return (
-    <div className="flex items-center gap-0.5">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Star
-          key={i}
-          className={`${className} ${value >= i + 1 ? "fill-saffron text-saffron" : "text-muted-foreground/30"}`}
-        />
-      ))}
-    </div>
-  );
-}
+import { Plus, Minus, ShoppingBag, Heart } from "lucide-react";
 
 export const Route = createFileRoute("/product/$id")({
   component: ProductPage,
