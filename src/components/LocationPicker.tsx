@@ -386,38 +386,6 @@ function LocationPickerClient({
               {locating ? "Detecting your location..." : "Use my current location"}
             </button>
 
-            {/* Autocomplete suggestions */}
-            <div className="mt-6">
-              <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                <MapPin className="h-3.5 w-3.5" /> {query.trim() ? "Matching areas" : "Popular areas we deliver to"}
-              </h3>
-              {suggestions.length === 0 ? (
-                <p className="mt-3 rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
-                  No serviceable area matches “{query.trim()}”. We currently deliver only in Ongole.
-                </p>
-              ) : (
-                <ul className="mt-3 space-y-2">
-                  {suggestions.map((area) => (
-                    <li key={area.keyword}>
-                      <button
-                        type="button"
-                        onClick={() => selectArea(area)}
-                        className="flex w-full items-center gap-3 rounded-xl border border-border bg-card p-3 text-left hover:border-primary hover:bg-primary/5"
-                      >
-                        <MapPin className="h-4 w-4 shrink-0 text-primary" />
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-semibold">{area.name}</span>
-                          <span className="block truncate text-xs text-muted-foreground">Ongole · {area.pincode}</span>
-                        </span>
-                        <span className="flex shrink-0 items-center gap-1 rounded-full bg-leaf/10 px-2 py-1 text-[11px] font-bold text-leaf">
-                          <Zap className="h-3 w-3" /> {deliveryWindow(area.etaMinutes)}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
 
 
 
