@@ -85,6 +85,15 @@ function ProductPage() {
           <div className="flex flex-col">
             <h1 className="font-display text-3xl font-bold leading-tight md:text-4xl">{p.name}</h1>
             <div className="mt-1 text-sm text-muted-foreground">{p.unit}</div>
+            {ratingSummary.count > 0 && (
+              <div className="mt-2 flex items-center gap-2">
+                <Stars value={Math.round(ratingSummary.average)} />
+                <span className="text-sm font-bold">{ratingSummary.average.toFixed(1)}</span>
+                <span className="text-sm text-muted-foreground">
+                  ({ratingSummary.count} rating{ratingSummary.count > 1 ? "s" : ""})
+                </span>
+              </div>
+            )}
             <div className="mt-4 flex items-end gap-3">
               <div className="font-display text-3xl font-bold">{formatINR(p.price)}</div>
               {p.mrp && p.mrp > p.price && <div className="text-muted-foreground line-through">{formatINR(p.mrp)}</div>}
