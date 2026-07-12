@@ -39,8 +39,10 @@ export const requestOtpFn = createServerFn({ method: "POST" })
       .gte("created_at", hourAgo);
     if ((count ?? 0) >= 5) throw new Error("Too many OTP requests. Please try again later.");
 
-    // In demo mode every number gets the same fixed code; otherwise a random one.
-    const code = DEMO_OTP_MODE ? DEMO_OTP : String(randomInt(100000, 1000000));
+    // Always generate a real, random per-request 6-digit code. There is never a
+    // fixed or predictable code, in any mode.
+    const demoMode = isDemoOtpMode();
+    const code = String(randomInt(100000, 1000000));
     const codeHash = createHash("sha256").update(`${phone}:${code}`).digest("hex");
     const expiresAt = new Date(Date.now() + 5 * 60_000).toISOString();
 
@@ -57,10 +59,12 @@ export const requestOtpFn = createServerFn({ method: "POST" })
       throw new Error("Could not generate a verification code. Please try again.");
     }
 
-    // Demo mode: skip the real SMS (Twilio trial can't reach unverified numbers)
-    // and return the demo code so the UI can show it.
-    if (DEMO_OTP_MODE) {
-      return { ok: true as const, demo: true as const, demoCode: DEMO_OTP };
+    // Demo mode (private/staging only): skip the real SMS (Twilio trial can't
+    // reach unverified numbers) and return the freshly generated random code so
+    // the UI can show it. This branch is unreachable in production because
+    // DEMO_OTP_MODE is unset there.
+    if (demoMode) {
+      return { ok: true as const, demo: true as const, demoCode: code };
     }
 
     try {
