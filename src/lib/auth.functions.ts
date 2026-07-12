@@ -1,14 +1,18 @@
 import { createServerFn } from "@tanstack/react-start";
 
 // ---------------- Demo OTP mode ----------------
-// While the Twilio account is still on trial (SMS only delivers to manually
-// verified numbers), we can't actually text real users. Until Twilio is
-// upgraded/verified, DEMO_OTP_MODE issues a single fixed code that works for
-// EVERY number, and skips the real SMS send. The Twilio integration below is
-// left fully in place — flip DEMO_OTP_MODE to false once Twilio is upgraded
-// and real SMS delivery resumes automatically.
-const DEMO_OTP_MODE = true;
-const DEMO_OTP = "123456";
+// Demo mode is ONLY for private/staging builds where real SMS is unavailable
+// (e.g. Twilio still on trial). It is gated behind a server-side environment
+// flag that is guaranteed to be false/absent in production, so the public,
+// deployed app always requires a real per-request random code delivered by
+// SMS. Even when demo mode is on, the code is randomly generated per request —
+// there is never a fixed, publicly-known code.
+//
+// To enable demo mode in a private environment, set the server secret
+// DEMO_OTP_MODE="true". Leave it unset in production.
+function isDemoOtpMode(): boolean {
+  return process.env.DEMO_OTP_MODE === "true";
+}
 
 // ---------------- Request an OTP ----------------
 // Generates a random 6-digit code, stores only its hash with a short expiry,
