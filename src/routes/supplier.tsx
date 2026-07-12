@@ -1,8 +1,9 @@
 import { createFileRoute, Outlet, Link, useRouterState, redirect, isRedirect } from "@tanstack/react-router";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { verifySupplierTokenFn } from "@/lib/supplier.functions";
 import { findSupplierById } from "@/lib/suppliers";
+import { SupplierContext, type SupplierInfo } from "@/lib/supplier-context";
 import { Boxes, ClipboardList } from "lucide-react";
 
 export const Route = createFileRoute("/supplier")({
@@ -25,11 +26,6 @@ export const Route = createFileRoute("/supplier")({
   component: SupplierLayout,
   head: () => ({ meta: [{ title: "Supplier Portal — Kartogo" }] }),
 });
-
-// ---- Supplier context (id, name, categories) shared with child pages ----
-export type SupplierInfo = { id: string; name: string; categories: string[] };
-const SupplierContext = createContext<SupplierInfo | null>(null);
-export const useSupplier = () => useContext(SupplierContext);
 
 const NAV = [
   { to: "/supplier", label: "Inventory", short: "Stock", icon: Boxes },
