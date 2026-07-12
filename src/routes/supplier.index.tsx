@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useCatalog } from "@/lib/store";
 import { CATEGORIES, formatINR, type Product } from "@/lib/data";
-import { useSupplier } from "./supplier";
+import { useSupplier } from "@/lib/supplier-context";
 import { Plus, Pencil, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
