@@ -92,3 +92,25 @@ export function verifyDeliveryToken(token?: string): { driverId: string; phone: 
   }
   return null;
 }
+
+// ---- Supplier tokens ----
+// Suppliers own a set of product categories (see src/lib/suppliers.ts). A signed
+// supplier token binds a session to one supplier id + phone so inventory and
+// order access can be scoped server-side to that supplier's categories.
+function supplierSecret(): string {
+  const s = process.env.SUPPLIER_SESSION_SECRET;
+  if (!s) throw new Error("SUPPLIER_SESSION_SECRET is not configured");
+  return s;
+}
+
+export function issueSupplierToken(supplierId: string, phone: string): string {
+  return sign({ role: "supplier", supplierId, phone, exp: Date.now() + 30 * DAY }, supplierSecret());
+}
+
+export function verifySupplierToken(token?: string): { supplierId: string; phone: string } | null {
+  const data = verify(token, supplierSecret());
+  if (data && data.role === "supplier" && typeof data.supplierId === "string" && typeof data.phone === "string") {
+    return { supplierId: data.supplierId, phone: data.phone };
+  }
+  return null;
+}

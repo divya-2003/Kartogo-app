@@ -85,7 +85,8 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { createHash } = await import("node:crypto");
-    const { issueCustomerToken, isAdminPhone, findDriverByPhone, issueDeliveryToken } = await import("./auth-tokens.server");
+    const { issueCustomerToken, isAdminPhone, findDriverByPhone, issueDeliveryToken, issueSupplierToken } = await import("./auth-tokens.server");
+    const { findSupplierByPhone } = await import("./suppliers");
 
     const { data: rows } = await supabaseAdmin
       .from("otp_codes")
@@ -122,11 +123,22 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
       ? { token: issueDeliveryToken(driver.id, driver.phone), driver: { id: driver.id, name: driver.name, phone: driver.phone } }
       : null;
 
+    // A registered supplier phone is issued a signed supplier token so the
+    // unified login can route them straight to their scoped supplier portal.
+    const supplierAccount = findSupplierByPhone(data.phone);
+    const supplier = supplierAccount
+      ? {
+          token: issueSupplierToken(supplierAccount.id, supplierAccount.phone),
+          supplier: { id: supplierAccount.id, name: supplierAccount.name, phone: supplierAccount.phone },
+        }
+      : null;
+
     return {
       ok: true as const,
       token: issueCustomerToken(data.phone),
       isAdminPhone: isAdminPhone(data.phone),
       delivery,
+      supplier,
     };
   });
 

@@ -171,6 +171,7 @@ export const useWishlist = () => {
 // it can no longer fabricate a role or a verified phone number.
 type User = { phone: string; name?: string; email?: string; address?: string; role: "customer" | "admin" };
 export type DeliverySession = { token: string; driver: { id: string; name: string; phone: string } };
+export type SupplierSession = { token: string; supplier: { id: string; name: string; phone: string } };
 export type AdminAuditEntry = { phone: string; at: number };
 
 type AuthCtx = {
@@ -183,8 +184,8 @@ type AuthCtx = {
   adminToken: string | null;
   /** Request an SMS OTP. Returns demo-mode info when SMS is bypassed. */
   sendOtp: (phone: string) => Promise<{ demo: boolean; demoCode?: string }>;
-  /** Verify the SMS OTP. Returns admin-eligibility and any delivery session. */
-  verifyOtp: (phone: string, otp: string) => Promise<{ user: User; isAdminPhone: boolean; delivery: DeliverySession | null }>;
+  /** Verify the SMS OTP. Returns admin-eligibility, delivery and supplier sessions. */
+  verifyOtp: (phone: string, otp: string) => Promise<{ user: User; isAdminPhone: boolean; delivery: DeliverySession | null; supplier: SupplierSession | null }>;
   /** Exchange the secret admin passcode for a signed admin token. */
   adminLogin: (passcode: string) => Promise<User>;
   setName: (name: string) => void;
@@ -256,7 +257,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCustomerToken(res.token);
       // A new login is not yet an admin session until the passcode is provided.
       setAdminToken(null);
-      return { user: u, isAdminPhone: res.isAdminPhone, delivery: res.delivery ?? null };
+      return { user: u, isAdminPhone: res.isAdminPhone, delivery: res.delivery ?? null, supplier: res.supplier ?? null };
     },
     adminLogin: async (passcode) => {
       const res = await adminLoginFn({ data: { passcode } });

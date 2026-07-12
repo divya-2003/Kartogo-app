@@ -48,7 +48,7 @@ function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { isAdminPhone, delivery } = await verifyOtp(phone, otp);
+      const { isAdminPhone, delivery, supplier } = await verifyOtp(phone, otp);
       // Delivery partners are routed straight to their portal.
       if (delivery) {
         try {
@@ -57,6 +57,16 @@ function LoginPage() {
         } catch { /* noop */ }
         toast.success(`Welcome, ${delivery.driver.name}!`);
         nav({ to: "/delivery" });
+        return;
+      }
+      // Suppliers are routed straight to their scoped inventory + orders portal.
+      if (supplier) {
+        try {
+          localStorage.setItem("qk_supplier_token", JSON.stringify(supplier.token));
+          localStorage.setItem("qk_supplier", JSON.stringify(supplier.supplier));
+        } catch { /* noop */ }
+        toast.success(`Welcome, ${supplier.supplier.name}!`);
+        nav({ to: "/supplier" });
         return;
       }
       if (isAdminPhone) {
