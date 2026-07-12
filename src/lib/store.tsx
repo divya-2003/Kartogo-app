@@ -257,7 +257,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCustomerToken(res.token);
       // A new login is not yet an admin session until the passcode is provided.
       setAdminToken(null);
-      return { user: u, isAdminPhone: res.isAdminPhone, delivery: res.delivery ?? null };
+      return { user: u, isAdminPhone: res.isAdminPhone, delivery: res.delivery ?? null, supplier: res.supplier ?? null };
     },
     adminLogin: async (passcode) => {
       const res = await adminLoginFn({ data: { passcode } });
