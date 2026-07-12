@@ -85,7 +85,8 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { createHash } = await import("node:crypto");
-    const { issueCustomerToken, isAdminPhone, findDriverByPhone, issueDeliveryToken } = await import("./auth-tokens.server");
+    const { issueCustomerToken, isAdminPhone, findDriverByPhone, issueDeliveryToken, issueSupplierToken } = await import("./auth-tokens.server");
+    const { findSupplierByPhone } = await import("./suppliers");
 
     const { data: rows } = await supabaseAdmin
       .from("otp_codes")
