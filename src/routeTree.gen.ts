@@ -28,6 +28,7 @@ import { Route as CartRouteImport } from './routes/cart'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SupplierIndexRouteImport } from './routes/supplier.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as RateOrderOrderIdRouteImport } from './routes/rate-order.$orderId'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
@@ -134,6 +135,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SupplierIndexRoute = SupplierIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SupplierRoute,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -200,7 +206,7 @@ export interface FileRoutesByFullPath {
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
   '/search': typeof SearchRoute
-  '/supplier': typeof SupplierRoute
+  '/supplier': typeof SupplierRouteWithChildren
   '/support': typeof SupportRoute
   '/topup': typeof TopupRoute
   '/wallet': typeof WalletRoute
@@ -215,6 +221,7 @@ export interface FileRoutesByFullPath {
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/supplier/': typeof SupplierIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -230,7 +237,6 @@ export interface FileRoutesByTo {
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
   '/search': typeof SearchRoute
-  '/supplier': typeof SupplierRoute
   '/support': typeof SupportRoute
   '/topup': typeof TopupRoute
   '/wallet': typeof WalletRoute
@@ -245,6 +251,7 @@ export interface FileRoutesByTo {
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
   '/admin': typeof AdminIndexRoute
+  '/supplier': typeof SupplierIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -262,7 +269,7 @@ export interface FileRoutesById {
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
   '/search': typeof SearchRoute
-  '/supplier': typeof SupplierRoute
+  '/supplier': typeof SupplierRouteWithChildren
   '/support': typeof SupportRoute
   '/topup': typeof TopupRoute
   '/wallet': typeof WalletRoute
@@ -277,6 +284,7 @@ export interface FileRoutesById {
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/supplier/': typeof SupplierIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -310,6 +318,7 @@ export interface FileRouteTypes {
     | '/product/$id'
     | '/rate-order/$orderId'
     | '/admin/'
+    | '/supplier/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -325,7 +334,6 @@ export interface FileRouteTypes {
     | '/refund-returns'
     | '/refunds'
     | '/search'
-    | '/supplier'
     | '/support'
     | '/topup'
     | '/wallet'
@@ -340,6 +348,7 @@ export interface FileRouteTypes {
     | '/product/$id'
     | '/rate-order/$orderId'
     | '/admin'
+    | '/supplier'
   id:
     | '__root__'
     | '/'
@@ -371,6 +380,7 @@ export interface FileRouteTypes {
     | '/product/$id'
     | '/rate-order/$orderId'
     | '/admin/'
+    | '/supplier/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -388,7 +398,7 @@ export interface RootRouteChildren {
   RefundReturnsRoute: typeof RefundReturnsRoute
   RefundsRoute: typeof RefundsRoute
   SearchRoute: typeof SearchRoute
-  SupplierRoute: typeof SupplierRoute
+  SupplierRoute: typeof SupplierRouteWithChildren
   SupportRoute: typeof SupportRoute
   TopupRoute: typeof TopupRoute
   WalletRoute: typeof WalletRoute
@@ -533,6 +543,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/supplier/': {
+      id: '/supplier/'
+      path: '/'
+      fullPath: '/supplier/'
+      preLoaderRoute: typeof SupplierIndexRouteImport
+      parentRoute: typeof SupplierRoute
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
@@ -628,6 +645,18 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface SupplierRouteChildren {
+  SupplierIndexRoute: typeof SupplierIndexRoute
+}
+
+const SupplierRouteChildren: SupplierRouteChildren = {
+  SupplierIndexRoute: SupplierIndexRoute,
+}
+
+const SupplierRouteWithChildren = SupplierRoute._addFileChildren(
+  SupplierRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
@@ -643,7 +672,7 @@ const rootRouteChildren: RootRouteChildren = {
   RefundReturnsRoute: RefundReturnsRoute,
   RefundsRoute: RefundsRoute,
   SearchRoute: SearchRoute,
-  SupplierRoute: SupplierRoute,
+  SupplierRoute: SupplierRouteWithChildren,
   SupportRoute: SupportRoute,
   TopupRoute: TopupRoute,
   WalletRoute: WalletRoute,
