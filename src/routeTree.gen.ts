@@ -30,6 +30,7 @@ import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SupplierIndexRouteImport } from './routes/supplier.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as SupplierOrdersRouteImport } from './routes/supplier.orders'
 import { Route as RateOrderOrderIdRouteImport } from './routes/rate-order.$orderId'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
@@ -145,6 +146,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const SupplierOrdersRoute = SupplierOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => SupplierRoute,
+} as any)
 const RateOrderOrderIdRoute = RateOrderOrderIdRouteImport.update({
   id: '/rate-order/$orderId',
   path: '/rate-order/$orderId',
@@ -220,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/category/$slug': typeof CategorySlugRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
+  '/supplier/orders': typeof SupplierOrdersRoute
   '/admin/': typeof AdminIndexRoute
   '/supplier/': typeof SupplierIndexRoute
 }
@@ -250,6 +257,7 @@ export interface FileRoutesByTo {
   '/category/$slug': typeof CategorySlugRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
+  '/supplier/orders': typeof SupplierOrdersRoute
   '/admin': typeof AdminIndexRoute
   '/supplier': typeof SupplierIndexRoute
 }
@@ -283,6 +291,7 @@ export interface FileRoutesById {
   '/category/$slug': typeof CategorySlugRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
+  '/supplier/orders': typeof SupplierOrdersRoute
   '/admin/': typeof AdminIndexRoute
   '/supplier/': typeof SupplierIndexRoute
 }
@@ -317,6 +326,7 @@ export interface FileRouteTypes {
     | '/category/$slug'
     | '/product/$id'
     | '/rate-order/$orderId'
+    | '/supplier/orders'
     | '/admin/'
     | '/supplier/'
   fileRoutesByTo: FileRoutesByTo
@@ -347,6 +357,7 @@ export interface FileRouteTypes {
     | '/category/$slug'
     | '/product/$id'
     | '/rate-order/$orderId'
+    | '/supplier/orders'
     | '/admin'
     | '/supplier'
   id:
@@ -379,6 +390,7 @@ export interface FileRouteTypes {
     | '/category/$slug'
     | '/product/$id'
     | '/rate-order/$orderId'
+    | '/supplier/orders'
     | '/admin/'
     | '/supplier/'
   fileRoutesById: FileRoutesById
@@ -557,6 +569,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/supplier/orders': {
+      id: '/supplier/orders'
+      path: '/orders'
+      fullPath: '/supplier/orders'
+      preLoaderRoute: typeof SupplierOrdersRouteImport
+      parentRoute: typeof SupplierRoute
+    }
     '/rate-order/$orderId': {
       id: '/rate-order/$orderId'
       path: '/rate-order/$orderId'
@@ -646,10 +665,12 @@ const AdminRouteChildren: AdminRouteChildren = {
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface SupplierRouteChildren {
+  SupplierOrdersRoute: typeof SupplierOrdersRoute
   SupplierIndexRoute: typeof SupplierIndexRoute
 }
 
 const SupplierRouteChildren: SupplierRouteChildren = {
+  SupplierOrdersRoute: SupplierOrdersRoute,
   SupplierIndexRoute: SupplierIndexRoute,
 }
 
