@@ -37,3 +37,38 @@ export const CATALOG: Record<string, CatalogEntry> = {
   p29: { name: "Pain Relief Balm", price: 55 },
   p30: { name: "Surgical Face Mask", price: 50 },
 };
+
+// Product -> category map, used to scope supplier order history to the
+// categories a supplier is responsible for. Keep in sync with src/lib/data.ts.
+export const PRODUCT_CATEGORY: Record<string, string> = {
+  p1: "pickles",
+  p2: "spice-powders",
+  p3: "spice-powders",
+  p4: "local-snacks",
+  p5: "snacks",
+  p6: "instant-food",
+  p7: "instant-food",
+  p8: "stationery",
+  p9: "stationery",
+  p10: "grooming",
+  p11: "grooming",
+  p12: "tiffin-batter",
+  p13: "tiffin-batter",
+  p14: "pooja",
+  p15: "pooja",
+  p16: "pickles",
+  p17: "local-snacks",
+  p18: "snacks",
+  p19: "beverages",
+  p20: "beverages",
+  p21: "pharmacy",
+  p22: "pharmacy",
+  p23: "pharmacy",
+  p24: "pharmacy",
+  p25: "pharmacy",
+  p26: "pharmacy",
+  p27: "pharmacy",
+  p28: "pharmacy",
+  p29: "pharmacy",
+  p30: "pharmacy",
+};
