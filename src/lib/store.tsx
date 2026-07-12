@@ -171,6 +171,7 @@ export const useWishlist = () => {
 // it can no longer fabricate a role or a verified phone number.
 type User = { phone: string; name?: string; email?: string; address?: string; role: "customer" | "admin" };
 export type DeliverySession = { token: string; driver: { id: string; name: string; phone: string } };
+export type SupplierSession = { token: string; supplier: { id: string; name: string; phone: string } };
 export type AdminAuditEntry = { phone: string; at: number };
 
 type AuthCtx = {
