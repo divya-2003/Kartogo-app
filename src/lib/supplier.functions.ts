@@ -63,7 +63,7 @@ export const listSupplierOrdersFn = createServerFn({ method: "POST" })
       orders.push({
         id: r.id,
         createdAt: new Date(r.created_at).getTime(),
-        status: r.status,
+        status: r.status as SupplierOrder["status"],
         refunded: Boolean(r.refunded),
         customerName: r.customer_name,
         items,
