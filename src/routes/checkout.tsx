@@ -29,7 +29,7 @@ function computeDiscount(code: string | null, subtotal: number): number {
 }
 
 function CheckoutPage() {
-  const { user } = useAuth();
+  const { user, setName: setProfileName } = useAuth();
   const { items, subtotal, clear } = useCart();
   const { products } = useCatalog();
   const { place } = useOrders();
