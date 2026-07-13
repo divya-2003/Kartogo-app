@@ -66,7 +66,9 @@ function CheckoutPage() {
       id: `delivery:${addr.id}`,
       kind: "delivery" as const,
       label: addr.label,
-      name: addr.name,
+      // Always show the current profile name so a name change reflects on every
+      // saved address, not the possibly-stale name captured when it was added.
+      name: userName,
       address: addr.address,
       removableId: addr.id,
     }));
