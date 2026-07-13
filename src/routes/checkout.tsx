@@ -29,7 +29,7 @@ function computeDiscount(code: string | null, subtotal: number): number {
 }
 
 function CheckoutPage() {
-  const { user } = useAuth();
+  const { user, setName: setProfileName } = useAuth();
   const { items, subtotal, clear } = useCart();
   const { products } = useCatalog();
   const { place } = useOrders();
@@ -66,7 +66,9 @@ function CheckoutPage() {
       id: `delivery:${addr.id}`,
       kind: "delivery" as const,
       label: addr.label,
-      name: addr.name,
+      // Always show the current profile name so a name change reflects on every
+      // saved address, not the possibly-stale name captured when it was added.
+      name: userName,
       address: addr.address,
       removableId: addr.id,
     }));
@@ -162,8 +164,14 @@ function CheckoutPage() {
       toast.error("Please add your door number, apartment name and landmark");
       return;
     }
+    const trimmedName = name.trim();
+    // The name entered on the address is the customer's name — sync it to their
+    // profile so it updates everywhere in the app (account, orders, header).
+    if (trimmedName && trimmedName !== (user?.name ?? "").trim()) {
+      setProfileName(trimmedName);
+    }
     const composed = `${newDoor.trim()}, ${newApartment.trim()}, Ongole (Near ${newLandmark.trim()})`;
-    const created = addDeliveryAddress({ label: label.trim() || "Home", name: name.trim(), address: composed });
+    const created = addDeliveryAddress({ label: label.trim() || "Home", name: trimmedName, address: composed });
     setSelectedId(`delivery:${created.id}`);
     setShowForm(false);
     setShowPicker(false);
