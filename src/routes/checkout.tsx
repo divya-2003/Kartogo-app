@@ -162,8 +162,14 @@ function CheckoutPage() {
       toast.error("Please add your door number, apartment name and landmark");
       return;
     }
+    const trimmedName = name.trim();
+    // The name entered on the address is the customer's name — sync it to their
+    // profile so it updates everywhere in the app (account, orders, header).
+    if (trimmedName && trimmedName !== (user?.name ?? "").trim()) {
+      setProfileName(trimmedName);
+    }
     const composed = `${newDoor.trim()}, ${newApartment.trim()}, Ongole (Near ${newLandmark.trim()})`;
-    const created = addDeliveryAddress({ label: label.trim() || "Home", name: name.trim(), address: composed });
+    const created = addDeliveryAddress({ label: label.trim() || "Home", name: trimmedName, address: composed });
     setSelectedId(`delivery:${created.id}`);
     setShowForm(false);
     setShowPicker(false);
