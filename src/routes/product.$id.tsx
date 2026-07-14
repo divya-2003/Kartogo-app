@@ -2,7 +2,7 @@ import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-ro
 import { toast } from "sonner";
 import { Header } from "@/components/Header";
 import { useCart, useCatalog, useAuth, useWishlist } from "@/lib/store";
-import { formatINR } from "@/lib/data";
+import { formatINR, PRODUCTS } from "@/lib/data";
 import { getProductRatingsFn } from "@/lib/reviews.functions";
 import { Plus, Minus, ShoppingBag, Heart, Star } from "lucide-react";
 
@@ -34,7 +34,6 @@ export const Route = createFileRoute("/product/$id")({
   gcTime: 0,
   shouldReload: true,
   head: ({ params }) => {
-    const { PRODUCTS } = require("@/lib/data") as { PRODUCTS: Array<{ id: string; name: string; description: string; price: number; stock: number; image?: string }> };
     const p = PRODUCTS.find((x) => x.id === params.id);
     if (!p) return {};
     const title = `${p.name} — Buy online in Ongole | Kartogo`.slice(0, 60);
