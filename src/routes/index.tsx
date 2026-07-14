@@ -83,6 +83,7 @@ function Index() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      <h1 className="sr-only">Kartogo — Ongole's 15-minute neighbourhood store</h1>
       {/* ---------- Warm top ---------- */}
       <div className="bg-gradient-to-b from-[oklch(0.9_0.07_70)] to-background">
         <div className="mx-auto max-w-2xl px-4 pt-4 lg:max-w-7xl lg:px-8">

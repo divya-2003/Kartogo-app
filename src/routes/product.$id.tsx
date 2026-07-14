@@ -21,9 +21,6 @@ function Stars({ value, className = "h-4 w-4" }: { value: number; className?: st
 
 export const Route = createFileRoute("/product/$id")({
   component: ProductPage,
-  // Always fetch the freshest rating summary on the server for this product.
-  // staleTime: 0 + shouldReload guarantees the loader re-runs on every visit,
-  // so the page never renders a cached average/count.
   loader: async ({ params }) => {
     try {
       const res = await getProductRatingsFn({ data: { productIds: [params.id] } });
@@ -36,6 +33,41 @@ export const Route = createFileRoute("/product/$id")({
   staleTime: 0,
   gcTime: 0,
   shouldReload: true,
+  head: ({ params }) => {
+    const { PRODUCTS } = require("@/lib/data") as { PRODUCTS: Array<{ id: string; name: string; description: string; price: number; stock: number; image?: string }> };
+    const p = PRODUCTS.find((x) => x.id === params.id);
+    if (!p) return {};
+    const title = `${p.name} — Buy online in Ongole | Kartogo`.slice(0, 60);
+    const desc = (p.description || `${p.name} delivered in 15 minutes across Ongole.`).slice(0, 160);
+    return {
+      meta: [
+        { title },
+        { name: "description", content: desc },
+        { property: "og:title", content: p.name },
+        { property: "og:description", content: desc },
+        { property: "og:type", content: "product" },
+        { property: "og:url", content: `/product/${params.id}` },
+        ...(p.image ? [{ property: "og:image", content: p.image }] : []),
+      ],
+      links: [{ rel: "canonical", href: `/product/${params.id}` }],
+      scripts: [{
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: p.name,
+          description: p.description,
+          ...(p.image ? { image: p.image } : {}),
+          offers: {
+            "@type": "Offer",
+            priceCurrency: "INR",
+            price: p.price,
+            availability: p.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+          },
+        }),
+      }],
+    };
+  },
   notFoundComponent: () => <div className="p-10 text-center">Product not found.</div>,
   errorComponent: ({ error }) => <div className="p-10 text-center text-destructive">{error.message}</div>,
 });
@@ -105,9 +137,9 @@ function ProductPage() {
             <div className="mt-6 flex items-center gap-3">
               {inCart ? (
                 <div className="flex items-center gap-2 rounded-xl border border-primary p-1">
-                  <button onClick={() => setQty(p.id, inCart.qty - 1)} className="grid h-9 w-9 place-items-center rounded-lg text-primary hover:bg-primary/10"><Minus className="h-4 w-4" /></button>
+                  <button aria-label="Decrease quantity" onClick={() => setQty(p.id, inCart.qty - 1)} className="grid h-9 w-9 place-items-center rounded-lg text-primary hover:bg-primary/10"><Minus className="h-4 w-4" /></button>
                   <span className="min-w-8 text-center font-bold">{inCart.qty}</span>
-                  <button onClick={() => setQty(p.id, inCart.qty + 1)} className="grid h-9 w-9 place-items-center rounded-lg text-primary hover:bg-primary/10"><Plus className="h-4 w-4" /></button>
+                  <button aria-label="Increase quantity" onClick={() => setQty(p.id, inCart.qty + 1)} className="grid h-9 w-9 place-items-center rounded-lg text-primary hover:bg-primary/10"><Plus className="h-4 w-4" /></button>
                 </div>
               ) : (
                 <button disabled={p.stock <= 0} onClick={handleAdd} className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground">
