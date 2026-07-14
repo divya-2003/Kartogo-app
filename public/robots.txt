@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /supplier
+Disallow: /delivery
+Disallow: /checkout
+Disallow: /cart
+Disallow: /account
+Disallow: /orders
+Disallow: /wallet
+Disallow: /topup
+Disallow: /login
+Disallow: /menu
+Disallow: /rate-order
+
+Sitemap: https://quick-niche-delight.lovable.app/sitemap.xml

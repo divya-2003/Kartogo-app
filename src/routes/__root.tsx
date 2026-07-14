@@ -54,6 +54,31 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
+    scripts: [{
+      type: "application/ld+json",
+      children: JSON.stringify({
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            name: "Kartogo",
+            url: "https://quick-niche-delight.lovable.app",
+            areaServed: "Ongole, Andhra Pradesh, India",
+            contactPoint: { "@type": "ContactPoint", telephone: "+91-91103-10034", contactType: "customer service", email: "support@kartogo.in" },
+          },
+          {
+            "@type": "WebSite",
+            name: "Kartogo",
+            url: "https://quick-niche-delight.lovable.app",
+            potentialAction: {
+              "@type": "SearchAction",
+              target: "https://quick-niche-delight.lovable.app/search?q={search_term_string}",
+              "query-input": "required name=search_term_string",
+            },
+          },
+        ],
+      }),
+    }],
   }),
   shellComponent: RootShell,
   component: RootComponent,

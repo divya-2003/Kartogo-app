@@ -1,0 +1,16 @@
+# Kartogo
+
+> Kartogo is a hyperlocal 15-minute delivery service in Ongole, Andhra Pradesh. We deliver snacks, pickles, instant food, spice powders, pooja items, tiffin batter and daily essentials from neighbourhood makers.
+
+## Pages
+
+- [Home](/): Shop essentials with 15-minute delivery in Ongole.
+- [Categories](/categories): Browse all product categories — snacks, pickles, spices, pooja items, tiffin batter and more.
+- [Search](/search): Search the Kartogo catalog.
+- [Print Store](/print): Local print & stationery on-demand.
+- [Support](/support): Help, contact and refund information.
+- [Refund & Returns](/refund-returns): Refund and returns policy.
+
+## Optional
+
+- [Wishlist](/wishlist): Saved items (requires login).
