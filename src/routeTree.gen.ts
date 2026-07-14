@@ -14,6 +14,7 @@ import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as TopupRouteImport } from './routes/topup'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as SupplierRouteImport } from './routes/supplier'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as RefundsRouteImport } from './routes/refunds'
 import { Route as RefundReturnsRouteImport } from './routes/refund-returns'
@@ -64,6 +65,11 @@ const SupportRoute = SupportRouteImport.update({
 const SupplierRoute = SupplierRouteImport.update({
   id: '/supplier',
   path: '/supplier',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SearchRoute = SearchRouteImport.update({
@@ -212,6 +218,7 @@ export interface FileRoutesByFullPath {
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
   '/search': typeof SearchRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/supplier': typeof SupplierRouteWithChildren
   '/support': typeof SupportRoute
   '/topup': typeof TopupRoute
@@ -244,6 +251,7 @@ export interface FileRoutesByTo {
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
   '/search': typeof SearchRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
   '/topup': typeof TopupRoute
   '/wallet': typeof WalletRoute
@@ -277,6 +285,7 @@ export interface FileRoutesById {
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
   '/search': typeof SearchRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/supplier': typeof SupplierRouteWithChildren
   '/support': typeof SupportRoute
   '/topup': typeof TopupRoute
@@ -312,6 +321,7 @@ export interface FileRouteTypes {
     | '/refund-returns'
     | '/refunds'
     | '/search'
+    | '/sitemap.xml'
     | '/supplier'
     | '/support'
     | '/topup'
@@ -344,6 +354,7 @@ export interface FileRouteTypes {
     | '/refund-returns'
     | '/refunds'
     | '/search'
+    | '/sitemap.xml'
     | '/support'
     | '/topup'
     | '/wallet'
@@ -376,6 +387,7 @@ export interface FileRouteTypes {
     | '/refund-returns'
     | '/refunds'
     | '/search'
+    | '/sitemap.xml'
     | '/supplier'
     | '/support'
     | '/topup'
@@ -410,6 +422,7 @@ export interface RootRouteChildren {
   RefundReturnsRoute: typeof RefundReturnsRoute
   RefundsRoute: typeof RefundsRoute
   SearchRoute: typeof SearchRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SupplierRoute: typeof SupplierRouteWithChildren
   SupportRoute: typeof SupportRoute
   TopupRoute: typeof TopupRoute
@@ -455,6 +468,13 @@ declare module '@tanstack/react-router' {
       path: '/supplier'
       fullPath: '/supplier'
       preLoaderRoute: typeof SupplierRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search': {
@@ -693,6 +713,7 @@ const rootRouteChildren: RootRouteChildren = {
   RefundReturnsRoute: RefundReturnsRoute,
   RefundsRoute: RefundsRoute,
   SearchRoute: SearchRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   SupplierRoute: SupplierRouteWithChildren,
   SupportRoute: SupportRoute,
   TopupRoute: TopupRoute,

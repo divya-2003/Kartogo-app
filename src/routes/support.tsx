@@ -3,7 +3,28 @@ import { ChevronLeft, Headphones, Mail, Phone, MessageCircle } from "lucide-reac
 
 export const Route = createFileRoute("/support")({
   component: SupportPage,
-  head: () => ({ meta: [{ title: "Help & Support — Kartogo" }] }),
+  head: () => ({
+    meta: [
+      { title: "Help & Support — Kartogo" },
+      { name: "description", content: "Reach the Kartogo team in Ongole for order help, refunds, delivery questions and feedback — call, email or message us 24/7." },
+      { property: "og:title", content: "Help & Support — Kartogo" },
+      { property: "og:description", content: "Get help with your Kartogo order — call, email or message our Ongole support team, 24/7." },
+      { property: "og:url", content: "/support" },
+    ],
+    links: [{ rel: "canonical", href: "/support" }],
+    scripts: [{
+      type: "application/ld+json",
+      children: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: [
+          { "@type": "Question", name: "How do I contact Kartogo customer service?", acceptedAnswer: { "@type": "Answer", text: "Call +91 91103 10034 or email support@kartogo.in — our team responds 24/7." } },
+          { "@type": "Question", name: "How fast is Kartogo delivery?", acceptedAnswer: { "@type": "Answer", text: "Kartogo delivers snacks, pickles, spices, tiffin batter and daily essentials within about 15 minutes across Ongole." } },
+          { "@type": "Question", name: "Can I return or refund an order?", acceptedAnswer: { "@type": "Answer", text: "Yes — reach us within 24 hours of delivery via call or email and we'll arrange a refund or replacement per our returns policy." } },
+        ],
+      }),
+    }],
+  }),
 });
 
 function SupportPage() {
@@ -18,7 +39,7 @@ function SupportPage() {
               <Headphones className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="font-display text-xl font-bold">Help & Support</h1>
+              <h2 className="font-display text-xl font-bold">Help & Support</h2>
               <p className="text-sm text-muted-foreground">We're here to help you 24/7</p>
             </div>
           </div>

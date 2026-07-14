@@ -74,7 +74,7 @@ export function Header() {
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 md:px-6">
         <Link to={isAdmin && isAdminArea ? "/admin" : "/"} className="flex items-center gap-2">
           <div className="grid h-9 w-9 place-items-center overflow-hidden rounded-xl bg-[#15205a]">
-            <img src={kartigoLogo.url} alt="Kartogo" className="h-full w-full object-cover" />
+            <img src={kartigoLogo.url} alt="Kartogo - Neighborhood Store" className="h-full w-full object-cover" />
           </div>
           <div className="leading-tight">
             <div className="font-display text-lg font-bold tracking-tight">Kartogo{isAdminArea && <span className="ml-1 text-xs font-semibold text-primary">· Admin</span>}</div>
