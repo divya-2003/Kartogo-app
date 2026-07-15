@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { listSupplierOrdersFn, type SupplierOrder } from "@/lib/supplier.functions";
+import { listSupplierOrdersFn, supplierMarkPackedFn, type SupplierOrder } from "@/lib/supplier.functions";
 import { formatINR } from "@/lib/data";
 import { CheckCircle2, RotateCcw, Clock, Package } from "lucide-react";
 
@@ -24,6 +24,27 @@ function SupplierOrders() {
   const [orders, setOrders] = useState<SupplierOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"all" | "delivered" | "returned" | "active">("all");
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const getToken = (): string | null => {
+    try { return JSON.parse(localStorage.getItem("qk_supplier_token") || "null"); } catch { return null; }
+  };
+
+  const markPacked = async (id: string) => {
+    const token = getToken();
+    if (!token) return;
+    setBusyId(id);
+    setError(null);
+    try {
+      await supplierMarkPackedFn({ data: { token, id } });
+      setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status: "packed" } : o)));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not update order");
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -83,6 +104,10 @@ function SupplierOrders() {
         ))}
       </div>
 
+      {error && (
+        <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm text-destructive">{error}</div>
+      )}
+
       {loading ? (
         <div className="rounded-2xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">Loading orders…</div>
       ) : filtered.length === 0 ? (
@@ -109,8 +134,19 @@ function SupplierOrders() {
                   </li>
                 ))}
               </ul>
-              <div className="mt-3 flex justify-end border-t border-border pt-2 text-sm font-bold">
-                Your items total: {formatINR(o.supplierTotal)}
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2 text-sm font-bold">
+                <div>
+                  {o.status === "placed" ? (
+                    <button
+                      onClick={() => markPacked(o.id)}
+                      disabled={busyId === o.id}
+                      className="rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+                    >
+                      {busyId === o.id ? "Marking…" : "Mark as packed"}
+                    </button>
+                  ) : null}
+                </div>
+                <span>Your items total: {formatINR(o.supplierTotal)}</span>
               </div>
             </div>
           ))}

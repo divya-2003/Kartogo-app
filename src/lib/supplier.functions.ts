@@ -73,3 +73,54 @@ export const listSupplierOrdersFn = createServerFn({ method: "POST" })
 
     return { orders };
   });
+
+// ---------------- Supplier marks an order as packed ----------------
+// A supplier is only allowed to advance an order from "placed" → "packed",
+// and only when the order actually contains at least one item from one of
+// their categories. All authorization is enforced server-side; the DB
+// trigger additionally blocks illegal transitions.
+export const supplierMarkPackedFn = createServerFn({ method: "POST" })
+  .inputValidator((data: { token?: string; id?: string }) => ({
+    token: data?.token ? String(data.token) : "",
+    id: String(data?.id ?? ""),
+  }))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { verifySupplierToken } = await import("./auth-tokens.server");
+    const { findSupplierById } = await import("./suppliers");
+    const { PRODUCT_CATEGORY } = await import("./server-catalog.server");
+
+    const session = verifySupplierToken(data.token);
+    if (!session) throw new Error("Your session has expired. Please log in again.");
+    const supplier = findSupplierById(session.supplierId);
+    if (!supplier) throw new Error("Supplier not found");
+    const cats = new Set(supplier.categories);
+
+    const { data: existing, error: readErr } = await supabaseAdmin
+      .from("app_orders")
+      .select("*")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (readErr || !existing) throw new Error("Order not found");
+
+    const items = (existing.items ?? []) as SupplierOrderItem[];
+    const owned = items.some((i) => cats.has(PRODUCT_CATEGORY[i.productId] ?? ""));
+    if (!owned) throw new Error("This order doesn't contain any of your items");
+
+    if (existing.status !== "placed") {
+      throw new Error("Only newly placed orders can be marked as packed");
+    }
+
+    const { data: row, error } = await supabaseAdmin
+      .from("app_orders")
+      .update({ status: "packed", updated_at: new Date().toISOString() })
+      .eq("id", data.id)
+      .eq("status", "placed")
+      .select("*")
+      .maybeSingle();
+
+    if (error || !row) {
+      throw new Error("Status could not be updated. Please try again.");
+    }
+    return { ok: true as const, id: row.id, status: row.status as SupplierOrder["status"] };
+  });
