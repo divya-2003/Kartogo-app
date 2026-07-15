@@ -12,6 +12,14 @@ import {
 } from "./orders.functions";
 import { addWishlistFn, removeWishlistFn, mergeWishlistFn } from "./wishlist.functions";
 import { getCustomerProfileFn, saveCustomerProfileFn, saveCustomerAddressesFn } from "./customer.functions";
+import {
+  listCatalogItemsFn,
+  upsertCatalogItemFn,
+  deleteCatalogItemFn,
+  setCatalogPriceFn,
+  setCatalogStockFn,
+  type CatalogItemRow,
+} from "./catalog.functions";
 
 
 
