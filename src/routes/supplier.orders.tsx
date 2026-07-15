@@ -104,6 +104,10 @@ function SupplierOrders() {
         ))}
       </div>
 
+      {error && (
+        <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm text-destructive">{error}</div>
+      )}
+
       {loading ? (
         <div className="rounded-2xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">Loading orders…</div>
       ) : filtered.length === 0 ? (
