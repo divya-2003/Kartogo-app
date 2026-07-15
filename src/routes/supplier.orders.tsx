@@ -130,8 +130,19 @@ function SupplierOrders() {
                   </li>
                 ))}
               </ul>
-              <div className="mt-3 flex justify-end border-t border-border pt-2 text-sm font-bold">
-                Your items total: {formatINR(o.supplierTotal)}
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2 text-sm font-bold">
+                <div>
+                  {o.status === "placed" ? (
+                    <button
+                      onClick={() => markPacked(o.id)}
+                      disabled={busyId === o.id}
+                      className="rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+                    >
+                      {busyId === o.id ? "Marking…" : "Mark as packed"}
+                    </button>
+                  ) : null}
+                </div>
+                <span>Your items total: {formatINR(o.supplierTotal)}</span>
               </div>
             </div>
           ))}
