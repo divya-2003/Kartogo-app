@@ -24,6 +24,27 @@ function SupplierOrders() {
   const [orders, setOrders] = useState<SupplierOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"all" | "delivered" | "returned" | "active">("all");
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const getToken = (): string | null => {
+    try { return JSON.parse(localStorage.getItem("qk_supplier_token") || "null"); } catch { return null; }
+  };
+
+  const markPacked = async (id: string) => {
+    const token = getToken();
+    if (!token) return;
+    setBusyId(id);
+    setError(null);
+    try {
+      await supplierMarkPackedFn({ data: { token, id } });
+      setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status: "packed" } : o)));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not update order");
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
