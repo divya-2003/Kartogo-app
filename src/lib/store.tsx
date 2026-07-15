@@ -286,8 +286,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
 
     setName: (name) => {
-      setUser(u => u ? { ...u, name } : u);
-      if (customerToken) void saveCustomerProfileFn({ data: { token: customerToken, name } }).catch(() => {});
+      setUser(u => {
+        const next = u ? { ...u, name } : u;
+        // Persist name (and preserve existing email/address so this doesn't
+        // wipe them). The customer profile is what feeds the account page,
+        // order records and the header greeting.
+        if (next && customerToken) {
+          void saveCustomerProfileFn({
+            data: {
+              token: customerToken,
+              name,
+              email: next.email ?? "",
+              address: next.address ?? "",
+            },
+          }).catch(() => {});
+        }
+        return next;
+      });
     },
     updateProfile: (patch) => {
       setUser(u => {
