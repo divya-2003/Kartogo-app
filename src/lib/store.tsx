@@ -12,6 +12,14 @@ import {
 } from "./orders.functions";
 import { addWishlistFn, removeWishlistFn, mergeWishlistFn } from "./wishlist.functions";
 import { getCustomerProfileFn, saveCustomerProfileFn, saveCustomerAddressesFn } from "./customer.functions";
+import {
+  listCatalogItemsFn,
+  upsertCatalogItemFn,
+  deleteCatalogItemFn,
+  setCatalogPriceFn,
+  setCatalogStockFn,
+  type CatalogItemRow,
+} from "./catalog.functions";
 
 
 
@@ -227,12 +235,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!p || cancelled) return;
         setUser(u => {
           if (!u) return u;
+          // Server profile is the source of truth for name/email/address so a
+          // name entered anywhere (checkout address, account page, other device)
+          // shows up everywhere. Fall back to local values only if the server
+          // has none yet.
           return {
             ...u,
-            // Prefer anything the user just typed locally; otherwise fill from server.
-            name: u.name || p.name || undefined,
-            email: u.email || p.email || undefined,
-            address: u.address || p.address || undefined,
+            name: p.name || u.name || undefined,
+            email: p.email || u.email || undefined,
+            address: p.address || u.address || undefined,
           };
         });
       } catch { /* offline / not logged in — keep local values */ }
@@ -275,8 +286,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
 
     setName: (name) => {
-      setUser(u => u ? { ...u, name } : u);
-      if (customerToken) void saveCustomerProfileFn({ data: { token: customerToken, name } }).catch(() => {});
+      setUser(u => {
+        const next = u ? { ...u, name } : u;
+        // Persist name (and preserve existing email/address so this doesn't
+        // wipe them). The customer profile is what feeds the account page,
+        // order records and the header greeting.
+        if (next && customerToken) {
+          void saveCustomerProfileFn({
+            data: {
+              token: customerToken,
+              name,
+              email: next.email ?? "",
+              address: next.address ?? "",
+            },
+          }).catch(() => {});
+        }
+        return next;
+      });
     },
     updateProfile: (patch) => {
       setUser(u => {
@@ -436,33 +462,121 @@ function useProductsValue(): Product[] {
   return c?.products ?? PRODUCTS;
 }
 
+function rowToProduct(r: CatalogItemRow): Product {
+  return {
+    id: r.id,
+    name: r.name,
+    category: r.category,
+    price: Number(r.price),
+    mrp: r.mrp == null ? undefined : Number(r.mrp),
+    unit: r.unit,
+    stock: Number(r.stock),
+    emoji: r.emoji,
+    image: r.image ?? undefined,
+    description: r.description,
+  };
+}
+
 export function CatalogProvider({ children }: { children: ReactNode }) {
-  const [products, setProducts] = useState<Product[]>(PRODUCTS);
-  useEffect(() => {
-    const stored = read<Product[]>("qk_products", PRODUCTS);
-    // Code (PRODUCTS) is the source of truth for catalog details (name, price,
-    // mrp, image, etc.). localStorage only preserves locally-edited stock so we
-    // don't clobber admin inventory changes, but still reflect code updates.
-    const stockById = new Map(stored.map(p => [p.id, p.stock]));
-    const merged = PRODUCTS.map(p => ({
-      ...p,
-      stock: stockById.get(p.id) ?? p.stock,
-    }));
-    setProducts(merged);
+  const { customerToken, adminToken } = useAuth();
+  const [supplierProducts, setSupplierProducts] = useState<Product[]>([]);
+  // Local overrides for seed PRODUCTS (stock/price tweaks). Supplier-added items
+  // now come from the server so every browser sees them.
+  const [seedOverrides, setSeedOverrides] = useState<Record<string, Partial<Product>>>({});
+
+  // Read the shared server catalog. This is what makes an item added on the
+  // supplier page appear in the customer + admin apps too.
+  const refreshCatalog = useCallback(async () => {
+    try {
+      const res = await listCatalogItemsFn();
+      setSupplierProducts(res.items.map(rowToProduct));
+    } catch { /* keep last good */ }
   }, []);
-  useEffect(() => { write("qk_products", products); }, [products]);
+
+  useEffect(() => {
+    setSeedOverrides(read<Record<string, Partial<Product>>>("qk_products_overrides", {}));
+    void refreshCatalog();
+  }, [refreshCatalog]);
+  useEffect(() => { write("qk_products_overrides", seedOverrides); }, [seedOverrides]);
+
+  // Light polling + focus refresh so a change from another browser (or the
+  // supplier page in a separate tab) shows up quickly.
+  useEffect(() => {
+    const onFocus = () => { if (document.visibilityState === "visible") void refreshCatalog(); };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    const poll = window.setInterval(() => {
+      if (document.visibilityState === "visible") void refreshCatalog();
+    }, 5000);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+      window.clearInterval(poll);
+    };
+  }, [refreshCatalog]);
+
+  const products = useMemo<Product[]>(() => {
+    const seed = PRODUCTS.map(p => ({ ...p, ...(seedOverrides[p.id] ?? {}) }));
+    // Supplier/admin items come after seed catalog. De-dupe by id in case of clashes.
+    const seen = new Set(seed.map(p => p.id));
+    return [...seed, ...supplierProducts.filter(p => !seen.has(p.id))];
+  }, [supplierProducts, seedOverrides]);
+
+  const tokens = () => ({
+    supplierToken: read<string | null>("qk_supplier_token", null) ?? "",
+    adminToken: adminToken ?? "",
+  });
+
+  const isSeed = (id: string) => PRODUCTS.some(p => p.id === id);
 
   const value: CatalogCtx = {
     products,
-    upsert: (p) => setProducts(prev => {
-      const i = prev.findIndex(x => x.id === p.id);
-      if (i === -1) return [...prev, p];
-      const next = [...prev]; next[i] = p; return next;
-    }),
-    remove: (id) => setProducts(prev => prev.filter(p => p.id !== id)),
-    setStock: (id, stock) => setProducts(prev => prev.map(p => p.id === id ? { ...p, stock } : p)),
-    setPrice: (id, price) => setProducts(prev => prev.map(p => p.id === id ? { ...p, price } : p)),
+    upsert: (p) => {
+      // Optimistic update
+      setSupplierProducts(prev => {
+        if (isSeed(p.id)) return prev;
+        const i = prev.findIndex(x => x.id === p.id);
+        if (i === -1) return [...prev, p];
+        const next = [...prev]; next[i] = p; return next;
+      });
+      if (isSeed(p.id)) {
+        setSeedOverrides(prev => ({ ...prev, [p.id]: { ...prev[p.id], ...p } }));
+      }
+      const { supplierToken, adminToken } = tokens();
+      void upsertCatalogItemFn({ data: {
+        supplierToken, adminToken,
+        id: p.id, name: p.name, category: p.category, price: p.price,
+        mrp: p.mrp, unit: p.unit, stock: p.stock, emoji: p.emoji,
+        image: p.image, description: p.description,
+      } }).then(refreshCatalog).catch(() => { /* keep optimistic */ });
+    },
+    remove: (id) => {
+      setSupplierProducts(prev => prev.filter(p => p.id !== id));
+      const { supplierToken, adminToken } = tokens();
+      void deleteCatalogItemFn({ data: { supplierToken, adminToken, id } })
+        .then(refreshCatalog).catch(() => {});
+    },
+    setStock: (id, stock) => {
+      setSupplierProducts(prev => prev.map(p => p.id === id ? { ...p, stock } : p));
+      if (isSeed(id)) setSeedOverrides(prev => ({ ...prev, [id]: { ...prev[id], stock } }));
+      const { supplierToken, adminToken } = tokens();
+      if (!isSeed(id)) {
+        void setCatalogStockFn({ data: { supplierToken, adminToken, id, stock } })
+          .then(refreshCatalog).catch(() => {});
+      }
+    },
+    setPrice: (id, price) => {
+      setSupplierProducts(prev => prev.map(p => p.id === id ? { ...p, price } : p));
+      if (isSeed(id)) setSeedOverrides(prev => ({ ...prev, [id]: { ...prev[id], price } }));
+      const { supplierToken, adminToken } = tokens();
+      if (!isSeed(id)) {
+        void setCatalogPriceFn({ data: { supplierToken, adminToken, id, price } })
+          .then(refreshCatalog).catch(() => {});
+      }
+    },
   };
+  // customerToken is unused here but kept in deps for future auth-aware pricing.
+  void customerToken;
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }
 export const useCatalog = () => {
