@@ -235,12 +235,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!p || cancelled) return;
         setUser(u => {
           if (!u) return u;
+          // Server profile is the source of truth for name/email/address so a
+          // name entered anywhere (checkout address, account page, other device)
+          // shows up everywhere. Fall back to local values only if the server
+          // has none yet.
           return {
             ...u,
-            // Prefer anything the user just typed locally; otherwise fill from server.
-            name: u.name || p.name || undefined,
-            email: u.email || p.email || undefined,
-            address: u.address || p.address || undefined,
+            name: p.name || u.name || undefined,
+            email: p.email || u.email || undefined,
+            address: p.address || u.address || undefined,
           };
         });
       } catch { /* offline / not logged in — keep local values */ }
