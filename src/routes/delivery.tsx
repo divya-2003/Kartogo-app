@@ -404,15 +404,21 @@ function EarningsSection({ orders, deliveredCount, activeCount }: {
                     <div className="p-4 text-center text-sm text-muted-foreground">No deliveries yet this month.</div>
                   ) : (
                     <ul className="divide-y divide-border">
-                      {current.map(o => (
-                        <li key={o.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-                          <div className="min-w-0">
-                            <div className="font-semibold">{o.id}</div>
-                            <div className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("en-IN")}</div>
-                          </div>
-                          <span className="shrink-0 font-semibold text-primary">+{formatINR(EARNING_PER_ORDER)}</span>
-                        </li>
-                      ))}
+                      {current.map(o => {
+                        const share = Math.max(0, Number(o.driver_surge_share) || 0);
+                        return (
+                          <li key={o.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+                            <div className="min-w-0">
+                              <div className="font-semibold">{o.id}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {new Date(o.created_at).toLocaleString("en-IN")}
+                                {share > 0 && <span className="ml-1 text-primary">· +{formatINR(share)} surge</span>}
+                              </div>
+                            </div>
+                            <span className="shrink-0 font-semibold text-primary">+{formatINR(payoutFor(o))}</span>
+                          </li>
+                        );
+                      })}
                     </ul>
                   )}
                 </div>
