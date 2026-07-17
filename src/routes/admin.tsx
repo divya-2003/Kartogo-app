@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { useOrders } from "@/lib/store";
 import { verifyAdminTokenFn } from "@/lib/auth.functions";
-import { LayoutDashboard, Package2, Boxes, ClipboardList, Bike, ArrowLeft, PackageX, Star } from "lucide-react";
+import { LayoutDashboard, Package2, Boxes, ClipboardList, Bike, ArrowLeft, PackageX, Star, Flame } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: async () => {
