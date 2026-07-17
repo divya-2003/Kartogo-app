@@ -37,6 +37,7 @@ const NAV = [
   { to: "/admin/cancellations", label: "Cancellations", short: "Cancels", icon: PackageX },
   { to: "/admin/feedback", label: "Feedback", short: "Reviews", icon: Star },
   { to: "/admin/delivery", label: "Delivery", short: "Riders", icon: Bike },
+  { to: "/admin/surge", label: "Surge pricing", short: "Surge", icon: Flame },
 ] as const;
 
 function AdminLayout() {
