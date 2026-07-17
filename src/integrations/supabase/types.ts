@@ -24,6 +24,7 @@ export type Database = {
           delivery_boy_id: string | null
           delivery_fee: number
           discount: number
+          driver_surge_share: number
           id: string
           items: Json
           payment_method: string
@@ -32,6 +33,8 @@ export type Database = {
           refunded_at: string | null
           status: string
           subtotal: number
+          surge_amount: number
+          surge_reason: string | null
           total: number
           updated_at: string
         }
@@ -44,6 +47,7 @@ export type Database = {
           delivery_boy_id?: string | null
           delivery_fee?: number
           discount?: number
+          driver_surge_share?: number
           id: string
           items?: Json
           payment_method?: string
@@ -52,6 +56,8 @@ export type Database = {
           refunded_at?: string | null
           status?: string
           subtotal?: number
+          surge_amount?: number
+          surge_reason?: string | null
           total?: number
           updated_at?: string
         }
@@ -64,6 +70,7 @@ export type Database = {
           delivery_boy_id?: string | null
           delivery_fee?: number
           discount?: number
+          driver_surge_share?: number
           id?: string
           items?: Json
           payment_method?: string
@@ -72,6 +79,8 @@ export type Database = {
           refunded_at?: string | null
           status?: string
           subtotal?: number
+          surge_amount?: number
+          surge_reason?: string | null
           total?: number
           updated_at?: string
         }
@@ -481,6 +490,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      surge_config: {
+        Row: {
+          amount: number
+          driver_share_percent: number
+          enabled: boolean
+          id: number
+          note: string | null
+          reason: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          driver_share_percent?: number
+          enabled?: boolean
+          id?: number
+          note?: string | null
+          reason?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          driver_share_percent?: number
+          enabled?: boolean
+          id?: number
+          note?: string | null
+          reason?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       wallet_topups: {
         Row: {

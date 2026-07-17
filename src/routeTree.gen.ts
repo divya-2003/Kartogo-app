@@ -35,6 +35,7 @@ import { Route as SupplierOrdersRouteImport } from './routes/supplier.orders'
 import { Route as RateOrderOrderIdRouteImport } from './routes/rate-order.$orderId'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as AdminSurgeRouteImport } from './routes/admin.surge'
 import { Route as AdminProductsRouteImport } from './routes/admin.products'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
@@ -172,6 +173,11 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
   path: '/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSurgeRoute = AdminSurgeRouteImport.update({
+  id: '/surge',
+  path: '/surge',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminProductsRoute = AdminProductsRouteImport.update({
   id: '/products',
   path: '/products',
@@ -230,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
+  '/admin/surge': typeof AdminSurgeRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
@@ -262,6 +269,7 @@ export interface FileRoutesByTo {
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
+  '/admin/surge': typeof AdminSurgeRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
@@ -297,6 +305,7 @@ export interface FileRoutesById {
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
+  '/admin/surge': typeof AdminSurgeRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
@@ -333,6 +342,7 @@ export interface FileRouteTypes {
     | '/admin/inventory'
     | '/admin/orders'
     | '/admin/products'
+    | '/admin/surge'
     | '/category/$slug'
     | '/product/$id'
     | '/rate-order/$orderId'
@@ -365,6 +375,7 @@ export interface FileRouteTypes {
     | '/admin/inventory'
     | '/admin/orders'
     | '/admin/products'
+    | '/admin/surge'
     | '/category/$slug'
     | '/product/$id'
     | '/rate-order/$orderId'
@@ -399,6 +410,7 @@ export interface FileRouteTypes {
     | '/admin/inventory'
     | '/admin/orders'
     | '/admin/products'
+    | '/admin/surge'
     | '/category/$slug'
     | '/product/$id'
     | '/rate-order/$orderId'
@@ -617,6 +629,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/surge': {
+      id: '/admin/surge'
+      path: '/surge'
+      fullPath: '/admin/surge'
+      preLoaderRoute: typeof AdminSurgeRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/products': {
       id: '/admin/products'
       path: '/products'
@@ -669,6 +688,7 @@ interface AdminRouteChildren {
   AdminInventoryRoute: typeof AdminInventoryRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
   AdminProductsRoute: typeof AdminProductsRoute
+  AdminSurgeRoute: typeof AdminSurgeRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -679,6 +699,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminInventoryRoute: AdminInventoryRoute,
   AdminOrdersRoute: AdminOrdersRoute,
   AdminProductsRoute: AdminProductsRoute,
+  AdminSurgeRoute: AdminSurgeRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 

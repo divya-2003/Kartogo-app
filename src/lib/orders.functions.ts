@@ -78,6 +78,7 @@ export const placeOrderFn = createServerFn({ method: "POST" })
     const { verifyCustomerToken } = await import("./auth-tokens.server");
     const { CATALOG } = await import("./server-catalog.server");
     const { COUPONS, computeDiscount, deliveryFee } = await import("./promo");
+    const { loadSurgeConfig } = await import("./surge.functions");
 
     const session = verifyCustomerToken(data.token);
     if (!session) throw new Error("Your session has expired. Please log in again.");
@@ -89,7 +90,18 @@ export const placeOrderFn = createServerFn({ method: "POST" })
     });
 
     const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
-    const fee = deliveryFee(subtotal);
+    const baseFee = deliveryFee(subtotal);
+
+    // Snapshot surge state at the moment of ordering. Anything a driver earns
+    // from this order is derived from THIS snapshot — not the live config —
+    // so later admin edits never rewrite past settlements.
+    const surge = await loadSurgeConfig();
+    const surgeAmount = surge.enabled && subtotal > 0 ? Math.round(surge.amount) : 0;
+    const surgeReason = surgeAmount > 0 ? surge.reason : null;
+    const driverSurgeShare = surgeAmount > 0
+      ? Math.round((surgeAmount * surge.driverSharePercent) / 100)
+      : 0;
+    const fee = baseFee + surgeAmount;
 
     let promoCode: string | null = null;
     let discount = 0;
@@ -135,6 +147,9 @@ export const placeOrderFn = createServerFn({ method: "POST" })
         items,
         subtotal,
         delivery_fee: fee,
+        surge_amount: surgeAmount,
+        surge_reason: surgeReason,
+        driver_surge_share: driverSurgeShare,
         discount,
         promo_code: promoCode,
         total,

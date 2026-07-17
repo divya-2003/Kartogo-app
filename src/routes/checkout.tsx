@@ -4,7 +4,8 @@ import { Header } from "@/components/Header";
 import { useAuth, useCart, useCatalog, useOrders, useLocation, useWallet, buildLocationQuery, type SavedLocation } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { toast } from "sonner";
-import { Banknote, Smartphone, Wallet, MapPin, Plus, Check, Trash2, X, Tag, Pencil } from "lucide-react";
+import { Banknote, Smartphone, Wallet, MapPin, Plus, Check, Trash2, X, Tag, Pencil, Flame } from "lucide-react";
+import { getSurgeConfigFn, SURGE_REASON_LABELS, type SurgeConfig } from "@/lib/surge.functions";
 
 export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
@@ -106,7 +107,11 @@ function CheckoutPage() {
     }
   }, [addressOptions, selectedId]);
 
-  const fee = subtotal === 0 ? 0 : subtotal >= 199 ? 0 : 25;
+  const baseFee = subtotal === 0 ? 0 : subtotal >= 199 ? 0 : 25;
+  const [surge, setSurge] = useState<SurgeConfig | null>(null);
+  useEffect(() => { getSurgeConfigFn().then(setSurge).catch(() => {}); }, []);
+  const surgeAmount = surge?.enabled && subtotal > 0 ? Math.round(surge.amount) : 0;
+  const fee = baseFee + surgeAmount;
   const discount = useMemo(() => computeDiscount(appliedCode, subtotal), [appliedCode, subtotal]);
   const total = Math.max(0, subtotal + fee - discount);
 
@@ -518,7 +523,16 @@ function CheckoutPage() {
 
             <div className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
               <Row label="Subtotal" value={formatINR(subtotal)} />
-              <Row label="Delivery" value={fee === 0 ? "FREE" : formatINR(fee)} />
+              <Row label="Delivery" value={baseFee === 0 ? "FREE" : formatINR(baseFee)} />
+              {surgeAmount > 0 && surge && (
+                <div className="flex items-start justify-between gap-2">
+                  <span className="flex items-center gap-1 text-muted-foreground">
+                    <Flame className="h-3.5 w-3.5 text-primary" />
+                    Surge · {SURGE_REASON_LABELS[surge.reason]}
+                  </span>
+                  <span className="font-semibold text-primary">+{formatINR(surgeAmount)}</span>
+                </div>
+              )}
               {discount > 0 && (
                 <div className="flex justify-between"><span className="text-muted-foreground">Discount ({appliedCode})</span><span className="font-semibold text-primary">−{formatINR(discount)}</span></div>
               )}
