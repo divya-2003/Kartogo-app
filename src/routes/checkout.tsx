@@ -107,7 +107,11 @@ function CheckoutPage() {
     }
   }, [addressOptions, selectedId]);
 
-  const fee = subtotal === 0 ? 0 : subtotal >= 199 ? 0 : 25;
+  const baseFee = subtotal === 0 ? 0 : subtotal >= 199 ? 0 : 25;
+  const [surge, setSurge] = useState<SurgeConfig | null>(null);
+  useEffect(() => { getSurgeConfigFn().then(setSurge).catch(() => {}); }, []);
+  const surgeAmount = surge?.enabled && subtotal > 0 ? Math.round(surge.amount) : 0;
+  const fee = baseFee + surgeAmount;
   const discount = useMemo(() => computeDiscount(appliedCode, subtotal), [appliedCode, subtotal]);
   const total = Math.max(0, subtotal + fee - discount);
 
