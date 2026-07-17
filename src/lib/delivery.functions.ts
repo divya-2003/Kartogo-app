@@ -135,11 +135,13 @@ export const listAvailableOrdersFn = createServerFn({ method: "POST" })
     const session = verifyDeliveryToken(data.token);
     if (!session) throw new Error("Your session has expired. Please log in again.");
 
+    // Include both freshly placed and already-packed (by supplier) orders
+    // so a driver can still claim orders after the supplier packs them.
     const { data: rows, error } = await supabaseAdmin
       .from("app_orders")
       .select("*")
       .is("delivery_boy_id", null)
-      .eq("status", "placed")
+      .in("status", ["placed", "packed"])
       .order("created_at", { ascending: false });
     if (error) throw new Error("Orders could not be loaded. Please try again.");
     return rows ?? [];
