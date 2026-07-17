@@ -127,12 +127,11 @@ function ProductPage() {
               {p.mrp && p.mrp > p.price && <div className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">{Math.round((1 - p.price / p.mrp) * 100)}% OFF</div>}
             </div>
             <p className="mt-4 text-muted-foreground">{p.description}</p>
-            <div className="mt-6">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">Stock</div>
-              <div className={`text-sm font-semibold ${p.stock > 5 ? "text-primary" : p.stock > 0 ? "text-saffron-foreground" : "text-destructive"}`}>
-                {p.stock > 0 ? `${p.stock} in stock` : "Out of stock"}
+            {p.stock <= 0 && (
+              <div className="mt-6">
+                <div className="text-sm font-semibold text-destructive">Out of stock</div>
               </div>
-            </div>
+            )}
             <div className="mt-6 flex items-center gap-3">
               {inCart ? (
                 <div className="flex items-center gap-2 rounded-xl border border-primary p-1">
