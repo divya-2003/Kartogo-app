@@ -26,6 +26,9 @@ type OrderRow = {
   total: number;
   payment_method: string;
   status: string;
+  surge_amount?: number | null;
+  surge_reason?: string | null;
+  driver_surge_share?: number | null;
 };
 
 const TOKEN_KEY = "qk_delivery_token";
