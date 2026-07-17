@@ -170,7 +170,7 @@ export const claimOrderFn = createServerFn({ method: "POST" })
       .maybeSingle();
     if (readErr || !existing) throw new Error("Order not found");
     if (existing.delivery_boy_id) throw new Error("This order was already taken by another partner");
-    if (existing.status !== "placed") throw new Error("This order is no longer available");
+    if (existing.status !== "placed" && existing.status !== "packed") throw new Error("This order is no longer available");
 
     const { data: row, error } = await supabaseAdmin
       .from("app_orders")
