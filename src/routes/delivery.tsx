@@ -340,7 +340,9 @@ function EarningsSection({ orders, deliveredCount, activeCount }: {
     (groups.get(key) ?? []).slice().sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   const current = monthOrdersFor(currentKey);
-  const currentTotal = current.length * EARNING_PER_ORDER;
+  const payoutFor = (o: OrderRow) => EARNING_PER_ORDER + Math.max(0, Number(o.driver_surge_share) || 0);
+  const totalFor = (list: OrderRow[]) => list.reduce((s, o) => s + payoutFor(o), 0);
+  const currentTotal = totalFor(current);
   const previousKeys = keys.filter(k => k !== currentKey);
 
   return (
