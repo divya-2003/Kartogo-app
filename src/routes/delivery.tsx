@@ -434,7 +434,7 @@ function EarningsSection({ orders, deliveredCount, activeCount }: {
                     <div className="font-display font-bold">{labelFor(key)}</div>
                     <div className="text-xs text-muted-foreground">{list.length} deliver{list.length === 1 ? "y" : "ies"}</div>
                   </div>
-                  <span className="ml-auto font-display text-lg font-bold text-primary">{formatINR(list.length * EARNING_PER_ORDER)}</span>
+                  <span className="ml-auto font-display text-lg font-bold text-primary">{formatINR(totalFor(list))}</span>
                 </div>
               );
             })}
