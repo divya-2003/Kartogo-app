@@ -272,7 +272,7 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
                   )}
 
                   {/* Call & directions to the customer — available once the order is assigned. */}
-                  {tab !== "available" && (
+                  {tab === "active" && (
                     <div className="mt-3 flex items-center gap-2">
                       <a
                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o.address)}`}
