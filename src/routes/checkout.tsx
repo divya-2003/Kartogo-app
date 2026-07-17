@@ -523,7 +523,16 @@ function CheckoutPage() {
 
             <div className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
               <Row label="Subtotal" value={formatINR(subtotal)} />
-              <Row label="Delivery" value={fee === 0 ? "FREE" : formatINR(fee)} />
+              <Row label="Delivery" value={baseFee === 0 ? "FREE" : formatINR(baseFee)} />
+              {surgeAmount > 0 && surge && (
+                <div className="flex items-start justify-between gap-2">
+                  <span className="flex items-center gap-1 text-muted-foreground">
+                    <Flame className="h-3.5 w-3.5 text-primary" />
+                    Surge · {SURGE_REASON_LABELS[surge.reason]}
+                  </span>
+                  <span className="font-semibold text-primary">+{formatINR(surgeAmount)}</span>
+                </div>
+              )}
               {discount > 0 && (
                 <div className="flex justify-between"><span className="text-muted-foreground">Discount ({appliedCode})</span><span className="font-semibold text-primary">−{formatINR(discount)}</span></div>
               )}
