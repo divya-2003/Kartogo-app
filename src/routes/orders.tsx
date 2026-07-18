@@ -218,7 +218,7 @@ function OrdersPage() {
     notifyOnce(
       `${orderId}:driver:${deliveryBoyId}`,
       "Delivery partner assigned",
-      `${boy.name} · ${boy.phone}`,
+      `${boy.name} · chat via the app`,
     );
   };
 
