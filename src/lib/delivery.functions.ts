@@ -86,7 +86,8 @@ export const listDeliveryOrdersFn = createServerFn({ method: "POST" })
       .eq("delivery_boy_id", session.driverId)
       .order("created_at", { ascending: false });
     if (error) throw new Error("Orders could not be loaded. Please try again.");
-    return rows ?? [];
+    return maskOrdersForDriver(rows ?? []);
+
   });
 
 // ---------------- Update status of my order ----------------
