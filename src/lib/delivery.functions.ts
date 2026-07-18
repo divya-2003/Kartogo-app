@@ -1,8 +1,18 @@
 import { createServerFn } from "@tanstack/react-start";
 
+// Strip the customer's raw phone number before returning an order to a
+// delivery partner — drivers communicate through in-app chat / masked calls.
+function maskOrderForDriver<T extends Record<string, unknown>>(row: T): T {
+  return { ...row, customer_phone: null } as T;
+}
+function maskOrdersForDriver<T extends Record<string, unknown>>(rows: T[]): T[] {
+  return rows.map(maskOrderForDriver);
+}
+
 // Statuses a delivery partner is allowed to set on their own orders.
 const DELIVERY_STATUSES = ["packed", "out_for_delivery", "delivered"] as const;
 type DeliveryStatus = (typeof DELIVERY_STATUSES)[number];
+
 
 // ---------------- Delivery partner login ----------------
 // The driver enters their registered phone + the SMS OTP (request it first with
@@ -76,7 +86,8 @@ export const listDeliveryOrdersFn = createServerFn({ method: "POST" })
       .eq("delivery_boy_id", session.driverId)
       .order("created_at", { ascending: false });
     if (error) throw new Error("Orders could not be loaded. Please try again.");
-    return rows ?? [];
+    return maskOrdersForDriver(rows ?? []);
+
   });
 
 // ---------------- Update status of my order ----------------
@@ -120,7 +131,8 @@ export const deliverySetStatusFn = createServerFn({ method: "POST" })
       console.error("Delivery status update failed", error);
       throw new Error("Status could not be updated. Please try again.");
     }
-    return row;
+    return maskOrderForDriver(row);
+
   });
 
 // ---------------- List unassigned (available) orders ----------------
@@ -144,7 +156,7 @@ export const listAvailableOrdersFn = createServerFn({ method: "POST" })
       .in("status", ["placed", "packed"])
       .order("created_at", { ascending: false });
     if (error) throw new Error("Orders could not be loaded. Please try again.");
-    return rows ?? [];
+    return maskOrdersForDriver(rows ?? []);
   });
 
 // ---------------- Claim an order ("I'm taking this order") ----------------
@@ -183,6 +195,6 @@ export const claimOrderFn = createServerFn({ method: "POST" })
     if (error || !row) {
       throw new Error("This order was already taken by another partner");
     }
-    return row;
+    return maskOrderForDriver(row);
   });
 

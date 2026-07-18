@@ -32,6 +32,9 @@ import {
 } from "lucide-react";
 import { downloadInvoice } from "@/lib/invoice";
 import { submitReviewsFn } from "@/lib/reviews.functions";
+import { initiateMaskedCallFn } from "@/lib/chat.functions";
+import { OrderChat } from "@/components/OrderChat";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -122,6 +125,19 @@ function OrdersPage() {
   const [rateTarget, setRateTarget] = useState<Order | null>(null);
   const [ratedOrderIds, setRatedOrderIds] = useState<Set<string>>(new Set());
   const [ratedLoaded, setRatedLoaded] = useState(false);
+  const [chatOrderId, setChatOrderId] = useState<string | null>(null);
+
+  const maskedCall = async (orderId: string) => {
+    if (!customerToken) { toast.error("Please log in again"); return; }
+    try {
+      const res = await initiateMaskedCallFn({ data: { token: customerToken, orderId } });
+      toast.success(res.message);
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+  };
+
+
 
   useEffect(() => {
     try {
@@ -185,8 +201,9 @@ function OrdersPage() {
     let description = base.description;
     if (status === "out_for_delivery" && deliveryBoyId) {
       const boy = DELIVERY_BOYS.find((d) => d.id === deliveryBoyId);
-      if (boy) description += ` Driver: ${boy.name} · ${boy.phone}`;
+      if (boy) description += ` Driver: ${boy.name} · chat via the app.`;
     }
+
     if (status === "delivered" && placedAt) {
       const duration = formatDeliveryDuration(placedAt, deliveredAt ?? Date.now());
       description += ` Delivered in ${duration}.`;
@@ -201,7 +218,7 @@ function OrdersPage() {
     notifyOnce(
       `${orderId}:driver:${deliveryBoyId}`,
       "Delivery partner assigned",
-      `${boy.name} · ${boy.phone}`,
+      `${boy.name} · chat via the app`,
     );
   };
 
@@ -497,13 +514,28 @@ function OrdersPage() {
                         eta={etaText(o.status, statusSince[o.id], now)}
                       />
                       {boy && (
-                        <div className="mt-3 rounded-lg bg-primary/5 px-3 py-2 text-sm">
-                          Delivery partner: <span className="font-semibold">{boy.name}</span> ·{" "}
-                          <a className="text-primary" href={`tel:${boy.phone}`}>
-                            {boy.phone}
-                          </a>
+                        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 text-sm">
+                          <span>Delivery partner: <span className="font-semibold">{boy.name}</span></span>
+                          <span className="text-xs text-muted-foreground">Number is private</span>
+                          <div className="ml-auto flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setChatOrderId(o.id)}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold hover:bg-secondary"
+                            >
+                              💬 Chat
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void maskedCall(o.id)}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold hover:bg-secondary"
+                            >
+                              📞 Call
+                            </button>
+                          </div>
                         </div>
                       )}
+
                     </div>
                   )}
 
@@ -789,7 +821,17 @@ function OrdersPage() {
           }}
         />
       )}
+      {chatOrderId && customerToken && (
+        <OrderChat
+          token={customerToken}
+          orderId={chatOrderId}
+          myRole="customer"
+          peerLabel="Delivery partner"
+          onClose={() => setChatOrderId(null)}
+        />
+      )}
     </div>
+
 
   );
 }

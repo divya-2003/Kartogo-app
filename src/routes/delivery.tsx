@@ -1,9 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Bike, Phone, Package, Truck, CheckCircle2, MapPin, LogOut, RefreshCw, IndianRupee, HandPlatter, User2, Wallet, ListChecks, Navigation, ChevronDown } from "lucide-react";
+import { Bike, Phone, Package, Truck, CheckCircle2, MapPin, LogOut, RefreshCw, IndianRupee, HandPlatter, User2, Wallet, ListChecks, Navigation, ChevronDown, MessageSquare } from "lucide-react";
 import { listDeliveryOrdersFn, deliverySetStatusFn, listAvailableOrdersFn, claimOrderFn } from "@/lib/delivery.functions";
+import { initiateMaskedCallFn } from "@/lib/chat.functions";
+import { OrderChat } from "@/components/OrderChat";
 import { formatINR } from "@/lib/data";
+
 
 
 export const Route = createFileRoute("/delivery")({
@@ -18,7 +21,7 @@ type OrderRow = {
   id: string;
   created_at: string;
   customer_name: string;
-  customer_phone: string;
+  customer_phone: string | null;
   address: string;
   items: { productId: string; name: string; qty: number; price: number }[];
   subtotal: number;
@@ -95,6 +98,17 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [tab, setTab] = useState<"available" | "active" | "done">("available");
   const [view, setView] = useState<"orders" | "account">("orders");
+  const [chatOrderId, setChatOrderId] = useState<string | null>(null);
+
+  const maskedCall = async (orderId: string) => {
+    try {
+      const res = await initiateMaskedCallFn({ data: { token, orderId } });
+      toast.success(res.message);
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+  };
+
 
 
 
@@ -229,13 +243,12 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
 
                   <div className="mt-3 space-y-1.5 text-sm">
                     <div className="font-semibold">{o.customer_name}</div>
-                    <a href={`tel:${o.customer_phone}`} className="flex items-center gap-1.5 text-primary">
-                      <Phone className="h-3.5 w-3.5" /> +91 {o.customer_phone}
-                    </a>
+                    <div className="text-xs text-muted-foreground">Phone hidden — use in-app chat or masked call</div>
                     <div className="flex items-start gap-1.5 text-muted-foreground">
                       <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" /> <span>{o.address}</span>
                     </div>
                   </div>
+
 
                   <ul className="my-3 grid gap-1 border-y border-border py-3 text-sm">
                     {o.items.map(i => (
@@ -274,25 +287,32 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
                     </button>
                   )}
 
-                  {/* Call & directions to the customer — available once the order is assigned. */}
+                  {/* Chat / masked call / directions — available once the order is assigned. */}
                   {tab === "active" && (
-                    <div className="mt-3 flex items-center gap-2">
+                    <div className="mt-3 grid grid-cols-3 gap-2">
                       <a
                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o.address)}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-secondary"
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-secondary"
                       >
                         <Navigation className="h-3.5 w-3.5" /> Directions
                       </a>
-                      <a
-                        href={`tel:${o.customer_phone}`}
-                        className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-secondary"
+                      <button
+                        onClick={() => setChatOrderId(o.id)}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-secondary"
+                      >
+                        <MessageSquare className="h-3.5 w-3.5" /> Chat
+                      </button>
+                      <button
+                        onClick={() => void maskedCall(o.id)}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-secondary"
                       >
                         <Phone className="h-3.5 w-3.5" /> Call
-                      </a>
+                      </button>
                     </div>
                   )}
+
 
                 </article>
 
@@ -304,9 +324,19 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
         )}
       </div>
 
+      {chatOrderId && (
+        <OrderChat
+          token={token}
+          orderId={chatOrderId}
+          myRole="driver"
+          peerLabel="Customer"
+          onClose={() => setChatOrderId(null)}
+        />
+      )}
     </div>
   );
 }
+
 
 // ---------------- Earnings (monthly, clickable) ----------------
 // Delivery partners earn a flat ₹25 for every order they deliver.
@@ -538,12 +568,10 @@ function AccountView({ driver, deliveredCount, activeCount, orders, onLogout }: 
                     >
                       <Navigation className="h-3.5 w-3.5" /> Directions
                     </a>
-                    <a
-                      href={`tel:${o.customer_phone}`}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-secondary"
-                    >
-                      <Phone className="h-3.5 w-3.5" /> Call
-                    </a>
+                    <span className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground">
+                      <Phone className="h-3.5 w-3.5" /> Call via app
+                    </span>
+
                   </div>
                 </article>
               );
