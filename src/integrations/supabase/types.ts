@@ -284,6 +284,69 @@ export type Database = {
         }
         Relationships: []
       }
+      order_call_logs: {
+        Row: {
+          callee_id: string
+          callee_role: string
+          caller_id: string
+          caller_role: string
+          created_at: string
+          id: string
+          order_id: string
+          provider_ref: string | null
+          status: string
+        }
+        Insert: {
+          callee_id: string
+          callee_role: string
+          caller_id: string
+          caller_role: string
+          created_at?: string
+          id?: string
+          order_id: string
+          provider_ref?: string | null
+          status?: string
+        }
+        Update: {
+          callee_id?: string
+          callee_role?: string
+          caller_id?: string
+          caller_role?: string
+          created_at?: string
+          id?: string
+          order_id?: string
+          provider_ref?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      order_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          order_id: string
+          sender_id: string
+          sender_role: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          order_id: string
+          sender_id: string
+          sender_role: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          order_id?: string
+          sender_id?: string
+          sender_role?: string
+        }
+        Relationships: []
+      }
       order_status_log: {
         Row: {
           changed_at: string
