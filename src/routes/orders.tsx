@@ -32,6 +32,9 @@ import {
 } from "lucide-react";
 import { downloadInvoice } from "@/lib/invoice";
 import { submitReviewsFn } from "@/lib/reviews.functions";
+import { initiateMaskedCallFn } from "@/lib/chat.functions";
+import { OrderChat } from "@/components/OrderChat";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
