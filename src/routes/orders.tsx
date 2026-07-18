@@ -125,6 +125,19 @@ function OrdersPage() {
   const [rateTarget, setRateTarget] = useState<Order | null>(null);
   const [ratedOrderIds, setRatedOrderIds] = useState<Set<string>>(new Set());
   const [ratedLoaded, setRatedLoaded] = useState(false);
+  const [chatOrderId, setChatOrderId] = useState<string | null>(null);
+
+  const maskedCall = async (orderId: string) => {
+    if (!customerToken) { toast.error("Please log in again"); return; }
+    try {
+      const res = await initiateMaskedCallFn({ data: { token: customerToken, orderId } });
+      toast.success(res.message);
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+  };
+
+
 
   useEffect(() => {
     try {
