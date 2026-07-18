@@ -558,12 +558,10 @@ function AccountView({ driver, deliveredCount, activeCount, orders, onLogout }: 
                     >
                       <Navigation className="h-3.5 w-3.5" /> Directions
                     </a>
-                    <a
-                      href={`tel:${o.customer_phone}`}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-secondary"
-                    >
-                      <Phone className="h-3.5 w-3.5" /> Call
-                    </a>
+                    <span className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground">
+                      <Phone className="h-3.5 w-3.5" /> Call via app
+                    </span>
+
                   </div>
                 </article>
               );
