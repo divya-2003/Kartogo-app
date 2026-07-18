@@ -820,7 +820,17 @@ function OrdersPage() {
           }}
         />
       )}
+      {chatOrderId && customerToken && (
+        <OrderChat
+          token={customerToken}
+          orderId={chatOrderId}
+          myRole="customer"
+          peerLabel="Delivery partner"
+          onClose={() => setChatOrderId(null)}
+        />
+      )}
     </div>
+
 
   );
 }
