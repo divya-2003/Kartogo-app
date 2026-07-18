@@ -287,25 +287,32 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
                     </button>
                   )}
 
-                  {/* Call & directions to the customer — available once the order is assigned. */}
+                  {/* Chat / masked call / directions — available once the order is assigned. */}
                   {tab === "active" && (
-                    <div className="mt-3 flex items-center gap-2">
+                    <div className="mt-3 grid grid-cols-3 gap-2">
                       <a
                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o.address)}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-secondary"
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-secondary"
                       >
                         <Navigation className="h-3.5 w-3.5" /> Directions
                       </a>
-                      <a
-                        href={`tel:${o.customer_phone}`}
-                        className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-secondary"
+                      <button
+                        onClick={() => setChatOrderId(o.id)}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-secondary"
+                      >
+                        <MessageSquare className="h-3.5 w-3.5" /> Chat
+                      </button>
+                      <button
+                        onClick={() => void maskedCall(o.id)}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-secondary"
                       >
                         <Phone className="h-3.5 w-3.5" /> Call
-                      </a>
+                      </button>
                     </div>
                   )}
+
 
                 </article>
 
