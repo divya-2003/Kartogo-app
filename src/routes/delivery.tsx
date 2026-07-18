@@ -324,9 +324,19 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
         )}
       </div>
 
+      {chatOrderId && (
+        <OrderChat
+          token={token}
+          orderId={chatOrderId}
+          myRole="driver"
+          peerLabel="Customer"
+          onClose={() => setChatOrderId(null)}
+        />
+      )}
     </div>
   );
 }
+
 
 // ---------------- Earnings (monthly, clickable) ----------------
 // Delivery partners earn a flat ₹25 for every order they deliver.
