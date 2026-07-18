@@ -131,7 +131,8 @@ export const deliverySetStatusFn = createServerFn({ method: "POST" })
       console.error("Delivery status update failed", error);
       throw new Error("Status could not be updated. Please try again.");
     }
-    return row;
+    return maskOrderForDriver(row);
+
   });
 
 // ---------------- List unassigned (available) orders ----------------
