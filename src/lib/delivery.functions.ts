@@ -156,7 +156,7 @@ export const listAvailableOrdersFn = createServerFn({ method: "POST" })
       .in("status", ["placed", "packed"])
       .order("created_at", { ascending: false });
     if (error) throw new Error("Orders could not be loaded. Please try again.");
-    return rows ?? [];
+    return maskOrdersForDriver(rows ?? []);
   });
 
 // ---------------- Claim an order ("I'm taking this order") ----------------
