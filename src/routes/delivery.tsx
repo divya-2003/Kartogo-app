@@ -243,13 +243,12 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
 
                   <div className="mt-3 space-y-1.5 text-sm">
                     <div className="font-semibold">{o.customer_name}</div>
-                    <a href={`tel:${o.customer_phone}`} className="flex items-center gap-1.5 text-primary">
-                      <Phone className="h-3.5 w-3.5" /> +91 {o.customer_phone}
-                    </a>
+                    <div className="text-xs text-muted-foreground">Phone hidden — use in-app chat or masked call</div>
                     <div className="flex items-start gap-1.5 text-muted-foreground">
                       <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" /> <span>{o.address}</span>
                     </div>
                   </div>
+
 
                   <ul className="my-3 grid gap-1 border-y border-border py-3 text-sm">
                     {o.items.map(i => (
