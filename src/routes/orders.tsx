@@ -201,8 +201,9 @@ function OrdersPage() {
     let description = base.description;
     if (status === "out_for_delivery" && deliveryBoyId) {
       const boy = DELIVERY_BOYS.find((d) => d.id === deliveryBoyId);
-      if (boy) description += ` Driver: ${boy.name} · ${boy.phone}`;
+      if (boy) description += ` Driver: ${boy.name} · chat via the app.`;
     }
+
     if (status === "delivered" && placedAt) {
       const duration = formatDeliveryDuration(placedAt, deliveredAt ?? Date.now());
       description += ` Delivered in ${duration}.`;
