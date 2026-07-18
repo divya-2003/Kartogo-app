@@ -497,13 +497,28 @@ function OrdersPage() {
                         eta={etaText(o.status, statusSince[o.id], now)}
                       />
                       {boy && (
-                        <div className="mt-3 rounded-lg bg-primary/5 px-3 py-2 text-sm">
-                          Delivery partner: <span className="font-semibold">{boy.name}</span> ·{" "}
-                          <a className="text-primary" href={`tel:${boy.phone}`}>
-                            {boy.phone}
-                          </a>
+                        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 text-sm">
+                          <span>Delivery partner: <span className="font-semibold">{boy.name}</span></span>
+                          <span className="text-xs text-muted-foreground">Number is private</span>
+                          <div className="ml-auto flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setChatOrderId(o.id)}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold hover:bg-secondary"
+                            >
+                              💬 Chat
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void maskedCall(o.id)}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold hover:bg-secondary"
+                            >
+                              📞 Call
+                            </button>
+                          </div>
                         </div>
                       )}
+
                     </div>
                   )}
 
