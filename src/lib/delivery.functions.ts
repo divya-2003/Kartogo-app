@@ -195,6 +195,6 @@ export const claimOrderFn = createServerFn({ method: "POST" })
     if (error || !row) {
       throw new Error("This order was already taken by another partner");
     }
-    return row;
+    return maskOrderForDriver(row);
   });
 
