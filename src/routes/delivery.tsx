@@ -21,7 +21,7 @@ type OrderRow = {
   id: string;
   created_at: string;
   customer_name: string;
-  customer_phone: string;
+  customer_phone: string | null;
   address: string;
   items: { productId: string; name: string; qty: number; price: number }[];
   subtotal: number;
