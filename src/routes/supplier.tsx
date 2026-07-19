@@ -30,6 +30,7 @@ export const Route = createFileRoute("/supplier")({
 const NAV = [
   { to: "/supplier", label: "Inventory", short: "Stock", icon: Boxes },
   { to: "/supplier/orders", label: "Orders", short: "Orders", icon: ClipboardList },
+  { to: "/supplier/account", label: "Account", short: "Account", icon: User2 },
 ] as const;
 
 function SupplierLayout() {
