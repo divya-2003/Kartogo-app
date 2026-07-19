@@ -18,12 +18,13 @@ export const Route = createFileRoute("/")({
   }),
 });
 
-/** Detects a saved admin/delivery session and returns where to send the user. */
-function roleRedirectTarget(): "/delivery" | "/admin" | null {
+/** Detects a saved admin/delivery/supplier session and returns where to send the user. */
+function roleRedirectTarget(): "/delivery" | "/admin" | "/supplier" | null {
   if (typeof window === "undefined") return null;
   try {
     if (localStorage.getItem("qk_delivery_token") && localStorage.getItem("qk_delivery_driver")) return "/delivery";
     if (JSON.parse(localStorage.getItem("qk_admin_token") || "null")) return "/admin";
+    if (JSON.parse(localStorage.getItem("qk_supplier_token") || "null") && localStorage.getItem("qk_supplier")) return "/supplier";
   } catch { /* noop */ }
   return null;
 }
