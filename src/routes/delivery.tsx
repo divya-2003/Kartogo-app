@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Bike, Phone, Package, Truck, CheckCircle2, MapPin, LogOut, RefreshCw, IndianRupee, HandPlatter, User2, Wallet, ListChecks, Navigation, ChevronDown, MessageSquare } from "lucide-react";
@@ -10,6 +10,14 @@ import { formatINR } from "@/lib/data";
 
 
 export const Route = createFileRoute("/delivery")({
+  beforeLoad: () => {
+    if (typeof window === "undefined") return;
+    // Delivery portal is gated on a saved driver session; missing session goes
+    // to /login, never to the customer home page.
+    const token = localStorage.getItem("qk_delivery_token");
+    const driver = localStorage.getItem("qk_delivery_driver");
+    if (!token || !driver) throw redirect({ to: "/login" });
+  },
   component: DeliveryPortal,
   head: () => ({ meta: [{ title: "Delivery Partner — Kartogo" }] }),
 });
