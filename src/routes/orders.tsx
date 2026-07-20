@@ -90,7 +90,7 @@ const ACTIVE_TITLE: Record<Exclude<OrderStatus, "delivered" | "cancelled">, stri
 
 function OrdersPage() {
   const { user, customerToken } = useAuth();
-  const { orders, refresh, cancel } = useOrders();
+  const { orders, refresh, cancel, requestRefund } = useOrders();
   const { refresh: refreshWallet } = useWallet();
   const [cancelling, setCancelling] = useState<string | null>(null);
   const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
