@@ -854,6 +854,24 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
       announceOrdersSync(saved.id, saved.status);
       return saved;
     },
+    requestRefund: async (id, payload) => {
+      const ct = tokensRef.current.customerToken;
+      if (!ct) throw new Error("Please log in to request a refund");
+      const row = await requestRefundFn({ data: { token: ct, id, ...payload } });
+      const saved = rowToOrder(row as unknown as OrderRow);
+      upsertLocal(saved);
+      announceOrdersSync(saved.id, saved.status);
+      return saved;
+    },
+    resolveRefundRequest: async (id, decision) => {
+      const at = tokensRef.current.adminToken;
+      if (!at) throw new Error("Admin authorization required");
+      const row = await resolveRefundRequestFn({ data: { adminToken: at, id, decision } });
+      const saved = rowToOrder(row as unknown as OrderRow);
+      upsertLocal(saved);
+      announceOrdersSync(saved.id, saved.status);
+      return saved;
+    },
   };
   return <OrdersContext.Provider value={value}>{children}</OrdersContext.Provider>;
 }
