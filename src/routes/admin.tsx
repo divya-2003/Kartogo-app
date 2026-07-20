@@ -35,6 +35,7 @@ const NAV = [
   { to: "/admin/inventory", label: "Inventory", short: "Stock", icon: Boxes },
   { to: "/admin/orders", label: "Orders", short: "Orders", icon: ClipboardList },
   { to: "/admin/cancellations", label: "Cancellations", short: "Cancels", icon: PackageX },
+  { to: "/admin/refund-requests", label: "Refund requests", short: "Refunds", icon: BadgeIndianRupee },
   { to: "/admin/feedback", label: "Feedback", short: "Reviews", icon: Star },
   { to: "/admin/delivery", label: "Delivery", short: "Riders", icon: Bike },
   { to: "/admin/surge", label: "Surge pricing", short: "Surge", icon: Flame },
