@@ -68,7 +68,7 @@ export const upsertCatalogItemFn = createServerFn({ method: "POST" })
     unit: str(data?.unit, 80),
     stock: Math.max(0, Math.floor(num(data?.stock))),
     emoji: str(data?.emoji, 8) || "🛒",
-    image: data?.image ? str(data.image, 500) : null,
+    image: data?.image ? String(data.image).trim().slice(0, 2_000_000) : null,
     description: str(data?.description, 2000),
   }))
   .handler(async ({ data }) => {
