@@ -29,6 +29,11 @@ export type Database = {
           items: Json
           payment_method: string
           promo_code: string | null
+          refund_request_reason: string | null
+          refund_request_resolution: string | null
+          refund_request_status: string | null
+          refund_request_type: string | null
+          refund_requested_at: string | null
           refunded: boolean
           refunded_at: string | null
           status: string
@@ -52,6 +57,11 @@ export type Database = {
           items?: Json
           payment_method?: string
           promo_code?: string | null
+          refund_request_reason?: string | null
+          refund_request_resolution?: string | null
+          refund_request_status?: string | null
+          refund_request_type?: string | null
+          refund_requested_at?: string | null
           refunded?: boolean
           refunded_at?: string | null
           status?: string
@@ -75,6 +85,11 @@ export type Database = {
           items?: Json
           payment_method?: string
           promo_code?: string | null
+          refund_request_reason?: string | null
+          refund_request_resolution?: string | null
+          refund_request_status?: string | null
+          refund_request_type?: string | null
+          refund_requested_at?: string | null
           refunded?: boolean
           refunded_at?: string | null
           status?: string
