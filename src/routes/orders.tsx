@@ -778,11 +778,18 @@ function OrdersPage() {
           deliveredAt={statusSince[reportTarget.id] ?? reportTarget.updatedAt}
           products={products}
           onClose={() => setReportTarget(null)}
-          onSubmit={(data) => {
-            toast.success(
-              `Issue reported for ${reportTarget.id}: ${data.type} · ${data.resolution}`,
-            );
-            setReportTarget(null);
+          onSubmit={async (data) => {
+            const target = reportTarget;
+            try {
+              await requestRefund(target.id, { type: data.type, resolution: data.resolution, details: data.details });
+              toast.success(
+                `${data.resolution} request sent for ${target.id}. We'll review it shortly.`,
+              );
+            } catch (e) {
+              toast.error(e instanceof Error ? e.message : "Could not submit request");
+            } finally {
+              setReportTarget(null);
+            }
           }}
         />
       )}
