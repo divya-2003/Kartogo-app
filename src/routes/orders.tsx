@@ -90,7 +90,7 @@ const ACTIVE_TITLE: Record<Exclude<OrderStatus, "delivered" | "cancelled">, stri
 
 function OrdersPage() {
   const { user, customerToken } = useAuth();
-  const { orders, refresh, cancel } = useOrders();
+  const { orders, refresh, cancel, requestRefund } = useOrders();
   const { refresh: refreshWallet } = useWallet();
   const [cancelling, setCancelling] = useState<string | null>(null);
   const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
@@ -778,11 +778,18 @@ function OrdersPage() {
           deliveredAt={statusSince[reportTarget.id] ?? reportTarget.updatedAt}
           products={products}
           onClose={() => setReportTarget(null)}
-          onSubmit={(data) => {
-            toast.success(
-              `Issue reported for ${reportTarget.id}: ${data.type} · ${data.resolution}`,
-            );
-            setReportTarget(null);
+          onSubmit={async (data) => {
+            const target = reportTarget;
+            try {
+              await requestRefund(target.id, { type: data.type, resolution: data.resolution, details: data.details });
+              toast.success(
+                `${data.resolution} request sent for ${target.id}. We'll review it shortly.`,
+              );
+            } catch (e) {
+              toast.error(e instanceof Error ? e.message : "Could not submit request");
+            } finally {
+              setReportTarget(null);
+            }
           }}
         />
       )}

@@ -9,6 +9,8 @@ import {
   assignOrderFn,
   markRefundedFn,
   cancelOrderFn,
+  requestRefundFn,
+  resolveRefundRequestFn,
 } from "./orders.functions";
 import { addWishlistFn, removeWishlistFn, mergeWishlistFn } from "./wishlist.functions";
 import { getCustomerProfileFn, saveCustomerProfileFn, saveCustomerAddressesFn } from "./customer.functions";
@@ -610,6 +612,11 @@ export type Order = {
   cancelReason?: string;
   refunded?: boolean;
   refundedAt?: number;
+  refundRequestedAt?: number;
+  refundRequestReason?: string;
+  refundRequestType?: string;
+  refundRequestResolution?: "Refund" | "Replacement";
+  refundRequestStatus?: "pending" | "approved" | "rejected";
 };
 
 type OrdersCtx = {
@@ -619,6 +626,8 @@ type OrdersCtx = {
   setStatus: (id: string, status: OrderStatus, cancelReason?: string) => Promise<void>;
   assign: (id: string, deliveryBoyId: string) => Promise<void>;
   markRefunded: (id: string, refunded: boolean) => Promise<void>;
+  requestRefund: (id: string, payload: { type: string; resolution: "Refund" | "Replacement"; details: string }) => Promise<Order>;
+  resolveRefundRequest: (id: string, decision: "approved" | "rejected") => Promise<Order>;
   /** Customer-scoped cancellation (only the order owner, only while "placed"). */
   cancel: (id: string, reason: string) => Promise<Order>;
 };
@@ -654,8 +663,15 @@ type OrderRow = {
   cancel_reason?: string | null;
   refunded?: boolean | null;
   refunded_at?: string | null;
+  refund_requested_at?: string | null;
+  refund_request_reason?: string | null;
+  refund_request_type?: string | null;
+  refund_request_resolution?: string | null;
+  refund_request_status?: string | null;
 };
 function rowToOrder(r: OrderRow): Order {
+  const resolution = r.refund_request_resolution === "Replacement" ? "Replacement" : r.refund_request_resolution === "Refund" ? "Refund" : undefined;
+  const status = r.refund_request_status === "approved" || r.refund_request_status === "rejected" || r.refund_request_status === "pending" ? r.refund_request_status : undefined;
   return {
     id: r.id,
     createdAt: new Date(r.created_at).getTime(),
@@ -675,6 +691,11 @@ function rowToOrder(r: OrderRow): Order {
     cancelReason: r.cancel_reason ?? undefined,
     refunded: r.refunded ?? false,
     refundedAt: r.refunded_at ? new Date(r.refunded_at).getTime() : undefined,
+    refundRequestedAt: r.refund_requested_at ? new Date(r.refund_requested_at).getTime() : undefined,
+    refundRequestReason: r.refund_request_reason ?? undefined,
+    refundRequestType: r.refund_request_type ?? undefined,
+    refundRequestResolution: resolution,
+    refundRequestStatus: status,
   };
 }
 
@@ -828,6 +849,24 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
       const ct = tokensRef.current.customerToken;
       if (!ct) throw new Error("Please log in to cancel an order");
       const row = await cancelOrderFn({ data: { token: ct, id, reason } });
+      const saved = rowToOrder(row as unknown as OrderRow);
+      upsertLocal(saved);
+      announceOrdersSync(saved.id, saved.status);
+      return saved;
+    },
+    requestRefund: async (id, payload) => {
+      const ct = tokensRef.current.customerToken;
+      if (!ct) throw new Error("Please log in to request a refund");
+      const row = await requestRefundFn({ data: { token: ct, id, ...payload } });
+      const saved = rowToOrder(row as unknown as OrderRow);
+      upsertLocal(saved);
+      announceOrdersSync(saved.id, saved.status);
+      return saved;
+    },
+    resolveRefundRequest: async (id, decision) => {
+      const at = tokensRef.current.adminToken;
+      if (!at) throw new Error("Admin authorization required");
+      const row = await resolveRefundRequestFn({ data: { adminToken: at, id, decision } });
       const saved = rowToOrder(row as unknown as OrderRow);
       upsertLocal(saved);
       announceOrdersSync(saved.id, saved.status);
