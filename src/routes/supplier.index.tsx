@@ -5,6 +5,7 @@ import { CATEGORIES, formatINR, type Product } from "@/lib/data";
 import { useSupplier } from "@/lib/supplier-context";
 import { Plus, Pencil, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
+import { ImagePicker } from "@/components/ImagePicker";
 
 export const Route = createFileRoute("/supplier/")({ component: SupplierInventory });
 
@@ -142,6 +143,7 @@ function ItemEditor({ product, categories, onSave, onClose }: { product: Product
             <NumField label="MRP ₹" value={p.mrp ?? 0} onChange={(v) => setP({ ...p, mrp: v })} />
             <NumField label="Stock" value={p.stock} onChange={(v) => setP({ ...p, stock: v })} />
           </div>
+          <ImagePicker value={p.image} onChange={(v) => setP({ ...p, image: v })} />
           <textarea value={p.description} onChange={(e) => setP({ ...p, description: e.target.value })} rows={3} placeholder="Description" className="rounded-lg border border-input bg-background px-3 py-2 outline-none" />
         </div>
         <div className="mt-5 flex justify-end gap-2">
