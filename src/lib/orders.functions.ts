@@ -359,3 +359,102 @@ export const cancelOrderFn = createServerFn({ method: "POST" })
 
     return row;
   });
+
+// ---------------- Customer: request a refund/replacement ----------------
+// Called from the customer "Report an issue" flow. Persists the request on the
+// order so admins can see and action it in the Refund requests screen.
+export const requestRefundFn = createServerFn({ method: "POST" })
+  .inputValidator((data: {
+    token: string;
+    id: string;
+    type: string;
+    resolution: "Refund" | "Replacement";
+    details: string;
+  }) => ({
+    token: String(data?.token ?? ""),
+    id: String(data?.id ?? ""),
+    type: String(data?.type ?? "").slice(0, 80),
+    resolution: data?.resolution === "Replacement" ? "Replacement" : "Refund",
+    details: String(data?.details ?? "").slice(0, 500),
+  }))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { verifyCustomerToken } = await import("./auth-tokens.server");
+
+    const session = verifyCustomerToken(data.token);
+    if (!session) throw new Error("Please log in to request a refund");
+
+    const { data: existing, error: readErr } = await supabaseAdmin
+      .from("app_orders")
+      .select("*")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (readErr || !existing) throw new Error("Order not found");
+    if (existing.customer_phone !== session.phone) throw new Error("You can only request refunds on your own orders");
+
+    const { data: row, error } = await supabaseAdmin
+      .from("app_orders")
+      .update({
+        refund_requested_at: new Date().toISOString(),
+        refund_request_reason: data.details,
+        refund_request_type: data.type,
+        refund_request_resolution: data.resolution,
+        refund_request_status: "pending",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", data.id)
+      .select("*")
+      .maybeSingle();
+
+    if (error || !row) throw new Error("Could not submit your request. Please try again.");
+    return row;
+  });
+
+// ---------------- Admin: resolve a refund request ----------------
+export const resolveRefundRequestFn = createServerFn({ method: "POST" })
+  .inputValidator((data: { adminToken: string; id: string; decision: "approved" | "rejected" }) => ({
+    adminToken: String(data?.adminToken ?? ""),
+    id: String(data?.id ?? ""),
+    decision: data?.decision === "approved" ? "approved" : "rejected",
+  }))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { verifyAdminToken } = await import("./auth-tokens.server");
+    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+
+    const { data: existing, error: readErr } = await supabaseAdmin
+      .from("app_orders")
+      .select("*")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (readErr || !existing) throw new Error("Order not found");
+
+    const shouldMarkRefunded = data.decision === "approved" && existing.refund_request_resolution === "Refund";
+
+    const { data: row, error } = await supabaseAdmin
+      .from("app_orders")
+      .update({
+        refund_request_status: data.decision,
+        refunded: shouldMarkRefunded ? true : existing.refunded,
+        refunded_at: shouldMarkRefunded ? new Date().toISOString() : existing.refunded_at,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", data.id)
+      .select("*")
+      .maybeSingle();
+
+    if (error || !row) throw new Error("Could not update the request. Please try again.");
+
+    // Auto-credit Kartogo Cash on wallet refunds so the customer is made whole.
+    const wasWallet = existing.payment_method === "wallet" && Number(existing.total) > 0;
+    if (shouldMarkRefunded && wasWallet && !existing.refunded) {
+      await supabaseAdmin.rpc("adjust_wallet", {
+        p_phone: existing.customer_phone,
+        p_amount: Number(existing.total),
+        p_type: "credit",
+        p_note: `Refund approved for order ${existing.id}`,
+      });
+    }
+
+    return row;
+  });
