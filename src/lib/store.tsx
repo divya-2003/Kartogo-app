@@ -663,8 +663,15 @@ type OrderRow = {
   cancel_reason?: string | null;
   refunded?: boolean | null;
   refunded_at?: string | null;
+  refund_requested_at?: string | null;
+  refund_request_reason?: string | null;
+  refund_request_type?: string | null;
+  refund_request_resolution?: string | null;
+  refund_request_status?: string | null;
 };
 function rowToOrder(r: OrderRow): Order {
+  const resolution = r.refund_request_resolution === "Replacement" ? "Replacement" : r.refund_request_resolution === "Refund" ? "Refund" : undefined;
+  const status = r.refund_request_status === "approved" || r.refund_request_status === "rejected" || r.refund_request_status === "pending" ? r.refund_request_status : undefined;
   return {
     id: r.id,
     createdAt: new Date(r.created_at).getTime(),
@@ -684,6 +691,11 @@ function rowToOrder(r: OrderRow): Order {
     cancelReason: r.cancel_reason ?? undefined,
     refunded: r.refunded ?? false,
     refundedAt: r.refunded_at ? new Date(r.refunded_at).getTime() : undefined,
+    refundRequestedAt: r.refund_requested_at ? new Date(r.refund_requested_at).getTime() : undefined,
+    refundRequestReason: r.refund_request_reason ?? undefined,
+    refundRequestType: r.refund_request_type ?? undefined,
+    refundRequestResolution: resolution,
+    refundRequestStatus: status,
   };
 }
 
