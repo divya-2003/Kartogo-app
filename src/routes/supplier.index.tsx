@@ -130,9 +130,16 @@ function ItemEditor({ product, categories, onSave, onClose }: { product: Product
           <button onClick={onClose}><X className="h-4 w-4" /></button>
         </div>
         <div className="grid gap-3">
-          <div className="grid grid-cols-[80px_1fr] gap-3">
+          <div className="grid grid-cols-[64px_80px_1fr] gap-3">
+            <div className="grid h-full w-16 place-items-center overflow-hidden rounded-lg border border-border bg-secondary">
+              {p.image ? (
+                <img src={p.image} alt={p.name || "preview"} className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-2xl">{p.emoji || "🛒"}</span>
+              )}
+            </div>
             <input value={p.emoji} onChange={(e) => setP({ ...p, emoji: e.target.value })} placeholder="🛒" className="rounded-lg border border-input bg-background px-3 py-2 text-center text-2xl outline-none" />
-            <input value={p.name} onChange={(e) => setP({ ...p, name: e.target.value })} placeholder="Item name" className="rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+            <input value={p.name} onChange={(e) => setP({ ...p, name: e.target.value })} placeholder="Item name" className="min-w-0 rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
           </div>
           <select value={p.category} onChange={(e) => setP({ ...p, category: e.target.value })} className="rounded-lg border border-input bg-background px-3 py-2 outline-none">
             {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
