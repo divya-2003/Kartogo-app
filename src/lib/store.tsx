@@ -612,6 +612,11 @@ export type Order = {
   cancelReason?: string;
   refunded?: boolean;
   refundedAt?: number;
+  refundRequestedAt?: number;
+  refundRequestReason?: string;
+  refundRequestType?: string;
+  refundRequestResolution?: "Refund" | "Replacement";
+  refundRequestStatus?: "pending" | "approved" | "rejected";
 };
 
 type OrdersCtx = {
@@ -621,6 +626,8 @@ type OrdersCtx = {
   setStatus: (id: string, status: OrderStatus, cancelReason?: string) => Promise<void>;
   assign: (id: string, deliveryBoyId: string) => Promise<void>;
   markRefunded: (id: string, refunded: boolean) => Promise<void>;
+  requestRefund: (id: string, payload: { type: string; resolution: "Refund" | "Replacement"; details: string }) => Promise<Order>;
+  resolveRefundRequest: (id: string, decision: "approved" | "rejected") => Promise<Order>;
   /** Customer-scoped cancellation (only the order owner, only while "placed"). */
   cancel: (id: string, reason: string) => Promise<Order>;
 };
