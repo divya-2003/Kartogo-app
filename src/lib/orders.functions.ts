@@ -445,16 +445,38 @@ export const resolveRefundRequestFn = createServerFn({ method: "POST" })
 
     if (error || !row) throw new Error("Could not update the request. Please try again.");
 
-    // Auto-credit Kartogo Cash on wallet refunds so the customer is made whole.
-    const wasWallet = existing.payment_method === "wallet" && Number(existing.total) > 0;
-    if (shouldMarkRefunded && wasWallet && !existing.refunded) {
-      await supabaseAdmin.rpc("adjust_wallet", {
-        p_phone: existing.customer_phone,
-        p_amount: Number(existing.total),
-        p_type: "credit",
-        p_note: `Refund approved for order ${existing.id}`,
-      });
+    // Auto-credit Kartogo Cash on approved refund requests so the customer is made whole.
+    // Rules (per policy):
+    //  - Wallet-paid orders: full refund credit back to Kartogo Cash (no expiry).
+    //  - Any order under ₹500 (including Cash on Delivery): credit the order value
+    //    minus 5% GST to Kartogo Cash. That credit is valid for 1 year from today.
+    const total = Number(existing.total) || 0;
+    const wasWallet = existing.payment_method === "wallet" && total > 0;
+    const alreadyRefunded = existing.refunded === true;
+
+    if (shouldMarkRefunded && !alreadyRefunded && total > 0) {
+      if (wasWallet) {
+        await supabaseAdmin.rpc("adjust_wallet", {
+          p_phone: existing.customer_phone,
+          p_amount: total,
+          p_type: "credit",
+          p_note: `Refund approved for order ${existing.id}`,
+        });
+      } else if (total < 500) {
+        // Strip 5% GST from the paid amount (prices are GST-inclusive).
+        const GST_RATE = 0.05;
+        const creditAmount = Math.max(1, Math.round(total / (1 + GST_RATE)));
+        const expiresAt = new Date();
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+        await supabaseAdmin.rpc("credit_wallet_with_expiry", {
+          p_phone: existing.customer_phone,
+          p_amount: creditAmount,
+          p_note: `Refund for order ${existing.id} (excl. GST) · valid 1 year`,
+          p_expires_at: expiresAt.toISOString(),
+        });
+      }
     }
 
     return row;
   });
+
