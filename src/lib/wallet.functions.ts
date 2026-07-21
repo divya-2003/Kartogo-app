@@ -11,6 +11,8 @@ export type WalletTxnRow = {
   amount: number;
   note: string;
   created_at: string;
+  expires_at: string | null;
+  expired_at: string | null;
 };
 
 export type TopupRow = {
@@ -23,11 +25,14 @@ export type TopupRow = {
 async function loadWallet(phone: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+  // Sweep any credits whose 1-year validity has elapsed before reading balance.
+  await supabaseAdmin.rpc("expire_wallet_credits", { p_phone: phone });
+
   const [{ data: wallet }, { data: txns }] = await Promise.all([
     supabaseAdmin.from("customer_wallets").select("balance").eq("phone", phone).maybeSingle(),
     supabaseAdmin
       .from("wallet_transactions")
-      .select("id, type, amount, note, created_at")
+      .select("id, type, amount, note, created_at, expires_at, expired_at")
       .eq("phone", phone)
       .order("created_at", { ascending: false })
       .limit(50),
@@ -38,6 +43,7 @@ async function loadWallet(phone: string) {
     txns: (txns ?? []) as WalletTxnRow[],
   };
 }
+
 
 async function loadTopups(phone: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

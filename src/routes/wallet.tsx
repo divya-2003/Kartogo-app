@@ -64,6 +64,11 @@ function WalletPage() {
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-pop">
             {txns.map((t, i) => {
               const credit = t.type === "credit";
+              const expiryNote = t.expiresAt && !t.expiredAt
+                ? `Valid until ${new Date(t.expiresAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`
+                : t.expiredAt
+                ? "Expired"
+                : null;
               return (
                 <div
                   key={t.id}
@@ -75,6 +80,9 @@ function WalletPage() {
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-semibold">{t.note}</div>
                     <div className="text-xs text-muted-foreground">{formatWhen(t.at)}</div>
+                    {expiryNote && (
+                      <div className={`mt-0.5 text-xs font-semibold ${t.expiredAt ? "text-destructive" : "text-primary"}`}>{expiryNote}</div>
+                    )}
                   </div>
                   <div className={`shrink-0 font-display text-base font-bold ${credit ? "text-leaf" : "text-destructive"}`}>
                     {credit ? "+" : "−"}{formatINR(t.amount)}
@@ -82,6 +90,7 @@ function WalletPage() {
                 </div>
               );
             })}
+
           </div>
         )}
 

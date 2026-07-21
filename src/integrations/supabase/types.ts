@@ -627,6 +627,8 @@ export type Database = {
         Row: {
           amount: number
           created_at: string
+          expired_at: string | null
+          expires_at: string | null
           id: string
           note: string
           phone: string
@@ -635,6 +637,8 @@ export type Database = {
         Insert: {
           amount: number
           created_at?: string
+          expired_at?: string | null
+          expires_at?: string | null
           id?: string
           note?: string
           phone: string
@@ -643,6 +647,8 @@ export type Database = {
         Update: {
           amount?: number
           created_at?: string
+          expired_at?: string | null
+          expires_at?: string | null
           id?: string
           note?: string
           phone?: string
@@ -664,6 +670,16 @@ export type Database = {
         }
         Returns: number
       }
+      credit_wallet_with_expiry: {
+        Args: {
+          p_amount: number
+          p_expires_at: string
+          p_note: string
+          p_phone: string
+        }
+        Returns: number
+      }
+      expire_wallet_credits: { Args: { p_phone: string }; Returns: undefined }
     }
     Enums: {
       order_status:
