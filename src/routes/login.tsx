@@ -49,8 +49,15 @@ function LoginPage() {
     setLoading(true);
     try {
       const { isAdminPhone, delivery, supplier } = await verifyOtp(phone, otp);
+      // Clear tokens belonging to OTHER roles so a device that previously
+      // hosted a supplier/delivery/admin session doesn't bounce a new customer
+      // (or a different role) back to the wrong portal via roleRedirectTarget.
+      const clearKeys = (keys: string[]) => {
+        try { for (const k of keys) localStorage.removeItem(k); } catch { /* noop */ }
+      };
       // Delivery partners are routed straight to their portal.
       if (delivery) {
+        clearKeys(["qk_admin_token", "qk_supplier_token", "qk_supplier"]);
         try {
           localStorage.setItem("qk_delivery_token", delivery.token);
           localStorage.setItem("qk_delivery_driver", JSON.stringify(delivery.driver));
@@ -61,6 +68,7 @@ function LoginPage() {
       }
       // Suppliers are routed straight to their scoped inventory + orders portal.
       if (supplier) {
+        clearKeys(["qk_admin_token", "qk_delivery_token", "qk_delivery_driver"]);
         try {
           localStorage.setItem("qk_supplier_token", JSON.stringify(supplier.token));
           localStorage.setItem("qk_supplier", JSON.stringify(supplier.supplier));
@@ -76,12 +84,22 @@ function LoginPage() {
         toast.success("Identity verified. Enter your admin passcode.");
         return;
       }
+      // Regular customer — purge any stale role tokens from prior sessions
+      // on this device so the home page doesn't auto-redirect them.
+      clearKeys([
+        "qk_admin_token",
+        "qk_delivery_token",
+        "qk_delivery_driver",
+        "qk_supplier_token",
+        "qk_supplier",
+      ]);
       toast.success("Welcome to Kartogo!");
       nav({ to: redirect ?? "/" });
     } catch (err) {
       toast.error((err as Error).message);
     } finally { setLoading(false); }
   };
+
 
   const handlePasscode = async (e: React.FormEvent) => {
     e.preventDefault();
