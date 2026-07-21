@@ -361,7 +361,17 @@ export const useAuth = () => {
 // client can no longer fabricate a balance via localStorage to pay for free.
 // Order spends and refunds are applied entirely on the server (in placeOrderFn /
 // cancelOrderFn / markRefundedFn); the client just refreshes after those calls.
-export type WalletTxn = { id: string; type: "credit" | "debit"; amount: number; note: string; at: number };
+export type WalletTxn = {
+  id: string;
+  type: "credit" | "debit";
+  amount: number;
+  note: string;
+  at: number;
+  /** For time-limited credits (e.g. refund credits) — epoch ms when the credit expires. */
+  expiresAt: number | null;
+  /** When the credit was expired and offset by the system. */
+  expiredAt: number | null;
+};
 export type WalletTopup = { id: string; amount: number; status: "success" | "failed"; at: number };
 type WalletCtx = {
   balance: number;
@@ -384,8 +394,11 @@ function rowToWalletTxn(r: WalletTxnRow): WalletTxn {
     amount: Number(r.amount),
     note: r.note,
     at: new Date(r.created_at).getTime(),
+    expiresAt: r.expires_at ? new Date(r.expires_at).getTime() : null,
+    expiredAt: r.expired_at ? new Date(r.expired_at).getTime() : null,
   };
 }
+
 
 function rowToTopup(r: TopupRow): WalletTopup {
   return {
