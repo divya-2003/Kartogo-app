@@ -446,36 +446,64 @@ export const resolveRefundRequestFn = createServerFn({ method: "POST" })
     if (error || !row) throw new Error("Could not update the request. Please try again.");
 
     // Auto-credit Kartogo Cash on approved refund requests so the customer is made whole.
-    // Rules (per policy):
+    // Rules live in the admin-configurable `refund_config` table:
     //  - Wallet-paid orders: full refund credit back to Kartogo Cash (no expiry).
-    //  - Any order under ₹500 (including Cash on Delivery): credit the order value
-    //    minus 5% GST to Kartogo Cash. That credit is valid for 1 year from today.
+    //  - Any order under the configured threshold (including Cash on Delivery): credit
+    //    the order value minus the configured GST% to Kartogo Cash. That credit is
+    //    valid for `credit_expiry_days` from today (default 365).
     const total = Number(existing.total) || 0;
-    const wasWallet = existing.payment_method === "wallet" && total > 0;
     const alreadyRefunded = existing.refunded === true;
 
+    const { loadRefundConfig } = await import("./refund.functions");
+    const { computeRefundCredit } = await import("./refund-credit");
+    const config = await loadRefundConfig();
+
+    let creditAmount = 0;
+    let creditExpiresAt: Date | null = null;
+
     if (shouldMarkRefunded && !alreadyRefunded && total > 0) {
-      if (wasWallet) {
+      const outcome = computeRefundCredit({
+        total,
+        paymentMethod: existing.payment_method as "cash" | "upi" | "wallet",
+        config,
+      });
+      if (outcome.kind === "wallet_full") {
+        creditAmount = outcome.creditAmount;
         await supabaseAdmin.rpc("adjust_wallet", {
           p_phone: existing.customer_phone,
-          p_amount: total,
+          p_amount: creditAmount,
           p_type: "credit",
           p_note: `Refund approved for order ${existing.id}`,
         });
-      } else if (total < 500) {
-        // Strip 5% GST from the paid amount (prices are GST-inclusive).
-        const GST_RATE = 0.05;
-        const creditAmount = Math.max(1, Math.round(total / (1 + GST_RATE)));
-        const expiresAt = new Date();
-        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+      } else if (outcome.kind === "low_value_ex_gst") {
+        creditAmount = outcome.creditAmount;
+        creditExpiresAt = outcome.expiresAt;
         await supabaseAdmin.rpc("credit_wallet_with_expiry", {
           p_phone: existing.customer_phone,
           p_amount: creditAmount,
-          p_note: `Refund for order ${existing.id} (excl. GST) · valid 1 year`,
-          p_expires_at: expiresAt.toISOString(),
+          p_note: `Refund for order ${existing.id} (excl. ${config.gstPercent}% GST) · valid ${config.creditExpiryDays} days`,
+          p_expires_at: outcome.expiresAt.toISOString(),
         });
       }
     }
+
+    // Audit log — records the actor, decision, and exact wallet credit posted.
+    // The admin token is opaque (single passcode-scoped role), so we log
+    // "admin" plus the last 8 chars of the signed token as a best-effort
+    // session fingerprint.
+    const actor = `admin:${data.adminToken.slice(-8)}`;
+    await supabaseAdmin.from("refund_audit_log").insert({
+      order_id: existing.id,
+      customer_phone: existing.customer_phone,
+      decision: data.decision,
+      resolution: existing.refund_request_resolution ?? null,
+      order_total: total,
+      credit_amount: creditAmount,
+      credit_expires_at: creditExpiresAt ? creditExpiresAt.toISOString() : null,
+      threshold_amount: config.thresholdAmount,
+      gst_percent: config.gstPercent,
+      actor,
+    });
 
     return row;
   });
