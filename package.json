@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "check:brand": "node scripts/check-no-kartigo.mjs",
+    "test": "vitest run",
     "format": "prettier --write ."
   },
   "dependencies": {
