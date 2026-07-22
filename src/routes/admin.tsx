@@ -3,15 +3,12 @@ import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { useOrders } from "@/lib/store";
 import { verifyAdminTokenFn } from "@/lib/auth.functions";
-import { LayoutDashboard, Package2, Boxes, ClipboardList, Bike, ArrowLeft, PackageX, Star, Flame, BadgeIndianRupee } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { LayoutDashboard, Package2, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Menu } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: async () => {
     if (typeof window === "undefined") return;
-    // The admin shell is gated on a SERVER-CONFIRMED identity check: we read the
-    // token from localStorage but never trust it — the server cryptographically
-    // verifies its HMAC signature. A spoofed value fails verification and the
-    // user is redirected to /login before the admin UI is ever rendered.
     let token: string | null = null;
     try { token = JSON.parse(localStorage.getItem("qk_admin_token") || "null"); } catch { token = null; }
     if (!token) throw redirect({ to: "/login" });
@@ -19,7 +16,6 @@ export const Route = createFileRoute("/admin")({
       const { valid } = await verifyAdminTokenFn({ data: { token } });
       if (!valid) throw redirect({ to: "/login" });
     } catch (e) {
-      // Re-throw redirects; treat any other failure as unauthorized.
       if (isRedirect(e)) throw e;
       throw redirect({ to: "/login" });
     }
@@ -28,27 +24,25 @@ export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — Kartogo" }] }),
 });
 
-
 const NAV = [
-  { to: "/admin", label: "Dashboard", short: "Home", icon: LayoutDashboard },
-  { to: "/admin/products", label: "Products", short: "Products", icon: Package2 },
-  { to: "/admin/inventory", label: "Inventory", short: "Stock", icon: Boxes },
-  { to: "/admin/orders", label: "Orders", short: "Orders", icon: ClipboardList },
-  { to: "/admin/cancellations", label: "Cancellations", short: "Cancels", icon: PackageX },
-  { to: "/admin/refund-requests", label: "Refund requests", short: "Refunds", icon: BadgeIndianRupee },
-  { to: "/admin/feedback", label: "Feedback", short: "Reviews", icon: Star },
-  { to: "/admin/delivery", label: "Delivery", short: "Riders", icon: Bike },
-  { to: "/admin/surge", label: "Surge pricing", short: "Surge", icon: Flame },
+  { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/admin/products", label: "Products", icon: Package2 },
+  { to: "/admin/inventory", label: "Inventory", icon: Boxes },
+  { to: "/admin/orders", label: "Orders", icon: ClipboardList },
+  { to: "/admin/cancellations", label: "Cancellations", icon: PackageX },
+  { to: "/admin/refund-requests", label: "Refund requests", icon: BadgeIndianRupee },
+  { to: "/admin/feedback", label: "Feedback", icon: Star },
+  { to: "/admin/delivery", label: "Delivery", icon: Bike },
+  { to: "/admin/surge", label: "Surge pricing", icon: Flame },
 ] as const;
 
 function AdminLayout() {
   const path = useRouterState({ select: s => s.location.pathname });
   const { orders } = useOrders();
   const [cancelSeenCount, setCancelSeenCount] = useState(0);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const cancelledCount = orders.filter(o => o.status === "cancelled").length;
   const isActive = (to: string) => (to === "/admin" ? path === "/admin" : path.startsWith(to));
-
-  // Number of cancellations that arrived since the admin last opened the page.
   const unseenCancellations = Math.max(0, cancelledCount - cancelSeenCount);
 
   useEffect(() => {
@@ -56,8 +50,6 @@ function AdminLayout() {
     setCancelSeenCount(Number.isFinite(stored) ? stored : 0);
   }, [path]);
 
-  // On the cancellations page, treat every current cancellation as seen so the
-  // badge clears — it reappears only when new cancellations come in later.
   useEffect(() => {
     if (path.startsWith("/admin/cancellations")) {
       localStorage.setItem("kartigo_cancel_seen_count", String(cancelledCount));
@@ -65,63 +57,79 @@ function AdminLayout() {
     }
   }, [path, cancelledCount]);
 
+  // Auto-close the mobile sheet whenever the route changes.
+  useEffect(() => { setMobileOpen(false); }, [path]);
+
   const markCancellationsSeen = () => {
     localStorage.setItem("kartigo_cancel_seen_count", String(cancelledCount));
     setCancelSeenCount(cancelledCount);
   };
 
+  const NavList = ({ inSheet = false }: { inSheet?: boolean }) => (
+    <nav className="flex flex-col gap-1">
+      {NAV.map(n => {
+        const active = isActive(n.to);
+        const badge = n.to === "/admin/cancellations" && unseenCancellations > 0 ? unseenCancellations : null;
+        return (
+          <Link
+            key={n.to}
+            to={n.to}
+            onClick={() => {
+              if (n.to === "/admin/cancellations") markCancellationsSeen();
+              if (inSheet) setMobileOpen(false);
+            }}
+            className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition ${active ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}
+          >
+            <n.icon className="h-4 w-4" /> {n.label}
+            {badge !== null && (
+              <span className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold ${active ? "bg-primary-foreground text-primary" : "bg-destructive text-destructive-foreground"}`}>{badge}</span>
+            )}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 pb-28 pt-4 md:grid-cols-[220px_1fr] md:px-6 md:py-6 md:pb-6">
+      {/* Mobile top bar with hamburger */}
+      <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-border bg-card/95 px-3 py-2 backdrop-blur md:hidden">
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetTrigger asChild>
+            <button
+              aria-label={mobileOpen ? "Close admin menu" : "Open admin menu"}
+              className="grid h-10 w-10 place-items-center rounded-lg border border-border bg-card hover:bg-secondary"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-72 p-0">
+            <SheetHeader className="border-b border-border p-4">
+              <SheetTitle className="text-left font-display text-base font-bold">Admin menu</SheetTitle>
+            </SheetHeader>
+            <div className="p-3">
+              <NavList inSheet />
+            </div>
+          </SheetContent>
+        </Sheet>
+        <span className="font-display text-sm font-bold">Admin</span>
+        {unseenCancellations > 0 && (
+          <span className="ml-auto rounded-full bg-destructive px-2 py-0.5 text-[10px] font-bold text-destructive-foreground">
+            {unseenCancellations} new cancel
+          </span>
+        )}
+      </div>
+
+      <div className="mx-auto grid max-w-7xl gap-6 px-4 pb-6 pt-4 md:grid-cols-[220px_1fr] md:px-6 md:py-6">
         {/* Desktop sidebar */}
         <aside className="hidden h-fit rounded-2xl border border-border bg-card p-3 md:sticky md:top-24 md:block">
-
-          <nav className="flex flex-col gap-1">
-            {NAV.map(n => {
-              const active = isActive(n.to);
-              const badge = n.to === "/admin/cancellations" && unseenCancellations > 0 ? unseenCancellations : null;
-              return (
-                <Link key={n.to} to={n.to} onClick={n.to === "/admin/cancellations" ? markCancellationsSeen : undefined} className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition ${active ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}>
-                  <n.icon className="h-4 w-4" /> {n.label}
-                  {badge !== null && (
-                    <span className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold ${active ? "bg-primary-foreground text-primary" : "bg-destructive text-destructive-foreground"}`}>{badge}</span>
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
+          <NavList />
         </aside>
 
         <main><Outlet /></main>
       </div>
-
-      {/* Mobile: sticky bottom tab bar */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur md:hidden">
-        <div className="mx-auto flex max-w-lg">
-          {NAV.map(n => {
-            const active = isActive(n.to);
-            const badge = n.to === "/admin/cancellations" && unseenCancellations > 0 ? unseenCancellations : null;
-            return (
-              <Link
-                key={n.to}
-                to={n.to}
-                onClick={n.to === "/admin/cancellations" ? markCancellationsSeen : undefined}
-                className={`relative flex flex-1 flex-col items-center gap-1 py-2 text-[10px] font-semibold transition ${active ? "text-primary" : "text-muted-foreground"}`}
-              >
-                <span className={`grid h-8 w-8 place-items-center rounded-xl transition ${active ? "bg-primary/10" : ""}`}>
-                  <n.icon className="h-[18px] w-[18px]" />
-                </span>
-                <span className="leading-none">{n.short}</span>
-                {badge !== null && (
-                  <span className="absolute right-2 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground">{badge}</span>
-                )}
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
     </div>
   );
 }
