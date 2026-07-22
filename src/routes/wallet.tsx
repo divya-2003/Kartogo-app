@@ -22,10 +22,53 @@ function formatWhen(at: number) {
   });
 }
 
+function csvEscape(v: string | number | null | undefined): string {
+  if (v === null || v === undefined) return "";
+  const s = String(v);
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
 function WalletPage() {
-  const { user } = useAuth();
+  const { user, customerToken } = useAuth();
   const { balance, txns, topups } = useWallet();
   const nav = useNavigate();
+  const [exporting, setExporting] = useState(false);
+
+  const exportCsv = async () => {
+    if (!customerToken) return;
+    setExporting(true);
+    try {
+      const { rows, since } = await getWalletHistoryFn({ data: { token: customerToken } });
+      const header = ["Date", "Type", "Amount (INR)", "Note", "Expires at", "Expired at"];
+      const lines = [header.join(",")];
+      for (const r of rows) {
+        lines.push([
+          csvEscape(new Date(r.created_at).toISOString()),
+          csvEscape(r.type),
+          csvEscape(Number(r.amount).toFixed(2)),
+          csvEscape(r.note ?? ""),
+          csvEscape(r.expires_at ? new Date(r.expires_at).toISOString() : ""),
+          csvEscape(r.expired_at ? new Date(r.expired_at).toISOString() : ""),
+        ].join(","));
+      }
+      const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const today = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `kartogo-wallet-${today}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(`Exported ${rows.length} transactions since ${new Date(since).toLocaleDateString("en-IN")}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not export wallet history");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   if (!user) {
     return (
@@ -58,7 +101,16 @@ function WalletPage() {
         </div>
 
         {/* History */}
-        <h2 className="mb-3 mt-8 font-display text-xl font-bold">Transaction history</h2>
+        <div className="mb-3 mt-8 flex flex-wrap items-center gap-3">
+          <h2 className="font-display text-xl font-bold">Transaction history</h2>
+          <button
+            onClick={exportCsv}
+            disabled={exporting}
+            className="ml-auto flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold hover:bg-secondary disabled:opacity-60"
+          >
+            <Download className="h-3.5 w-3.5" /> {exporting ? "Exporting…" : "Export CSV (12 mo)"}
+          </button>
+        </div>
         {txns.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-border bg-card p-5 text-sm text-muted-foreground shadow-pop">
             No wallet transactions yet. Top-ups and order payments made with Kartogo Cash will show up here.
