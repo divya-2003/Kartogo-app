@@ -569,6 +569,75 @@ export type Database = {
           },
         ]
       }
+      refund_audit_log: {
+        Row: {
+          actor: string
+          created_at: string
+          credit_amount: number
+          credit_expires_at: string | null
+          customer_phone: string | null
+          decision: string
+          gst_percent: number | null
+          id: string
+          order_id: string
+          order_total: number | null
+          resolution: string | null
+          threshold_amount: number | null
+        }
+        Insert: {
+          actor?: string
+          created_at?: string
+          credit_amount?: number
+          credit_expires_at?: string | null
+          customer_phone?: string | null
+          decision: string
+          gst_percent?: number | null
+          id?: string
+          order_id: string
+          order_total?: number | null
+          resolution?: string | null
+          threshold_amount?: number | null
+        }
+        Update: {
+          actor?: string
+          created_at?: string
+          credit_amount?: number
+          credit_expires_at?: string | null
+          customer_phone?: string | null
+          decision?: string
+          gst_percent?: number | null
+          id?: string
+          order_id?: string
+          order_total?: number | null
+          resolution?: string | null
+          threshold_amount?: number | null
+        }
+        Relationships: []
+      }
+      refund_config: {
+        Row: {
+          credit_expiry_days: number
+          gst_percent: number
+          id: number
+          threshold_amount: number
+          updated_at: string
+        }
+        Insert: {
+          credit_expiry_days?: number
+          gst_percent?: number
+          id?: number
+          threshold_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          credit_expiry_days?: number
+          gst_percent?: number
+          id?: number
+          threshold_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       surge_config: {
         Row: {
           amount: number
