@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { MapPin, Search, ShoppingBag, Loader2, XCircle } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { MapPin, Search, ShoppingBag, Loader2, XCircle, Send } from "lucide-react";
 import { checkServiceability } from "@/lib/serviceability.functions";
 import { useLocation } from "@/lib/store";
 import { toast } from "sonner";
@@ -8,9 +9,10 @@ import { toast } from "sonner";
 export function LocationGate() {
   const { setLocation } = useLocation();
   const check = useServerFn(checkServiceability);
+  const nav = useNavigate();
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [denied, setDenied] = useState<string | null>(null);
+  const [denied, setDenied] = useState<{ reason: string; pincode: string | null } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +33,7 @@ export function LocationGate() {
         });
         toast.success(result.reason);
       } else {
-        setDenied(result.reason);
+        setDenied({ reason: result.reason, pincode: result.pincode ?? null });
       }
     } catch {
       toast.error("Couldn't check your location. Please try again.");
@@ -73,9 +75,18 @@ export function LocationGate() {
             </div>
 
             {denied && (
-              <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-                <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{denied}</span>
+              <div className="space-y-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                <div className="flex items-start gap-2">
+                  <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{denied.reason}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => nav({ to: "/request-service", search: { pincode: denied.pincode ?? undefined, area: query.trim() || undefined } })}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground hover:bg-destructive/90"
+                >
+                  <Send className="h-3.5 w-3.5" /> Request Kartogo to your area
+                </button>
               </div>
             )}
 
