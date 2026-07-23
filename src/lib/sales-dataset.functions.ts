@@ -54,9 +54,9 @@ export const getSalesDatasetFn = createServerFn({ method: "POST" })
     const productNamesById: Record<string, string> = {};
 
     const { CATALOG } = await import("./server-catalog.server");
-    for (const p of CATALOG) {
-      productIds.add(p.id);
-      productNamesById[p.id] = p.name;
+    for (const [pid, entry] of Object.entries(CATALOG)) {
+      productIds.add(pid);
+      productNamesById[pid] = entry.name;
     }
 
     const rows: SalesRow[] = ((orders ?? []) as OrderRow[]).map((o) => {
