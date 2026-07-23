@@ -483,6 +483,42 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_markets: {
+        Row: {
+          address: string
+          created_at: string
+          id: string
+          is_active: boolean
+          lat: number | null
+          lng: number | null
+          name: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          lat?: number | null
+          lng?: number | null
+          name: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          lat?: number | null
+          lng?: number | null
+          name?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_reviews: {
         Row: {
           created_at: string
@@ -664,6 +700,45 @@ export type Database = {
           id?: number
           note?: string | null
           reason?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      unserviceable_requests: {
+        Row: {
+          area_text: string | null
+          created_at: string
+          id: string
+          lat: number | null
+          lng: number | null
+          note: string | null
+          phone: string | null
+          pincode: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          area_text?: string | null
+          created_at?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          note?: string | null
+          phone?: string | null
+          pincode?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          area_text?: string | null
+          created_at?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          note?: string | null
+          phone?: string | null
+          pincode?: string | null
+          status?: string
           updated_at?: string
         }
         Relationships: []

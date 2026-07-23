@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useServerFn } from "@tanstack/react-start";
-import { MapPin, Search, X, ChevronDown, Loader2, XCircle, Clock, Check, Trash2, LocateFixed, Pencil } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { MapPin, Search, X, ChevronDown, Loader2, XCircle, Clock, Check, Trash2, LocateFixed, Pencil, Send } from "lucide-react";
 import { toast } from "sonner";
 import { checkServiceability, locateByCoords } from "@/lib/serviceability.functions";
 import { deliveryWindow } from "@/lib/serviceability";
@@ -55,11 +56,12 @@ function LocationPickerClient({
 }) {
   const check = useServerFn(checkServiceability);
   const locate = useServerFn(locateByCoords);
+  const nav = useNavigate();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [locating, setLocating] = useState(false);
-  const [denied, setDenied] = useState<string | null>(null);
+  const [denied, setDenied] = useState<{ reason: string; pincode: string | null; area: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Second step: capture the exact address (door no, apartment, landmark) for a
@@ -171,7 +173,7 @@ function LocationPickerClient({
           etaMinutes: result.etaMinutes ?? undefined,
         });
       } else {
-        setDenied(result.reason);
+        setDenied({ reason: result.reason, pincode: result.pincode ?? null, area: query.trim() });
       }
     } catch {
       toast.error("Couldn't check your location. Please try again.");
@@ -202,7 +204,7 @@ function LocationPickerClient({
             });
           } else {
             if (result.address) setQuery(result.address);
-            setDenied(result.reason);
+            setDenied({ reason: result.reason, pincode: result.pincode ?? null, area: result.address ?? "" });
           }
         } catch {
           toast.error("Couldn't detect your location. Please try again.");
@@ -350,9 +352,21 @@ function LocationPickerClient({
               </div>
 
               {denied && (
-                <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-                  <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>{denied}</span>
+                <div className="space-y-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                  <div className="flex items-start gap-2">
+                    <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>{denied.reason}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpen(false);
+                      nav({ to: "/request-service", search: { pincode: denied.pincode ?? undefined, area: denied.area || undefined } });
+                    }}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    <Send className="h-3.5 w-3.5" /> Request Kartogo to your area
+                  </button>
                 </div>
               )}
 
