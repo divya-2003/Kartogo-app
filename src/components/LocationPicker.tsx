@@ -56,11 +56,12 @@ function LocationPickerClient({
 }) {
   const check = useServerFn(checkServiceability);
   const locate = useServerFn(locateByCoords);
+  const nav = useNavigate();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [locating, setLocating] = useState(false);
-  const [denied, setDenied] = useState<string | null>(null);
+  const [denied, setDenied] = useState<{ reason: string; pincode: string | null; area: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Second step: capture the exact address (door no, apartment, landmark) for a
