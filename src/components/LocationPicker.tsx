@@ -173,7 +173,7 @@ function LocationPickerClient({
           etaMinutes: result.etaMinutes ?? undefined,
         });
       } else {
-        setDenied(result.reason);
+        setDenied({ reason: result.reason, pincode: result.pincode ?? null, area: query.trim() });
       }
     } catch {
       toast.error("Couldn't check your location. Please try again.");
@@ -204,7 +204,7 @@ function LocationPickerClient({
             });
           } else {
             if (result.address) setQuery(result.address);
-            setDenied(result.reason);
+            setDenied({ reason: result.reason, pincode: result.pincode ?? null, area: result.address ?? "" });
           }
         } catch {
           toast.error("Couldn't detect your location. Please try again.");
