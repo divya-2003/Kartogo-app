@@ -16,6 +16,7 @@ import { Route as SupportRouteImport } from './routes/support'
 import { Route as SupplierRouteImport } from './routes/supplier'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as RequestServiceRouteImport } from './routes/request-service'
 import { Route as RefundsRouteImport } from './routes/refunds'
 import { Route as RefundReturnsRouteImport } from './routes/refund-returns'
 import { Route as PrintRouteImport } from './routes/print'
@@ -36,9 +37,12 @@ import { Route as SupplierAccountRouteImport } from './routes/supplier.account'
 import { Route as RateOrderOrderIdRouteImport } from './routes/rate-order.$orderId'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as AdminUnserviceableRouteImport } from './routes/admin.unserviceable'
 import { Route as AdminSurgeRouteImport } from './routes/admin.surge'
+import { Route as AdminSalesRouteImport } from './routes/admin.sales'
 import { Route as AdminRefundRequestsRouteImport } from './routes/admin.refund-requests'
 import { Route as AdminProductsRouteImport } from './routes/admin.products'
+import { Route as AdminPartnersRouteImport } from './routes/admin.partners'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
 import { Route as AdminFeedbackRouteImport } from './routes/admin.feedback'
@@ -78,6 +82,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RequestServiceRoute = RequestServiceRouteImport.update({
+  id: '/request-service',
+  path: '/request-service',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RefundsRoute = RefundsRouteImport.update({
@@ -180,9 +189,19 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
   path: '/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminUnserviceableRoute = AdminUnserviceableRouteImport.update({
+  id: '/unserviceable',
+  path: '/unserviceable',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSurgeRoute = AdminSurgeRouteImport.update({
   id: '/surge',
   path: '/surge',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSalesRoute = AdminSalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminRefundRequestsRoute = AdminRefundRequestsRouteImport.update({
@@ -193,6 +212,11 @@ const AdminRefundRequestsRoute = AdminRefundRequestsRouteImport.update({
 const AdminProductsRoute = AdminProductsRouteImport.update({
   id: '/products',
   path: '/products',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPartnersRoute = AdminPartnersRouteImport.update({
+  id: '/partners',
+  path: '/partners',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminOrdersRoute = AdminOrdersRouteImport.update({
@@ -235,6 +259,7 @@ export interface FileRoutesByFullPath {
   '/print': typeof PrintRoute
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
+  '/request-service': typeof RequestServiceRoute
   '/search': typeof SearchRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/supplier': typeof SupplierRouteWithChildren
@@ -247,9 +272,12 @@ export interface FileRoutesByFullPath {
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/orders': typeof AdminOrdersRoute
+  '/admin/partners': typeof AdminPartnersRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/refund-requests': typeof AdminRefundRequestsRoute
+  '/admin/sales': typeof AdminSalesRoute
   '/admin/surge': typeof AdminSurgeRoute
+  '/admin/unserviceable': typeof AdminUnserviceableRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
@@ -271,6 +299,7 @@ export interface FileRoutesByTo {
   '/print': typeof PrintRoute
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
+  '/request-service': typeof RequestServiceRoute
   '/search': typeof SearchRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
@@ -282,9 +311,12 @@ export interface FileRoutesByTo {
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/orders': typeof AdminOrdersRoute
+  '/admin/partners': typeof AdminPartnersRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/refund-requests': typeof AdminRefundRequestsRoute
+  '/admin/sales': typeof AdminSalesRoute
   '/admin/surge': typeof AdminSurgeRoute
+  '/admin/unserviceable': typeof AdminUnserviceableRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
@@ -308,6 +340,7 @@ export interface FileRoutesById {
   '/print': typeof PrintRoute
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
+  '/request-service': typeof RequestServiceRoute
   '/search': typeof SearchRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/supplier': typeof SupplierRouteWithChildren
@@ -320,9 +353,12 @@ export interface FileRoutesById {
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/orders': typeof AdminOrdersRoute
+  '/admin/partners': typeof AdminPartnersRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/refund-requests': typeof AdminRefundRequestsRoute
+  '/admin/sales': typeof AdminSalesRoute
   '/admin/surge': typeof AdminSurgeRoute
+  '/admin/unserviceable': typeof AdminUnserviceableRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
@@ -347,6 +383,7 @@ export interface FileRouteTypes {
     | '/print'
     | '/refund-returns'
     | '/refunds'
+    | '/request-service'
     | '/search'
     | '/sitemap.xml'
     | '/supplier'
@@ -359,9 +396,12 @@ export interface FileRouteTypes {
     | '/admin/feedback'
     | '/admin/inventory'
     | '/admin/orders'
+    | '/admin/partners'
     | '/admin/products'
     | '/admin/refund-requests'
+    | '/admin/sales'
     | '/admin/surge'
+    | '/admin/unserviceable'
     | '/category/$slug'
     | '/product/$id'
     | '/rate-order/$orderId'
@@ -383,6 +423,7 @@ export interface FileRouteTypes {
     | '/print'
     | '/refund-returns'
     | '/refunds'
+    | '/request-service'
     | '/search'
     | '/sitemap.xml'
     | '/support'
@@ -394,9 +435,12 @@ export interface FileRouteTypes {
     | '/admin/feedback'
     | '/admin/inventory'
     | '/admin/orders'
+    | '/admin/partners'
     | '/admin/products'
     | '/admin/refund-requests'
+    | '/admin/sales'
     | '/admin/surge'
+    | '/admin/unserviceable'
     | '/category/$slug'
     | '/product/$id'
     | '/rate-order/$orderId'
@@ -419,6 +463,7 @@ export interface FileRouteTypes {
     | '/print'
     | '/refund-returns'
     | '/refunds'
+    | '/request-service'
     | '/search'
     | '/sitemap.xml'
     | '/supplier'
@@ -431,9 +476,12 @@ export interface FileRouteTypes {
     | '/admin/feedback'
     | '/admin/inventory'
     | '/admin/orders'
+    | '/admin/partners'
     | '/admin/products'
     | '/admin/refund-requests'
+    | '/admin/sales'
     | '/admin/surge'
+    | '/admin/unserviceable'
     | '/category/$slug'
     | '/product/$id'
     | '/rate-order/$orderId'
@@ -457,6 +505,7 @@ export interface RootRouteChildren {
   PrintRoute: typeof PrintRoute
   RefundReturnsRoute: typeof RefundReturnsRoute
   RefundsRoute: typeof RefundsRoute
+  RequestServiceRoute: typeof RequestServiceRoute
   SearchRoute: typeof SearchRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SupplierRoute: typeof SupplierRouteWithChildren
@@ -518,6 +567,13 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/request-service': {
+      id: '/request-service'
+      path: '/request-service'
+      fullPath: '/request-service'
+      preLoaderRoute: typeof RequestServiceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/refunds': {
@@ -660,11 +716,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/unserviceable': {
+      id: '/admin/unserviceable'
+      path: '/unserviceable'
+      fullPath: '/admin/unserviceable'
+      preLoaderRoute: typeof AdminUnserviceableRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/surge': {
       id: '/admin/surge'
       path: '/surge'
       fullPath: '/admin/surge'
       preLoaderRoute: typeof AdminSurgeRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/sales': {
+      id: '/admin/sales'
+      path: '/sales'
+      fullPath: '/admin/sales'
+      preLoaderRoute: typeof AdminSalesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/refund-requests': {
@@ -679,6 +749,13 @@ declare module '@tanstack/react-router' {
       path: '/products'
       fullPath: '/admin/products'
       preLoaderRoute: typeof AdminProductsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/partners': {
+      id: '/admin/partners'
+      path: '/partners'
+      fullPath: '/admin/partners'
+      preLoaderRoute: typeof AdminPartnersRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/orders': {
@@ -725,9 +802,12 @@ interface AdminRouteChildren {
   AdminFeedbackRoute: typeof AdminFeedbackRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
+  AdminPartnersRoute: typeof AdminPartnersRoute
   AdminProductsRoute: typeof AdminProductsRoute
   AdminRefundRequestsRoute: typeof AdminRefundRequestsRoute
+  AdminSalesRoute: typeof AdminSalesRoute
   AdminSurgeRoute: typeof AdminSurgeRoute
+  AdminUnserviceableRoute: typeof AdminUnserviceableRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -737,9 +817,12 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminFeedbackRoute: AdminFeedbackRoute,
   AdminInventoryRoute: AdminInventoryRoute,
   AdminOrdersRoute: AdminOrdersRoute,
+  AdminPartnersRoute: AdminPartnersRoute,
   AdminProductsRoute: AdminProductsRoute,
   AdminRefundRequestsRoute: AdminRefundRequestsRoute,
+  AdminSalesRoute: AdminSalesRoute,
   AdminSurgeRoute: AdminSurgeRoute,
+  AdminUnserviceableRoute: AdminUnserviceableRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
@@ -775,6 +858,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrintRoute: PrintRoute,
   RefundReturnsRoute: RefundReturnsRoute,
   RefundsRoute: RefundsRoute,
+  RequestServiceRoute: RequestServiceRoute,
   SearchRoute: SearchRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SupplierRoute: SupplierRouteWithChildren,
