@@ -352,9 +352,21 @@ function LocationPickerClient({
               </div>
 
               {denied && (
-                <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-                  <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>{denied}</span>
+                <div className="space-y-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                  <div className="flex items-start gap-2">
+                    <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>{denied.reason}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpen(false);
+                      nav({ to: "/request-service", search: { pincode: denied.pincode ?? undefined, area: denied.area || undefined } });
+                    }}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    <Send className="h-3.5 w-3.5" /> Request Kartogo to your area
+                  </button>
                 </div>
               )}
 
