@@ -20,7 +20,7 @@ export const Route = createFileRoute("/request-service")({
 function RequestServicePage() {
   const { pincode, area } = useSearch({ from: "/request-service" });
   const nav = useNavigate();
-  const { session } = useAuth();
+  const { user } = useAuth();
   const [note, setNote] = useState("");
   const [areaText, setAreaText] = useState(area ?? "");
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -56,7 +56,7 @@ function RequestServicePage() {
     setSubmitting(true);
     try {
       await createUnserviceableRequestFn({ data: {
-        phone: session?.phone ?? null,
+        phone: user?.phone ?? null,
         pincode: pincode ?? null,
         areaText: areaText.trim() || null,
         lat: coords?.lat ?? null,
