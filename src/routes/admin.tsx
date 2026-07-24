@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 import { useOrders } from "@/lib/store";
 import { verifyAdminTokenFn } from "@/lib/auth.functions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { LayoutDashboard, Package2, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Menu, Store, Inbox, Sheet as SheetIcon } from "lucide-react";
+import { LayoutDashboard, Package2, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Menu, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3 } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: async () => {
@@ -37,6 +37,10 @@ const NAV = [
   { to: "/admin/surge", label: "Surge pricing", icon: Flame },
   { to: "/admin/unserviceable", label: "Area requests", icon: Inbox },
   { to: "/admin/sales", label: "Sales dataset", icon: SheetIcon },
+  { to: "/admin/reports-daily", label: "Daily summary", icon: CalendarDays },
+  { to: "/admin/reports-products", label: "Product analytics", icon: Package },
+  { to: "/admin/reports-vendors", label: "Vendor report", icon: BarChart3 },
+  { to: "/admin/reports-riders", label: "Rider report", icon: Bike },
 ] as const;
 
 function AdminLayout() {
