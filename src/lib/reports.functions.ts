@@ -390,7 +390,7 @@ export const getProductAnalyticsFn = createServerFn({ method: "POST" })
         productId: pid,
         productName: c?.name || fallback?.name || pid,
         sku: pid.toUpperCase(),
-        category: c?.category || fallback?.category || "—",
+        category: c?.category || PRODUCT_CATEGORY[pid] || "—",
         unitsSold: 0, revenue: 0, ordersCount: 0, averageSellingPrice: 0,
         lastSoldDate: null,
         currentStock: c?.stock ?? 0,
