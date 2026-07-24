@@ -40,6 +40,10 @@ import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as AdminUnserviceableRouteImport } from './routes/admin.unserviceable'
 import { Route as AdminSurgeRouteImport } from './routes/admin.surge'
 import { Route as AdminSalesRouteImport } from './routes/admin.sales'
+import { Route as AdminReportsVendorsRouteImport } from './routes/admin.reports-vendors'
+import { Route as AdminReportsRidersRouteImport } from './routes/admin.reports-riders'
+import { Route as AdminReportsProductsRouteImport } from './routes/admin.reports-products'
+import { Route as AdminReportsDailyRouteImport } from './routes/admin.reports-daily'
 import { Route as AdminRefundRequestsRouteImport } from './routes/admin.refund-requests'
 import { Route as AdminProductsRouteImport } from './routes/admin.products'
 import { Route as AdminPartnersRouteImport } from './routes/admin.partners'
@@ -204,6 +208,26 @@ const AdminSalesRoute = AdminSalesRouteImport.update({
   path: '/sales',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminReportsVendorsRoute = AdminReportsVendorsRouteImport.update({
+  id: '/reports-vendors',
+  path: '/reports-vendors',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminReportsRidersRoute = AdminReportsRidersRouteImport.update({
+  id: '/reports-riders',
+  path: '/reports-riders',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminReportsProductsRoute = AdminReportsProductsRouteImport.update({
+  id: '/reports-products',
+  path: '/reports-products',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminReportsDailyRoute = AdminReportsDailyRouteImport.update({
+  id: '/reports-daily',
+  path: '/reports-daily',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminRefundRequestsRoute = AdminRefundRequestsRouteImport.update({
   id: '/refund-requests',
   path: '/refund-requests',
@@ -275,6 +299,10 @@ export interface FileRoutesByFullPath {
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/refund-requests': typeof AdminRefundRequestsRoute
+  '/admin/reports-daily': typeof AdminReportsDailyRoute
+  '/admin/reports-products': typeof AdminReportsProductsRoute
+  '/admin/reports-riders': typeof AdminReportsRidersRoute
+  '/admin/reports-vendors': typeof AdminReportsVendorsRoute
   '/admin/sales': typeof AdminSalesRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
@@ -314,6 +342,10 @@ export interface FileRoutesByTo {
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/refund-requests': typeof AdminRefundRequestsRoute
+  '/admin/reports-daily': typeof AdminReportsDailyRoute
+  '/admin/reports-products': typeof AdminReportsProductsRoute
+  '/admin/reports-riders': typeof AdminReportsRidersRoute
+  '/admin/reports-vendors': typeof AdminReportsVendorsRoute
   '/admin/sales': typeof AdminSalesRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
@@ -356,6 +388,10 @@ export interface FileRoutesById {
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/refund-requests': typeof AdminRefundRequestsRoute
+  '/admin/reports-daily': typeof AdminReportsDailyRoute
+  '/admin/reports-products': typeof AdminReportsProductsRoute
+  '/admin/reports-riders': typeof AdminReportsRidersRoute
+  '/admin/reports-vendors': typeof AdminReportsVendorsRoute
   '/admin/sales': typeof AdminSalesRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
@@ -399,6 +435,10 @@ export interface FileRouteTypes {
     | '/admin/partners'
     | '/admin/products'
     | '/admin/refund-requests'
+    | '/admin/reports-daily'
+    | '/admin/reports-products'
+    | '/admin/reports-riders'
+    | '/admin/reports-vendors'
     | '/admin/sales'
     | '/admin/surge'
     | '/admin/unserviceable'
@@ -438,6 +478,10 @@ export interface FileRouteTypes {
     | '/admin/partners'
     | '/admin/products'
     | '/admin/refund-requests'
+    | '/admin/reports-daily'
+    | '/admin/reports-products'
+    | '/admin/reports-riders'
+    | '/admin/reports-vendors'
     | '/admin/sales'
     | '/admin/surge'
     | '/admin/unserviceable'
@@ -479,6 +523,10 @@ export interface FileRouteTypes {
     | '/admin/partners'
     | '/admin/products'
     | '/admin/refund-requests'
+    | '/admin/reports-daily'
+    | '/admin/reports-products'
+    | '/admin/reports-riders'
+    | '/admin/reports-vendors'
     | '/admin/sales'
     | '/admin/surge'
     | '/admin/unserviceable'
@@ -737,6 +785,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSalesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/reports-vendors': {
+      id: '/admin/reports-vendors'
+      path: '/reports-vendors'
+      fullPath: '/admin/reports-vendors'
+      preLoaderRoute: typeof AdminReportsVendorsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/reports-riders': {
+      id: '/admin/reports-riders'
+      path: '/reports-riders'
+      fullPath: '/admin/reports-riders'
+      preLoaderRoute: typeof AdminReportsRidersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/reports-products': {
+      id: '/admin/reports-products'
+      path: '/reports-products'
+      fullPath: '/admin/reports-products'
+      preLoaderRoute: typeof AdminReportsProductsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/reports-daily': {
+      id: '/admin/reports-daily'
+      path: '/reports-daily'
+      fullPath: '/admin/reports-daily'
+      preLoaderRoute: typeof AdminReportsDailyRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/refund-requests': {
       id: '/admin/refund-requests'
       path: '/refund-requests'
@@ -805,6 +881,10 @@ interface AdminRouteChildren {
   AdminPartnersRoute: typeof AdminPartnersRoute
   AdminProductsRoute: typeof AdminProductsRoute
   AdminRefundRequestsRoute: typeof AdminRefundRequestsRoute
+  AdminReportsDailyRoute: typeof AdminReportsDailyRoute
+  AdminReportsProductsRoute: typeof AdminReportsProductsRoute
+  AdminReportsRidersRoute: typeof AdminReportsRidersRoute
+  AdminReportsVendorsRoute: typeof AdminReportsVendorsRoute
   AdminSalesRoute: typeof AdminSalesRoute
   AdminSurgeRoute: typeof AdminSurgeRoute
   AdminUnserviceableRoute: typeof AdminUnserviceableRoute
@@ -820,6 +900,10 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminPartnersRoute: AdminPartnersRoute,
   AdminProductsRoute: AdminProductsRoute,
   AdminRefundRequestsRoute: AdminRefundRequestsRoute,
+  AdminReportsDailyRoute: AdminReportsDailyRoute,
+  AdminReportsProductsRoute: AdminReportsProductsRoute,
+  AdminReportsRidersRoute: AdminReportsRidersRoute,
+  AdminReportsVendorsRoute: AdminReportsVendorsRoute,
   AdminSalesRoute: AdminSalesRoute,
   AdminSurgeRoute: AdminSurgeRoute,
   AdminUnserviceableRoute: AdminUnserviceableRoute,

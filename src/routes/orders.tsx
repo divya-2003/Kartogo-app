@@ -456,7 +456,13 @@ function OrdersPage() {
                           {cancelled
                             ? "Order cancelled"
                             : delivered
-                              ? "Order delivered"
+                              ? (o.refundRequestStatus === "approved"
+                                  ? "Refunded"
+                                  : o.refundRequestStatus === "pending"
+                                    ? "Refund Requested"
+                                    : o.refundRequestStatus === "rejected"
+                                      ? "Refund Failed"
+                                      : "Order delivered")
                               : ACTIVE_TITLE[
                                   o.status as Exclude<OrderStatus, "delivered" | "cancelled">
                                 ]}
