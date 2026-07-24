@@ -151,7 +151,7 @@ export const getSalesDatasetFn = createServerFn({ method: "POST" })
     const catById: Record<string, string> = {};
     for (const [pid, e] of Object.entries(CATALOG)) {
       namesById[pid] = e.name;
-      catById[pid] = e.category;
+      catById[pid] = PRODUCT_CATEGORY[pid];
     }
 
     const [ordersRes, driversRes, reviewsRes] = await Promise.all([
@@ -274,7 +274,7 @@ export const getDailySummaryFn = createServerFn({ method: "POST" })
     const { CATALOG } = await import("./server-catalog.server");
 
     const catById: Record<string, string> = {};
-    for (const [pid, e] of Object.entries(CATALOG)) catById[pid] = e.category;
+    for (const pid of Object.keys(CATALOG)) catById[pid] = PRODUCT_CATEGORY[pid] ?? "";
 
     const { data: orders, error } = await supabaseAdmin
       .from("app_orders")
@@ -448,7 +448,7 @@ export const getVendorReportFn = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { CATALOG } = await import("./server-catalog.server");
     const catById: Record<string, string> = {};
-    for (const [pid, e] of Object.entries(CATALOG)) catById[pid] = e.category;
+    for (const pid of Object.keys(CATALOG)) catById[pid] = PRODUCT_CATEGORY[pid] ?? "";
 
     const [ordersRes, statusRes, reviewsRes] = await Promise.all([
       supabaseAdmin.from("app_orders").select("id, created_at, status, items, subtotal, total"),
