@@ -145,7 +145,7 @@ export const getSalesDatasetFn = createServerFn({ method: "POST" })
     const { verifyAdminToken } = await import("./auth-tokens.server");
     if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { CATALOG } = await import("./server-catalog.server");
+    const { CATALOG, PRODUCT_CATEGORY } = await import("./server-catalog.server");
 
     const namesById: Record<string, string> = {};
     const catById: Record<string, string> = {};
@@ -271,7 +271,7 @@ export const getDailySummaryFn = createServerFn({ method: "POST" })
     const { verifyAdminToken } = await import("./auth-tokens.server");
     if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { CATALOG } = await import("./server-catalog.server");
+    const { CATALOG, PRODUCT_CATEGORY } = await import("./server-catalog.server");
 
     const catById: Record<string, string> = {};
     for (const pid of Object.keys(CATALOG)) catById[pid] = PRODUCT_CATEGORY[pid] ?? "";
@@ -369,7 +369,7 @@ export const getProductAnalyticsFn = createServerFn({ method: "POST" })
     const { verifyAdminToken } = await import("./auth-tokens.server");
     if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { CATALOG } = await import("./server-catalog.server");
+    const { CATALOG, PRODUCT_CATEGORY } = await import("./server-catalog.server");
 
     const [ordersRes, catalogRes] = await Promise.all([
       supabaseAdmin.from("app_orders").select("id, created_at, status, items").neq("status", "cancelled"),
@@ -446,7 +446,7 @@ export const getVendorReportFn = createServerFn({ method: "POST" })
     const { verifyAdminToken } = await import("./auth-tokens.server");
     if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { CATALOG } = await import("./server-catalog.server");
+    const { CATALOG, PRODUCT_CATEGORY } = await import("./server-catalog.server");
     const catById: Record<string, string> = {};
     for (const pid of Object.keys(CATALOG)) catById[pid] = PRODUCT_CATEGORY[pid] ?? "";
 
