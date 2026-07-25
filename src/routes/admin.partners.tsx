@@ -193,6 +193,7 @@ function MarketEditor({ initial, onClose, onSaved }: {
 }) {
   const [name, setName] = useState(initial?.name ?? "");
   const [address, setAddress] = useState(initial?.address ?? "");
+  const [phone, setPhone] = useState(initial?.phone ?? "");
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [lat, setLat] = useState<string>(initial?.lat != null ? String(initial.lat) : "");
   const [lng, setLng] = useState<string>(initial?.lng != null ? String(initial.lng) : "");
