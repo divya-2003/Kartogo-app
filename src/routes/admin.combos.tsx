@@ -156,9 +156,10 @@ function ComboEditor({ initial, mode, onClose, onSaved }: {
 
   const matches = useMemo(() => {
     const q = pickerQuery.trim().toLowerCase();
-    if (!q) return catalog.slice(0, 8);
-    return catalog.filter(p => p.name.toLowerCase().includes(q) || p.id.includes(q)).slice(0, 8);
-  }, [pickerQuery, catalog]);
+    const list = products;
+    if (!q) return list.slice(0, 8);
+    return list.filter((p) => p.name.toLowerCase().includes(q) || p.id.includes(q)).slice(0, 8);
+  }, [pickerQuery, products]);
 
   const addItem = (id: string, itemName: string) => {
     setItems(prev => {
