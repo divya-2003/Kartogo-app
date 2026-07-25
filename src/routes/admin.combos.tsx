@@ -145,7 +145,7 @@ export function CombosManager({ mode }: { mode: "admin" | "supplier" }) {
 function ComboEditor({ initial, mode, onClose, onSaved }: {
   initial: Combo | null; mode: "admin" | "supplier"; onClose: () => void; onSaved: () => void;
 }) {
-  const { catalog } = useCatalog();
+  const { products } = useCatalog();
   const [name, setName] = useState(initial?.name ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [emoji, setEmoji] = useState(initial?.emoji ?? "🎁");
