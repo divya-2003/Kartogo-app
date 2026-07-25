@@ -289,6 +289,11 @@ function MarketEditor({ initial, onClose, onSaved }: {
               placeholder="Full address / landmark"
               className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
           </div>
+          <div>
+            <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-muted-foreground">Mobile number</label>
+            <input value={phone} onChange={e => setPhone(e.target.value)} inputMode="tel" placeholder="e.g. 9876543210"
+              className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-base outline-none focus:ring-2 focus:ring-ring" />
+          </div>
 
           <div className="rounded-xl border border-border bg-secondary/40 p-3">
             <div className="font-display text-sm font-bold">Google Maps location</div>
