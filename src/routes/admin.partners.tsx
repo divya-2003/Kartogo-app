@@ -121,6 +121,11 @@ function AdminPartnersPage() {
                     <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                     <span className="line-clamp-2">{m.address}</span>
                   </div>
+                  {m.phone && (
+                    <a href={`tel:${m.phone}`} className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+                      📞 {m.phone}
+                    </a>
+                  )}
                   {m.notes && <p className="mt-2 text-xs italic text-muted-foreground">{m.notes}</p>}
                 </div>
               </div>
