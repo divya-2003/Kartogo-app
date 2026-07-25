@@ -256,6 +256,7 @@ function MarketEditor({ initial, onClose, onSaved }: {
         id: initial?.id,
         name: name.trim(),
         address: address.trim(),
+        phone: phone.trim() || null,
         lat: latN, lng: lngN,
         notes: notes.trim() || null,
         isActive: initial?.isActive ?? true,
