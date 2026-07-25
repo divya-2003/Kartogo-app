@@ -78,6 +78,7 @@ export const upsertPartnerMarketFn = createServerFn({ method: "POST" })
     const payload = {
       name: data.name.trim(),
       address: data.address.trim(),
+      phone: data.phone?.trim() || null,
       lat: data.lat ?? null,
       lng: data.lng ?? null,
       notes: data.notes?.trim() || null,
