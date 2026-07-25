@@ -34,6 +34,7 @@ const NAV = [
   { to: "/admin/feedback", label: "Feedback", icon: Star },
   { to: "/admin/delivery", label: "Delivery", icon: Bike },
   { to: "/admin/partners", label: "Partner markets", icon: Store },
+  { to: "/admin/combos", label: "Combo bundles", icon: Package },
   { to: "/admin/surge", label: "Surge pricing", icon: Flame },
   { to: "/admin/unserviceable", label: "Area requests", icon: Inbox },
   { to: "/admin/sales", label: "Sales dataset", icon: SheetIcon },
