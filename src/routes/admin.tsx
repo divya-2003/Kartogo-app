@@ -129,13 +129,13 @@ function AdminLayout() {
         )}
       </div>
 
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 pb-6 pt-4 md:grid-cols-[220px_1fr] md:px-6 md:py-6">
+      <div className="mx-auto grid max-w-7xl gap-6 px-4 pb-6 pt-4 md:grid-cols-[220px_minmax(0,1fr)] md:px-6 md:py-6">
         {/* Desktop sidebar */}
         <aside className="hidden h-fit rounded-2xl border border-border bg-card p-3 md:sticky md:top-24 md:block">
           <NavList />
         </aside>
 
-        <main><Outlet /></main>
+        <main className="min-w-0"><Outlet /></main>
       </div>
     </div>
   );
