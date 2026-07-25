@@ -462,7 +462,14 @@ function CheckoutPage() {
             <section className="rounded-2xl border border-border bg-card p-5">
               <h2 className="mb-3 font-display text-lg font-bold">Payment</h2>
               <div className="grid gap-2 sm:grid-cols-2">
-                <PaymentOption icon={<Banknote className="h-5 w-5" />} title="Cash on delivery" desc="Pay rider in cash" selected={payment === "cash"} onClick={() => setPayment("cash")} />
+                <PaymentOption
+                  icon={<Banknote className="h-5 w-5" />}
+                  title="Cash on delivery"
+                  desc={total > 499 ? "Unavailable for orders over ₹499" : "Pay rider in cash"}
+                  selected={payment === "cash"}
+                  onClick={() => { if (total <= 499) setPayment("cash"); }}
+                  disabled={total > 499}
+                />
                 <PaymentOption icon={<Smartphone className="h-5 w-5" />} title="UPI on delivery" desc="GPay / PhonePe / Paytm" selected={payment === "upi"} onClick={() => setPayment("upi")} />
                 <PaymentOption
                   icon={<Wallet className="h-5 w-5" />}
@@ -472,6 +479,11 @@ function CheckoutPage() {
                   onClick={() => setPayment("wallet")}
                 />
               </div>
+              {total > 499 && payment === "cash" && (
+                <p className="mt-2 rounded-lg bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-700">
+                  Cash on delivery is available only for orders up to ₹499. Please choose UPI or Kartogo Cash.
+                </p>
+              )}
               {payment === "wallet" && walletBalance < total && (
                 <p className="mt-2 flex items-center gap-1.5 rounded-lg bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive">
                   <X className="h-3.5 w-3.5" /> Insufficient Kartogo Cash — you need {formatINR(total - walletBalance)} more. Add money from your profile to pay with the wallet.
