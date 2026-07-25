@@ -60,7 +60,7 @@ function AdminPartnersPage() {
     const token = adminToken(); if (!token) return;
     try {
       await upsertPartnerMarketFn({ data: {
-        adminToken: token, id: m.id, name: m.name, address: m.address,
+        adminToken: token, id: m.id, name: m.name, address: m.address, phone: m.phone,
         lat: m.lat, lng: m.lng, notes: m.notes, isActive: !m.isActive,
       }});
       toast.success(!m.isActive ? "Market activated" : "Market deactivated");
