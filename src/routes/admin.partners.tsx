@@ -60,7 +60,7 @@ function AdminPartnersPage() {
     const token = adminToken(); if (!token) return;
     try {
       await upsertPartnerMarketFn({ data: {
-        adminToken: token, id: m.id, name: m.name, address: m.address,
+        adminToken: token, id: m.id, name: m.name, address: m.address, phone: m.phone,
         lat: m.lat, lng: m.lng, notes: m.notes, isActive: !m.isActive,
       }});
       toast.success(!m.isActive ? "Market activated" : "Market deactivated");
@@ -121,6 +121,11 @@ function AdminPartnersPage() {
                     <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                     <span className="line-clamp-2">{m.address}</span>
                   </div>
+                  {m.phone && (
+                    <a href={`tel:${m.phone}`} className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+                      📞 {m.phone}
+                    </a>
+                  )}
                   {m.notes && <p className="mt-2 text-xs italic text-muted-foreground">{m.notes}</p>}
                 </div>
               </div>
@@ -188,6 +193,7 @@ function MarketEditor({ initial, onClose, onSaved }: {
 }) {
   const [name, setName] = useState(initial?.name ?? "");
   const [address, setAddress] = useState(initial?.address ?? "");
+  const [phone, setPhone] = useState(initial?.phone ?? "");
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [lat, setLat] = useState<string>(initial?.lat != null ? String(initial.lat) : "");
   const [lng, setLng] = useState<string>(initial?.lng != null ? String(initial.lng) : "");
@@ -250,6 +256,7 @@ function MarketEditor({ initial, onClose, onSaved }: {
         id: initial?.id,
         name: name.trim(),
         address: address.trim(),
+        phone: phone.trim() || null,
         lat: latN, lng: lngN,
         notes: notes.trim() || null,
         isActive: initial?.isActive ?? true,
@@ -281,6 +288,11 @@ function MarketEditor({ initial, onClose, onSaved }: {
             <textarea value={address} onChange={e => setAddress(e.target.value)} rows={2}
               placeholder="Full address / landmark"
               className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-muted-foreground">Mobile number</label>
+            <input value={phone} onChange={e => setPhone(e.target.value)} inputMode="tel" placeholder="e.g. 9876543210"
+              className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-base outline-none focus:ring-2 focus:ring-ring" />
           </div>
 
           <div className="rounded-xl border border-border bg-secondary/40 p-3">

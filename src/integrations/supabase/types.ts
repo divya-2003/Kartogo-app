@@ -149,6 +149,51 @@ export type Database = {
         }
         Relationships: []
       }
+      combos: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          emoji: string | null
+          id: string
+          image: string | null
+          is_active: boolean
+          items: Json
+          name: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          emoji?: string | null
+          id?: string
+          image?: string | null
+          is_active?: boolean
+          items?: Json
+          name: string
+          price: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          emoji?: string | null
+          id?: string
+          image?: string | null
+          is_active?: boolean
+          items?: Json
+          name?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customer_wallets: {
         Row: {
           balance: number
@@ -224,6 +269,39 @@ export type Database = {
           saved_addresses?: Json
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      driver_ratings: {
+        Row: {
+          comment: string | null
+          created_at: string
+          customer_phone: string
+          driver_id: string
+          id: string
+          order_id: string
+          rating: number
+          updated_at: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          customer_phone: string
+          driver_id: string
+          id?: string
+          order_id: string
+          rating: number
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          customer_phone?: string
+          driver_id?: string
+          id?: string
+          order_id?: string
+          rating?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -493,6 +571,7 @@ export type Database = {
           lng: number | null
           name: string
           notes: string | null
+          phone: string | null
           updated_at: string
         }
         Insert: {
@@ -504,6 +583,7 @@ export type Database = {
           lng?: number | null
           name: string
           notes?: string | null
+          phone?: string | null
           updated_at?: string
         }
         Update: {
@@ -515,6 +595,7 @@ export type Database = {
           lng?: number | null
           name?: string
           notes?: string | null
+          phone?: string | null
           updated_at?: string
         }
         Relationships: []

@@ -370,13 +370,15 @@ function LocationPickerClient({
                 </div>
               )}
 
-              <button
-                disabled={loading}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
-              >
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                {loading ? "Checking..." : "Check & deliver here"}
-              </button>
+              {!denied && (
+                <button
+                  disabled={loading}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                >
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                  {loading ? "Checking..." : "Check & deliver here"}
+                </button>
+              )}
             </form>
 
             <button

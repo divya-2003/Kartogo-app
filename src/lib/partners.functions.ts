@@ -5,6 +5,7 @@ export type PartnerMarket = {
   id: string;
   name: string;
   address: string;
+  phone: string | null;
   lat: number | null;
   lng: number | null;
   notes: string | null;
@@ -17,6 +18,7 @@ type Row = {
   id: string;
   name: string;
   address: string;
+  phone: string | null;
   lat: number | null;
   lng: number | null;
   notes: string | null;
@@ -29,6 +31,7 @@ const rowToMarket = (r: Row): PartnerMarket => ({
   id: r.id,
   name: r.name,
   address: r.address,
+  phone: r.phone,
   lat: r.lat,
   lng: r.lng,
   notes: r.notes,
@@ -60,6 +63,7 @@ const upsertSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().min(1).max(120),
   address: z.string().min(1).max(400),
+  phone: z.string().max(20).nullable().optional(),
   lat: z.number().min(-90).max(90).nullable().optional(),
   lng: z.number().min(-180).max(180).nullable().optional(),
   notes: z.string().max(500).nullable().optional(),
@@ -74,6 +78,7 @@ export const upsertPartnerMarketFn = createServerFn({ method: "POST" })
     const payload = {
       name: data.name.trim(),
       address: data.address.trim(),
+      phone: data.phone?.trim() || null,
       lat: data.lat ?? null,
       lng: data.lng ?? null,
       notes: data.notes?.trim() || null,

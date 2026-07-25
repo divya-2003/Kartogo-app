@@ -90,13 +90,15 @@ export function LocationGate() {
               </div>
             )}
 
-            <button
-              disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
-            >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-              {loading ? "Checking..." : "Check serviceability"}
-            </button>
+            {!denied && (
+              <button
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                {loading ? "Checking..." : "Check serviceability"}
+              </button>
+            )}
           </form>
         </div>
         <p className="mt-4 text-center text-xs text-muted-foreground">
