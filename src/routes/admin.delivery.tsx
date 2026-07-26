@@ -66,9 +66,17 @@ function DeliveryAdmin() {
 
   const visible = filter === "all" ? riders : riders.filter(r => r.availability === filter);
 
-  const onToggle = (id: string, name: string, next: boolean) => {
-    setAvailable(id, next);
-    toast.success(`${name} marked ${next ? "available" : "unavailable"}`);
+  const onToggle = async (id: string, name: string, next: boolean) => {
+    try {
+      await setAvailable(id, next);
+      toast.success(
+        next
+          ? `${name} marked available — delivery app access restored`
+          : `${name} marked unavailable — delivery app access blocked (history kept)`,
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not update availability");
+    }
   };
 
   return (
