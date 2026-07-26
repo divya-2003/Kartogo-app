@@ -83,7 +83,7 @@ function DeliveryAdmin() {
     <div className="space-y-5">
       <div>
         <h1 className="font-display text-3xl font-bold">Delivery team</h1>
-        <p className="text-sm text-muted-foreground">Toggle availability — only available riders can be assigned to orders.</p>
+        <p className="text-sm text-muted-foreground">Toggle availability — only available riders can be assigned to orders and sign in to the delivery app. Blocking a rider never deletes their past orders or earnings.</p>
       </div>
 
       {/* Status summary cards */}
