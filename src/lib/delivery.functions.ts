@@ -199,3 +199,59 @@ export const claimOrderFn = createServerFn({ method: "POST" })
     return maskOrderForDriver(row);
   });
 
+
+// ---------------- Return pickups (refund requests) ----------------
+// The driver who delivered an order is the one who collects the returned items,
+// so refund requests surface in that same driver's portal.
+export const listReturnPickupsFn = createServerFn({ method: "POST" })
+  .inputValidator((data: { token: string }) => ({ token: String(data?.token ?? "") }))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const session = await requireActiveDriver(data.token);
+
+    const { data: rows, error } = await supabaseAdmin
+      .from("app_orders")
+      .select("*")
+      .eq("delivery_boy_id", session.driverId)
+      .not("refund_requested_at", "is", null)
+      .order("refund_requested_at", { ascending: false });
+    if (error) throw new Error("Return pickups could not be loaded. Please try again.");
+    return maskOrdersForDriver(rows ?? []);
+  });
+
+// Driver confirms the returned items were collected from the customer.
+export const markReturnPickedUpFn = createServerFn({ method: "POST" })
+  .inputValidator((data: { token: string; id: string }) => ({
+    token: String(data?.token ?? ""),
+    id: String(data?.id ?? ""),
+  }))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const session = await requireActiveDriver(data.token);
+
+    const { data: existing } = await supabaseAdmin
+      .from("app_orders")
+      .select("id, delivery_boy_id, refund_requested_at, return_stage")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!existing) throw new Error("Order not found");
+    if (existing.delivery_boy_id !== session.driverId) throw new Error("This return isn't assigned to you");
+    if (!existing.refund_requested_at) throw new Error("No return was requested for this order");
+    if (existing.return_stage && existing.return_stage !== "requested") {
+      throw new Error("This return is already picked up");
+    }
+
+    const { data: row, error } = await supabaseAdmin
+      .from("app_orders")
+      .update({
+        return_stage: "picked_up",
+        return_picked_up_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", data.id)
+      .eq("delivery_boy_id", session.driverId)
+      .select("*")
+      .maybeSingle();
+    if (error || !row) throw new Error("Could not update this return. Please try again.");
+    return maskOrderForDriver(row);
+  });
