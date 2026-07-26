@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Bike, Phone, Package, Truck, CheckCircle2, MapPin, LogOut, RefreshCw, IndianRupee, HandPlatter, User2, Wallet, ListChecks, Navigation, ChevronDown, MessageSquare } from "lucide-react";
-import { listDeliveryOrdersFn, deliverySetStatusFn, listAvailableOrdersFn, claimOrderFn } from "@/lib/delivery.functions";
+import { Bike, Phone, Package, Undo2, ShieldAlert, Truck, CheckCircle2, MapPin, LogOut, RefreshCw, IndianRupee, HandPlatter, User2, Wallet, ListChecks, Navigation, ChevronDown, MessageSquare } from "lucide-react";
+import { listDeliveryOrdersFn, deliverySetStatusFn, listAvailableOrdersFn, claimOrderFn, listReturnPickupsFn, markReturnPickedUpFn } from "@/lib/delivery.functions";
 import { initiateMaskedCallFn } from "@/lib/chat.functions";
 import { OrderChat } from "@/components/OrderChat";
 import { formatINR } from "@/lib/data";
@@ -40,6 +40,11 @@ type OrderRow = {
   surge_amount?: number | null;
   surge_reason?: string | null;
   driver_surge_share?: number | null;
+  refund_request_type?: string | null;
+  refund_request_reason?: string | null;
+  refund_request_status?: string | null;
+  refund_requested_at?: string | null;
+  return_stage?: string | null;
 };
 
 const TOKEN_KEY = "qk_delivery_token";
@@ -102,9 +107,11 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
 }) {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [available, setAvailable] = useState<OrderRow[]>([]);
+  const [returns, setReturns] = useState<OrderRow[]>([]);
+  const [blocked, setBlocked] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [tab, setTab] = useState<"available" | "active" | "done">("available");
+  const [tab, setTab] = useState<"available" | "active" | "returns" | "done">("available");
   const [view, setView] = useState<"orders" | "account">("orders");
   const [chatOrderId, setChatOrderId] = useState<string | null>(null);
 
@@ -123,15 +130,21 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [mine, open] = await Promise.all([
+      const [mine, open, pickups] = await Promise.all([
         listDeliveryOrdersFn({ data: { token } }),
         listAvailableOrdersFn({ data: { token } }),
+        listReturnPickupsFn({ data: { token } }),
       ]);
+      setBlocked(null);
       setOrders(mine as unknown as OrderRow[]);
       setAvailable(open as unknown as OrderRow[]);
+      setReturns(pickups as unknown as OrderRow[]);
     } catch (err) {
       const msg = (err as Error).message;
       if (/session has expired/i.test(msg)) { toast.error(msg); onExpired(); return; }
+      // Admin turned this rider off — block the portal but keep the session so
+      // access comes straight back when they're re-activated.
+      if (/turned off by the admin/i.test(msg)) { setBlocked(msg); return; }
       toast.error(msg);
     } finally { setLoading(false); }
   }, [token, onExpired]);
@@ -170,13 +183,45 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
     } finally { setBusyId(null); }
   };
 
+  // Confirm the returned items were collected from the customer.
+  const pickupReturn = async (o: OrderRow) => {
+    setBusyId(o.id);
+    try {
+      const row = await markReturnPickedUpFn({ data: { token, id: o.id } });
+      setReturns(prev => prev.map(x => x.id === o.id ? (row as unknown as OrderRow) : x));
+      toast.success(`${o.id} · returned items picked up ✓`);
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally { setBusyId(null); }
+  };
+
+  const pendingReturns = returns.filter(o => (o.return_stage ?? "requested") === "requested");
   const active = orders.filter(o => o.status !== "delivered" && o.status !== "cancelled");
   const done = orders.filter(o => o.status === "delivered" || o.status === "cancelled");
   const delivered = orders.filter(o => o.status === "delivered");
 
 
-  const visible = tab === "available" ? available : tab === "active" ? active : done;
+  const visible = tab === "available" ? available : tab === "active" ? active : tab === "returns" ? returns : done;
 
+
+  if (blocked) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-background p-6">
+        <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center">
+          <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-destructive/10 text-destructive">
+            <ShieldAlert className="h-6 w-6" />
+          </div>
+          <h1 className="mt-3 font-display text-xl font-bold">Access paused</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{blocked}</p>
+          <p className="mt-2 text-xs text-muted-foreground">Your delivery history and earnings are safe — everything returns when the admin marks you available again.</p>
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <button onClick={() => void load()} className="rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-secondary">Try again</button>
+            <button onClick={onLogout} className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">Log out</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-10">
@@ -210,12 +255,15 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
         ) : (
         <>
         {/* Tabs */}
-        <div className="mb-4 flex gap-2">
+        <div className="mb-4 flex flex-wrap gap-2">
           <button onClick={() => setTab("available")} className={`rounded-full px-4 py-1.5 text-sm font-semibold ${tab === "available" ? "bg-primary text-primary-foreground" : "border border-border bg-card"}`}>
             Available ({available.length})
           </button>
           <button onClick={() => setTab("active")} className={`rounded-full px-4 py-1.5 text-sm font-semibold ${tab === "active" ? "bg-primary text-primary-foreground" : "border border-border bg-card"}`}>
             Active ({active.length})
+          </button>
+          <button onClick={() => setTab("returns")} className={`rounded-full px-4 py-1.5 text-sm font-semibold ${tab === "returns" ? "bg-primary text-primary-foreground" : "border border-border bg-card"}`}>
+            Returns ({pendingReturns.length})
           </button>
           <button onClick={() => setTab("done")} className={`rounded-full px-4 py-1.5 text-sm font-semibold ${tab === "done" ? "bg-primary text-primary-foreground" : "border border-border bg-card"}`}>
             Completed ({done.length})
@@ -230,7 +278,9 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
               ? "No new orders waiting to be picked up right now. New orders appear here automatically."
               : tab === "active"
                 ? "No orders assigned to you yet."
-                : "No completed deliveries yet."}
+                : tab === "returns"
+                  ? "No return pickups right now. Refund requests on orders you delivered appear here."
+                  : "No completed deliveries yet."}
           </div>
         ) : (
 
@@ -275,6 +325,37 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
                     </div>
                   </div>
 
+                  {tab === "returns" && (
+                    <div className="mt-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm">
+                      <div className="flex items-center gap-2 font-bold text-destructive">
+                        <Undo2 className="h-4 w-4" /> Return pickup
+                      </div>
+                      {o.refund_request_type && <div className="mt-1 text-xs text-muted-foreground">Issue: {o.refund_request_type}</div>}
+                      {o.refund_request_reason && <div className="mt-0.5 text-xs text-muted-foreground">“{o.refund_request_reason}”</div>}
+                      <div className="mt-2 text-xs font-semibold">
+                        {(o.return_stage ?? "requested") === "requested"
+                          ? "Collect the items from the customer"
+                          : o.return_stage === "picked_up"
+                            ? "Picked up · with the store"
+                            : o.return_stage === "refund_initiated"
+                              ? "Refund initiated (3–5 business days)"
+                              : o.return_stage === "refunded"
+                                ? "Refunded to the customer"
+                                : "Refund request declined"}
+                      </div>
+                      {(o.return_stage ?? "requested") === "requested" && (
+                        <button
+                          onClick={() => pickupReturn(o)}
+                          disabled={busyId === o.id}
+                          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-destructive px-4 py-2.5 text-sm font-bold text-destructive-foreground transition hover:opacity-90 disabled:opacity-60"
+                        >
+                          <Undo2 className="h-4 w-4" />
+                          {busyId === o.id ? "Updating…" : "Returned items picked up"}
+                        </button>
+                      )}
+                    </div>
+                  )}
+
                   {tab === "available" ? (
                     <button
                       onClick={() => claim(o)}
@@ -296,7 +377,7 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
                   )}
 
                   {/* Chat / masked call / directions — available once the order is assigned. */}
-                  {tab === "active" && (
+                  {(tab === "active" || (tab === "returns" && (o.return_stage ?? "requested") === "requested")) && (
                     <div className="mt-3 grid grid-cols-3 gap-2">
                       <a
                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o.address)}`}

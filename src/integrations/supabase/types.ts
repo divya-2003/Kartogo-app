@@ -29,6 +29,7 @@ export type Database = {
           items: Json
           payment_method: string
           promo_code: string | null
+          refund_initiated_at: string | null
           refund_request_reason: string | null
           refund_request_resolution: string | null
           refund_request_status: string | null
@@ -36,6 +37,8 @@ export type Database = {
           refund_requested_at: string | null
           refunded: boolean
           refunded_at: string | null
+          return_picked_up_at: string | null
+          return_stage: string | null
           status: string
           subtotal: number
           surge_amount: number
@@ -57,6 +60,7 @@ export type Database = {
           items?: Json
           payment_method?: string
           promo_code?: string | null
+          refund_initiated_at?: string | null
           refund_request_reason?: string | null
           refund_request_resolution?: string | null
           refund_request_status?: string | null
@@ -64,6 +68,8 @@ export type Database = {
           refund_requested_at?: string | null
           refunded?: boolean
           refunded_at?: string | null
+          return_picked_up_at?: string | null
+          return_stage?: string | null
           status?: string
           subtotal?: number
           surge_amount?: number
@@ -85,6 +91,7 @@ export type Database = {
           items?: Json
           payment_method?: string
           promo_code?: string | null
+          refund_initiated_at?: string | null
           refund_request_reason?: string | null
           refund_request_resolution?: string | null
           refund_request_status?: string | null
@@ -92,6 +99,8 @@ export type Database = {
           refund_requested_at?: string | null
           refunded?: boolean
           refunded_at?: string | null
+          return_picked_up_at?: string | null
+          return_stage?: string | null
           status?: string
           subtotal?: number
           surge_amount?: number
@@ -269,6 +278,27 @@ export type Database = {
           saved_addresses?: Json
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      driver_availability: {
+        Row: {
+          active: boolean
+          created_at: string
+          driver_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          driver_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          driver_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -596,6 +626,60 @@ export type Database = {
           name?: string
           notes?: string | null
           phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      print_jobs: {
+        Row: {
+          address: string | null
+          copies: number
+          created_at: string
+          customer_name: string | null
+          customer_phone: string
+          file_data: string
+          file_name: string
+          file_size: number
+          file_type: string
+          id: string
+          notes: string | null
+          order_id: string | null
+          service: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          copies?: number
+          created_at?: string
+          customer_name?: string | null
+          customer_phone: string
+          file_data: string
+          file_name: string
+          file_size?: number
+          file_type: string
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          service: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          copies?: number
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string
+          file_data?: string
+          file_name?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          service?: string
+          status?: string
           updated_at?: string
         }
         Relationships: []

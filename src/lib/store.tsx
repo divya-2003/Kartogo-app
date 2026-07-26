@@ -13,6 +13,7 @@ import {
   resolveRefundRequestFn,
 } from "./orders.functions";
 import { addWishlistFn, removeWishlistFn, mergeWishlistFn } from "./wishlist.functions";
+import { listDriverAvailabilityFn, setDriverAvailabilityFn } from "./drivers.functions";
 import { getCustomerProfileFn, saveCustomerProfileFn, saveCustomerAddressesFn } from "./customer.functions";
 import {
   listCatalogItemsFn,
@@ -630,6 +631,10 @@ export type Order = {
   refundRequestType?: string;
   refundRequestResolution?: "Refund" | "Replacement";
   refundRequestStatus?: "pending" | "approved" | "rejected";
+  /** Customer-visible return journey: requested → picked_up → refund_initiated → refunded. */
+  returnStage?: "requested" | "picked_up" | "refund_initiated" | "refunded" | "refund_rejected";
+  returnPickedUpAt?: number;
+  refundInitiatedAt?: number;
 };
 
 type OrdersCtx = {
@@ -681,6 +686,9 @@ type OrderRow = {
   refund_request_type?: string | null;
   refund_request_resolution?: string | null;
   refund_request_status?: string | null;
+  return_stage?: string | null;
+  return_picked_up_at?: string | null;
+  refund_initiated_at?: string | null;
 };
 function rowToOrder(r: OrderRow): Order {
   const resolution = r.refund_request_resolution === "Replacement" ? "Replacement" : r.refund_request_resolution === "Refund" ? "Refund" : undefined;
@@ -709,6 +717,10 @@ function rowToOrder(r: OrderRow): Order {
     refundRequestType: r.refund_request_type ?? undefined,
     refundRequestResolution: resolution,
     refundRequestStatus: status,
+    returnStage: (["requested", "picked_up", "refund_initiated", "refunded", "refund_rejected"] as const)
+      .find(k => k === r.return_stage),
+    returnPickedUpAt: r.return_picked_up_at ? new Date(r.return_picked_up_at).getTime() : undefined,
+    refundInitiatedAt: r.refund_initiated_at ? new Date(r.refund_initiated_at).getTime() : undefined,
   };
 }
 
@@ -1154,32 +1166,54 @@ export type Driver = { id: string; name: string; phone: string; active: boolean 
 type DriversCtx = {
   drivers: Driver[];
   available: Driver[];
-  setAvailable: (id: string, active: boolean) => void;
+  setAvailable: (id: string, active: boolean) => Promise<void>;
 };
 const DriversContext = createContext<DriversCtx | null>(null);
 const DRIVERS_KEY = "qk_driver_availability";
 
 export function DriversProvider({ children }: { children: ReactNode }) {
+  const { adminToken } = useAuth();
   const [overrides, setOverrides] = useState<Record<string, boolean>>({});
+  const [loaded, setLoaded] = useState(false);
+
+  // Availability is stored on the server (it gates the delivery portal), with a
+  // local cache so admin screens render instantly.
   useEffect(() => { setOverrides(read<Record<string, boolean>>(DRIVERS_KEY, {})); }, []);
-  useEffect(() => { write(DRIVERS_KEY, overrides); }, [overrides]);
+  useEffect(() => { if (loaded) write(DRIVERS_KEY, overrides); }, [overrides, loaded]);
 
   useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === DRIVERS_KEY) setOverrides(read<Record<string, boolean>>(DRIVERS_KEY, {}));
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
+    if (!adminToken) return;
+    let alive = true;
+    (async () => {
+      try {
+        const rows = await listDriverAvailabilityFn({ data: { adminToken } });
+        if (!alive) return;
+        const next: Record<string, boolean> = {};
+        for (const r of rows) next[r.id] = r.active;
+        setOverrides(next);
+      } catch { /* keep cached values */ }
+      finally { if (alive) setLoaded(true); }
+    })();
+    return () => { alive = false; };
+  }, [adminToken]);
 
   const value = useMemo<DriversCtx>(() => {
     const drivers: Driver[] = DELIVERY_BOYS.map(d => ({ ...d, active: overrides[d.id] ?? d.active }));
     return {
       drivers,
       available: drivers.filter(d => d.active),
-      setAvailable: (id, active) => setOverrides(prev => ({ ...prev, [id]: active })),
+      setAvailable: async (id, active) => {
+        setOverrides(prev => ({ ...prev, [id]: active }));
+        if (!adminToken) throw new Error("Admin authorization required");
+        try {
+          await setDriverAvailabilityFn({ data: { adminToken, driverId: id, active } });
+        } catch (e) {
+          setOverrides(prev => ({ ...prev, [id]: !active }));
+          throw e;
+        }
+      },
     };
-  }, [overrides]);
+  }, [overrides, adminToken]);
 
   return <DriversContext.Provider value={value}>{children}</DriversContext.Provider>;
 }

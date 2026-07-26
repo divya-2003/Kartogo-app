@@ -82,6 +82,23 @@ const STATUS_NOTICE: Record<OrderStatus, (id: string) => { title: string; descri
   cancelled: (id) => ({ title: "Order cancelled", description: `${id} has been cancelled.` }),
 };
 
+// Customer-facing labels for the return / refund journey. Shown in the top-left
+// of the order card so the latest update is always the first thing they read.
+const RETURN_TITLE: Record<string, string> = {
+  requested: "Return requested",
+  picked_up: "Return order pickup done",
+  refund_initiated: "Refund initiated",
+  refunded: "Refunded",
+  refund_rejected: "Refund failed",
+};
+
+const RETURN_STEPS: { key: string; label: string; note?: string }[] = [
+  { key: "requested", label: "Return requested" },
+  { key: "picked_up", label: "Return order pickup" },
+  { key: "refund_initiated", label: "Refund initiated", note: "Estimated time 3–5 business days" },
+  { key: "refunded", label: "Refunded" },
+];
+
 const ACTIVE_TITLE: Record<Exclude<OrderStatus, "delivered" | "cancelled">, string> = {
   placed: "Order placed",
   packed: "Order packed",
@@ -456,13 +473,14 @@ function OrdersPage() {
                           {cancelled
                             ? "Order cancelled"
                             : delivered
-                              ? (o.refundRequestStatus === "approved"
-                                  ? "Refunded"
-                                  : o.refundRequestStatus === "pending"
-                                    ? "Refund Requested"
-                                    : o.refundRequestStatus === "rejected"
-                                      ? "Refund Failed"
-                                      : "Order delivered")
+                              ? (RETURN_TITLE[o.returnStage ?? ""] ??
+                                  (o.refundRequestStatus === "approved"
+                                    ? "Refunded"
+                                    : o.refundRequestStatus === "pending"
+                                      ? "Return requested"
+                                      : o.refundRequestStatus === "rejected"
+                                        ? "Refund failed"
+                                        : "Order delivered"))
                               : ACTIVE_TITLE[
                                   o.status as Exclude<OrderStatus, "delivered" | "cancelled">
                                 ]}
@@ -569,6 +587,10 @@ function OrdersPage() {
                             <div className="mt-1 pl-7 text-xs">Reason: {o.cancelReason}</div>
                           )}
                         </div>
+                      )}
+
+                      {o.refundRequestStatus && (
+                        <ReturnTracker order={o} driverName={boy?.name} />
                       )}
 
                       <div className="mb-2 text-sm font-bold">
@@ -715,7 +737,12 @@ function OrdersPage() {
 
                   {/* Footer actions — kept side by side */}
                   <div className="flex border-t border-border divide-x divide-border">
-                    {!cancelled && (
+                    {!cancelled && !o.refundRequestStatus && refundEligibility(
+                      o,
+                      products,
+                      statusSince[o.id] ?? o.updatedAt ?? Date.now(),
+                      now,
+                    ).eligible && (
                       <button
                         onClick={() => setReportTarget(o)}
                         className="flex-1 py-3 text-sm font-bold text-destructive transition hover:bg-destructive/10"
@@ -938,7 +965,7 @@ function CancelReasonModal({
 
 type ReportIssueData = {
   type: string;
-  resolution: "Refund" | "Replacement";
+  resolution: "Refund";
   details: string;
   photo?: File;
 };
@@ -951,18 +978,26 @@ const ISSUE_TYPES = [
   "Other",
 ];
 
-// Refund destination + timeline per the Refund & Returns Policy. Wallet orders
-// are returned instantly to Kartogo Cash; UPI/COD follow the policy windows.
-function refundTimeline(method: Order["paymentMethod"]): { destination: string; eta: string } {
-  switch (method) {
-    case "wallet":
-      return { destination: "Kartogo Cash (Wallet)", eta: "Instantly after approval" };
-    case "upi":
-      return { destination: "Original UPI account", eta: "1–3 business days" };
-    case "cash":
-    default:
-      return { destination: "UPI or bank transfer", eta: "3–5 business days" };
-  }
+// Orders under this value are refunded to Kartogo Cash (ex-GST, valid 1 year).
+// Larger orders go back to UPI / bank. Mirrors the server-side refund config.
+const WALLET_REFUND_THRESHOLD = 500;
+
+// Refund destination + timeline per the Refund & Returns Policy.
+function refundTimeline(order: { paymentMethod: Order["paymentMethod"]; total: number }): {
+  destination: string;
+  eta: string;
+} {
+  if (order.paymentMethod === "wallet")
+    return { destination: "Kartogo Cash (Wallet)", eta: "Instantly after approval" };
+  if (order.total < WALLET_REFUND_THRESHOLD)
+    return {
+      destination: "Kartogo Cash (Wallet) — GST amount excluded, valid 1 year",
+      eta: "Instantly after approval",
+    };
+  return {
+    destination: "UPI or bank transfer",
+    eta: "3–5 business days",
+  };
 }
 
 
@@ -980,7 +1015,9 @@ function ReportIssueModal({
   onSubmit: (data: ReportIssueData) => void;
 }) {
   const [type, setType] = useState<string | null>(null);
-  const [resolution, setResolution] = useState<"Refund" | "Replacement" | null>(null);
+  // Replacements are paused — every approved issue is settled as a refund
+  // (Kartogo Cash or UPI/bank depending on the order value).
+  const resolution: "Refund" = "Refund";
   const [details, setDetails] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
   const eligibility = useMemo(
@@ -1064,38 +1101,10 @@ function ReportIssueModal({
           ))}
         </div>
 
-        <div className="mt-4">
-          <div className="mb-2 text-sm font-bold">What would you prefer?</div>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => !refundClosed && setResolution("Refund")}
-              disabled={refundClosed}
-              title={refundClosed ? "Refund window has closed for this order" : undefined}
-              className={`rounded-xl border py-2.5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${
-                resolution === "Refund"
-                  ? "border-primary bg-primary/5 text-primary"
-                  : "border-border hover:bg-secondary"
-              }`}
-            >
-              Refund
-            </button>
-            <button
-              onClick={() => setResolution("Replacement")}
-              className={`rounded-xl border py-2.5 text-sm font-bold transition ${
-                resolution === "Replacement"
-                  ? "border-leaf bg-leaf/10 text-leaf"
-                  : "border-border hover:bg-secondary"
-              }`}
-            >
-              Replacement
-            </button>
-          </div>
-        </div>
-
-        {/* Policy-aware refund details — shown once a refund is requested. */}
-        {resolution === "Refund" &&
+        {/* Policy-aware refund details. */}
+        {!refundClosed &&
           (() => {
-            const t = refundTimeline(order.paymentMethod);
+            const t = refundTimeline(order);
             return (
               <div className="mt-3 rounded-xl border border-primary/25 bg-primary/5 p-3">
                 <div className="flex items-center gap-2 text-sm font-bold text-primary">
@@ -1161,16 +1170,63 @@ function ReportIssueModal({
           </button>
           <button
             onClick={() => {
-              if (!type || !resolution) return;
+              if (!type) return;
               onSubmit({ type, resolution, details, photo: photo ?? undefined });
             }}
-            disabled={!type || !resolution}
+            disabled={!type}
             className="rounded-xl bg-destructive py-2.5 text-sm font-bold text-destructive-foreground transition hover:opacity-90 disabled:opacity-50"
           >
             Submit report
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Customer-facing return journey for an order with a refund request.
+function ReturnTracker({ order, driverName }: { order: Order; driverName?: string }) {
+  const rejected = order.returnStage === "refund_rejected" || order.refundRequestStatus === "rejected";
+  const stage = order.returnStage ?? (order.refundRequestStatus === "approved" ? "refunded" : "requested");
+  const currentIndex = RETURN_STEPS.findIndex((s) => s.key === stage);
+
+  return (
+    <div className="mb-4 rounded-xl border border-primary/25 bg-primary/5 p-3">
+      <div className="text-sm font-bold text-primary">
+        {rejected ? "Refund request declined" : "Return & refund status"}
+      </div>
+      {!rejected && driverName && (stage === "requested" || stage === "picked_up") && (
+        <div className="mt-1 text-xs text-muted-foreground">
+          <span className="font-semibold text-foreground">{driverName}</span> — the same partner who
+          delivered this order — will pick up your product.
+        </div>
+      )}
+      {rejected ? (
+        <div className="mt-2 text-sm text-muted-foreground">
+          {order.refundRequestResolution || "Please contact support for more details."}
+        </div>
+      ) : (
+        <ol className="mt-3 space-y-2">
+          {RETURN_STEPS.map((step, i) => {
+            const done = currentIndex >= 0 && i <= currentIndex;
+            return (
+              <li key={step.key} className="flex items-start gap-2 text-sm">
+                <span
+                  className={`mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full border ${done ? "border-primary bg-primary" : "border-muted-foreground/40"}`}
+                >
+                  {done && <span className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />}
+                </span>
+                <span className={done ? "font-semibold" : "text-muted-foreground"}>
+                  {step.label}
+                  {step.note && (
+                    <span className="ml-1 text-xs font-normal text-muted-foreground">({step.note})</span>
+                  )}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+      )}
     </div>
   );
 }

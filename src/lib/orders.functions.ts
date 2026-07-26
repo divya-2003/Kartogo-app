@@ -400,6 +400,9 @@ export const requestRefundFn = createServerFn({ method: "POST" })
         refund_request_type: data.type,
         refund_request_resolution: data.resolution,
         refund_request_status: "pending",
+        return_stage: "requested",
+        return_picked_up_at: null,
+        refund_initiated_at: null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", data.id)
@@ -487,6 +490,29 @@ export const resolveRefundRequestFn = createServerFn({ method: "POST" })
       }
     }
 
+    // Advance the customer-visible return/refund stage:
+    //  - credit already posted to Kartogo Cash  → "refunded"
+    //  - approved but money moves out-of-band   → "refund_initiated" (3–5 business days)
+    //  - rejected                               → "refund_rejected"
+    let returnStage: string | null = null;
+    let refundInitiatedAt: string | null = null;
+    if (data.decision === "approved") {
+      refundInitiatedAt = new Date().toISOString();
+      returnStage = creditAmount > 0 ? "refunded" : "refund_initiated";
+    } else {
+      returnStage = "refund_rejected";
+    }
+    const { data: staged } = await supabaseAdmin
+      .from("app_orders")
+      .update({
+        return_stage: returnStage,
+        refund_initiated_at: refundInitiatedAt ?? existing.refund_initiated_at,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", data.id)
+      .select("*")
+      .maybeSingle();
+
     // Audit log — records the actor, decision, and exact wallet credit posted.
     // The admin token is opaque (single passcode-scoped role), so we log
     // "admin" plus the last 8 chars of the signed token as a best-effort
@@ -505,6 +531,6 @@ export const resolveRefundRequestFn = createServerFn({ method: "POST" })
       actor,
     });
 
-    return row;
+    return staged ?? row;
   });
 

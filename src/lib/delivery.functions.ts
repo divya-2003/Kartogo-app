@@ -13,6 +13,18 @@ function maskOrdersForDriver<T extends Record<string, unknown>>(rows: T[]): T[] 
 const DELIVERY_STATUSES = ["packed", "out_for_delivery", "delivered"] as const;
 type DeliveryStatus = (typeof DELIVERY_STATUSES)[number];
 
+// Verify the signed delivery token AND that the admin hasn't blocked this rider.
+// Blocking only removes portal access — the rider's history stays untouched.
+async function requireActiveDriver(token: string) {
+  const { verifyDeliveryToken } = await import("./auth-tokens.server");
+  const session = verifyDeliveryToken(token);
+  if (!session) throw new Error("Your session has expired. Please log in again.");
+  const { assertDriverActive } = await import("./driver-access.server");
+  await assertDriverActive(session.driverId);
+  return session;
+}
+
+
 
 // ---------------- Delivery partner login ----------------
 // The driver enters their registered phone + the SMS OTP (request it first with
@@ -34,7 +46,8 @@ export const deliveryLoginFn = createServerFn({ method: "POST" })
 
     const driver = findDriverByPhone(data.phone);
     if (!driver) throw new Error("This number isn't registered as a delivery partner");
-    if (!driver.active) throw new Error("Your delivery account is inactive. Contact the store.");
+    const { assertDriverActive } = await import("./driver-access.server");
+    await assertDriverActive(driver.id);
 
     const { data: rows } = await supabaseAdmin
       .from("otp_codes")
@@ -75,10 +88,7 @@ export const listDeliveryOrdersFn = createServerFn({ method: "POST" })
   .inputValidator((data: { token: string }) => ({ token: String(data?.token ?? "") }))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { verifyDeliveryToken } = await import("./auth-tokens.server");
-
-    const session = verifyDeliveryToken(data.token);
-    if (!session) throw new Error("Your session has expired. Please log in again.");
+    const session = await requireActiveDriver(data.token);
 
     const { data: rows, error } = await supabaseAdmin
       .from("app_orders")
@@ -101,10 +111,7 @@ export const deliverySetStatusFn = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { verifyDeliveryToken } = await import("./auth-tokens.server");
-
-    const session = verifyDeliveryToken(data.token);
-    if (!session) throw new Error("Your session has expired. Please log in again.");
+    const session = await requireActiveDriver(data.token);
 
     const { data: existing, error: readErr } = await supabaseAdmin
       .from("app_orders")
@@ -142,10 +149,7 @@ export const listAvailableOrdersFn = createServerFn({ method: "POST" })
   .inputValidator((data: { token: string }) => ({ token: String(data?.token ?? "") }))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { verifyDeliveryToken } = await import("./auth-tokens.server");
-
-    const session = verifyDeliveryToken(data.token);
-    if (!session) throw new Error("Your session has expired. Please log in again.");
+    const session = await requireActiveDriver(data.token);
 
     // Include both freshly placed and already-packed (by supplier) orders
     // so a driver can still claim orders after the supplier packs them.
@@ -170,10 +174,7 @@ export const claimOrderFn = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { verifyDeliveryToken } = await import("./auth-tokens.server");
-
-    const session = verifyDeliveryToken(data.token);
-    if (!session) throw new Error("Your session has expired. Please log in again.");
+    const session = await requireActiveDriver(data.token);
 
     const { data: existing, error: readErr } = await supabaseAdmin
       .from("app_orders")
@@ -198,3 +199,59 @@ export const claimOrderFn = createServerFn({ method: "POST" })
     return maskOrderForDriver(row);
   });
 
+
+// ---------------- Return pickups (refund requests) ----------------
+// The driver who delivered an order is the one who collects the returned items,
+// so refund requests surface in that same driver's portal.
+export const listReturnPickupsFn = createServerFn({ method: "POST" })
+  .inputValidator((data: { token: string }) => ({ token: String(data?.token ?? "") }))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const session = await requireActiveDriver(data.token);
+
+    const { data: rows, error } = await supabaseAdmin
+      .from("app_orders")
+      .select("*")
+      .eq("delivery_boy_id", session.driverId)
+      .not("refund_requested_at", "is", null)
+      .order("refund_requested_at", { ascending: false });
+    if (error) throw new Error("Return pickups could not be loaded. Please try again.");
+    return maskOrdersForDriver(rows ?? []);
+  });
+
+// Driver confirms the returned items were collected from the customer.
+export const markReturnPickedUpFn = createServerFn({ method: "POST" })
+  .inputValidator((data: { token: string; id: string }) => ({
+    token: String(data?.token ?? ""),
+    id: String(data?.id ?? ""),
+  }))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const session = await requireActiveDriver(data.token);
+
+    const { data: existing } = await supabaseAdmin
+      .from("app_orders")
+      .select("id, delivery_boy_id, refund_requested_at, return_stage")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!existing) throw new Error("Order not found");
+    if (existing.delivery_boy_id !== session.driverId) throw new Error("This return isn't assigned to you");
+    if (!existing.refund_requested_at) throw new Error("No return was requested for this order");
+    if (existing.return_stage && existing.return_stage !== "requested") {
+      throw new Error("This return is already picked up");
+    }
+
+    const { data: row, error } = await supabaseAdmin
+      .from("app_orders")
+      .update({
+        return_stage: "picked_up",
+        return_picked_up_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", data.id)
+      .eq("delivery_boy_id", session.driverId)
+      .select("*")
+      .maybeSingle();
+    if (error || !row) throw new Error("Could not update this return. Please try again.");
+    return maskOrderForDriver(row);
+  });
