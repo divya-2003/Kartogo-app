@@ -46,7 +46,8 @@ export const deliveryLoginFn = createServerFn({ method: "POST" })
 
     const driver = findDriverByPhone(data.phone);
     if (!driver) throw new Error("This number isn't registered as a delivery partner");
-    if (!driver.active) throw new Error("Your delivery account is inactive. Contact the store.");
+    const { assertDriverActive } = await import("./driver-access.server");
+    await assertDriverActive(driver.id);
 
     const { data: rows } = await supabaseAdmin
       .from("otp_codes")
@@ -87,10 +88,7 @@ export const listDeliveryOrdersFn = createServerFn({ method: "POST" })
   .inputValidator((data: { token: string }) => ({ token: String(data?.token ?? "") }))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { verifyDeliveryToken } = await import("./auth-tokens.server");
-
-    const session = verifyDeliveryToken(data.token);
-    if (!session) throw new Error("Your session has expired. Please log in again.");
+    const session = await requireActiveDriver(data.token);
 
     const { data: rows, error } = await supabaseAdmin
       .from("app_orders")
@@ -113,10 +111,7 @@ export const deliverySetStatusFn = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { verifyDeliveryToken } = await import("./auth-tokens.server");
-
-    const session = verifyDeliveryToken(data.token);
-    if (!session) throw new Error("Your session has expired. Please log in again.");
+    const session = await requireActiveDriver(data.token);
 
     const { data: existing, error: readErr } = await supabaseAdmin
       .from("app_orders")
@@ -154,10 +149,7 @@ export const listAvailableOrdersFn = createServerFn({ method: "POST" })
   .inputValidator((data: { token: string }) => ({ token: String(data?.token ?? "") }))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { verifyDeliveryToken } = await import("./auth-tokens.server");
-
-    const session = verifyDeliveryToken(data.token);
-    if (!session) throw new Error("Your session has expired. Please log in again.");
+    const session = await requireActiveDriver(data.token);
 
     // Include both freshly placed and already-packed (by supplier) orders
     // so a driver can still claim orders after the supplier packs them.
@@ -182,10 +174,7 @@ export const claimOrderFn = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { verifyDeliveryToken } = await import("./auth-tokens.server");
-
-    const session = verifyDeliveryToken(data.token);
-    if (!session) throw new Error("Your session has expired. Please log in again.");
+    const session = await requireActiveDriver(data.token);
 
     const { data: existing, error: readErr } = await supabaseAdmin
       .from("app_orders")
