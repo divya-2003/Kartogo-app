@@ -13,6 +13,18 @@ function maskOrdersForDriver<T extends Record<string, unknown>>(rows: T[]): T[] 
 const DELIVERY_STATUSES = ["packed", "out_for_delivery", "delivered"] as const;
 type DeliveryStatus = (typeof DELIVERY_STATUSES)[number];
 
+// Verify the signed delivery token AND that the admin hasn't blocked this rider.
+// Blocking only removes portal access — the rider's history stays untouched.
+async function requireActiveDriver(token: string) {
+  const { verifyDeliveryToken } = await import("./auth-tokens.server");
+  const session = verifyDeliveryToken(token);
+  if (!session) throw new Error("Your session has expired. Please log in again.");
+  const { assertDriverActive } = await import("./driver-access.server");
+  await assertDriverActive(session.driverId);
+  return session;
+}
+
+
 
 // ---------------- Delivery partner login ----------------
 // The driver enters their registered phone + the SMS OTP (request it first with
