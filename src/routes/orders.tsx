@@ -82,6 +82,23 @@ const STATUS_NOTICE: Record<OrderStatus, (id: string) => { title: string; descri
   cancelled: (id) => ({ title: "Order cancelled", description: `${id} has been cancelled.` }),
 };
 
+// Customer-facing labels for the return / refund journey. Shown in the top-left
+// of the order card so the latest update is always the first thing they read.
+const RETURN_TITLE: Record<string, string> = {
+  requested: "Return requested",
+  picked_up: "Return order pickup done",
+  refund_initiated: "Refund initiated",
+  refunded: "Refunded",
+  refund_rejected: "Refund failed",
+};
+
+const RETURN_STEPS: { key: string; label: string; note?: string }[] = [
+  { key: "requested", label: "Return requested" },
+  { key: "picked_up", label: "Return order pickup" },
+  { key: "refund_initiated", label: "Refund initiated", note: "Estimated time 3–5 business days" },
+  { key: "refunded", label: "Refunded" },
+];
+
 const ACTIVE_TITLE: Record<Exclude<OrderStatus, "delivered" | "cancelled">, string> = {
   placed: "Order placed",
   packed: "Order packed",
@@ -456,13 +473,14 @@ function OrdersPage() {
                           {cancelled
                             ? "Order cancelled"
                             : delivered
-                              ? (o.refundRequestStatus === "approved"
-                                  ? "Refunded"
-                                  : o.refundRequestStatus === "pending"
-                                    ? "Refund Requested"
-                                    : o.refundRequestStatus === "rejected"
-                                      ? "Refund Failed"
-                                      : "Order delivered")
+                              ? (RETURN_TITLE[o.returnStage ?? ""] ??
+                                  (o.refundRequestStatus === "approved"
+                                    ? "Refunded"
+                                    : o.refundRequestStatus === "pending"
+                                      ? "Return requested"
+                                      : o.refundRequestStatus === "rejected"
+                                        ? "Refund failed"
+                                        : "Order delivered"))
                               : ACTIVE_TITLE[
                                   o.status as Exclude<OrderStatus, "delivered" | "cancelled">
                                 ]}
@@ -569,6 +587,10 @@ function OrdersPage() {
                             <div className="mt-1 pl-7 text-xs">Reason: {o.cancelReason}</div>
                           )}
                         </div>
+                      )}
+
+                      {o.refundRequestStatus && (
+                        <ReturnTracker order={o} driverName={boy?.name} />
                       )}
 
                       <div className="mb-2 text-sm font-bold">
@@ -715,7 +737,12 @@ function OrdersPage() {
 
                   {/* Footer actions — kept side by side */}
                   <div className="flex border-t border-border divide-x divide-border">
-                    {!cancelled && (
+                    {!cancelled && !o.refundRequestStatus && refundEligibility(
+                      o,
+                      products,
+                      statusSince[o.id] ?? o.updatedAt ?? Date.now(),
+                      now,
+                    ).eligible && (
                       <button
                         onClick={() => setReportTarget(o)}
                         className="flex-1 py-3 text-sm font-bold text-destructive transition hover:bg-destructive/10"
