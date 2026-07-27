@@ -48,7 +48,7 @@ function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { isAdminPhone, delivery, supplier } = await verifyOtp(phone, otp);
+      const { isAdminPhone, delivery, deliveryPending, supplier } = await verifyOtp(phone, otp);
       // Clear tokens belonging to OTHER roles so a device that previously
       // hosted a supplier/delivery/admin session doesn't bounce a new customer
       // (or a different role) back to the wrong portal via roleRedirectTarget.
@@ -64,6 +64,12 @@ function LoginPage() {
         } catch { /* noop */ }
         toast.success(`Welcome, ${delivery.driver.name}!`);
         nav({ to: "/delivery" });
+        return;
+      }
+      // Registered partner whose portal access is paused by the admin.
+      if (deliveryPending) {
+        clearKeys(["qk_admin_token", "qk_supplier_token", "qk_supplier", "qk_delivery_token", "qk_delivery_driver"]);
+        nav({ to: "/delivery-request", search: { phone: deliveryPending.phone } });
         return;
       }
       // Suppliers are routed straight to their scoped inventory + orders portal.
