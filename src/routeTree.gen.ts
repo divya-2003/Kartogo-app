@@ -47,6 +47,7 @@ import { Route as AdminReportsProductsRouteImport } from './routes/admin.reports
 import { Route as AdminReportsDailyRouteImport } from './routes/admin.reports-daily'
 import { Route as AdminRefundRequestsRouteImport } from './routes/admin.refund-requests'
 import { Route as AdminProductsRouteImport } from './routes/admin.products'
+import { Route as AdminPrintRouteImport } from './routes/admin.print'
 import { Route as AdminPartnersRouteImport } from './routes/admin.partners'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
@@ -245,6 +246,11 @@ const AdminProductsRoute = AdminProductsRouteImport.update({
   path: '/products',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPrintRoute = AdminPrintRouteImport.update({
+  id: '/print',
+  path: '/print',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPartnersRoute = AdminPartnersRouteImport.update({
   id: '/partners',
   path: '/partners',
@@ -311,6 +317,7 @@ export interface FileRoutesByFullPath {
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/partners': typeof AdminPartnersRoute
+  '/admin/print': typeof AdminPrintRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/refund-requests': typeof AdminRefundRequestsRoute
   '/admin/reports-daily': typeof AdminReportsDailyRoute
@@ -356,6 +363,7 @@ export interface FileRoutesByTo {
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/partners': typeof AdminPartnersRoute
+  '/admin/print': typeof AdminPrintRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/refund-requests': typeof AdminRefundRequestsRoute
   '/admin/reports-daily': typeof AdminReportsDailyRoute
@@ -404,6 +412,7 @@ export interface FileRoutesById {
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/partners': typeof AdminPartnersRoute
+  '/admin/print': typeof AdminPrintRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/refund-requests': typeof AdminRefundRequestsRoute
   '/admin/reports-daily': typeof AdminReportsDailyRoute
@@ -453,6 +462,7 @@ export interface FileRouteTypes {
     | '/admin/inventory'
     | '/admin/orders'
     | '/admin/partners'
+    | '/admin/print'
     | '/admin/products'
     | '/admin/refund-requests'
     | '/admin/reports-daily'
@@ -498,6 +508,7 @@ export interface FileRouteTypes {
     | '/admin/inventory'
     | '/admin/orders'
     | '/admin/partners'
+    | '/admin/print'
     | '/admin/products'
     | '/admin/refund-requests'
     | '/admin/reports-daily'
@@ -545,6 +556,7 @@ export interface FileRouteTypes {
     | '/admin/inventory'
     | '/admin/orders'
     | '/admin/partners'
+    | '/admin/print'
     | '/admin/products'
     | '/admin/refund-requests'
     | '/admin/reports-daily'
@@ -859,6 +871,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProductsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/print': {
+      id: '/admin/print'
+      path: '/print'
+      fullPath: '/admin/print'
+      preLoaderRoute: typeof AdminPrintRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/partners': {
       id: '/admin/partners'
       path: '/partners'
@@ -919,6 +938,7 @@ interface AdminRouteChildren {
   AdminInventoryRoute: typeof AdminInventoryRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
   AdminPartnersRoute: typeof AdminPartnersRoute
+  AdminPrintRoute: typeof AdminPrintRoute
   AdminProductsRoute: typeof AdminProductsRoute
   AdminRefundRequestsRoute: typeof AdminRefundRequestsRoute
   AdminReportsDailyRoute: typeof AdminReportsDailyRoute
@@ -939,6 +959,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminInventoryRoute: AdminInventoryRoute,
   AdminOrdersRoute: AdminOrdersRoute,
   AdminPartnersRoute: AdminPartnersRoute,
+  AdminPrintRoute: AdminPrintRoute,
   AdminProductsRoute: AdminProductsRoute,
   AdminRefundRequestsRoute: AdminRefundRequestsRoute,
   AdminReportsDailyRoute: AdminReportsDailyRoute,
