@@ -23,6 +23,7 @@ import { Route as PrintRouteImport } from './routes/print'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as MenuRouteImport } from './routes/menu'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as DeliveryRequestRouteImport } from './routes/delivery-request'
 import { Route as DeliveryRouteImport } from './routes/delivery'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CategoriesRouteImport } from './routes/categories'
@@ -122,6 +123,11 @@ const MenuRoute = MenuRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeliveryRequestRoute = DeliveryRequestRouteImport.update({
+  id: '/delivery-request',
+  path: '/delivery-request',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DeliveryRoute = DeliveryRouteImport.update({
@@ -283,6 +289,7 @@ export interface FileRoutesByFullPath {
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/delivery': typeof DeliveryRoute
+  '/delivery-request': typeof DeliveryRequestRoute
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
   '/orders': typeof OrdersRoute
@@ -328,6 +335,7 @@ export interface FileRoutesByTo {
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/delivery': typeof DeliveryRoute
+  '/delivery-request': typeof DeliveryRequestRoute
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
   '/orders': typeof OrdersRoute
@@ -374,6 +382,7 @@ export interface FileRoutesById {
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/delivery': typeof DeliveryRoute
+  '/delivery-request': typeof DeliveryRequestRoute
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
   '/orders': typeof OrdersRoute
@@ -422,6 +431,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/checkout'
     | '/delivery'
+    | '/delivery-request'
     | '/login'
     | '/menu'
     | '/orders'
@@ -467,6 +477,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/checkout'
     | '/delivery'
+    | '/delivery-request'
     | '/login'
     | '/menu'
     | '/orders'
@@ -512,6 +523,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/checkout'
     | '/delivery'
+    | '/delivery-request'
     | '/login'
     | '/menu'
     | '/orders'
@@ -559,6 +571,7 @@ export interface RootRouteChildren {
   CategoriesRoute: typeof CategoriesRoute
   CheckoutRoute: typeof CheckoutRoute
   DeliveryRoute: typeof DeliveryRoute
+  DeliveryRequestRoute: typeof DeliveryRequestRoute
   LoginRoute: typeof LoginRoute
   MenuRoute: typeof MenuRoute
   OrdersRoute: typeof OrdersRoute
@@ -676,6 +689,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/delivery-request': {
+      id: '/delivery-request'
+      path: '/delivery-request'
+      fullPath: '/delivery-request'
+      preLoaderRoute: typeof DeliveryRequestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/delivery': {
@@ -957,6 +977,7 @@ const rootRouteChildren: RootRouteChildren = {
   CategoriesRoute: CategoriesRoute,
   CheckoutRoute: CheckoutRoute,
   DeliveryRoute: DeliveryRoute,
+  DeliveryRequestRoute: DeliveryRequestRoute,
   LoginRoute: LoginRoute,
   MenuRoute: MenuRoute,
   OrdersRoute: OrdersRoute,
