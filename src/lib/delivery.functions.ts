@@ -42,9 +42,10 @@ export const deliveryLoginFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { createHash } = await import("node:crypto");
-    const { issueDeliveryToken, findDriverByPhone } = await import("./auth-tokens.server");
+    const { issueDeliveryToken } = await import("./auth-tokens.server");
+    const { findRosterDriverByPhone } = await import("./driver-roster.server");
 
-    const driver = findDriverByPhone(data.phone);
+    const driver = await findRosterDriverByPhone(data.phone);
     if (!driver) throw new Error("This number isn't registered as a delivery partner");
     const { assertDriverActive } = await import("./driver-access.server");
     await assertDriverActive(driver.id);
