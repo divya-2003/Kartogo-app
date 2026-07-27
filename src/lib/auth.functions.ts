@@ -155,6 +155,7 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
       token: issueCustomerToken(data.phone),
       isAdminPhone: isAdminPhone(data.phone),
       delivery,
+      deliveryPending,
       supplier,
     };
   });
