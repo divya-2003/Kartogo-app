@@ -283,21 +283,39 @@ export type Database = {
       }
       driver_availability: {
         Row: {
+          access_requested_at: string | null
           active: boolean
           created_at: string
           driver_id: string
+          name: string | null
+          phone: string | null
+          shift_end: string | null
+          shift_start: string | null
+          shift_type: string | null
           updated_at: string
         }
         Insert: {
+          access_requested_at?: string | null
           active?: boolean
           created_at?: string
           driver_id: string
+          name?: string | null
+          phone?: string | null
+          shift_end?: string | null
+          shift_start?: string | null
+          shift_type?: string | null
           updated_at?: string
         }
         Update: {
+          access_requested_at?: string | null
           active?: boolean
           created_at?: string
           driver_id?: string
+          name?: string | null
+          phone?: string | null
+          shift_end?: string | null
+          shift_start?: string | null
+          shift_type?: string | null
           updated_at?: string
         }
         Relationships: []

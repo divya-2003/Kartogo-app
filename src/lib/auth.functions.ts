@@ -96,7 +96,8 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { createHash } = await import("node:crypto");
-    const { issueCustomerToken, isAdminPhone, findDriverByPhone, issueDeliveryToken, issueSupplierToken } = await import("./auth-tokens.server");
+    const { issueCustomerToken, isAdminPhone, issueDeliveryToken, issueSupplierToken } = await import("./auth-tokens.server");
+    const { findRosterDriverByPhone } = await import("./driver-roster.server");
     const { findSupplierByPhone } = await import("./suppliers");
 
     const { data: rows } = await supabaseAdmin
@@ -129,9 +130,14 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
     // Derive the role from server-side registries. A registered, active delivery
     // partner is issued a signed delivery token in the same step so the unified
     // login can route them straight to the delivery portal.
-    const driver = findDriverByPhone(data.phone);
+    const driver = await findRosterDriverByPhone(data.phone);
     const delivery = driver && driver.active
       ? { token: issueDeliveryToken(driver.id, driver.phone), driver: { id: driver.id, name: driver.name, phone: driver.phone } }
+      : null;
+    // Registered but paused — the login screen sends them to the access request
+    // page instead of dropping them into the customer app.
+    const deliveryPending = driver && !driver.active
+      ? { name: driver.name, phone: driver.phone, requested: !!driver.accessRequestedAt }
       : null;
 
     // A registered supplier phone is issued a signed supplier token so the
@@ -149,6 +155,7 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
       token: issueCustomerToken(data.phone),
       isAdminPhone: isAdminPhone(data.phone),
       delivery,
+      deliveryPending,
       supplier,
     };
   });

@@ -196,7 +196,7 @@ type AuthCtx = {
   /** Request an SMS OTP. Returns demo-mode info when SMS is bypassed. */
   sendOtp: (phone: string) => Promise<{ demo: boolean; demoCode?: string }>;
   /** Verify the SMS OTP. Returns admin-eligibility, delivery and supplier sessions. */
-  verifyOtp: (phone: string, otp: string) => Promise<{ user: User; isAdminPhone: boolean; delivery: DeliverySession | null; supplier: SupplierSession | null }>;
+  verifyOtp: (phone: string, otp: string) => Promise<{ user: User; isAdminPhone: boolean; delivery: DeliverySession | null; deliveryPending: { name: string; phone: string; requested: boolean } | null; supplier: SupplierSession | null }>;
   /** Exchange the secret admin passcode for a signed admin token. */
   adminLogin: (passcode: string) => Promise<User>;
   setName: (name: string) => void;
@@ -271,7 +271,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCustomerToken(res.token);
       // A new login is not yet an admin session until the passcode is provided.
       setAdminToken(null);
-      return { user: u, isAdminPhone: res.isAdminPhone, delivery: res.delivery ?? null, supplier: res.supplier ?? null };
+      return { user: u, isAdminPhone: res.isAdminPhone, delivery: res.delivery ?? null, deliveryPending: res.deliveryPending ?? null, supplier: res.supplier ?? null };
     },
     adminLogin: async (passcode) => {
       const res = await adminLoginFn({ data: { passcode } });
@@ -1158,62 +1158,70 @@ export const useLocation = () => {
 export { DELIVERY_BOYS };
 
 // ---------------- Drivers (availability toggles) ----------------
-// Admin-managed availability for delivery partners. The roster is static
-// (src/lib/data.ts); availability overrides persist in localStorage and sync
-// across tabs so the Orders "Assign" dropdown only offers available riders.
-export type Driver = { id: string; name: string; phone: string; active: boolean };
+// The roster is server-backed: the founding riders plus every partner the admin
+// adds later. Availability gates the delivery portal, so the server is the
+// source of truth; a local cache keeps admin screens instant.
+export type Driver = {
+  id: string;
+  name: string;
+  phone: string;
+  active: boolean;
+  shiftType?: "full_time" | "part_time";
+  shiftStart?: string | null;
+  shiftEnd?: string | null;
+  accessRequestedAt?: string | null;
+};
 
 type DriversCtx = {
   drivers: Driver[];
   available: Driver[];
   setAvailable: (id: string, active: boolean) => Promise<void>;
+  refresh: () => Promise<void>;
 };
 const DriversContext = createContext<DriversCtx | null>(null);
-const DRIVERS_KEY = "qk_driver_availability";
+const DRIVERS_KEY = "qk_driver_roster";
 
 export function DriversProvider({ children }: { children: ReactNode }) {
   const { adminToken } = useAuth();
-  const [overrides, setOverrides] = useState<Record<string, boolean>>({});
+  const [roster, setRoster] = useState<Driver[]>([]);
   const [loaded, setLoaded] = useState(false);
 
-  // Availability is stored on the server (it gates the delivery portal), with a
-  // local cache so admin screens render instantly.
-  useEffect(() => { setOverrides(read<Record<string, boolean>>(DRIVERS_KEY, {})); }, []);
-  useEffect(() => { if (loaded) write(DRIVERS_KEY, overrides); }, [overrides, loaded]);
+  useEffect(() => { setRoster(read<Driver[]>(DRIVERS_KEY, [])); }, []);
+  useEffect(() => { if (loaded) write(DRIVERS_KEY, roster); }, [roster, loaded]);
 
-  useEffect(() => {
+  const load = useCallback(async () => {
     if (!adminToken) return;
-    let alive = true;
-    (async () => {
-      try {
-        const rows = await listDriverAvailabilityFn({ data: { adminToken } });
-        if (!alive) return;
-        const next: Record<string, boolean> = {};
-        for (const r of rows) next[r.id] = r.active;
-        setOverrides(next);
-      } catch { /* keep cached values */ }
-      finally { if (alive) setLoaded(true); }
-    })();
-    return () => { alive = false; };
+    try {
+      const rows = await listDriverAvailabilityFn({ data: { adminToken } });
+      setRoster(rows);
+    } catch { /* keep cached values */ }
+    finally { setLoaded(true); }
   }, [adminToken]);
 
+  useEffect(() => { void load(); }, [load]);
+
   const value = useMemo<DriversCtx>(() => {
-    const drivers: Driver[] = DELIVERY_BOYS.map(d => ({ ...d, active: overrides[d.id] ?? d.active }));
+    const base: Driver[] = DELIVERY_BOYS.map(d => ({ ...d }));
+    const merged = roster.length
+      ? roster
+      : base;
     return {
-      drivers,
-      available: drivers.filter(d => d.active),
+      drivers: merged,
+      available: merged.filter(d => d.active),
       setAvailable: async (id, active) => {
-        setOverrides(prev => ({ ...prev, [id]: active }));
+        setRoster(prev => prev.map(d => (d.id === id ? { ...d, active } : d)));
         if (!adminToken) throw new Error("Admin authorization required");
         try {
           await setDriverAvailabilityFn({ data: { adminToken, driverId: id, active } });
+          await load();
         } catch (e) {
-          setOverrides(prev => ({ ...prev, [id]: !active }));
+          setRoster(prev => prev.map(d => (d.id === id ? { ...d, active: !active } : d)));
           throw e;
         }
       },
+      refresh: load,
     };
-  }, [overrides, adminToken]);
+  }, [roster, adminToken, load]);
 
   return <DriversContext.Provider value={value}>{children}</DriversContext.Provider>;
 }

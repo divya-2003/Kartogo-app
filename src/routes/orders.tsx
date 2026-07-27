@@ -566,7 +566,7 @@ function OrdersPage() {
                   {/* Expanded detail — bill summary */}
                   {open && (
                     <div className="border-t border-border px-4 py-4">
-                      {delivered && (
+                      {delivered && !o.refundRequestStatus && (
                         <div className="mb-4 flex items-center justify-between rounded-xl bg-leaf/10 px-3 py-2.5">
                           <span className="flex items-center gap-2 font-bold text-leaf">
                             <CheckCircle2 className="h-5 w-5" /> Delivered

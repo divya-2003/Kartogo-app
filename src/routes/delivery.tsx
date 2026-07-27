@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, redirect, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Bike, Phone, Package, Undo2, ShieldAlert, Truck, CheckCircle2, MapPin, LogOut, RefreshCw, IndianRupee, HandPlatter, User2, Wallet, ListChecks, Navigation, ChevronDown, MessageSquare } from "lucide-react";
@@ -214,9 +214,16 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
           <h1 className="mt-3 font-display text-xl font-bold">Access paused</h1>
           <p className="mt-2 text-sm text-muted-foreground">{blocked}</p>
           <p className="mt-2 text-xs text-muted-foreground">Your delivery history and earnings are safe — everything returns when the admin marks you available again.</p>
-          <div className="mt-4 flex items-center justify-center gap-2">
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            <Link
+              to="/delivery-request"
+              search={{ phone: driver.phone }}
+              className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+            >
+              Request delivery page
+            </Link>
             <button onClick={() => void load()} className="rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-secondary">Try again</button>
-            <button onClick={onLogout} className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">Log out</button>
+            <button onClick={onLogout} className="rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-secondary">Log out</button>
           </div>
         </div>
       </div>
