@@ -1185,51 +1185,85 @@ function ReportIssueModal({
 }
 
 // Customer-facing return journey for an order with a refund request.
+// Only rendered when a return exists — normal forward deliveries never see it.
 function ReturnTracker({ order, driverName }: { order: Order; driverName?: string }) {
   const rejected = order.returnStage === "refund_rejected" || order.refundRequestStatus === "rejected";
   const stage = order.returnStage ?? (order.refundRequestStatus === "approved" ? "refunded" : "requested");
   const currentIndex = RETURN_STEPS.findIndex((s) => s.key === stage);
+  const awaitingPickup = !rejected && stage === "requested";
 
   return (
     <div className="mb-4 rounded-xl border border-primary/25 bg-primary/5 p-3">
-      <div className="text-sm font-bold text-primary">
-        {rejected ? "Refund request declined" : "Return & refund status"}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm font-bold text-primary">
+          {rejected ? "Refund request declined" : (RETURN_TITLE[stage] ?? "Return & refund status")}
+        </span>
+        {!rejected && driverName && (stage === "requested" || stage === "picked_up") && (
+          <span className="rounded-full bg-card px-2 py-0.5 text-xs font-semibold text-foreground">
+            {driverName}
+          </span>
+        )}
+        {awaitingPickup && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-saffron/20 px-2.5 py-0.5 text-xs font-bold text-saffron-foreground">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-leaf/70" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-leaf" />
+            </span>
+            Pickup agent arriving within 2 hours
+          </span>
+        )}
       </div>
-      {!rejected && driverName && (stage === "requested" || stage === "picked_up") && (
-        <div className="mt-1 text-xs text-muted-foreground">
-          <span className="font-semibold text-foreground">{driverName}</span> — the same partner who
-          delivered this order — will pick up your product.
-        </div>
-      )}
+
       {rejected ? (
         <div className="mt-2 text-sm text-muted-foreground">
           {order.refundRequestResolution || "Please contact support for more details."}
         </div>
       ) : (
-        <ol className="mt-3 space-y-2">
-          {RETURN_STEPS.map((step, i) => {
-            const done = currentIndex >= 0 && i <= currentIndex;
-            return (
-              <li key={step.key} className="flex items-start gap-2 text-sm">
-                <span
-                  className={`mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full border ${done ? "border-primary bg-primary" : "border-muted-foreground/40"}`}
-                >
-                  {done && <span className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />}
-                </span>
-                <span className={done ? "font-semibold" : "text-muted-foreground"}>
-                  {step.label}
-                  {step.note && (
-                    <span className="ml-1 text-xs font-normal text-muted-foreground">({step.note})</span>
+        <>
+          {/* Horizontal progress stepper */}
+          <div className="mt-4 flex items-start">
+            {RETURN_STEPS.map((step, i) => {
+              const done = currentIndex >= 0 && i < currentIndex;
+              const active = i === currentIndex;
+              return (
+                <div key={step.key} className="flex min-w-0 flex-1 items-start">
+                  <div className="flex min-w-0 flex-1 flex-col items-center gap-1">
+                    <span
+                      className={`relative grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 transition-colors ${
+                        active
+                          ? "border-primary bg-primary"
+                          : done
+                            ? "border-primary bg-primary/20"
+                            : "border-muted-foreground/30 bg-card"
+                      }`}
+                    >
+                      {active && <span className="absolute inset-0 rounded-full bg-primary/40 animate-ping" aria-hidden />}
+                      {done && <span className="h-1.5 w-1.5 rounded-full bg-primary" />}
+                    </span>
+                    <span
+                      className={`text-center text-[10px] font-semibold leading-tight ${
+                        active ? "text-primary" : done ? "text-foreground" : "text-muted-foreground"
+                      }`}
+                    >
+                      {step.label}
+                    </span>
+                    {step.note && active && (
+                      <span className="text-center text-[10px] text-muted-foreground">{step.note}</span>
+                    )}
+                  </div>
+                  {i < RETURN_STEPS.length - 1 && (
+                    <span className={`mt-2.5 h-0.5 w-3 shrink-0 sm:w-6 ${i < currentIndex ? "bg-primary" : "bg-border"}`} />
                   )}
-                </span>
-              </li>
-            );
-          })}
-        </ol>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );
 }
+
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
