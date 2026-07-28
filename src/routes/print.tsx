@@ -72,12 +72,47 @@ const SERVICES: Service[] = [
   },
 ];
 
-const STATUS_LABEL: Record<string, string> = {
-  received: "Received",
-  printing: "Printing",
-  ready: "Ready — out for delivery",
-  collected: "Delivered",
-};
+// Fulfilment milestones shown as a horizontal stepper on each print job.
+const PRINT_STEPS: { key: string; label: string }[] = [
+  { key: "received", label: "Received" },
+  { key: "printing", label: "Printing" },
+  { key: "ready", label: "Ready for pickup" },
+  { key: "collected", label: "Handed to rider" },
+];
+
+function PrintJobTracker({ status }: { status: string }) {
+  const current = Math.max(0, PRINT_STEPS.findIndex(s => s.key === status));
+  return (
+    <div className="mt-3">
+      <div className="flex items-start">
+        {PRINT_STEPS.map((step, i) => {
+          const done = i < current;
+          const active = i === current;
+          return (
+            <div key={step.key} className="flex min-w-0 flex-1 items-start">
+              <div className="flex min-w-0 flex-1 flex-col items-center gap-1">
+                <span
+                  className={`relative grid h-4 w-4 place-items-center rounded-full border-2 ${
+                    active ? "border-leaf bg-leaf" : done ? "border-primary bg-primary" : "border-border bg-card"
+                  }`}
+                >
+                  {active && <span className="absolute inset-0 rounded-full bg-leaf/50 animate-ping" aria-hidden />}
+                </span>
+                <span className={`text-center text-[10px] font-semibold leading-tight ${active ? "text-leaf" : done ? "text-foreground" : "text-muted-foreground"}`}>
+                  {step.label}
+                </span>
+              </div>
+              {i < PRINT_STEPS.length - 1 && (
+                <span className={`mt-2 h-0.5 w-4 shrink-0 sm:w-8 ${i < current ? "bg-primary" : "bg-border"}`} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 
 function PrintStorePage() {
   const { customerToken, user } = useAuth();
