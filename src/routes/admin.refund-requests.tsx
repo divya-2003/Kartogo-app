@@ -363,3 +363,74 @@ function TabChip({ active, onClick, icon, label }: { active: boolean; onClick: (
     </button>
   );
 }
+
+// Return pickups must never get stuck: if the original rider is paused/offline,
+// admins get an inline override to hand the pickup to any active partner.
+function ReturnPickupBanner({ orderId, assignedDriverId, drivers, onAssign }: {
+  orderId: string;
+  assignedDriverId?: string | null;
+  drivers: Driver[];
+  onAssign: (id: string, deliveryBoyId: string) => Promise<void>;
+}) {
+  const [choice, setChoice] = useState("");
+  const [saving, setSaving] = useState(false);
+  const assigned = drivers.find(d => d.id === assignedDriverId);
+  const activeDrivers = drivers.filter(d => d.active && d.id !== assignedDriverId);
+  const needsOverride = !assigned || !assigned.active;
+
+  if (!needsOverride) {
+    return (
+      <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-secondary/40 px-3 py-2 text-sm">
+        <Truck className="h-4 w-4 text-primary" />
+        <span className="font-semibold">Return pickup:</span>
+        <span className="text-muted-foreground">{assigned.name} · active</span>
+      </div>
+    );
+  }
+
+  const reassign = async () => {
+    if (!choice) return;
+    setSaving(true);
+    try {
+      await onAssign(orderId, choice);
+      toast.success("Return pickup reassigned");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not reassign");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="mb-3 rounded-xl border border-destructive/40 bg-destructive/5 p-3">
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <AlertTriangle className="h-4 w-4 text-destructive" />
+        <span className="font-semibold text-destructive">
+          {assigned ? `${assigned.name} is offline/paused` : "No delivery partner assigned"}
+        </span>
+        <span className="text-muted-foreground">— assign an active partner for the return pickup.</span>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <select
+          value={choice}
+          onChange={e => setChoice(e.target.value)}
+          className="min-w-0 flex-1 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-semibold"
+          aria-label="Assign active delivery partner"
+        >
+          <option value="">Select active partner…</option>
+          {activeDrivers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+        </select>
+        <button
+          onClick={reassign}
+          disabled={!choice || saving}
+          className="rounded-lg bg-primary px-3 py-1.5 text-sm font-bold text-primary-foreground disabled:opacity-50"
+        >
+          {saving ? "Assigning…" : "Assign pickup"}
+        </button>
+      </div>
+      {activeDrivers.length === 0 && (
+        <p className="mt-2 text-xs text-muted-foreground">No active partners right now — activate one in Delivery team.</p>
+      )}
+    </div>
+  );
+}
