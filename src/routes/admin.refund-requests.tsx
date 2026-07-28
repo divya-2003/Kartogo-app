@@ -46,9 +46,11 @@ function RefundRequests() {
 /* ----------------------------- Requests panel ---------------------------- */
 
 function RequestsPanel() {
-  const { orders, resolveRefundRequest } = useOrders();
+  const { orders, resolveRefundRequest, assign } = useOrders();
+  const { drivers } = useDrivers();
   const [filter, setFilter] = useState<"pending" | "approved" | "rejected" | "all">("pending");
   const [busy, setBusy] = useState<string | null>(null);
+
 
   const requests = useMemo(
     () => orders.filter(o => !!o.refundRequestedAt).sort((a, b) => (b.refundRequestedAt ?? 0) - (a.refundRequestedAt ?? 0)),
