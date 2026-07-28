@@ -461,7 +461,51 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
 }
 
 
+// ---------------- Today's summary ----------------
+const isSameDay = (iso?: string | null) => {
+  if (!iso) return false;
+  const d = new Date(iso);
+  const n = new Date();
+  return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+};
+
+function DailySummary({ orders, returns }: { orders: OrderRow[]; returns: OrderRow[] }) {
+  const deliveredToday = orders.filter(o => o.status === "delivered" && isSameDay(o.created_at));
+  const returnsToday = returns.filter(o => (o.return_stage ?? "") !== "requested" && isSameDay(o.return_picked_up_at));
+  const earnedToday = deliveredToday.reduce(
+    (s, o) => s + EARNING_PER_ORDER + Math.max(0, Number(o.driver_surge_share) || 0),
+    0,
+  );
+
+  return (
+    <section className="mb-4 rounded-2xl border border-border bg-gradient-to-br from-primary/10 to-card p-4 shadow-pop sm:p-5">
+      <div className="flex items-center gap-2">
+        <IndianRupee className="h-4 w-4 text-primary" />
+        <h2 className="font-display text-base font-extrabold sm:text-lg">Today&apos;s summary</h2>
+        <span className="ml-auto text-xs font-semibold text-muted-foreground">
+          {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+        </span>
+      </div>
+      <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="rounded-xl border border-border bg-card p-3 text-center">
+          <div className="font-display text-xl font-extrabold sm:text-2xl">{deliveredToday.length}</div>
+          <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-xs">Deliveries</div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-3 text-center">
+          <div className="font-display text-xl font-extrabold sm:text-2xl">{returnsToday.length}</div>
+          <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-xs">Returns</div>
+        </div>
+        <div className="rounded-xl border border-primary/40 bg-primary/10 p-3 text-center">
+          <div className="font-display text-xl font-extrabold text-primary sm:text-2xl">{formatINR(earnedToday)}</div>
+          <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-xs">Earned today</div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ---------------- Earnings (monthly, clickable) ----------------
+
 // Delivery partners earn a flat ₹25 for every order they deliver.
 const EARNING_PER_ORDER = 25;
 
