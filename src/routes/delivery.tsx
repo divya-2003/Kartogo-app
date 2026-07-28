@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { Bike, Phone, Package, Undo2, ShieldAlert, Truck, CheckCircle2, MapPin, LogOut, RefreshCw, IndianRupee, HandPlatter, User2, Wallet, ListChecks, Navigation, ChevronDown, MessageSquare } from "lucide-react";
 import { listDeliveryOrdersFn, deliverySetStatusFn, listAvailableOrdersFn, claimOrderFn, listReturnPickupsFn, markReturnPickedUpFn } from "@/lib/delivery.functions";
 import { initiateMaskedCallFn } from "@/lib/chat.functions";
+import { getDriverStatusFn } from "@/lib/drivers.functions";
+
 import { OrderChat } from "@/components/OrderChat";
 import { formatINR } from "@/lib/data";
 
@@ -45,6 +47,8 @@ type OrderRow = {
   refund_request_status?: string | null;
   refund_requested_at?: string | null;
   return_stage?: string | null;
+  return_picked_up_at?: string | null;
+  driver_surge_share?: number | null;
 };
 
 const TOKEN_KEY = "qk_delivery_token";
