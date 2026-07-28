@@ -129,6 +129,17 @@ function RequestsPanel() {
                   {o.items.map(i => <li key={i.productId} className="text-muted-foreground">{i.name} × <span className="font-semibold text-foreground">{i.qty}</span></li>)}
                 </ul>
 
+                {status === "pending" && (
+                  <ReturnPickupBanner
+                    orderId={o.id}
+                    assignedDriverId={o.deliveryBoyId}
+                    drivers={drivers}
+                    onAssign={assign}
+                  />
+                )}
+
+
+
                 <div className="flex flex-wrap items-center gap-3 border-t border-border pt-3">
                   {status === "pending" ? (
                     <>
