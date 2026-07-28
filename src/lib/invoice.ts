@@ -114,10 +114,12 @@ export async function downloadInvoice(o: Order) {
     y += 18;
   };
 
-  const surge = Math.max(0, Number(o.surgeAmount) || 0);
+  const extra = o as unknown as { surgeAmount?: number; surgeReason?: string };
+  const surge = Math.max(0, Number(extra.surgeAmount) || 0);
   sumRow("Subtotal (items)", inr(o.subtotal));
   sumRow("Delivery Fee", o.deliveryFee > 0 ? inr(o.deliveryFee) : "FREE");
-  if (surge > 0) sumRow(`Surge${o.surgeReason ? ` (${String(o.surgeReason).replace(/_/g, " ")})` : ""}`, inr(surge));
+  if (surge > 0) sumRow(`Surge${extra.surgeReason ? ` (${String(extra.surgeReason).replace(/_/g, " ")})` : ""}`, inr(surge));
+
   if (o.discount > 0) sumRow(`Discount${o.promoCode ? ` (${o.promoCode})` : ""}`, `- ${inr(o.discount)}`, { color: PRIMARY });
   // GST is included in the listed prices — shown for transparency.
   const gstIncluded = Math.round(o.total - o.total / 1.05);
