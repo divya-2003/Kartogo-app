@@ -286,7 +286,9 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
           />
         ) : (
         <>
-        {/* Tabs */}
+        <DailySummary orders={orders} returns={returns} />
+
+
         <div className="mb-4 flex flex-wrap gap-2">
           <button onClick={() => setTab("available")} className={`rounded-full px-4 py-1.5 text-sm font-semibold ${tab === "available" ? "bg-primary text-primary-foreground" : "border border-border bg-card"}`}>
             Available ({available.length})
