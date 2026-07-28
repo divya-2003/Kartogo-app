@@ -156,6 +156,27 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
     return () => clearInterval(t);
   }, [load]);
 
+  // While access is paused, poll the roster so the dashboard unlocks the moment
+  // the admin approves — no logout / hard refresh needed.
+  useEffect(() => {
+    if (!blocked) return;
+    let alive = true;
+    const check = async () => {
+      try {
+        const s = await getDriverStatusFn({ data: { phone: driver.phone } });
+        if (!alive || !s.found || !s.active) return;
+        try { localStorage.setItem("qk_delivery_active", "1"); } catch { /* noop */ }
+        setBlocked(null);
+        await load();
+        toast.success("Access approved — welcome back!");
+      } catch { /* keep waiting */ }
+    };
+    void check();
+    const t = setInterval(() => { void check(); }, 8000);
+    return () => { alive = false; clearInterval(t); };
+  }, [blocked, driver.phone, load]);
+
+
   const advance = async (o: OrderRow, next: DeliveryStatus, label: string) => {
     setBusyId(o.id);
     try {
