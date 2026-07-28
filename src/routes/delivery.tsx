@@ -48,7 +48,7 @@ type OrderRow = {
   refund_requested_at?: string | null;
   return_stage?: string | null;
   return_picked_up_at?: string | null;
-  driver_surge_share?: number | null;
+
 };
 
 const TOKEN_KEY = "qk_delivery_token";
