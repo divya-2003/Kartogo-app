@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { Bike, Phone, Package, Undo2, ShieldAlert, Truck, CheckCircle2, MapPin, LogOut, RefreshCw, IndianRupee, HandPlatter, User2, Wallet, ListChecks, Navigation, ChevronDown, MessageSquare } from "lucide-react";
 import { listDeliveryOrdersFn, deliverySetStatusFn, listAvailableOrdersFn, claimOrderFn, listReturnPickupsFn, markReturnPickedUpFn } from "@/lib/delivery.functions";
 import { initiateMaskedCallFn } from "@/lib/chat.functions";
+import { getDriverStatusFn } from "@/lib/drivers.functions";
+
 import { OrderChat } from "@/components/OrderChat";
 import { formatINR } from "@/lib/data";
 
@@ -45,6 +47,8 @@ type OrderRow = {
   refund_request_status?: string | null;
   refund_requested_at?: string | null;
   return_stage?: string | null;
+  return_picked_up_at?: string | null;
+
 };
 
 const TOKEN_KEY = "qk_delivery_token";
@@ -156,6 +160,27 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
     return () => clearInterval(t);
   }, [load]);
 
+  // While access is paused, poll the roster so the dashboard unlocks the moment
+  // the admin approves — no logout / hard refresh needed.
+  useEffect(() => {
+    if (!blocked) return;
+    let alive = true;
+    const check = async () => {
+      try {
+        const s = await getDriverStatusFn({ data: { phone: driver.phone } });
+        if (!alive || !s.found || !s.active) return;
+        try { localStorage.setItem("qk_delivery_active", "1"); } catch { /* noop */ }
+        setBlocked(null);
+        await load();
+        toast.success("Access approved — welcome back!");
+      } catch { /* keep waiting */ }
+    };
+    void check();
+    const t = setInterval(() => { void check(); }, 8000);
+    return () => { alive = false; clearInterval(t); };
+  }, [blocked, driver.phone, load]);
+
+
   const advance = async (o: OrderRow, next: DeliveryStatus, label: string) => {
     setBusyId(o.id);
     try {
@@ -261,7 +286,9 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
           />
         ) : (
         <>
-        {/* Tabs */}
+        <DailySummary orders={orders} returns={returns} />
+
+
         <div className="mb-4 flex flex-wrap gap-2">
           <button onClick={() => setTab("available")} className={`rounded-full px-4 py-1.5 text-sm font-semibold ${tab === "available" ? "bg-primary text-primary-foreground" : "border border-border bg-card"}`}>
             Available ({available.length})
@@ -434,7 +461,51 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
 }
 
 
+// ---------------- Today's summary ----------------
+const isSameDay = (iso?: string | null) => {
+  if (!iso) return false;
+  const d = new Date(iso);
+  const n = new Date();
+  return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+};
+
+function DailySummary({ orders, returns }: { orders: OrderRow[]; returns: OrderRow[] }) {
+  const deliveredToday = orders.filter(o => o.status === "delivered" && isSameDay(o.created_at));
+  const returnsToday = returns.filter(o => (o.return_stage ?? "") !== "requested" && isSameDay(o.return_picked_up_at));
+  const earnedToday = deliveredToday.reduce(
+    (s, o) => s + EARNING_PER_ORDER + Math.max(0, Number(o.driver_surge_share) || 0),
+    0,
+  );
+
+  return (
+    <section className="mb-4 rounded-2xl border border-border bg-gradient-to-br from-primary/10 to-card p-4 shadow-pop sm:p-5">
+      <div className="flex items-center gap-2">
+        <IndianRupee className="h-4 w-4 text-primary" />
+        <h2 className="font-display text-base font-extrabold sm:text-lg">Today&apos;s summary</h2>
+        <span className="ml-auto text-xs font-semibold text-muted-foreground">
+          {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+        </span>
+      </div>
+      <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="rounded-xl border border-border bg-card p-3 text-center">
+          <div className="font-display text-xl font-extrabold sm:text-2xl">{deliveredToday.length}</div>
+          <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-xs">Deliveries</div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-3 text-center">
+          <div className="font-display text-xl font-extrabold sm:text-2xl">{returnsToday.length}</div>
+          <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-xs">Returns</div>
+        </div>
+        <div className="rounded-xl border border-primary/40 bg-primary/10 p-3 text-center">
+          <div className="font-display text-xl font-extrabold text-primary sm:text-2xl">{formatINR(earnedToday)}</div>
+          <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-xs">Earned today</div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ---------------- Earnings (monthly, clickable) ----------------
+
 // Delivery partners earn a flat ₹25 for every order they deliver.
 const EARNING_PER_ORDER = 25;
 
@@ -446,7 +517,10 @@ function EarningsSection({ orders, deliveredCount, activeCount }: {
   const now = new Date();
   const currentKey = now.getFullYear() * 12 + now.getMonth();
   const [open, setOpen] = useState(false);
-  const [monthOpen, setMonthOpen] = useState(true);
+  const [selectedKey, setSelectedKey] = useState(currentKey);
+  const [visibleCount, setVisibleCount] = useState(5);
+
+  const PAGE = 5;
 
   // Group delivered orders into calendar months.
   const groups = new Map<number, OrderRow[]>();
@@ -469,7 +543,10 @@ function EarningsSection({ orders, deliveredCount, activeCount }: {
   const payoutFor = (o: OrderRow) => EARNING_PER_ORDER + Math.max(0, Number(o.driver_surge_share) || 0);
   const totalFor = (list: OrderRow[]) => list.reduce((s, o) => s + payoutFor(o), 0);
   const currentTotal = totalFor(current);
-  const previousKeys = keys.filter(k => k !== currentKey);
+
+  const selected = monthOrdersFor(selectedKey);
+  const selectedTotal = totalFor(selected);
+  const shown = selected.slice(0, visibleCount);
 
   return (
     <section>
@@ -505,32 +582,32 @@ function EarningsSection({ orders, deliveredCount, activeCount }: {
               </div>
             </div>
 
-            {/* This month — clickable, with detailed breakdown inside */}
+            {/* Month picker + payouts for the chosen month */}
             <div className="overflow-hidden rounded-2xl border border-primary/40 bg-background">
-              <button
-                onClick={() => setMonthOpen(v => !v)}
-                aria-expanded={monthOpen}
-                className="flex w-full items-center gap-3 p-4 text-left hover:bg-secondary/60"
-              >
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 font-display font-bold">
-                    {labelFor(currentKey)}
-                    <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase text-primary">This month</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground">{current.length} deliver{current.length === 1 ? "y" : "ies"}</div>
-                </div>
-                <div className="ml-auto flex items-center gap-2">
-                  <span className="font-display text-lg font-bold text-primary">{formatINR(currentTotal)}</span>
-                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${monthOpen ? "rotate-180" : ""}`} />
-                </div>
-              </button>
-              {monthOpen && (
-                <div className="border-t border-border">
-                  {current.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-muted-foreground">No deliveries yet this month.</div>
-                  ) : (
+              <div className="flex flex-wrap items-center gap-2 p-4">
+                <label className="text-xs font-semibold text-muted-foreground" htmlFor="earnings-month">Month</label>
+                <select
+                  id="earnings-month"
+                  value={selectedKey}
+                  onChange={e => { setSelectedKey(Number(e.target.value)); setVisibleCount(PAGE); }}
+                  className="min-w-0 flex-1 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold"
+                >
+                  {keys.map(k => (
+                    <option key={k} value={k}>
+                      {labelFor(k)}{k === currentKey ? " · this month" : ""}
+                    </option>
+                  ))}
+                </select>
+                <span className="font-display text-lg font-bold text-primary">{formatINR(selectedTotal)}</span>
+              </div>
+
+              <div className="border-t border-border">
+                {selected.length === 0 ? (
+                  <div className="p-4 text-center text-sm text-muted-foreground">No deliveries in {labelFor(selectedKey)}.</div>
+                ) : (
+                  <>
                     <ul className="divide-y divide-border">
-                      {current.map(o => {
+                      {shown.map(o => {
                         const share = Math.max(0, Number(o.driver_surge_share) || 0);
                         return (
                           <li key={o.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
@@ -546,24 +623,30 @@ function EarningsSection({ orders, deliveredCount, activeCount }: {
                         );
                       })}
                     </ul>
-                  )}
-                </div>
-              )}
+                    {selected.length > shown.length && (
+                      <button
+                        onClick={() => setVisibleCount(c => c + PAGE)}
+                        className="w-full border-t border-border py-3 text-sm font-bold text-primary hover:bg-secondary/60"
+                      >
+                        Show more ({selected.length - shown.length} left)
+                      </button>
+                    )}
+                    {shown.length > PAGE && selected.length === shown.length && (
+                      <button
+                        onClick={() => setVisibleCount(PAGE)}
+                        className="w-full border-t border-border py-3 text-sm font-bold text-muted-foreground hover:bg-secondary/60"
+                      >
+                        Show less
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
 
-            {/* Previous months — total only, no history */}
-            {previousKeys.map(key => {
-              const list = monthOrdersFor(key);
-              return (
-                <div key={key} className="flex items-center gap-3 rounded-2xl border border-border bg-background p-4">
-                  <div className="min-w-0">
-                    <div className="font-display font-bold">{labelFor(key)}</div>
-                    <div className="text-xs text-muted-foreground">{list.length} deliver{list.length === 1 ? "y" : "ies"}</div>
-                  </div>
-                  <span className="ml-auto font-display text-lg font-bold text-primary">{formatINR(totalFor(list))}</span>
-                </div>
-              );
-            })}
+            <p className="text-center text-[11px] text-muted-foreground">
+              Flat {formatINR(EARNING_PER_ORDER)} per delivery + your share of any surge.
+            </p>
           </div>
         )}
       </div>
