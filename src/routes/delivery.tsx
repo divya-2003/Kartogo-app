@@ -517,7 +517,10 @@ function EarningsSection({ orders, deliveredCount, activeCount }: {
   const now = new Date();
   const currentKey = now.getFullYear() * 12 + now.getMonth();
   const [open, setOpen] = useState(false);
-  const [monthOpen, setMonthOpen] = useState(true);
+  const [selectedKey, setSelectedKey] = useState(currentKey);
+  const [visibleCount, setVisibleCount] = useState(5);
+
+  const PAGE = 5;
 
   // Group delivered orders into calendar months.
   const groups = new Map<number, OrderRow[]>();
@@ -540,7 +543,10 @@ function EarningsSection({ orders, deliveredCount, activeCount }: {
   const payoutFor = (o: OrderRow) => EARNING_PER_ORDER + Math.max(0, Number(o.driver_surge_share) || 0);
   const totalFor = (list: OrderRow[]) => list.reduce((s, o) => s + payoutFor(o), 0);
   const currentTotal = totalFor(current);
-  const previousKeys = keys.filter(k => k !== currentKey);
+
+  const selected = monthOrdersFor(selectedKey);
+  const selectedTotal = totalFor(selected);
+  const shown = selected.slice(0, visibleCount);
 
   return (
     <section>
@@ -576,32 +582,32 @@ function EarningsSection({ orders, deliveredCount, activeCount }: {
               </div>
             </div>
 
-            {/* This month — clickable, with detailed breakdown inside */}
+            {/* Month picker + payouts for the chosen month */}
             <div className="overflow-hidden rounded-2xl border border-primary/40 bg-background">
-              <button
-                onClick={() => setMonthOpen(v => !v)}
-                aria-expanded={monthOpen}
-                className="flex w-full items-center gap-3 p-4 text-left hover:bg-secondary/60"
-              >
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 font-display font-bold">
-                    {labelFor(currentKey)}
-                    <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase text-primary">This month</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground">{current.length} deliver{current.length === 1 ? "y" : "ies"}</div>
-                </div>
-                <div className="ml-auto flex items-center gap-2">
-                  <span className="font-display text-lg font-bold text-primary">{formatINR(currentTotal)}</span>
-                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${monthOpen ? "rotate-180" : ""}`} />
-                </div>
-              </button>
-              {monthOpen && (
-                <div className="border-t border-border">
-                  {current.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-muted-foreground">No deliveries yet this month.</div>
-                  ) : (
+              <div className="flex flex-wrap items-center gap-2 p-4">
+                <label className="text-xs font-semibold text-muted-foreground" htmlFor="earnings-month">Month</label>
+                <select
+                  id="earnings-month"
+                  value={selectedKey}
+                  onChange={e => { setSelectedKey(Number(e.target.value)); setVisibleCount(PAGE); }}
+                  className="min-w-0 flex-1 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold"
+                >
+                  {keys.map(k => (
+                    <option key={k} value={k}>
+                      {labelFor(k)}{k === currentKey ? " · this month" : ""}
+                    </option>
+                  ))}
+                </select>
+                <span className="font-display text-lg font-bold text-primary">{formatINR(selectedTotal)}</span>
+              </div>
+
+              <div className="border-t border-border">
+                {selected.length === 0 ? (
+                  <div className="p-4 text-center text-sm text-muted-foreground">No deliveries in {labelFor(selectedKey)}.</div>
+                ) : (
+                  <>
                     <ul className="divide-y divide-border">
-                      {current.map(o => {
+                      {shown.map(o => {
                         const share = Math.max(0, Number(o.driver_surge_share) || 0);
                         return (
                           <li key={o.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
@@ -617,24 +623,34 @@ function EarningsSection({ orders, deliveredCount, activeCount }: {
                         );
                       })}
                     </ul>
-                  )}
-                </div>
-              )}
+                    {selected.length > shown.length && (
+                      <button
+                        onClick={() => setVisibleCount(c => c + PAGE)}
+                        className="w-full border-t border-border py-3 text-sm font-bold text-primary hover:bg-secondary/60"
+                      >
+                        Show more ({selected.length - shown.length} left)
+                      </button>
+                    )}
+                    {shown.length > PAGE && selected.length === shown.length && (
+                      <button
+                        onClick={() => setVisibleCount(PAGE)}
+                        className="w-full border-t border-border py-3 text-sm font-bold text-muted-foreground hover:bg-secondary/60"
+                      >
+                        Show less
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
 
-            {/* Previous months — total only, no history */}
-            {previousKeys.map(key => {
-              const list = monthOrdersFor(key);
-              return (
-                <div key={key} className="flex items-center gap-3 rounded-2xl border border-border bg-background p-4">
-                  <div className="min-w-0">
-                    <div className="font-display font-bold">{labelFor(key)}</div>
-                    <div className="text-xs text-muted-foreground">{list.length} deliver{list.length === 1 ? "y" : "ies"}</div>
-                  </div>
-                  <span className="ml-auto font-display text-lg font-bold text-primary">{formatINR(totalFor(list))}</span>
-                </div>
-              );
-            })}
+            <p className="text-center text-[11px] text-muted-foreground">
+              Flat {formatINR(EARNING_PER_ORDER)} per delivery + your share of any surge.
+            </p>
+          </div>
+        )}
+      </div>
+
           </div>
         )}
       </div>
