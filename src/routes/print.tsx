@@ -16,7 +16,11 @@ import {
   HelpCircle,
   ChevronRight,
   Zap,
+  Minus,
+  Plus,
+  IndianRupee,
   X,
+
 } from "lucide-react";
 import { PRINT_SERVICES, createPrintJobFn, listMyPrintJobsFn, type PrintJob } from "@/lib/print.functions";
 
