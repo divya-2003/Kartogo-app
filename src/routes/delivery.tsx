@@ -650,10 +650,6 @@ function EarningsSection({ orders, deliveredCount, activeCount }: {
           </div>
         )}
       </div>
-
-          </div>
-        )}
-      </div>
     </section>
   );
 }
