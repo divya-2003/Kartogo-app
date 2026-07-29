@@ -6,6 +6,7 @@ import { listDeliveryOrdersFn, deliverySetStatusFn, listAvailableOrdersFn, claim
 import { initiateMaskedCallFn } from "@/lib/chat.functions";
 import { getDriverStatusFn } from "@/lib/drivers.functions";
 
+import { supabase } from "@/integrations/supabase/client";
 import { OrderChat } from "@/components/OrderChat";
 import { formatINR } from "@/lib/data";
 
