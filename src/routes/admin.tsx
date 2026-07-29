@@ -120,7 +120,7 @@ function AdminLayout() {
             <SheetHeader className="border-b border-border p-4">
               <SheetTitle className="text-left font-display text-base font-bold">Admin menu</SheetTitle>
             </SheetHeader>
-            <div className="p-3">
+            <div className="max-h-[calc(100vh-5rem)] overflow-y-auto p-3">
               <NavList inSheet />
             </div>
           </SheetContent>
@@ -135,7 +135,7 @@ function AdminLayout() {
 
       <div className="mx-auto grid max-w-7xl gap-6 px-4 pb-6 pt-4 md:grid-cols-[220px_minmax(0,1fr)] md:px-6 md:py-6">
         {/* Desktop sidebar */}
-        <aside className="hidden h-fit rounded-2xl border border-border bg-card p-3 md:sticky md:top-24 md:block">
+        <aside className="hidden h-fit max-h-[calc(100vh-8rem)] overflow-y-auto rounded-2xl border border-border bg-card p-3 md:sticky md:top-24 md:block">
           <NavList />
         </aside>
 
