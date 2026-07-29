@@ -109,11 +109,26 @@ function CheckoutPage() {
 
   const baseFee = subtotal === 0 ? 0 : subtotal >= 199 ? 0 : 25;
   const [surge, setSurge] = useState<SurgeConfig | null>(null);
-  useEffect(() => { getSurgeConfigFn().then(setSurge).catch(() => {}); }, []);
+  // Live estimate: surge/delivery rules are admin-controlled, so re-read them
+  // periodically while the customer is on checkout instead of once on mount.
+  useEffect(() => {
+    let alive = true;
+    const pull = () => { getSurgeConfigFn().then(s => { if (alive) setSurge(s); }).catch(() => {}); };
+    pull();
+    const t = setInterval(pull, 20000);
+    return () => { alive = false; clearInterval(t); };
+  }, []);
   const surgeAmount = surge?.enabled && subtotal > 0 ? Math.round(surge.amount) : 0;
   const fee = baseFee + surgeAmount;
   const discount = useMemo(() => computeDiscount(appliedCode, subtotal), [appliedCode, subtotal]);
   const total = Math.max(0, subtotal + fee - discount);
+  // GST is inclusive in listed prices (5% slab) — show it as a breakdown line
+  // so the estimate stays transparent without changing what's payable.
+  const GST_RATE = 0.05;
+  const taxableValue = Math.max(0, subtotal - discount);
+  const gst = Math.round((taxableValue - taxableValue / (1 + GST_RATE)) * 100) / 100;
+  const freeDeliveryGap = subtotal > 0 && subtotal < 199 ? 199 - subtotal : 0;
+
 
   // Show wallet warning only when the wallet method is actively selected.
 
