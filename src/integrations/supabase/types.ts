@@ -720,6 +720,48 @@ export type Database = {
         }
         Relationships: []
       }
+      product_offers: {
+        Row: {
+          applies_to_all: boolean
+          badge: string
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          product_ids: Json
+          sort_order: number
+          title: string
+          tone: string
+          updated_at: string
+        }
+        Insert: {
+          applies_to_all?: boolean
+          badge?: string
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          product_ids?: Json
+          sort_order?: number
+          title: string
+          tone?: string
+          updated_at?: string
+        }
+        Update: {
+          applies_to_all?: boolean
+          badge?: string
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          product_ids?: Json
+          sort_order?: number
+          title?: string
+          tone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_reviews: {
         Row: {
           created_at: string
@@ -871,6 +913,45 @@ export type Database = {
           gst_percent?: number
           id?: number
           threshold_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      stock_alerts: {
+        Row: {
+          category: string
+          created_at: string
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          markets: string
+          product_id: string
+          product_name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          markets?: string
+          product_id: string
+          product_name?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          markets?: string
+          product_id?: string
+          product_name?: string
+          status?: string
           updated_at?: string
         }
         Relationships: []
