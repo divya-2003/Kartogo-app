@@ -109,11 +109,26 @@ function CheckoutPage() {
 
   const baseFee = subtotal === 0 ? 0 : subtotal >= 199 ? 0 : 25;
   const [surge, setSurge] = useState<SurgeConfig | null>(null);
-  useEffect(() => { getSurgeConfigFn().then(setSurge).catch(() => {}); }, []);
+  // Live estimate: surge/delivery rules are admin-controlled, so re-read them
+  // periodically while the customer is on checkout instead of once on mount.
+  useEffect(() => {
+    let alive = true;
+    const pull = () => { getSurgeConfigFn().then(s => { if (alive) setSurge(s); }).catch(() => {}); };
+    pull();
+    const t = setInterval(pull, 20000);
+    return () => { alive = false; clearInterval(t); };
+  }, []);
   const surgeAmount = surge?.enabled && subtotal > 0 ? Math.round(surge.amount) : 0;
   const fee = baseFee + surgeAmount;
   const discount = useMemo(() => computeDiscount(appliedCode, subtotal), [appliedCode, subtotal]);
   const total = Math.max(0, subtotal + fee - discount);
+  // GST is inclusive in listed prices (5% slab) — show it as a breakdown line
+  // so the estimate stays transparent without changing what's payable.
+  const GST_RATE = 0.05;
+  const taxableValue = Math.max(0, subtotal - discount);
+  const gst = Math.round((taxableValue - taxableValue / (1 + GST_RATE)) * 100) / 100;
+  const freeDeliveryGap = subtotal > 0 && subtotal < 199 ? 199 - subtotal : 0;
+
 
   // Show wallet warning only when the wallet method is actively selected.
 
@@ -534,8 +549,17 @@ function CheckoutPage() {
             </div>
 
             <div className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
+              <div className="mb-1 flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Live estimate</span>
+                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-leaf" /> updates live
+                </span>
+              </div>
               <Row label="Subtotal" value={formatINR(subtotal)} />
               <Row label="Delivery" value={baseFee === 0 ? "FREE" : formatINR(baseFee)} />
+              {freeDeliveryGap > 0 && (
+                <div className="text-xs text-primary">Add {formatINR(freeDeliveryGap)} more for free delivery</div>
+              )}
               {surgeAmount > 0 && surge && (
                 <div className="flex items-start justify-between gap-2">
                   <span className="flex items-center gap-1 text-muted-foreground">
@@ -548,7 +572,11 @@ function CheckoutPage() {
               {discount > 0 && (
                 <div className="flex justify-between"><span className="text-muted-foreground">Discount ({appliedCode})</span><span className="font-semibold text-primary">−{formatINR(discount)}</span></div>
               )}
+              {gst > 0 && (
+                <div className="flex justify-between text-xs"><span className="text-muted-foreground">Incl. GST @ 5%</span><span className="text-muted-foreground">{formatINR(gst)}</span></div>
+              )}
               <div className="mt-2 flex justify-between border-t border-border pt-2 text-base font-bold"><span>Total</span><span>{formatINR(total)}</span></div>
+
 
               {/* Payment split */}
               {payment === "wallet" ? (

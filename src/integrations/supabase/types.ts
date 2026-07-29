@@ -281,6 +281,24 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_access_events: {
+        Row: {
+          active: boolean
+          driver_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          driver_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          driver_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       driver_availability: {
         Row: {
           access_requested_at: string | null

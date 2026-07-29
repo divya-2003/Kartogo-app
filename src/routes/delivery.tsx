@@ -6,6 +6,7 @@ import { listDeliveryOrdersFn, deliverySetStatusFn, listAvailableOrdersFn, claim
 import { initiateMaskedCallFn } from "@/lib/chat.functions";
 import { getDriverStatusFn } from "@/lib/drivers.functions";
 
+import { supabase } from "@/integrations/supabase/client";
 import { OrderChat } from "@/components/OrderChat";
 import { formatINR } from "@/lib/data";
 
@@ -179,6 +180,31 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
     const t = setInterval(() => { void check(); }, 8000);
     return () => { alive = false; clearInterval(t); };
   }, [blocked, driver.phone, load]);
+
+  // Realtime: listen for this rider's access flag flipping to active. The
+  // moment the admin approves, swap the "Request access" screen for the live
+  // dashboard — no logout / login round trip. Polling above stays as fallback.
+  useEffect(() => {
+    if (!blocked || !driver.id) return;
+    const channel = supabase
+      .channel(`driver-access-${driver.id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "driver_access_events", filter: `driver_id=eq.${driver.id}` },
+        (payload) => {
+          const row = payload.new as { active?: boolean } | null;
+          if (!row?.active) return;
+          try { localStorage.setItem("qk_delivery_active", "1"); } catch { /* noop */ }
+          setBlocked(null);
+          void load();
+          toast.success("Access approved — welcome back!");
+        },
+      )
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [blocked, driver.id, load]);
+
+
 
 
   const advance = async (o: OrderRow, next: DeliveryStatus, label: string) => {
