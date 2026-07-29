@@ -36,6 +36,8 @@ const NAV = [
   { to: "/admin/print", label: "Print queue", icon: Printer },
   { to: "/admin/partners", label: "Partner markets", icon: Store },
   { to: "/admin/combos", label: "Combo bundles", icon: Package },
+  { to: "/admin/offers", label: "Additional offers", icon: BadgeIndianRupee },
+  { to: "/admin/stock-alerts", label: "Restock requests", icon: Inbox },
   { to: "/admin/surge", label: "Surge pricing", icon: Flame },
   { to: "/admin/unserviceable", label: "Area requests", icon: Inbox },
   { to: "/admin/sales", label: "Sales dataset", icon: SheetIcon },

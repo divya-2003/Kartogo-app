@@ -40,6 +40,7 @@ import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as AdminUnserviceableRouteImport } from './routes/admin.unserviceable'
 import { Route as AdminSurgeRouteImport } from './routes/admin.surge'
+import { Route as AdminStockAlertsRouteImport } from './routes/admin.stock-alerts'
 import { Route as AdminSalesRouteImport } from './routes/admin.sales'
 import { Route as AdminReportsVendorsRouteImport } from './routes/admin.reports-vendors'
 import { Route as AdminReportsRidersRouteImport } from './routes/admin.reports-riders'
@@ -212,6 +213,11 @@ const AdminSurgeRoute = AdminSurgeRouteImport.update({
   path: '/surge',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminStockAlertsRoute = AdminStockAlertsRouteImport.update({
+  id: '/stock-alerts',
+  path: '/stock-alerts',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSalesRoute = AdminSalesRouteImport.update({
   id: '/sales',
   path: '/sales',
@@ -332,6 +338,7 @@ export interface FileRoutesByFullPath {
   '/admin/reports-riders': typeof AdminReportsRidersRoute
   '/admin/reports-vendors': typeof AdminReportsVendorsRoute
   '/admin/sales': typeof AdminSalesRoute
+  '/admin/stock-alerts': typeof AdminStockAlertsRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -379,6 +386,7 @@ export interface FileRoutesByTo {
   '/admin/reports-riders': typeof AdminReportsRidersRoute
   '/admin/reports-vendors': typeof AdminReportsVendorsRoute
   '/admin/sales': typeof AdminSalesRoute
+  '/admin/stock-alerts': typeof AdminStockAlertsRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -429,6 +437,7 @@ export interface FileRoutesById {
   '/admin/reports-riders': typeof AdminReportsRidersRoute
   '/admin/reports-vendors': typeof AdminReportsVendorsRoute
   '/admin/sales': typeof AdminSalesRoute
+  '/admin/stock-alerts': typeof AdminStockAlertsRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -480,6 +489,7 @@ export interface FileRouteTypes {
     | '/admin/reports-riders'
     | '/admin/reports-vendors'
     | '/admin/sales'
+    | '/admin/stock-alerts'
     | '/admin/surge'
     | '/admin/unserviceable'
     | '/category/$slug'
@@ -527,6 +537,7 @@ export interface FileRouteTypes {
     | '/admin/reports-riders'
     | '/admin/reports-vendors'
     | '/admin/sales'
+    | '/admin/stock-alerts'
     | '/admin/surge'
     | '/admin/unserviceable'
     | '/category/$slug'
@@ -576,6 +587,7 @@ export interface FileRouteTypes {
     | '/admin/reports-riders'
     | '/admin/reports-vendors'
     | '/admin/sales'
+    | '/admin/stock-alerts'
     | '/admin/surge'
     | '/admin/unserviceable'
     | '/category/$slug'
@@ -834,6 +846,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSurgeRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/stock-alerts': {
+      id: '/admin/stock-alerts'
+      path: '/stock-alerts'
+      fullPath: '/admin/stock-alerts'
+      preLoaderRoute: typeof AdminStockAlertsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/sales': {
       id: '/admin/sales'
       path: '/sales'
@@ -966,6 +985,7 @@ interface AdminRouteChildren {
   AdminReportsRidersRoute: typeof AdminReportsRidersRoute
   AdminReportsVendorsRoute: typeof AdminReportsVendorsRoute
   AdminSalesRoute: typeof AdminSalesRoute
+  AdminStockAlertsRoute: typeof AdminStockAlertsRoute
   AdminSurgeRoute: typeof AdminSurgeRoute
   AdminUnserviceableRoute: typeof AdminUnserviceableRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -988,6 +1008,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminReportsRidersRoute: AdminReportsRidersRoute,
   AdminReportsVendorsRoute: AdminReportsVendorsRoute,
   AdminSalesRoute: AdminSalesRoute,
+  AdminStockAlertsRoute: AdminStockAlertsRoute,
   AdminSurgeRoute: AdminSurgeRoute,
   AdminUnserviceableRoute: AdminUnserviceableRoute,
   AdminIndexRoute: AdminIndexRoute,
