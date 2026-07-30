@@ -194,3 +194,22 @@ export const getDriverStatusFn = createServerFn({ method: "POST" })
       requested: !!driver.accessRequestedAt,
     };
   });
+
+// Waiting-room upgrade: a paused rider holds a signed "pending" token. Once the
+// admin marks them available this exchanges it for a real delivery session, so
+// the delivery page swaps itself in without a logout / re-login cycle.
+export const activateDriverSessionFn = createServerFn({ method: "POST" })
+  .inputValidator((data: { pendingToken?: string }) => ({ pendingToken: String(data?.pendingToken ?? "") }))
+  .handler(async ({ data }) => {
+    const { verifyPendingDriverToken, issueDeliveryToken } = await import("./auth-tokens.server");
+    const session = verifyPendingDriverToken(data.pendingToken);
+    if (!session) return { active: false as const };
+    const { findRosterDriverById } = await import("./driver-roster.server");
+    const driver = await findRosterDriverById(session.driverId);
+    if (!driver || !driver.active) return { active: false as const };
+    return {
+      active: true as const,
+      token: issueDeliveryToken(driver.id, driver.phone),
+      driver: { id: driver.id, name: driver.name, phone: driver.phone },
+    };
+  });
