@@ -137,7 +137,14 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
     // Registered but paused — the login screen sends them to the access request
     // page instead of dropping them into the customer app.
     const deliveryPending = driver && !driver.active
-      ? { name: driver.name, phone: driver.phone, requested: !!driver.accessRequestedAt }
+      ? {
+          name: driver.name,
+          phone: driver.phone,
+          requested: !!driver.accessRequestedAt,
+          // Lets the waiting screen upgrade itself to a real session the moment
+          // the admin approves — no re-login required.
+          pendingToken: issuePendingDriverToken(driver.id, driver.phone),
+        }
       : null;
 
     // A registered supplier phone is issued a signed supplier token so the
