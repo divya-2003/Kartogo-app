@@ -93,12 +93,29 @@ export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolea
           {p.name}
         </Link>
         <div className="text-xs text-muted-foreground">{p.unit}</div>
+        {offers.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {offers.slice(0, 2).map(o => (
+              <span key={o.id} className={`rounded-md border px-1.5 py-0.5 text-[10px] font-bold ${OFFER_TONE_CLASS[o.tone] ?? OFFER_TONE_CLASS.primary}`}>
+                {o.badge || o.title}
+              </span>
+            ))}
+          </div>
+        )}
         <div className="mt-1 flex items-end justify-between gap-2">
           <div>
             <div className="font-display text-base font-bold">{formatINR(p.price)}</div>
             {p.mrp && p.mrp > p.price && <div className="text-xs text-muted-foreground line-through">{formatINR(p.mrp)}</div>}
           </div>
-          {inCart ? (
+          {out ? (
+            <button
+              onClick={() => void handleNotify()}
+              disabled={notifying || notified}
+              className="inline-flex items-center gap-1 rounded-lg border border-saffron bg-saffron/15 px-2.5 py-1.5 text-xs font-bold text-foreground transition hover:bg-saffron/30 disabled:opacity-70"
+            >
+              <BellRing className="h-3 w-3" /> {notified ? "NOTIFYING" : notifying ? "…" : "NOTIFY ME"}
+            </button>
+          ) : inCart ? (
             <div className="flex items-center overflow-hidden rounded-lg border border-primary">
               <button onClick={() => setQty(p.id, inCart.qty - 1)} className="px-2 py-1 text-primary hover:bg-primary/10">−</button>
               <span className="min-w-6 text-center text-sm font-semibold">{inCart.qty}</span>
@@ -106,14 +123,14 @@ export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolea
             </div>
           ) : (
             <button
-              disabled={out}
               onClick={handleAdd}
-              className="inline-flex items-center gap-1 rounded-lg border border-primary px-3 py-1.5 text-xs font-bold text-primary transition hover:bg-primary hover:text-primary-foreground disabled:border-border disabled:text-muted-foreground"
+              className="inline-flex items-center gap-1 rounded-lg border border-primary px-3 py-1.5 text-xs font-bold text-primary transition hover:bg-primary hover:text-primary-foreground"
             >
-              {out ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3" />} ADD
+              <Plus className="h-3 w-3" /> ADD
             </button>
           )}
         </div>
+
       </div>
     </div>
   );
