@@ -100,7 +100,7 @@ export function Header() {
                 {placeholder ? `Search "${placeholder}"` : "Search"}
               </span>
             </div>
-          </button>
+          </Link>
         )}
 
         <div className="ml-auto flex items-center gap-2">
@@ -173,7 +173,7 @@ export function Header() {
               <Search className="h-4 w-4 text-muted-foreground" />
               <span className="w-full truncate text-sm text-muted-foreground">{placeholder ? `Search "${placeholder}"` : "Search"}</span>
             </div>
-          </button>
+          </Link>
         </div>
       )}
 
