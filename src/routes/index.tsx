@@ -19,10 +19,13 @@ export const Route = createFileRoute("/")({
 });
 
 /** Detects a saved admin/delivery/supplier session and returns where to send the user. */
-function roleRedirectTarget(): "/delivery" | "/admin" | "/supplier" | null {
+function roleRedirectTarget(): "/delivery" | "/admin" | "/supplier" | "/delivery-request" | null {
   if (typeof window === "undefined") return null;
   try {
     if (localStorage.getItem("qk_delivery_token") && localStorage.getItem("qk_delivery_driver")) return "/delivery";
+    // A paused rider waiting for approval belongs on the waiting screen, never
+    // on the customer home page.
+    if (localStorage.getItem("qk_delivery_pending_token")) return "/delivery-request";
     if (JSON.parse(localStorage.getItem("qk_admin_token") || "null")) return "/admin";
     if (JSON.parse(localStorage.getItem("qk_supplier_token") || "null") && localStorage.getItem("qk_supplier")) return "/supplier";
   } catch { /* noop */ }

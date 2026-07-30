@@ -96,7 +96,7 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { createHash } = await import("node:crypto");
-    const { issueCustomerToken, isAdminPhone, issueDeliveryToken, issueSupplierToken } = await import("./auth-tokens.server");
+    const { issueCustomerToken, isAdminPhone, issueDeliveryToken, issueSupplierToken, issuePendingDriverToken } = await import("./auth-tokens.server");
     const { findRosterDriverByPhone } = await import("./driver-roster.server");
     const { findSupplierByPhone } = await import("./suppliers");
 
@@ -137,7 +137,14 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
     // Registered but paused — the login screen sends them to the access request
     // page instead of dropping them into the customer app.
     const deliveryPending = driver && !driver.active
-      ? { name: driver.name, phone: driver.phone, requested: !!driver.accessRequestedAt }
+      ? {
+          name: driver.name,
+          phone: driver.phone,
+          requested: !!driver.accessRequestedAt,
+          // Lets the waiting screen upgrade itself to a real session the moment
+          // the admin approves — no re-login required.
+          pendingToken: issuePendingDriverToken(driver.id, driver.phone),
+        }
       : null;
 
     // A registered supplier phone is issued a signed supplier token so the

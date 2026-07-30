@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Bike, Clock, ShieldAlert, CheckCircle2 } from "lucide-react";
-import { getDriverStatusFn, requestDriverAccessFn } from "@/lib/drivers.functions";
+import { getDriverStatusFn, requestDriverAccessFn, activateDriverSessionFn } from "@/lib/drivers.functions";
 
 export const Route = createFileRoute("/delivery-request")({
   validateSearch: (search: Record<string, unknown>): { phone?: string } => ({
@@ -24,6 +24,32 @@ function DeliveryRequestPage() {
   const [status, setStatus] = useState<Status | null>(null);
   const [sending, setSending] = useState(false);
   const [requested, setRequested] = useState(false);
+  const nav = useNavigate();
+
+  // Live approval watch: the paused rider holds a signed pending token. Every
+  // 3s we ask the server to upgrade it — the instant the admin marks them
+  // available we drop a real delivery session in and land on the portal, with
+  // no logout / re-login and no accidental bounce to the customer home page.
+  useEffect(() => {
+    let alive = true;
+    const tick = async () => {
+      let pending: string | null = null;
+      try { pending = localStorage.getItem("qk_delivery_pending_token"); } catch { pending = null; }
+      if (!pending) return;
+      try {
+        const res = await activateDriverSessionFn({ data: { pendingToken: pending } });
+        if (!alive || !res.active) return;
+        localStorage.setItem("qk_delivery_token", res.token);
+        localStorage.setItem("qk_delivery_driver", JSON.stringify(res.driver));
+        localStorage.removeItem("qk_delivery_pending_token");
+        toast.success("Access approved — opening your delivery page");
+        void nav({ to: "/delivery" });
+      } catch { /* keep waiting */ }
+    };
+    void tick();
+    const id = window.setInterval(() => { if (document.visibilityState === "visible") void tick(); }, 3000);
+    return () => { alive = false; window.clearInterval(id); };
+  }, [nav]);
 
   useEffect(() => {
     if (!phone) return;
@@ -82,7 +108,7 @@ function DeliveryRequestPage() {
 
         {requested ? (
           <div className="mt-5 flex items-center justify-center gap-2 rounded-2xl bg-leaf/10 px-4 py-3 text-sm font-semibold text-leaf">
-            <CheckCircle2 className="h-5 w-5" /> Request sent — waiting for admin approval
+            <CheckCircle2 className="h-5 w-5" /> Request sent — waiting for admin approval. This page opens automatically once approved.
           </div>
         ) : (
           <div className="mt-5 flex items-center justify-center gap-3">

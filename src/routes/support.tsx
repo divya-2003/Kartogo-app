@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { ChevronLeft, Headphones, Mail, Phone, MessageCircle } from "lucide-react";
 
 export const Route = createFileRoute("/support")({
@@ -107,13 +107,27 @@ function SupportPage() {
   );
 }
 
+// Goes back to wherever the customer came from (Print Store, orders, profile…)
+// instead of always dumping them on the profile page.
+function BackButton() {
+  const router = useRouter();
+  return (
+    <button
+      type="button"
+      aria-label="Back"
+      onClick={() => { if (router.history.canGoBack()) router.history.back(); else void router.navigate({ to: "/menu" }); }}
+      className="grid h-9 w-9 place-items-center rounded-full border border-border hover:bg-secondary"
+    >
+      <ChevronLeft className="h-5 w-5" />
+    </button>
+  );
+}
+
 function TopBar() {
   return (
     <div className="sticky top-0 z-40 border-b border-border bg-background">
       <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3 md:px-6">
-        <Link to="/menu" aria-label="Back" className="grid h-9 w-9 place-items-center rounded-full border border-border hover:bg-secondary">
-          <ChevronLeft className="h-5 w-5" />
-        </Link>
+        <BackButton />
         <h1 className="font-display text-xl font-bold">Help & Support</h1>
       </div>
     </div>

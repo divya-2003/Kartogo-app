@@ -196,7 +196,7 @@ type AuthCtx = {
   /** Request an SMS OTP. Returns demo-mode info when SMS is bypassed. */
   sendOtp: (phone: string) => Promise<{ demo: boolean; demoCode?: string }>;
   /** Verify the SMS OTP. Returns admin-eligibility, delivery and supplier sessions. */
-  verifyOtp: (phone: string, otp: string) => Promise<{ user: User; isAdminPhone: boolean; delivery: DeliverySession | null; deliveryPending: { name: string; phone: string; requested: boolean } | null; supplier: SupplierSession | null }>;
+  verifyOtp: (phone: string, otp: string) => Promise<{ user: User; isAdminPhone: boolean; delivery: DeliverySession | null; deliveryPending: { name: string; phone: string; requested: boolean; pendingToken: string } | null; supplier: SupplierSession | null }>;
   /** Exchange the secret admin passcode for a signed admin token. */
   adminLogin: (passcode: string) => Promise<User>;
   setName: (name: string) => void;
@@ -536,8 +536,12 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   }, [refreshCatalog]);
 
   const products = useMemo<Product[]>(() => {
-    const seed = PRODUCTS.map(p => ({ ...p, ...(seedOverrides[p.id] ?? {}) }));
-    // Supplier/admin items come after seed catalog. De-dupe by id in case of clashes.
+    // The server catalog is the source of truth. A seed product that has been
+    // edited (price / stock / image) exists there too, so its row must WIN over
+    // the bundled seed data — otherwise an out-of-stock item keeps showing as
+    // available for every other shopper.
+    const serverById = new Map(supplierProducts.map(p => [p.id, p]));
+    const seed = PRODUCTS.map(p => ({ ...p, ...(seedOverrides[p.id] ?? {}), ...(serverById.get(p.id) ?? {}) }));
     const seen = new Set(seed.map(p => p.id));
     return [...seed, ...supplierProducts.filter(p => !seen.has(p.id))];
   }, [supplierProducts, seedOverrides]);
@@ -548,13 +552,25 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   });
 
   const isSeed = (id: string) => PRODUCTS.some(p => p.id === id);
+  const findProduct = (id: string) => products.find(p => p.id === id);
+
+  // Persist a seed product to the shared server catalog so stock/price edits are
+  // visible to every customer, not just the browser that made the change.
+  const pushToServer = (p: Product) => {
+    const { supplierToken, adminToken: at } = tokens();
+    void upsertCatalogItemFn({ data: {
+      supplierToken, adminToken: at,
+      id: p.id, name: p.name, category: p.category, price: p.price,
+      mrp: p.mrp, unit: p.unit, stock: p.stock, emoji: p.emoji,
+      image: p.image, description: p.description,
+    } }).then(refreshCatalog).catch(() => { /* keep optimistic */ });
+  };
 
   const value: CatalogCtx = {
     products,
     upsert: (p) => {
       // Optimistic update
       setSupplierProducts(prev => {
-        if (isSeed(p.id)) return prev;
         const i = prev.findIndex(x => x.id === p.id);
         if (i === -1) return [...prev, p];
         const next = [...prev]; next[i] = p; return next;
@@ -562,13 +578,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       if (isSeed(p.id)) {
         setSeedOverrides(prev => ({ ...prev, [p.id]: { ...prev[p.id], ...p } }));
       }
-      const { supplierToken, adminToken } = tokens();
-      void upsertCatalogItemFn({ data: {
-        supplierToken, adminToken,
-        id: p.id, name: p.name, category: p.category, price: p.price,
-        mrp: p.mrp, unit: p.unit, stock: p.stock, emoji: p.emoji,
-        image: p.image, description: p.description,
-      } }).then(refreshCatalog).catch(() => { /* keep optimistic */ });
+      pushToServer(p);
     },
     remove: (id) => {
       setSupplierProducts(prev => prev.filter(p => p.id !== id));
@@ -577,22 +587,32 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
         .then(refreshCatalog).catch(() => {});
     },
     setStock: (id, stock) => {
-      setSupplierProducts(prev => prev.map(p => p.id === id ? { ...p, stock } : p));
+      setSupplierProducts(prev => {
+        const i = prev.findIndex(x => x.id === id);
+        if (i !== -1) { const next = [...prev]; next[i] = { ...next[i], stock }; return next; }
+        const base = findProduct(id);
+        return base ? [...prev, { ...base, stock }] : prev;
+      });
       if (isSeed(id)) setSeedOverrides(prev => ({ ...prev, [id]: { ...prev[id], stock } }));
+      const base = findProduct(id);
+      if (isSeed(id) && base) { pushToServer({ ...base, stock }); return; }
       const { supplierToken, adminToken } = tokens();
-      if (!isSeed(id)) {
-        void setCatalogStockFn({ data: { supplierToken, adminToken, id, stock } })
-          .then(refreshCatalog).catch(() => {});
-      }
+      void setCatalogStockFn({ data: { supplierToken, adminToken, id, stock } })
+        .then(refreshCatalog).catch(() => {});
     },
     setPrice: (id, price) => {
-      setSupplierProducts(prev => prev.map(p => p.id === id ? { ...p, price } : p));
+      setSupplierProducts(prev => {
+        const i = prev.findIndex(x => x.id === id);
+        if (i !== -1) { const next = [...prev]; next[i] = { ...next[i], price }; return next; }
+        const base = findProduct(id);
+        return base ? [...prev, { ...base, price }] : prev;
+      });
       if (isSeed(id)) setSeedOverrides(prev => ({ ...prev, [id]: { ...prev[id], price } }));
+      const base = findProduct(id);
+      if (isSeed(id) && base) { pushToServer({ ...base, price }); return; }
       const { supplierToken, adminToken } = tokens();
-      if (!isSeed(id)) {
-        void setCatalogPriceFn({ data: { supplierToken, adminToken, id, price } })
-          .then(refreshCatalog).catch(() => {});
-      }
+      void setCatalogPriceFn({ data: { supplierToken, adminToken, id, price } })
+        .then(refreshCatalog).catch(() => {});
     },
   };
   // customerToken is unused here but kept in deps for future auth-aware pricing.

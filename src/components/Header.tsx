@@ -89,9 +89,9 @@ export function Header() {
         )}
 
         {!hideBrowse && (
-          <button
-            type="button"
-            onClick={() => setSearchOpen(true)}
+          <Link
+            to="/search"
+            search={{ q: "" }}
             className="ml-2 hidden flex-1 md:block"
           >
             <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-left shadow-pop">
@@ -100,7 +100,7 @@ export function Header() {
                 {placeholder ? `Search "${placeholder}"` : "Search"}
               </span>
             </div>
-          </button>
+          </Link>
         )}
 
         <div className="ml-auto flex items-center gap-2">
@@ -168,12 +168,12 @@ export function Header() {
               <LocationPicker />
             </div>
           )}
-          <button type="button" onClick={() => setSearchOpen(true)} className="w-full">
+          <Link to="/search" search={{ q: "" }} className="block w-full">
             <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-left">
               <Search className="h-4 w-4 text-muted-foreground" />
               <span className="w-full truncate text-sm text-muted-foreground">{placeholder ? `Search "${placeholder}"` : "Search"}</span>
             </div>
-          </button>
+          </Link>
         </div>
       )}
 
