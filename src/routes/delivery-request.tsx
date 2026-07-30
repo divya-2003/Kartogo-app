@@ -34,12 +34,12 @@ function DeliveryRequestPage() {
     let alive = true;
     const tick = async () => {
       let pending: string | null = null;
-      try { pending = JSON.parse(localStorage.getItem("qk_delivery_pending_token") || "null"); } catch { pending = null; }
+      try { pending = localStorage.getItem("qk_delivery_pending_token"); } catch { pending = null; }
       if (!pending) return;
       try {
         const res = await activateDriverSessionFn({ data: { pendingToken: pending } });
         if (!alive || !res.active) return;
-        localStorage.setItem("qk_delivery_token", JSON.stringify(res.token));
+        localStorage.setItem("qk_delivery_token", res.token);
         localStorage.setItem("qk_delivery_driver", JSON.stringify(res.driver));
         localStorage.removeItem("qk_delivery_pending_token");
         toast.success("Access approved — opening your delivery page");

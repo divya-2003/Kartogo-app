@@ -57,7 +57,7 @@ function LoginPage() {
       };
       // Delivery partners are routed straight to their portal.
       if (delivery) {
-        clearKeys(["qk_admin_token", "qk_supplier_token", "qk_supplier"]);
+        clearKeys(["qk_admin_token", "qk_supplier_token", "qk_supplier", "qk_delivery_pending_token"]);
         try {
           localStorage.setItem("qk_delivery_token", delivery.token);
           localStorage.setItem("qk_delivery_driver", JSON.stringify(delivery.driver));
@@ -69,6 +69,9 @@ function LoginPage() {
       // Registered partner whose portal access is paused by the admin.
       if (deliveryPending) {
         clearKeys(["qk_admin_token", "qk_supplier_token", "qk_supplier", "qk_delivery_token", "qk_delivery_driver"]);
+        // Park a short-lived pending token so the waiting screen can promote
+        // itself to a full delivery session the second the admin approves.
+        try { localStorage.setItem("qk_delivery_pending_token", deliveryPending.pendingToken); } catch { /* noop */ }
         nav({ to: "/delivery-request", search: { phone: deliveryPending.phone } });
         return;
       }
