@@ -117,3 +117,26 @@ export const updateStockAlertStatusFn = createServerFn({ method: "POST" })
     if (error) throw new Error("Could not update this request");
     return { ok: true as const };
   });
+
+/** Supplier: restock reminders for products inside their own categories. */
+export const listSupplierStockAlertsFn = createServerFn({ method: "POST" })
+  .inputValidator((data: { token?: string }) => ({ token: String(data?.token ?? "") }))
+  .handler(async ({ data }): Promise<StockAlert[]> => {
+    const { verifySupplierToken } = await import("./auth-tokens.server");
+    const { findSupplierById } = await import("./suppliers");
+    const session = verifySupplierToken(data.token);
+    if (!session) return [];
+    const supplier = findSupplierById(session.supplierId);
+    if (!supplier) return [];
+    const cats = new Set<string>(supplier.categories);
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("stock_alerts")
+      .select("*")
+      .in("status", ["pending", "sourcing"])
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) return [];
+    return (rows as Row[]).map(toAlert).filter(a => cats.has(a.category));
+  });
