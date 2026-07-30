@@ -93,6 +93,22 @@ export function verifyDeliveryToken(token?: string): { driverId: string; phone: 
   return null;
 }
 
+// A rider who passed OTP but whose portal access is paused by the admin gets a
+// short-lived "pending" token. It grants NO portal access on its own — it only
+// lets the waiting screen ask the server to upgrade it to a real delivery
+// session the moment the admin flips them back to available.
+export function issuePendingDriverToken(driverId: string, phone: string): string {
+  return sign({ role: "delivery_pending", driverId, phone, exp: Date.now() + 7 * DAY }, deliverySecret());
+}
+
+export function verifyPendingDriverToken(token?: string): { driverId: string; phone: string } | null {
+  const data = verify(token, deliverySecret());
+  if (data && data.role === "delivery_pending" && typeof data.driverId === "string" && typeof data.phone === "string") {
+    return { driverId: data.driverId, phone: data.phone };
+  }
+  return null;
+}
+
 // ---- Supplier tokens ----
 // Suppliers own a set of product categories (see src/lib/suppliers.ts). A signed
 // supplier token binds a session to one supplier id + phone so inventory and
