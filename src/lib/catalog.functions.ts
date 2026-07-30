@@ -105,6 +105,7 @@ export const upsertCatalogItemFn = createServerFn({ method: "POST" })
       source: who.source,
     }, { onConflict: "id" });
     if (error) { console.error("upsert catalog", error); throw new Error("Could not save item"); }
+    await confirmRestockAlerts(data.id, data.stock);
     return { ok: true };
   });
 
@@ -155,5 +156,6 @@ export const setCatalogStockFn = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("catalog_items").update({ stock: data.stock }).eq("id", data.id);
     if (error) throw new Error("Could not update stock");
+    await confirmRestockAlerts(data.id, data.stock);
     return { ok: true };
   });
