@@ -37,6 +37,20 @@ async function authorize(supplierToken: string, adminToken: string): Promise<{ s
   return null;
 }
 
+// When an item comes back into stock, close out the "Notify me" restock
+// requests the admin is tracking for it — they become "restocked" (confirmed).
+async function confirmRestockAlerts(productId: string, stock: number) {
+  if (stock <= 0 || !productId) return;
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin
+      .from("stock_alerts")
+      .update({ status: "restocked", updated_at: new Date().toISOString() })
+      .eq("product_id", productId)
+      .in("status", ["pending", "sourcing"]);
+  } catch { /* restock confirmation is best-effort */ }
+}
+
 // ---------------- List all items (public) ----------------
 export const listCatalogItemsFn = createServerFn({ method: "GET" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
