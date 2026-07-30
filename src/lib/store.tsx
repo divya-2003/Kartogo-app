@@ -196,7 +196,7 @@ type AuthCtx = {
   /** Request an SMS OTP. Returns demo-mode info when SMS is bypassed. */
   sendOtp: (phone: string) => Promise<{ demo: boolean; demoCode?: string }>;
   /** Verify the SMS OTP. Returns admin-eligibility, delivery and supplier sessions. */
-  verifyOtp: (phone: string, otp: string) => Promise<{ user: User; isAdminPhone: boolean; delivery: DeliverySession | null; deliveryPending: { name: string; phone: string; requested: boolean } | null; supplier: SupplierSession | null }>;
+  verifyOtp: (phone: string, otp: string) => Promise<{ user: User; isAdminPhone: boolean; delivery: DeliverySession | null; deliveryPending: { name: string; phone: string; requested: boolean; pendingToken: string } | null; supplier: SupplierSession | null }>;
   /** Exchange the secret admin passcode for a signed admin token. */
   adminLogin: (passcode: string) => Promise<User>;
   setName: (name: string) => void;
