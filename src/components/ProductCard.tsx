@@ -1,15 +1,21 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Plus, Check, Heart } from "lucide-react";
+import { Plus, Heart, BellRing } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import type { Product } from "@/lib/data";
 import { formatINR } from "@/lib/data";
 import { useCart, useAuth, useWishlist } from "@/lib/store";
+import { useProductOffers, OFFER_TONE_CLASS } from "@/lib/use-offers";
+import { createStockAlertFn } from "@/lib/stock-alerts.functions";
 
 export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolean }) {
   const { items, add, setQty } = useCart();
   const { user } = useAuth();
   const { has, toggle } = useWishlist();
   const nav = useNavigate();
+  const offers = useProductOffers(p.id);
+  const [notifying, setNotifying] = useState(false);
+  const [notified, setNotified] = useState(false);
   const inCart = items.find(i => i.productId === p.id);
   const wished = has(p.id);
   const out = p.stock <= 0;
@@ -28,6 +34,26 @@ export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolea
       nav({ to: "/login", search: { redirect: "/" } });
     }
   };
+
+  // Out-of-stock → raise a restock request with the admin (product + markets).
+  const handleNotify = async () => {
+    setNotifying(true);
+    try {
+      await createStockAlertFn({ data: {
+        productId: p.id,
+        productName: p.name,
+        category: p.category,
+        customerPhone: user?.phone ?? null,
+        customerName: user?.name ?? null,
+      } });
+      setNotified(true);
+      toast.success("We'll notify you when it's back");
+    } catch {
+      toast.error("Couldn't register your request");
+    } finally { setNotifying(false); }
+  };
+
+
 
 
   return (
