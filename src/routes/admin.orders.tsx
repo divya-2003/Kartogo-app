@@ -114,6 +114,17 @@ function OrdersAdmin() {
         <Chip active={tab === "returns"} onClick={() => setTab("returns")} label={`Returns (${returnsCount})`} />
       </div>
 
+      {tab === "returns" && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm">
+          <span className="font-semibold text-destructive">Returned / refund-requested orders</span>
+          <Link to="/admin/refund-requests" className="ml-auto rounded-lg bg-destructive px-3 py-1.5 text-xs font-bold text-destructive-foreground hover:opacity-90">
+            Manage return & refund requests
+          </Link>
+        </div>
+      )}
+
+
+
       {filtered.length > 0 && (
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-3 py-2">
           <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold">
