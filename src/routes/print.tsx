@@ -22,7 +22,7 @@ import {
   X,
 
 } from "lucide-react";
-import { PRINT_SERVICES, createPrintJobFn, listMyPrintJobsFn, type PrintJob } from "@/lib/print.functions";
+import { PRINT_SERVICES, createPrintJobFn } from "@/lib/print.functions";
 
 export const Route = createFileRoute("/print")({
   component: PrintStorePage,
@@ -72,58 +72,10 @@ const SERVICES: Service[] = [
   },
 ];
 
-// Fulfilment milestones shown as a horizontal stepper on each print job.
-const PRINT_STEPS: { key: string; label: string }[] = [
-  { key: "received", label: "Received" },
-  { key: "printing", label: "Printing" },
-  { key: "ready", label: "Ready for pickup" },
-  { key: "collected", label: "Handed to rider" },
-];
-
-function PrintJobTracker({ status }: { status: string }) {
-  const current = Math.max(0, PRINT_STEPS.findIndex(s => s.key === status));
-  return (
-    <div className="mt-3">
-      <div className="flex items-start">
-        {PRINT_STEPS.map((step, i) => {
-          const done = i < current;
-          const active = i === current;
-          return (
-            <div key={step.key} className="flex min-w-0 flex-1 items-start">
-              <div className="flex min-w-0 flex-1 flex-col items-center gap-1">
-                <span
-                  className={`relative grid h-4 w-4 place-items-center rounded-full border-2 ${
-                    active ? "border-leaf bg-leaf" : done ? "border-primary bg-primary" : "border-border bg-card"
-                  }`}
-                >
-                  {active && <span className="absolute inset-0 rounded-full bg-leaf/50 animate-ping" aria-hidden />}
-                </span>
-                <span className={`text-center text-[10px] font-semibold leading-tight ${active ? "text-leaf" : done ? "text-foreground" : "text-muted-foreground"}`}>
-                  {step.label}
-                </span>
-              </div>
-              {i < PRINT_STEPS.length - 1 && (
-                <span className={`mt-2 h-0.5 w-4 shrink-0 sm:w-8 ${i < current ? "bg-primary" : "bg-border"}`} />
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-
 function PrintStorePage() {
   const { customerToken, user } = useAuth();
   const [openService, setOpenService] = useState<ServiceKey | null>(null);
-  const [jobs, setJobs] = useState<PrintJob[]>([]);
-
-  const loadJobs = async () => {
-    if (!customerToken) { setJobs([]); return; }
-    try { setJobs(await listMyPrintJobsFn({ data: { token: customerToken } })); } catch { /* offline */ }
-  };
-  useEffect(() => { void loadJobs(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [customerToken]);
+  const loadJobs = async () => { /* job history is intentionally not shown to customers */ };
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -193,28 +145,6 @@ function PrintStorePage() {
             </div>
           ))}
         </div>
-
-        {/* My print jobs */}
-        {jobs.length > 0 && (
-          <div className="mt-4 rounded-3xl border border-border bg-card p-5 shadow-pop">
-            <h3 className="font-display text-lg font-extrabold">My print jobs</h3>
-            <ul className="mt-3 space-y-3">
-              {jobs.map(j => (
-                <li key={j.id} className="rounded-2xl bg-secondary/50 px-3 py-3 text-sm">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="min-w-0 truncate font-semibold">{j.fileName}</span>
-                    <span className="text-xs text-muted-foreground">{j.copies} cop{j.copies === 1 ? "y" : "ies"}</span>
-                    <span className="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary">
-                      {PRINT_STEPS.find(s => s.key === j.status)?.label ?? j.status}
-                    </span>
-                  </div>
-                  <PrintJobTracker status={j.status} />
-                </li>
-              ))}
-            </ul>
-
-          </div>
-        )}
 
         {/* FAQ */}
         <div className="mt-4 rounded-3xl border border-border bg-card p-5 shadow-pop">
@@ -378,14 +308,19 @@ function UploadModal({
         </div>
         <p className="mt-1 text-xs text-muted-foreground">Accepted: {cfg.hint} · up to 5 MB</p>
 
-        <label className="mt-4 block text-xs font-semibold text-muted-foreground">
-          Choose file
+        {/* Custom picker — the native "No file chosen / Choose file" text is
+            hidden once the customer has attached something. */}
+        <label className="mt-4 block">
           <input
             type="file"
             accept={cfg.accept}
             onChange={e => setFile(e.target.files?.[0] ?? null)}
-            className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground"
+            className="sr-only"
           />
+          <span className={`flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-3 text-sm font-bold transition ${file ? "border-leaf/50 bg-leaf/10 text-leaf" : "border-primary/50 bg-primary/5 text-primary hover:bg-primary/10"}`}>
+            <Upload className="h-4 w-4" />
+            {file ? "Change file" : "Upload your file"}
+          </span>
         </label>
 
         {/* Live file preview */}

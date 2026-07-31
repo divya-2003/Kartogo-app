@@ -274,7 +274,7 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
               Request delivery page
             </Link>
             <button onClick={() => void load()} className="rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-secondary">Try again</button>
-            <button onClick={onLogout} className="rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-secondary">Log out</button>
+            <button onClick={onLogout} className="rounded-xl border border-destructive/40 px-4 py-2 text-sm font-bold text-destructive hover:bg-destructive/10">Log out</button>
           </div>
         </div>
       </div>
@@ -788,7 +788,7 @@ function AccountView({ driver, deliveredCount, activeCount, orders, onLogout }: 
       {/* Log out */}
       <button
         onClick={onLogout}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-bold text-muted-foreground hover:bg-secondary"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-destructive/40 bg-card px-4 py-3 text-sm font-bold text-destructive hover:bg-destructive/10"
       >
         <LogOut className="h-4 w-4" /> Log out
       </button>

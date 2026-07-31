@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { Search, X } from "lucide-react";
 import { useCatalog } from "@/lib/store";
 import { CATEGORIES, formatINR } from "@/lib/data";
 import { toast } from "sonner";
@@ -6,13 +8,52 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/admin/inventory")({ component: InventoryAdmin });
 
 function InventoryAdmin() {
-  const { products, setPrice, setStock } = useCatalog();
+  const { products: allProducts, setPrice, setStock } = useCatalog();
+  const [q, setQ] = useState("");
+
+  // Search across name, unit and category so the admin can jump straight to an
+  // item instead of scrolling the whole catalogue.
+  const products = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    if (!term) return allProducts;
+    return allProducts.filter(p => {
+      const cat = CATEGORIES.find(c => c.slug === p.category)?.name ?? p.category;
+      return `${p.name} ${p.unit} ${cat}`.toLowerCase().includes(term);
+    });
+  }, [allProducts, q]);
+
   return (
     <div className="space-y-5">
       <div>
         <h1 className="font-display text-3xl font-bold">Inventory & prices</h1>
         <p className="text-sm text-muted-foreground">Quick edit — changes save instantly.</p>
       </div>
+
+      {/* Search */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex min-w-[16rem] flex-1 items-center gap-2 rounded-xl border border-input bg-background px-3 py-2">
+          <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <input
+            value={q}
+            onChange={e => setQ(e.target.value)}
+            placeholder="Search products, units or categories…"
+            aria-label="Search inventory"
+            className="w-full bg-transparent text-sm outline-none"
+          />
+          {q && (
+            <button type="button" aria-label="Clear search" onClick={() => setQ("")} className="grid h-6 w-6 place-items-center rounded-full hover:bg-secondary">
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+        <span className="text-xs font-semibold text-muted-foreground">{products.length} of {allProducts.length} items</span>
+      </div>
+
+      {products.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">
+          No products match "{q}".
+        </div>
+      )}
       {/* Desktop / laptop: table */}
       <div className="hidden overflow-hidden rounded-2xl border border-border bg-card md:block">
         <table className="w-full text-sm">

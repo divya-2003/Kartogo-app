@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth, useDrivers, useOrders, type Order } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { Switch } from "@/components/ui/switch";
-import { Bike, Phone, CircleDot, Wallet, UserPlus, Clock, BellRing, Users } from "lucide-react";
+import { Bike, Phone, CircleDot, Wallet, UserPlus, Clock, BellRing, Users, RefreshCw } from "lucide-react";
 import { addDeliveryPartnerFn, updateDeliveryPartnerFn } from "@/lib/drivers.functions";
 import { toast } from "sonner";
 
@@ -27,6 +27,27 @@ function DeliveryAdmin() {
   const { drivers, setAvailable, refresh } = useDrivers();
   const [filter, setFilter] = useState<"all" | Availability>("all");
   const [section, setSection] = useState<Section>("team");
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastSync, setLastSync] = useState<number>(() => Date.now());
+
+  // Live roster: access requests raised by paused riders must land here without
+  // the admin reloading the page, so we re-pull the roster every second while
+  // the tab is visible (and expose a manual refresh, like the delivery app).
+  useEffect(() => {
+    const tick = async () => {
+      if (document.visibilityState !== "visible") return;
+      try { await refresh(); setLastSync(Date.now()); } catch { /* keep polling */ }
+    };
+    const id = window.setInterval(() => { void tick(); }, 1000);
+    return () => window.clearInterval(id);
+  }, [refresh]);
+
+  const manualRefresh = async () => {
+    setRefreshing(true);
+    try { await refresh(); setLastSync(Date.now()); toast.success("Delivery team refreshed"); }
+    catch { toast.error("Could not refresh right now"); }
+    finally { setRefreshing(false); }
+  };
 
   const riders = useMemo(() => {
     return drivers.map(d => {
@@ -97,9 +118,22 @@ function DeliveryAdmin() {
 
   return (
     <div className="space-y-5">
-      <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
         <h1 className="font-display text-3xl font-bold">Delivery team</h1>
         <p className="text-sm text-muted-foreground">Toggle availability — only available riders can be assigned to orders and sign in to the delivery app. Blocking a rider never deletes their past orders or earnings.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">Live · synced {new Date(lastSync).toLocaleTimeString("en-IN")}</span>
+          <button
+            type="button"
+            onClick={() => void manualRefresh()}
+            disabled={refreshing}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-bold hover:bg-secondary disabled:opacity-60"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} /> Refresh
+          </button>
+        </div>
       </div>
 
       {/* Subsections */}

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useOrders, useDrivers, type OrderStatus } from "@/lib/store";
 import { formatINR } from "@/lib/data";
@@ -24,16 +24,35 @@ const NEXT_STATUS: Partial<Record<OrderStatus, { next: OrderStatus; label: strin
   out_for_delivery: { next: "delivered", label: "Mark as Delivered" },
 };
 
+// Customer-visible return journey labels, reused for the admin Returns tab.
+const RETURN_STAGE_LABEL: Record<string, string> = {
+  requested: "Return requested",
+  picked_up: "Return picked up",
+  refund_initiated: "Refund initiated",
+  refunded: "Refunded",
+  refund_rejected: "Return rejected",
+};
+
+const isReturnOrder = (o: { refundRequestedAt?: number; returnStage?: string; refunded?: boolean }) =>
+  Boolean(o.refundRequestedAt || o.returnStage || o.refunded);
+
 function OrdersAdmin() {
   const { orders, setStatus, assign } = useOrders();
   const { drivers, available: availableDrivers } = useDrivers();
-  const [tab, setTab] = useState<"all" | OrderStatus>("all");
+  const [tab, setTab] = useState<"all" | "returns" | OrderStatus>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState<OrderStatus>("packed");
   const [busy, setBusy] = useState(false);
 
+  const returnsCount = useMemo(() => orders.filter(isReturnOrder).length, [orders]);
+
   const filtered = useMemo(
-    () => (tab === "all" ? orders : orders.filter(o => o.status === tab)),
+    () =>
+      tab === "all"
+        ? orders
+        : tab === "returns"
+          ? orders.filter(isReturnOrder)
+          : orders.filter(o => o.status === tab),
     [orders, tab],
   );
 
@@ -92,7 +111,19 @@ function OrdersAdmin() {
         {STATUSES.map(s => (
           <Chip key={s.key} active={tab === s.key} onClick={() => setTab(s.key)} label={`${s.label} (${orders.filter(o => o.status === s.key).length})`} />
         ))}
+        <Chip active={tab === "returns"} onClick={() => setTab("returns")} label={`Returns (${returnsCount})`} />
       </div>
+
+      {tab === "returns" && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm">
+          <span className="font-semibold text-destructive">Returned / refund-requested orders</span>
+          <Link to="/admin/refund-requests" className="ml-auto rounded-lg bg-destructive px-3 py-1.5 text-xs font-bold text-destructive-foreground hover:opacity-90">
+            Manage return & refund requests
+          </Link>
+        </div>
+      )}
+
+
 
       {filtered.length > 0 && (
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-3 py-2">
@@ -153,7 +184,18 @@ function OrdersAdmin() {
                     aria-label={`Select ${o.id}`}
                   />
                   <div>
-                    <div className="font-display text-base font-bold">{o.id} <span className="ml-1 rounded-md bg-secondary px-2 py-0.5 text-xs">{o.status.replace(/_/g, " ")}</span></div>
+                    <div className="font-display text-base font-bold">
+                      {o.id}
+                      <span className="ml-1 rounded-md bg-secondary px-2 py-0.5 text-xs">{o.status.replace(/_/g, " ")}</span>
+                      {isReturnOrder(o) && (
+                        <span className="ml-1 rounded-md bg-destructive/15 px-2 py-0.5 text-xs font-bold text-destructive">
+                          {RETURN_STAGE_LABEL[o.returnStage ?? ""] ?? (o.refunded ? "Refunded" : "Return requested")}
+                        </span>
+                      )}
+                    </div>
+                    {isReturnOrder(o) && o.refundRequestReason && (
+                      <div className="mt-0.5 text-xs text-destructive">Reason: {o.refundRequestReason}</div>
+                    )}
                     <div className="text-xs text-muted-foreground">{new Date(o.createdAt).toLocaleString("en-IN")} · {o.customerName} · {o.customerPhone}</div>
                     <div className="mt-1 text-xs text-muted-foreground">{o.address}</div>
                   </div>
