@@ -173,7 +173,18 @@ function OrdersAdmin() {
                     aria-label={`Select ${o.id}`}
                   />
                   <div>
-                    <div className="font-display text-base font-bold">{o.id} <span className="ml-1 rounded-md bg-secondary px-2 py-0.5 text-xs">{o.status.replace(/_/g, " ")}</span></div>
+                    <div className="font-display text-base font-bold">
+                      {o.id}
+                      <span className="ml-1 rounded-md bg-secondary px-2 py-0.5 text-xs">{o.status.replace(/_/g, " ")}</span>
+                      {isReturnOrder(o) && (
+                        <span className="ml-1 rounded-md bg-destructive/15 px-2 py-0.5 text-xs font-bold text-destructive">
+                          {RETURN_STAGE_LABEL[o.returnStage ?? ""] ?? (o.refunded ? "Refunded" : "Return requested")}
+                        </span>
+                      )}
+                    </div>
+                    {isReturnOrder(o) && o.refundRequestReason && (
+                      <div className="mt-0.5 text-xs text-destructive">Reason: {o.refundRequestReason}</div>
+                    )}
                     <div className="text-xs text-muted-foreground">{new Date(o.createdAt).toLocaleString("en-IN")} · {o.customerName} · {o.customerPhone}</div>
                     <div className="mt-1 text-xs text-muted-foreground">{o.address}</div>
                   </div>
