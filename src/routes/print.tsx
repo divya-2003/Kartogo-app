@@ -194,28 +194,6 @@ function PrintStorePage() {
           ))}
         </div>
 
-        {/* My print jobs */}
-        {jobs.length > 0 && (
-          <div className="mt-4 rounded-3xl border border-border bg-card p-5 shadow-pop">
-            <h3 className="font-display text-lg font-extrabold">My print jobs</h3>
-            <ul className="mt-3 space-y-3">
-              {jobs.map(j => (
-                <li key={j.id} className="rounded-2xl bg-secondary/50 px-3 py-3 text-sm">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="min-w-0 truncate font-semibold">{j.fileName}</span>
-                    <span className="text-xs text-muted-foreground">{j.copies} cop{j.copies === 1 ? "y" : "ies"}</span>
-                    <span className="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary">
-                      {PRINT_STEPS.find(s => s.key === j.status)?.label ?? j.status}
-                    </span>
-                  </div>
-                  <PrintJobTracker status={j.status} />
-                </li>
-              ))}
-            </ul>
-
-          </div>
-        )}
-
         {/* FAQ */}
         <div className="mt-4 rounded-3xl border border-border bg-card p-5 shadow-pop">
           <div className="flex items-center gap-2">
