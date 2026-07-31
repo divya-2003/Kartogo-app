@@ -274,7 +274,7 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
               Request delivery page
             </Link>
             <button onClick={() => void load()} className="rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-secondary">Try again</button>
-            <button onClick={onLogout} className="rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-secondary">Log out</button>
+            <button onClick={onLogout} className="rounded-xl border border-destructive/40 px-4 py-2 text-sm font-bold text-destructive hover:bg-destructive/10">Log out</button>
           </div>
         </div>
       </div>
