@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Zap, Search, Wallet, User2, Home, LayoutGrid, ShoppingBag, TrendingUp, Ticket, CheckCircle2, Printer } from "lucide-react";
 import { deliveryWindow } from "@/lib/serviceability";
 import { LocationPicker } from "@/components/LocationPicker";
+import { AutoLocationGate } from "@/components/AutoLocationGate";
 import { ProductCard } from "@/components/ProductCard";
 import { CATEGORIES, formatINR } from "@/lib/data";
 import { useCatalog, useAuth, useLocation, useCart, useWallet } from "@/lib/store";
@@ -87,6 +88,7 @@ function Index() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      <AutoLocationGate />
       <h1 className="sr-only">Kartogo — Ongole's 15-minute neighbourhood store</h1>
       {/* ---------- Warm top ---------- */}
       <div className="bg-gradient-to-b from-[oklch(0.9_0.07_70)] to-background">
