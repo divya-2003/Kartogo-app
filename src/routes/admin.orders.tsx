@@ -111,6 +111,7 @@ function OrdersAdmin() {
         {STATUSES.map(s => (
           <Chip key={s.key} active={tab === s.key} onClick={() => setTab(s.key)} label={`${s.label} (${orders.filter(o => o.status === s.key).length})`} />
         ))}
+        <Chip active={tab === "returns"} onClick={() => setTab("returns")} label={`Returns (${returnsCount})`} />
       </div>
 
       {filtered.length > 0 && (
