@@ -24,16 +24,35 @@ const NEXT_STATUS: Partial<Record<OrderStatus, { next: OrderStatus; label: strin
   out_for_delivery: { next: "delivered", label: "Mark as Delivered" },
 };
 
+// Customer-visible return journey labels, reused for the admin Returns tab.
+const RETURN_STAGE_LABEL: Record<string, string> = {
+  requested: "Return requested",
+  picked_up: "Return picked up",
+  refund_initiated: "Refund initiated",
+  refunded: "Refunded",
+  refund_rejected: "Return rejected",
+};
+
+const isReturnOrder = (o: { refundRequestedAt?: number; returnStage?: string; refunded?: boolean }) =>
+  Boolean(o.refundRequestedAt || o.returnStage || o.refunded);
+
 function OrdersAdmin() {
   const { orders, setStatus, assign } = useOrders();
   const { drivers, available: availableDrivers } = useDrivers();
-  const [tab, setTab] = useState<"all" | OrderStatus>("all");
+  const [tab, setTab] = useState<"all" | "returns" | OrderStatus>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState<OrderStatus>("packed");
   const [busy, setBusy] = useState(false);
 
+  const returnsCount = useMemo(() => orders.filter(isReturnOrder).length, [orders]);
+
   const filtered = useMemo(
-    () => (tab === "all" ? orders : orders.filter(o => o.status === tab)),
+    () =>
+      tab === "all"
+        ? orders
+        : tab === "returns"
+          ? orders.filter(isReturnOrder)
+          : orders.filter(o => o.status === tab),
     [orders, tab],
   );
 
