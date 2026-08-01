@@ -96,9 +96,9 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { createHash } = await import("node:crypto");
-    const { issueCustomerToken, isAdminPhone, issueDeliveryToken, issueSupplierToken, issuePendingDriverToken } = await import("./auth-tokens.server");
+    const { issueCustomerToken, issueDeliveryToken, issueSupplierToken, issuePendingDriverToken } = await import("./auth-tokens.server");
     const { findRosterDriverByPhone } = await import("./driver-roster.server");
-    const { findSupplierByPhone } = await import("./suppliers");
+    const { findSupplierByPhone, findSupplierById } = await import("./suppliers");
 
     const { data: rows } = await supabaseAdmin
       .from("otp_codes")
@@ -127,40 +127,71 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
 
     await supabaseAdmin.from("otp_codes").update({ consumed: true }).eq("id", row.id);
 
-    // Derive the role from server-side registries. A registered, active delivery
-    // partner is issued a signed delivery token in the same step so the unified
-    // login can route them straight to the delivery portal.
-    const driver = await findRosterDriverByPhone(data.phone);
-    const delivery = driver && driver.active
-      ? { token: issueDeliveryToken(driver.id, driver.phone), driver: { id: driver.id, name: driver.name, phone: driver.phone } }
-      : null;
-    // Registered but paused — the login screen sends them to the access request
-    // page instead of dropping them into the customer app.
-    const deliveryPending = driver && !driver.active
-      ? {
-          name: driver.name,
-          phone: driver.phone,
-          requested: !!driver.accessRequestedAt,
-          // Lets the waiting screen upgrade itself to a real session the moment
-          // the admin approves — no re-login required.
-          pendingToken: issuePendingDriverToken(driver.id, driver.phone),
-        }
-      : null;
+    // ---- Role resolution comes from the DATABASE (staff_accounts) ----
+    // Mobile numbers are only credentials; roles and permanent user_ids live in
+    // `staff_accounts`. Legacy registries are used ONLY to self-heal a missing
+    // staff row (e.g. a partner added before staff accounts existed).
+    const { findStaffByPhone, ensureStaffAccount } = await import("./staff.server");
+    let staff = await findStaffByPhone(data.phone);
 
-    // A registered supplier phone is issued a signed supplier token so the
-    // unified login can route them straight to their scoped supplier portal.
-    const supplierAccount = findSupplierByPhone(data.phone);
-    const supplier = supplierAccount
+    if (!staff) {
+      const legacyDriver = await findRosterDriverByPhone(data.phone);
+      if (legacyDriver) {
+        staff = await ensureStaffAccount({
+          role: "delivery_partner", refId: legacyDriver.id,
+          fullName: legacyDriver.name, mobileNumber: legacyDriver.phone,
+        });
+      } else {
+        const legacySupplier = findSupplierByPhone(data.phone);
+        if (legacySupplier) {
+          staff = await ensureStaffAccount({
+            role: "vendor", refId: legacySupplier.id,
+            fullName: legacySupplier.name, mobileNumber: legacySupplier.phone,
+          });
+        }
+      }
+    }
+
+    const isStaffActive = !staff || staff.status === "active";
+
+    // --- Delivery partner ---
+    let delivery: { token: string; driver: { id: string; name: string; phone: string } } | null = null;
+    let deliveryPending: { name: string; phone: string; requested: boolean; pendingToken: string } | null = null;
+    if (staff && staff.role === "delivery_partner" && staff.refId) {
+      const { findRosterDriverById } = await import("./driver-roster.server");
+      const driver = await findRosterDriverById(staff.refId);
+      const name = driver?.name ?? staff.fullName;
+      const active = isStaffActive && (driver ? driver.active : false);
+      if (active) {
+        delivery = {
+          token: issueDeliveryToken(staff.refId, data.phone, staff.userId),
+          driver: { id: staff.refId, name, phone: data.phone },
+        };
+      } else {
+        deliveryPending = {
+          name,
+          phone: data.phone,
+          requested: !!driver?.accessRequestedAt,
+          pendingToken: issuePendingDriverToken(staff.refId, data.phone),
+        };
+      }
+    }
+
+    // --- Vendor / supplier ---
+    const supplierAccount = staff && staff.role === "vendor" && staff.refId
+      ? findSupplierById(staff.refId)
+      : null;
+    const supplier = supplierAccount && isStaffActive
       ? {
-          token: issueSupplierToken(supplierAccount.id, supplierAccount.phone),
-          supplier: { id: supplierAccount.id, name: supplierAccount.name, phone: supplierAccount.phone },
+          token: issueSupplierToken(supplierAccount.id, data.phone, staff!.userId),
+          supplier: { id: supplierAccount.id, name: staff!.fullName || supplierAccount.name, phone: data.phone },
         }
       : null;
 
     return {
       ok: true as const,
       token: issueCustomerToken(data.phone),
-      isAdminPhone: isAdminPhone(data.phone),
+      isAdminPhone: !!staff && staff.role === "admin" && isStaffActive,
       delivery,
       deliveryPending,
       supplier,
@@ -170,7 +201,10 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
 // ---------------- Admin login ----------------
 // Validates the secret passcode server-side and issues a signed admin token.
 export const adminLoginFn = createServerFn({ method: "POST" })
-  .inputValidator((data: { passcode: string }) => ({ passcode: String(data?.passcode ?? "") }))
+  .inputValidator((data: { passcode: string; phone?: string }) => ({
+    passcode: String(data?.passcode ?? ""),
+    phone: data?.phone ? String(data.phone) : "",
+  }))
   .handler(async ({ data }) => {
     const { createHash, timingSafeEqual } = await import("node:crypto");
     const { issueAdminToken } = await import("./auth-tokens.server");
@@ -183,7 +217,12 @@ export const adminLoginFn = createServerFn({ method: "POST" })
     if (a.length !== b.length || !timingSafeEqual(a, b)) {
       return { ok: false as const, error: "Incorrect admin passcode" };
     }
-    return { ok: true as const, token: issueAdminToken() };
+    const { findStaffByPhone } = await import("./staff.server");
+    const admin = data.phone ? await findStaffByPhone(data.phone) : null;
+    if (data.phone && (!admin || admin.role !== "admin" || admin.status !== "active")) {
+      return { ok: false as const, error: "This number is not an admin account" };
+    }
+    return { ok: true as const, token: issueAdminToken(admin?.userId) };
   });
 
 // ---------------- Verify admin token (server-side gate) ----------------
