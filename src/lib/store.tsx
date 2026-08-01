@@ -198,7 +198,7 @@ type AuthCtx = {
   /** Verify the SMS OTP. Returns admin-eligibility, delivery and supplier sessions. */
   verifyOtp: (phone: string, otp: string) => Promise<{ user: User; isAdminPhone: boolean; delivery: DeliverySession | null; deliveryPending: { name: string; phone: string; requested: boolean; pendingToken: string } | null; supplier: SupplierSession | null }>;
   /** Exchange the secret admin passcode for a signed admin token. */
-  adminLogin: (passcode: string) => Promise<User>;
+  adminLogin: (passcode: string, phone?: string) => Promise<User>;
   setName: (name: string) => void;
   updateProfile: (patch: Partial<Pick<User, "name" | "email" | "address">>) => void;
   logout: () => void;
@@ -273,8 +273,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAdminToken(null);
       return { user: u, isAdminPhone: res.isAdminPhone, delivery: res.delivery ?? null, deliveryPending: res.deliveryPending ?? null, supplier: res.supplier ?? null };
     },
-    adminLogin: async (passcode) => {
-      const res = await adminLoginFn({ data: { passcode } });
+    adminLogin: async (passcode, phone) => {
+      const res = await adminLoginFn({ data: { passcode, phone } });
       if (!res.ok) throw new Error(res.error ?? "Incorrect admin passcode");
       // Persist synchronously BEFORE returning so the admin route's beforeLoad
       // (which reads localStorage directly) sees the token on the very first

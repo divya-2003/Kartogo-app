@@ -114,7 +114,7 @@ function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await adminLogin(passcode);
+      await adminLogin(passcode, phone);
       toast.success("Welcome back, admin!");
       nav({ to: "/admin" });
     } catch (err) {

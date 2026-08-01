@@ -146,10 +146,10 @@ export async function changeStaffMobile(userId: string, newMobile: string): Prom
 
   // Keep the delivery roster row in sync so assignments keep resolving.
   if (account.role === "delivery_partner" && account.refId) {
-    await supabaseAdmin
-      .from("driver_availability")
-      .update({ phone: newMobile })
-      .eq("driver_id", account.refId);
+    await supabaseAdmin.from("driver_availability").upsert(
+      { driver_id: account.refId, name: account.fullName, phone: newMobile, updated_at: new Date().toISOString() },
+      { onConflict: "driver_id" },
+    );
   }
 
   return toStaff(data as Row);
