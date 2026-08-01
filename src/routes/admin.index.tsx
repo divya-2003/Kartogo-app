@@ -4,6 +4,7 @@ import { useCatalog, useOrders, useAuth } from "@/lib/store";
 import type { Order } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { StaffAccountCard } from "@/components/StaffAccountCard";
 import { IndianRupee, ShoppingBag, AlertTriangle, Truck, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({ component: Dashboard });
@@ -106,6 +107,8 @@ function Dashboard() {
         <Stat icon={<IndianRupee className="h-5 w-5" />} label="This month's revenue" value={formatINR(monthlyRevenue)} accent onClick={() => setOpenPeriod("month")} />
         <Stat icon={<IndianRupee className="h-5 w-5" />} label="This year's revenue" value={formatINR(yearlyRevenue)} accent onClick={() => setOpenPeriod("year")} />
       </div>
+
+      <StaffAccountCard role="admin" />
 
       <Dialog open={openPeriod !== null} onOpenChange={(o) => !o && setOpenPeriod(null)}>
         <DialogContent className="max-w-md">

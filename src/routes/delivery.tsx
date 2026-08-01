@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, redirect, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { StaffAccountCard } from "@/components/StaffAccountCard";
 import { Bike, Phone, Package, Undo2, ShieldAlert, Truck, CheckCircle2, MapPin, LogOut, RefreshCw, IndianRupee, HandPlatter, User2, Wallet, ListChecks, Navigation, ChevronDown, MessageSquare } from "lucide-react";
 import { listDeliveryOrdersFn, deliverySetStatusFn, listAvailableOrdersFn, claimOrderFn, listReturnPickupsFn, markReturnPickedUpFn } from "@/lib/delivery.functions";
 import { initiateMaskedCallFn } from "@/lib/chat.functions";
@@ -706,6 +707,8 @@ function AccountView({ driver, deliveredCount, activeCount, orders, onLogout }: 
     <div className="space-y-5">
       {/* My earnings */}
       <EarningsSection orders={orders} deliveredCount={deliveredCount} activeCount={activeCount} />
+
+      <StaffAccountCard role="delivery_partner" />
 
 
       {/* Account details */}

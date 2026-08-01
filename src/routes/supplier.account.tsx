@@ -5,6 +5,7 @@ import { listSupplierOrdersFn, type SupplierOrder } from "@/lib/supplier.functio
 import { useSupplier } from "@/lib/supplier-context";
 import { CATEGORIES, formatINR } from "@/lib/data";
 import { toast } from "sonner";
+import { StaffAccountCard } from "@/components/StaffAccountCard";
 
 export const Route = createFileRoute("/supplier/account")({ component: SupplierAccount });
 
@@ -65,6 +66,8 @@ function SupplierAccount() {
         <StatCard icon={Clock} label="In progress" value={String(stats.active)} tone="saffron" />
         <StatCard icon={IndianRupee} label="Delivered revenue" value={formatINR(stats.revenue)} tone="primary" />
       </div>
+
+      <StaffAccountCard role="vendor" />
 
       {/* Account details */}
       <section>
