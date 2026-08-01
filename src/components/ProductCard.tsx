@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Plus, Heart, BellRing } from "lucide-react";
+import { Plus, Heart, BellRing, ShoppingCart } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Product } from "@/lib/data";
@@ -116,10 +116,18 @@ export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolea
               <BellRing className="h-3 w-3" /> {notified ? "NOTIFYING" : notifying ? "…" : "NOTIFY ME"}
             </button>
           ) : inCart ? (
-            <div className="flex items-center overflow-hidden rounded-lg border border-primary">
-              <button onClick={() => setQty(p.id, inCart.qty - 1)} className="px-2 py-1 text-primary hover:bg-primary/10">−</button>
-              <span className="min-w-6 text-center text-sm font-semibold">{inCart.qty}</span>
-              <button onClick={() => setQty(p.id, inCart.qty + 1)} className="px-2 py-1 text-primary hover:bg-primary/10">+</button>
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center overflow-hidden rounded-lg border border-primary">
+                <button onClick={() => setQty(p.id, inCart.qty - 1)} aria-label="Decrease quantity" className="px-2 py-1 text-primary hover:bg-primary/10">−</button>
+                <span className="min-w-6 text-center text-sm font-semibold">{inCart.qty}</span>
+                <button onClick={() => setQty(p.id, inCart.qty + 1)} aria-label="Increase quantity" className="px-2 py-1 text-primary hover:bg-primary/10">+</button>
+              </div>
+              <Link
+                to="/cart"
+                className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+              >
+                <ShoppingCart className="h-3 w-3" /> GO TO CART
+              </Link>
             </div>
           ) : (
             <button

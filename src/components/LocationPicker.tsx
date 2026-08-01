@@ -236,7 +236,7 @@ function LocationPickerClient({
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => { setAdding(savedAddresses.length === 0); setDenied(null); setOpen(true); }}
         className="flex w-full items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-semibold hover:bg-secondary"
       >
         <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
