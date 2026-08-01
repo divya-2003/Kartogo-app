@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
-import { MapPin, Search, X, ChevronDown, Loader2, XCircle, Clock, Check, Trash2, LocateFixed, Pencil, Send } from "lucide-react";
+import { MapPin, Search, X, ChevronDown, Loader2, XCircle, Clock, Check, Trash2, LocateFixed, Pencil, Send, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { checkServiceability, locateByCoords } from "@/lib/serviceability.functions";
 import { deliveryWindow } from "@/lib/serviceability";
@@ -63,6 +63,9 @@ function LocationPickerClient({
   const [locating, setLocating] = useState(false);
   const [denied, setDenied] = useState<{ reason: string; pincode: string | null; area: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Show the "add a new address" search form only when there's nothing saved
+  // yet, or the user explicitly taps "Add new address".
+  const [adding, setAdding] = useState(savedAddresses.length === 0);
 
   // Second step: capture the exact address (door no, apartment, landmark) for a
   // confirmed serviceable area before we save the location.
