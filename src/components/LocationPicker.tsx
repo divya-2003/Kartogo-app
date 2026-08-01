@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
-import { MapPin, Search, X, ChevronDown, Loader2, XCircle, Clock, Check, Trash2, LocateFixed, Pencil, Send } from "lucide-react";
+import { MapPin, Search, X, ChevronDown, Loader2, XCircle, Clock, Check, Trash2, LocateFixed, Pencil, Send, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { checkServiceability, locateByCoords } from "@/lib/serviceability.functions";
 import { deliveryWindow } from "@/lib/serviceability";
@@ -63,6 +63,9 @@ function LocationPickerClient({
   const [locating, setLocating] = useState(false);
   const [denied, setDenied] = useState<{ reason: string; pincode: string | null; area: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Show the "add a new address" search form only when there's nothing saved
+  // yet, or the user explicitly taps "Add new address".
+  const [adding, setAdding] = useState(savedAddresses.length === 0);
 
   // Second step: capture the exact address (door no, apartment, landmark) for a
   // confirmed serviceable area before we save the location.
@@ -233,7 +236,7 @@ function LocationPickerClient({
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => { setAdding(savedAddresses.length === 0); setDenied(null); setOpen(true); }}
         className="flex w-full items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-semibold hover:bg-secondary"
       >
         <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
@@ -336,76 +339,14 @@ function LocationPickerClient({
               </form>
             </div>
           ) : (
-          /* Body */
+          /* Body — saved addresses first, then "Add new address" */
           <div className="mx-auto w-full max-w-lg flex-1 overflow-y-auto px-4 py-5">
 
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <div className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-3 focus-within:ring-2 focus-within:ring-ring">
-                <Search className="h-4 w-4 text-muted-foreground" />
-                <input
-                  ref={inputRef}
-                  value={query}
-                  onChange={e => { setQuery(e.target.value); setDenied(null); }}
-                  placeholder="Type your area, locality or pincode"
-                  className="w-full bg-transparent text-base outline-none"
-                />
-              </div>
-
-              {denied && (
-                <div className="space-y-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-                  <div className="flex items-start gap-2">
-                    <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                    <span>{denied.reason}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOpen(false);
-                      nav({ to: "/request-service", search: { pincode: denied.pincode ?? undefined, area: denied.area || undefined } });
-                    }}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground hover:bg-destructive/90"
-                  >
-                    <Send className="h-3.5 w-3.5" /> Request Kartogo to your area
-                  </button>
-                </div>
-              )}
-
-              {!denied && (
-                <button
-                  disabled={loading}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
-                >
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                  {loading ? "Checking..." : "Check & deliver here"}
-                </button>
-              )}
-            </form>
-
-            <button
-              type="button"
-              onClick={useCurrentLocation}
-              disabled={locating}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/5 py-3 font-semibold text-primary hover:bg-primary/10 disabled:opacity-60"
-            >
-              {locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
-              {locating ? "Detecting your location..." : "Use my current location"}
-            </button>
-
-
-
-
-
-            {/* Saved addresses */}
-            <div className="mt-8">
-              <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                <Clock className="h-3.5 w-3.5" /> Saved addresses
-              </h3>
-
-              {savedAddresses.length === 0 ? (
-                <p className="mt-3 rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
-                  No saved addresses yet. Locations you confirm will appear here.
-                </p>
-              ) : (
+            {savedAddresses.length > 0 && (
+              <div className="mb-6">
+                <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                  <Clock className="h-3.5 w-3.5" /> Saved addresses
+                </h3>
                 <ul className="mt-3 space-y-2">
                   {savedAddresses.map((addr) => {
                     const active = location?.query.toLowerCase() === addr.query.toLowerCase();
@@ -445,10 +386,89 @@ function LocationPickerClient({
                     );
                   })}
                 </ul>
-              )}
-            </div>
+              </div>
+            )}
+
+            {!adding && savedAddresses.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => setAdding(true)}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary bg-primary/5 py-3 font-bold text-primary hover:bg-primary/10"
+              >
+                <Plus className="h-4 w-4" /> Add new address
+              </button>
+            ) : (
+              <>
+                {savedAddresses.length > 0 && (
+                  <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-foreground">Add new address</h3>
+                )}
+                <form onSubmit={handleSubmit} className="space-y-3">
+                  <div className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-3 focus-within:ring-2 focus-within:ring-ring">
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                    <input
+                      ref={inputRef}
+                      value={query}
+                      onChange={e => { setQuery(e.target.value); setDenied(null); }}
+                      placeholder="Type your area, locality or pincode"
+                      className="w-full bg-transparent text-base outline-none"
+                    />
+                  </div>
+
+                  {denied && (
+                    <div className="space-y-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                      <div className="flex items-start gap-2">
+                        <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                        <span>{denied.reason}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOpen(false);
+                          nav({ to: "/request-service", search: { pincode: denied.pincode ?? undefined, area: denied.area || undefined } });
+                        }}
+                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        <Send className="h-3.5 w-3.5" /> Request Kartogo to your area
+                      </button>
+                    </div>
+                  )}
+
+                  {!denied && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        disabled={loading}
+                        className="flex min-w-[10rem] flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                      >
+                        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                        {loading ? "Checking..." : "Check & deliver here"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={useCurrentLocation}
+                        disabled={locating}
+                        className="flex min-w-[10rem] flex-1 items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/5 py-3 font-semibold text-primary hover:bg-primary/10 disabled:opacity-60"
+                      >
+                        {locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
+                        {locating ? "Detecting..." : "Use current location"}
+                      </button>
+                    </div>
+                  )}
+                </form>
+
+                {savedAddresses.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => { setAdding(false); setDenied(null); }}
+                    className="mt-3 w-full rounded-xl py-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
+                  >
+                    Back to saved addresses
+                  </button>
+                )}
+              </>
+            )}
           </div>
           )}
+
         </div>,
         document.body
       )}

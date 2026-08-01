@@ -48,12 +48,17 @@ export function verifyCustomerToken(token?: string): { phone: string } | null {
 }
 
 // ---- Admin tokens ----
-export function issueAdminToken(): string {
-  return sign({ admin: true, exp: Date.now() + DAY }, adminSecret());
+export function issueAdminToken(userId?: string): string {
+  return sign({ admin: true, userId: userId ?? null, exp: Date.now() + DAY }, adminSecret());
 }
 export function verifyAdminToken(token?: string): boolean {
   const data = verify(token, adminSecret());
   return !!(data && data.admin === true);
+}
+export function readAdminToken(token?: string): { userId: string | null } | null {
+  const data = verify(token, adminSecret());
+  if (!data || data.admin !== true) return null;
+  return { userId: typeof data.userId === "string" ? data.userId : null };
 }
 
 // Allow list lives on the server only. Used to decide whether to prompt for the
@@ -81,14 +86,14 @@ function deliverySecret(): string {
   return s;
 }
 
-export function issueDeliveryToken(driverId: string, phone: string): string {
-  return sign({ role: "delivery", driverId, phone, exp: Date.now() + 30 * DAY }, deliverySecret());
+export function issueDeliveryToken(driverId: string, phone: string, userId?: string): string {
+  return sign({ role: "delivery", driverId, phone, userId: userId ?? null, exp: Date.now() + 30 * DAY }, deliverySecret());
 }
 
-export function verifyDeliveryToken(token?: string): { driverId: string; phone: string } | null {
+export function verifyDeliveryToken(token?: string): { driverId: string; phone: string; userId: string | null } | null {
   const data = verify(token, deliverySecret());
   if (data && data.role === "delivery" && typeof data.driverId === "string" && typeof data.phone === "string") {
-    return { driverId: data.driverId, phone: data.phone };
+    return { driverId: data.driverId, phone: data.phone, userId: typeof data.userId === "string" ? data.userId : null };
   }
   return null;
 }
@@ -119,14 +124,14 @@ function supplierSecret(): string {
   return s;
 }
 
-export function issueSupplierToken(supplierId: string, phone: string): string {
-  return sign({ role: "supplier", supplierId, phone, exp: Date.now() + 30 * DAY }, supplierSecret());
+export function issueSupplierToken(supplierId: string, phone: string, userId?: string): string {
+  return sign({ role: "supplier", supplierId, phone, userId: userId ?? null, exp: Date.now() + 30 * DAY }, supplierSecret());
 }
 
-export function verifySupplierToken(token?: string): { supplierId: string; phone: string } | null {
+export function verifySupplierToken(token?: string): { supplierId: string; phone: string; userId: string | null } | null {
   const data = verify(token, supplierSecret());
   if (data && data.role === "supplier" && typeof data.supplierId === "string" && typeof data.phone === "string") {
-    return { supplierId: data.supplierId, phone: data.phone };
+    return { supplierId: data.supplierId, phone: data.phone, userId: typeof data.userId === "string" ? data.userId : null };
   }
   return null;
 }

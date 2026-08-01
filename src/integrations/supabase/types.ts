@@ -443,6 +443,38 @@ export type Database = {
         }
         Relationships: []
       }
+      mobile_number_changes: {
+        Row: {
+          changed_at: string
+          id: string
+          new_mobile_number: string
+          old_mobile_number: string
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string
+          id?: string
+          new_mobile_number: string
+          old_mobile_number: string
+          user_id: string
+        }
+        Update: {
+          changed_at?: string
+          id?: string
+          new_mobile_number?: string
+          old_mobile_number?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mobile_number_changes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "staff_accounts"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       order_call_logs: {
         Row: {
           callee_id: string
@@ -914,6 +946,39 @@ export type Database = {
           id?: number
           threshold_amount?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      staff_accounts: {
+        Row: {
+          created_at: string
+          full_name: string
+          mobile_number: string
+          ref_id: string | null
+          role: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          mobile_number: string
+          ref_id?: string | null
+          role: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          mobile_number?: string
+          ref_id?: string | null
+          role?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

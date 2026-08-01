@@ -38,6 +38,34 @@ export const createUnserviceableRequestFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => createSchema.parse(data))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // One request per login: if this phone already raised a request, refresh it
+    // instead of creating a duplicate row for the admin to sift through.
+    if (data.phone) {
+      const { data: existing } = await supabaseAdmin
+        .from("unserviceable_requests")
+        .select("*")
+        .eq("phone", data.phone)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      const prev = existing?.[0] as Row | undefined;
+      if (prev) {
+        const { data: updated } = await supabaseAdmin
+          .from("unserviceable_requests")
+          .update({
+            pincode: data.pincode || prev.pincode,
+            area_text: data.areaText || prev.area_text,
+            lat: data.lat ?? prev.lat,
+            lng: data.lng ?? prev.lng,
+            note: data.note || prev.note,
+          })
+          .eq("id", prev.id)
+          .select("*")
+          .maybeSingle();
+        return toReq((updated ?? prev) as Row);
+      }
+    }
+
     const { data: row, error } = await supabaseAdmin
       .from("unserviceable_requests")
       .insert({
@@ -64,7 +92,19 @@ export const listUnserviceableRequestsFn = createServerFn({ method: "POST" })
       .select("*")
       .order("created_at", { ascending: false });
     if (error) throw new Error("Could not load requests");
-    return (rows as Row[]).map(toReq);
+    // Collapse duplicates: only the most recent request per login (phone) is
+    // shown. Anonymous requests fall back to a coarse coordinate/area key.
+    const seen = new Set<string>();
+    const unique: Row[] = [];
+    for (const r of (rows as Row[])) {
+      const key = r.phone
+        ? `p:${r.phone}`
+        : `l:${r.lat != null ? r.lat.toFixed(3) : ""},${r.lng != null ? r.lng.toFixed(3) : ""}|${(r.area_text ?? "").toLowerCase()}|${r.pincode ?? ""}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      unique.push(r);
+    }
+    return unique.map(toReq);
   });
 
 export const updateUnserviceableStatusFn = createServerFn({ method: "POST" })

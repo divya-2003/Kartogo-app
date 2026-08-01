@@ -85,8 +85,8 @@ export const addDeliveryPartnerFn = createServerFn({ method: "POST" })
     if (roster.some((d) => d.phone === data.phone)) {
       throw new Error("A delivery partner with this mobile number already exists");
     }
-    const { findSupplierByPhone } = await import("./suppliers");
-    if (findSupplierByPhone(data.phone)) throw new Error("This number is already used by a supplier");
+    const { findStaffByPhone, ensureStaffAccount } = await import("./staff.server");
+    if (await findStaffByPhone(data.phone)) throw new Error("This mobile number is already in use.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("driver_availability").upsert(
@@ -103,6 +103,14 @@ export const addDeliveryPartnerFn = createServerFn({ method: "POST" })
       { onConflict: "driver_id" },
     );
     if (error) throw new Error("Could not add this delivery partner. Please try again.");
+
+    // Permanent identity for the new partner — everything else keys off this id.
+    await ensureStaffAccount({
+      role: "delivery_partner",
+      refId: driverIdForPhone(data.phone),
+      fullName: data.name,
+      mobileNumber: data.phone,
+    });
     return { ok: true as const, id: driverIdForPhone(data.phone) };
   });
 
