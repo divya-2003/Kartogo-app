@@ -9,6 +9,8 @@ export const Route = createFileRoute("/supplier/sales")({ component: SupplierSal
 type Bucket = { key: string; label: string; sort: number };
 type Row = { productId: string; name: string; units: number; revenue: number };
 
+const PAGE = 10;
+
 // ISO-ish week key so weekly buckets are stable across month boundaries.
 function weekBucket(d: Date): Bucket {
   const tmp = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -78,11 +80,18 @@ function SupplierSales() {
       .map(g => ({ ...g, rows: [...g.rows.values()].sort((a, b) => b.units - a.units) }));
   }, [orders, mode]);
 
-  const totals = useMemo(() => ({
-    units: groups.reduce((s, g) => s + g.units, 0),
-    revenue: groups.reduce((s, g) => s + g.revenue, 0),
-    products: new Set(groups.flatMap(g => g.rows.map(r => r.productId))).size,
-  }), [groups]);
+  // Filtered view (same interaction as the delivery partner's earnings page):
+  // pick a period from a dropdown, see that period's total top-right.
+  const [selectedKey, setSelectedKey] = useState<string>("");
+  const [visibleCount, setVisibleCount] = useState(PAGE);
+
+  useEffect(() => {
+    setSelectedKey(groups[0]?.bucket.key ?? "");
+    setVisibleCount(PAGE);
+  }, [groups]);
+
+  const selected = groups.find(g => g.bucket.key === selectedKey) ?? groups[0] ?? null;
+  const shown = selected ? selected.rows.slice(0, visibleCount) : [];
 
   return (
     <div className="space-y-5">
@@ -107,67 +116,88 @@ function SupplierSales() {
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        <Stat icon={PackageCheck} label="Units sold" value={String(totals.units)} />
-        <Stat icon={Boxes} label="Products sold" value={String(totals.products)} />
-        <Stat icon={IndianRupee} label="Total sales value" value={formatINR(totals.revenue)} />
+        <Stat icon={PackageCheck} label={mode === "month" ? "Units this period" : "Units this week"} value={String(selected?.units ?? 0)} />
+        <Stat icon={Boxes} label="Products sold" value={String(selected?.rows.length ?? 0)} />
+        <Stat icon={IndianRupee} label="Sales value" value={formatINR(selected?.revenue ?? 0)} />
       </div>
 
       {loading ? (
         <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">Loading sales…</div>
-      ) : groups.length === 0 ? (
+      ) : groups.length === 0 || !selected ? (
         <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
           No delivered sales yet for your categories.
         </div>
       ) : (
-        <div className="space-y-4">
-          {groups.map(g => (
-            <section key={g.bucket.key} className="overflow-hidden rounded-2xl border border-border bg-card">
-              <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-secondary/50 px-4 py-3">
-                <div className="flex items-center gap-2 font-display text-base font-bold">
-                  <BarChart3 className="h-4 w-4 text-primary" /> {g.bucket.label}
-                </div>
-                <div className="text-sm font-bold">
-                  {g.units} unit{g.units === 1 ? "" : "s"} · <span className="text-primary">{formatINR(g.revenue)}</span>
-                </div>
-              </header>
-
-              {/* Desktop table */}
-              <div className="hidden md:block">
-                <table className="w-full text-sm">
-                  <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
-                    <tr>
-                      <th className="px-4 py-2">Product</th>
-                      <th className="px-4 py-2 w-32">Units sold</th>
-                      <th className="px-4 py-2 w-40">Total selling cost</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {g.rows.map(r => (
-                      <tr key={r.productId}>
-                        <td className="px-4 py-2 font-semibold">{r.name}</td>
-                        <td className="px-4 py-2">{r.units}</td>
-                        <td className="px-4 py-2 font-bold">{formatINR(r.revenue)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Mobile list */}
-              <ul className="divide-y divide-border md:hidden">
-                {g.rows.map(r => (
-                  <li key={r.productId} className="flex items-center justify-between gap-3 px-4 py-3">
-                    <div className="min-w-0">
-                      <div className="truncate font-semibold">{r.name}</div>
-                      <div className="text-xs text-muted-foreground">{r.units} unit{r.units === 1 ? "" : "s"} sold</div>
-                    </div>
-                    <div className="shrink-0 font-bold">{formatINR(r.revenue)}</div>
-                  </li>
+        <section className="overflow-hidden rounded-2xl border border-border bg-card">
+          <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-secondary/50 px-4 py-3">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-primary" />
+              <label className="text-xs font-semibold text-muted-foreground" htmlFor="sales-period">
+                {mode === "month" ? "Month" : "Week"}
+              </label>
+              <select
+                id="sales-period"
+                value={selected.bucket.key}
+                onChange={e => { setSelectedKey(e.target.value); setVisibleCount(PAGE); }}
+                className="rounded-lg border border-input bg-background px-2 py-1.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-ring"
+              >
+                {groups.map(g => (
+                  <option key={g.bucket.key} value={g.bucket.key}>{g.bucket.label}</option>
                 ))}
-              </ul>
-            </section>
-          ))}
-        </div>
+              </select>
+            </div>
+            <div className="text-sm font-bold">
+              {selected.units} unit{selected.units === 1 ? "" : "s"} ·{" "}
+              <span className="font-display text-lg text-primary">{formatINR(selected.revenue)}</span>
+            </div>
+          </header>
+
+          {/* Desktop table */}
+          <div className="hidden md:block">
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-2">Product</th>
+                  <th className="w-32 px-4 py-2">Units sold</th>
+                  <th className="w-40 px-4 py-2">Total selling cost</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {shown.map(r => (
+                  <tr key={r.productId}>
+                    <td className="px-4 py-2 font-semibold">{r.name}</td>
+                    <td className="px-4 py-2">{r.units}</td>
+                    <td className="px-4 py-2 font-bold">{formatINR(r.revenue)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile list */}
+          <ul className="divide-y divide-border md:hidden">
+            {shown.map(r => (
+              <li key={r.productId} className="flex items-center justify-between gap-3 px-4 py-3">
+                <div className="min-w-0">
+                  <div className="truncate font-semibold">{r.name}</div>
+                  <div className="text-xs text-muted-foreground">{r.units} unit{r.units === 1 ? "" : "s"} sold</div>
+                </div>
+                <div className="shrink-0 font-bold">{formatINR(r.revenue)}</div>
+              </li>
+            ))}
+          </ul>
+
+          {selected.rows.length > shown.length && (
+            <div className="border-t border-border p-3">
+              <button
+                onClick={() => setVisibleCount(c => c + PAGE)}
+                className="w-full rounded-xl border border-border py-2 text-sm font-bold hover:bg-secondary"
+              >
+                Show more ({selected.rows.length - shown.length} left)
+              </button>
+            </div>
+          )}
+        </section>
       )}
     </div>
   );
