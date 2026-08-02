@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useServerFn } from "@tanstack/react-start";
-import { useNavigate } from "@tanstack/react-router";
 import { MapPin, Search, X, ChevronDown, Loader2, XCircle, Clock, Check, Trash2, LocateFixed, Pencil, Send, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { checkServiceability, locateByCoords } from "@/lib/serviceability.functions";
@@ -66,9 +65,6 @@ function LocationPickerClient({
   const [requesting, setRequesting] = useState(false);
   const [requested, setRequested] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  // Show the "add a new address" search form only when there's nothing saved
-  // yet, or the user explicitly taps "Add new address".
-  const [adding, setAdding] = useState(savedAddresses.length === 0);
 
   // Second step: capture the exact address (door no, apartment, landmark) for a
   // confirmed serviceable area before we save the location.
@@ -263,7 +259,7 @@ function LocationPickerClient({
   return (
     <>
       <button
-        onClick={() => { setAdding(savedAddresses.length === 0); setDenied(null); setOpen(true); }}
+        onClick={() => { setDenied(null); setOpen(true); }}
         className="flex w-full items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-semibold hover:bg-secondary"
       >
         <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
