@@ -57,12 +57,14 @@ function LocationPickerClient({
 }) {
   const check = useServerFn(checkServiceability);
   const locate = useServerFn(locateByCoords);
-  const nav = useNavigate();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [locating, setLocating] = useState(false);
-  const [denied, setDenied] = useState<{ reason: string; pincode: string | null; area: string } | null>(null);
+  const [denied, setDenied] = useState<{ reason: string; pincode: string | null; area: string; lat?: number; lng?: number } | null>(null);
+  const [requesting, setRequesting] = useState(false);
+  const [requested, setRequested] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   // Show the "add a new address" search form only when there's nothing saved
   // yet, or the user explicitly taps "Add new address".
@@ -84,6 +86,7 @@ function LocationPickerClient({
       setDenied(null);
       setPending(null);
       setEditingQuery(null);
+      setRequested(false);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [open]);
@@ -158,6 +161,31 @@ function LocationPickerClient({
   };
 
 
+  // Ask Kartogo to launch here — recorded straight from this sheet so the
+  // customer never loses their place.
+  const requestArea = async () => {
+    if (!denied || requesting) return;
+    setRequesting(true);
+    try {
+      await createUnserviceableRequestFn({
+        data: {
+          phone: user?.phone ?? null,
+          pincode: denied.pincode,
+          areaText: denied.area || "Unknown area",
+          lat: denied.lat ?? null,
+          lng: denied.lng ?? null,
+          note: null,
+        },
+      });
+      setRequested(true);
+      toast.success("Location requested");
+    } catch {
+      toast.error("Couldn't send your request. Please try again.");
+    } finally {
+      setRequesting(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) {
@@ -206,7 +234,7 @@ function LocationPickerClient({
             });
           } else {
             if (result.address) setQuery(result.address);
-            setDenied({ reason: result.reason, pincode: result.pincode ?? null, area: result.address ?? "" });
+            setDenied({ reason: result.reason, pincode: result.pincode ?? null, area: result.address ?? "", lat: pos.coords.latitude, lng: pos.coords.longitude });
           }
         } catch {
           toast.error("Couldn't detect your location. Please try again.");
