@@ -1,15 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, Plus, Pencil } from "lucide-react";
 import { useCatalog } from "@/lib/store";
-import { CATEGORIES, formatINR } from "@/lib/data";
+import { CATEGORIES, formatINR, type Product } from "@/lib/data";
+import { ItemEditor } from "@/components/ItemEditor";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/inventory")({ component: InventoryAdmin });
 
+const EMPTY: Product = { id: "", name: "", category: CATEGORIES[0]?.slug ?? "snacks", price: 0, unit: "", stock: 0, emoji: "🛒", description: "" };
+
 function InventoryAdmin() {
-  const { products: allProducts, setPrice, setStock } = useCatalog();
+  const { products: allProducts, setPrice, setStock, upsert } = useCatalog();
   const [q, setQ] = useState("");
+  const [editing, setEditing] = useState<Product | null>(null);
 
   // Search across name, unit and category so the admin can jump straight to an
   // item instead of scrolling the whole catalogue.
@@ -24,9 +28,17 @@ function InventoryAdmin() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-3xl font-bold">Inventory & prices</h1>
-        <p className="text-sm text-muted-foreground">Quick edit — changes save instantly.</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl font-bold">Inventory & prices</h1>
+          <p className="text-sm text-muted-foreground">Quick edit — changes save instantly.</p>
+        </div>
+        <button
+          onClick={() => setEditing({ ...EMPTY, id: `p${Date.now()}` })}
+          className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90"
+        >
+          <Plus className="h-4 w-4" /> New item
+        </button>
       </div>
 
       {/* Search */}
@@ -48,6 +60,16 @@ function InventoryAdmin() {
         </div>
         <span className="text-xs font-semibold text-muted-foreground">{products.length} of {allProducts.length} items</span>
       </div>
+
+      {editing && (
+        <ItemEditor
+          product={editing}
+          categories={CATEGORIES}
+          onClose={() => setEditing(null)}
+          onSave={(p) => { upsert(p); setEditing(null); toast.success("Item saved"); }}
+        />
+      )}
+
 
       {products.length === 0 && (
         <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">
