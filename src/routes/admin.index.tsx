@@ -108,7 +108,7 @@ function Dashboard() {
         <Stat icon={<IndianRupee className="h-5 w-5" />} label="This year's revenue" value={formatINR(yearlyRevenue)} accent onClick={() => setOpenPeriod("year")} />
       </div>
 
-      <StaffAccountCard role="admin" />
+
 
       <Dialog open={openPeriod !== null} onOpenChange={(o) => !o && setOpenPeriod(null)}>
         <DialogContent className="max-w-md">

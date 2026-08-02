@@ -58,6 +58,7 @@ import { Route as AdminFeedbackRouteImport } from './routes/admin.feedback'
 import { Route as AdminDeliveryRouteImport } from './routes/admin.delivery'
 import { Route as AdminCombosRouteImport } from './routes/admin.combos'
 import { Route as AdminCancellationsRouteImport } from './routes/admin.cancellations'
+import { Route as AdminAccountRouteImport } from './routes/admin.account'
 
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
@@ -304,6 +305,11 @@ const AdminCancellationsRoute = AdminCancellationsRouteImport.update({
   path: '/cancellations',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAccountRoute = AdminAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -328,6 +334,7 @@ export interface FileRoutesByFullPath {
   '/topup': typeof TopupRoute
   '/wallet': typeof WalletRoute
   '/wishlist': typeof WishlistRoute
+  '/admin/account': typeof AdminAccountRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/combos': typeof AdminCombosRoute
   '/admin/delivery': typeof AdminDeliveryRoute
@@ -377,6 +384,7 @@ export interface FileRoutesByTo {
   '/topup': typeof TopupRoute
   '/wallet': typeof WalletRoute
   '/wishlist': typeof WishlistRoute
+  '/admin/account': typeof AdminAccountRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/combos': typeof AdminCombosRoute
   '/admin/delivery': typeof AdminDeliveryRoute
@@ -429,6 +437,7 @@ export interface FileRoutesById {
   '/topup': typeof TopupRoute
   '/wallet': typeof WalletRoute
   '/wishlist': typeof WishlistRoute
+  '/admin/account': typeof AdminAccountRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/combos': typeof AdminCombosRoute
   '/admin/delivery': typeof AdminDeliveryRoute
@@ -482,6 +491,7 @@ export interface FileRouteTypes {
     | '/topup'
     | '/wallet'
     | '/wishlist'
+    | '/admin/account'
     | '/admin/cancellations'
     | '/admin/combos'
     | '/admin/delivery'
@@ -531,6 +541,7 @@ export interface FileRouteTypes {
     | '/topup'
     | '/wallet'
     | '/wishlist'
+    | '/admin/account'
     | '/admin/cancellations'
     | '/admin/combos'
     | '/admin/delivery'
@@ -582,6 +593,7 @@ export interface FileRouteTypes {
     | '/topup'
     | '/wallet'
     | '/wishlist'
+    | '/admin/account'
     | '/admin/cancellations'
     | '/admin/combos'
     | '/admin/delivery'
@@ -984,10 +996,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCancellationsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/account': {
+      id: '/admin/account'
+      path: '/account'
+      fullPath: '/admin/account'
+      preLoaderRoute: typeof AdminAccountRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminAccountRoute: typeof AdminAccountRoute
   AdminCancellationsRoute: typeof AdminCancellationsRoute
   AdminCombosRoute: typeof AdminCombosRoute
   AdminDeliveryRoute: typeof AdminDeliveryRoute
@@ -1011,6 +1031,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAccountRoute: AdminAccountRoute,
   AdminCancellationsRoute: AdminCancellationsRoute,
   AdminCombosRoute: AdminCombosRoute,
   AdminDeliveryRoute: AdminDeliveryRoute,

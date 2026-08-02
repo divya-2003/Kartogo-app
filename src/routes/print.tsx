@@ -241,7 +241,7 @@ function UploadModal({
   const [colorMode, setColorMode] = useState<"bw" | "color">(service === "documents" ? "bw" : "color");
   const [copies, setCopies] = useState(1);
   const [notes, setNotes] = useState("");
-  const [address, setAddress] = useState(defaultAddress);
+  const [address] = useState(defaultAddress);
   const [busy, setBusy] = useState(false);
 
   const isImage = !!file && /^image\//.test(file.type);
@@ -286,7 +286,7 @@ function UploadModal({
           address,
         },
       });
-      toast.success("Uploaded — the print shop has your file");
+      toast.success("Added to cart — the print shop has your file");
       await onUploaded();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed");
@@ -409,21 +409,13 @@ function UploadModal({
           {!file && <p className="mt-2 text-[11px] text-muted-foreground">Choose a file to see your exact total.</p>}
         </div>
 
-        <label className="mt-3 block text-xs font-semibold text-muted-foreground">
-          Delivery address
-          <textarea
-            value={address} onChange={e => setAddress(e.target.value)} rows={2}
-            placeholder="Where should we deliver the prints?"
-            className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground"
-          />
-        </label>
-
         <div className="mt-4 flex items-center gap-2">
           <button disabled={busy} className="flex-1 rounded-2xl bg-primary py-3 text-sm font-bold text-primary-foreground disabled:opacity-60">
-            {busy ? "Uploading..." : `Upload & pay ₹${total}`}
+            {busy ? "Adding..." : `Add to cart · ₹${total}`}
           </button>
           <button type="button" onClick={onClose} className="rounded-2xl border border-border px-4 py-3 text-sm font-bold hover:bg-secondary">Cancel</button>
         </div>
+
       </form>
     </div>
   );

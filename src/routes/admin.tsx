@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 import { useOrders } from "@/lib/store";
 import { verifyAdminTokenFn } from "@/lib/auth.functions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { LayoutDashboard, Package2, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Menu, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer } from "lucide-react";
+import { LayoutDashboard, Package2, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Menu, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: async () => {
@@ -45,7 +45,9 @@ const NAV = [
   { to: "/admin/reports-products", label: "Product analytics", icon: Package },
   { to: "/admin/reports-vendors", label: "Vendor report", icon: BarChart3 },
   { to: "/admin/reports-riders", label: "Rider report", icon: Bike },
+  { to: "/admin/account", label: "Account", icon: UserRound },
 ] as const;
+
 
 function AdminLayout() {
   const path = useRouterState({ select: s => s.location.pathname });
@@ -126,12 +128,22 @@ function AdminLayout() {
           </SheetContent>
         </Sheet>
         <span className="font-display text-sm font-bold">Admin</span>
-        {unseenCancellations > 0 && (
-          <span className="ml-auto rounded-full bg-destructive px-2 py-0.5 text-[10px] font-bold text-destructive-foreground">
-            {unseenCancellations} new cancel
-          </span>
-        )}
+        <div className="ml-auto flex items-center gap-2">
+          {unseenCancellations > 0 && (
+            <span className="rounded-full bg-destructive px-2 py-0.5 text-[10px] font-bold text-destructive-foreground">
+              {unseenCancellations} new cancel
+            </span>
+          )}
+          <Link
+            to="/admin/account"
+            aria-label="Admin account"
+            className="grid h-9 w-9 place-items-center rounded-full border border-border bg-card hover:bg-secondary"
+          >
+            <UserRound className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
+
 
       <div className="mx-auto grid max-w-7xl gap-6 px-4 pb-6 pt-4 md:grid-cols-[220px_minmax(0,1fr)] md:px-6 md:py-6">
         {/* Desktop sidebar */}

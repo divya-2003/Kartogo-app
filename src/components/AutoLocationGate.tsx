@@ -27,42 +27,60 @@ export function AutoLocationGate() {
 
   useEffect(() => {
     let alive = true;
+    let settled = false;
     try { if (sessionStorage.getItem(SESSION_KEY)) return; } catch { /* ignore */ }
     if (typeof navigator === "undefined" || !navigator.geolocation) return;
 
+    const handle = async (pos: GeolocationPosition) => {
+      if (settled) return;
+      settled = true;
+      try { sessionStorage.setItem(SESSION_KEY, "1"); } catch { /* ignore */ }
+      const { latitude: lat, longitude: lng } = pos.coords;
+      try {
+        const res = await locate({ data: { lat, lng } });
+        if (!alive) return;
+        if (res.serviceable) {
+          const area = res.area ?? res.address ?? "Current location";
+          setLocation({
+            query: res.address || area,
+            area,
+            serviceable: true,
+            etaMinutes: res.etaMinutes ?? undefined,
+            baseQuery: res.address || area,
+          });
+        } else {
+          setDenied({
+            address: res.address || "your current location",
+            pincode: res.pincode ?? null,
+            reason: res.reason,
+            lat,
+            lng,
+          });
+        }
+      } catch { /* silent — the manual picker still works */ }
+    };
+
+    // Fast path: accept a recently cached, coarse fix so the app knows where the
+    // customer is almost instantly. A precise fix runs in parallel and only
+    // matters if the quick one fails.
     navigator.geolocation.getCurrentPosition(
-      async (pos) => {
+      handle,
+      () => { /* fall back to the precise attempt below */ },
+      { enableHighAccuracy: false, timeout: 2500, maximumAge: 900000 },
+    );
+    navigator.geolocation.getCurrentPosition(
+      handle,
+      () => {
+        if (settled) return;
+        settled = true;
         try { sessionStorage.setItem(SESSION_KEY, "1"); } catch { /* ignore */ }
-        const { latitude: lat, longitude: lng } = pos.coords;
-        try {
-          const res = await locate({ data: { lat, lng } });
-          if (!alive) return;
-          if (res.serviceable) {
-            const area = res.area ?? res.address ?? "Current location";
-            setLocation({
-              query: res.address || area,
-              area,
-              serviceable: true,
-              etaMinutes: res.etaMinutes ?? undefined,
-              baseQuery: res.address || area,
-            });
-          } else {
-            setDenied({
-              address: res.address || "your current location",
-              pincode: res.pincode ?? null,
-              reason: res.reason,
-              lat,
-              lng,
-            });
-          }
-        } catch { /* silent — the manual picker still works */ }
       },
-      () => { try { sessionStorage.setItem(SESSION_KEY, "1"); } catch { /* ignore */ } },
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 300000 },
     );
 
     return () => { alive = false; };
   }, [locate, setLocation]);
+
 
   const sendRequest = useCallback(async () => {
     if (!denied) return;

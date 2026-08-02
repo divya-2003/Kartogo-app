@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, Home, LayoutGrid, TrendingUp, Printer, Search, Flame, X } from "lucide-react";
+import { ChevronLeft, Home, LayoutGrid, TrendingUp, Printer, Search, Flame, X, Clock } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
 import { useCatalog } from "@/lib/store";
 import { z } from "zod";
@@ -18,11 +18,42 @@ export const Route = createFileRoute("/search")({
   }),
 });
 
+const RECENT_KEY = "qk_recent_searches";
+
 function SearchPage() {
   const { q } = Route.useSearch();
   const { products } = useCatalog();
   const nav = useNavigate();
   const [input, setInput] = useState(q ?? "");
+  const [recent, setRecent] = useState<string[]>([]);
+
+  // Recent searches live on the device so the search page opens with the
+  // customer's own shortcuts.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(RECENT_KEY);
+      const list = raw ? (JSON.parse(raw) as unknown) : [];
+      if (Array.isArray(list)) setRecent(list.filter((x): x is string => typeof x === "string").slice(0, 8));
+    } catch { /* ignore */ }
+  }, []);
+
+  const rememberSearch = (value: string) => {
+    const term = value.trim();
+    if (term.length < 2) return;
+    setRecent(prev => {
+      const next = [term, ...prev.filter(t => t.toLowerCase() !== term.toLowerCase())].slice(0, 8);
+      try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  };
+
+  const forgetSearch = (term: string) => {
+    setRecent(prev => {
+      const next = prev.filter(t => t !== term);
+      try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  };
 
   // keep the input box in sync when the URL query changes (e.g. tapping Trending)
   useEffect(() => { setInput(q ?? ""); }, [q]);
@@ -60,7 +91,7 @@ function SearchPage() {
           <h1 className="font-display text-xl font-bold">Trending</h1>
         </div>
         <div className="mx-auto max-w-2xl px-4 pb-3 lg:max-w-7xl lg:px-8">
-          <form onSubmit={(e) => { e.preventDefault(); submitSearch(input); }}>
+          <form onSubmit={(e) => { e.preventDefault(); submitSearch(input); rememberSearch(input); }}>
             <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 shadow-pop">
               <Search className="h-5 w-5 shrink-0 text-muted-foreground" />
               <input
@@ -68,6 +99,7 @@ function SearchPage() {
                 onChange={(e) => submitSearch(e.target.value)}
                 placeholder='Search for "avakaya"'
                 className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                onBlur={() => rememberSearch(input)}
                 aria-label="Search products"
               />
               {input && (
@@ -101,6 +133,33 @@ function SearchPage() {
           </>
         ) : (
           <>
+            {recent.length > 0 && (
+              <section className="mb-6">
+                <div className="flex items-center justify-between gap-2">
+                  <h2 className="flex items-center gap-2 font-display text-sm font-extrabold uppercase tracking-wide text-muted-foreground">
+                    <Clock className="h-4 w-4" /> Recent searches
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => { setRecent([]); try { localStorage.removeItem(RECENT_KEY); } catch { /* ignore */ } }}
+                    className="text-xs font-bold text-primary hover:underline"
+                  >
+                    Clear all
+                  </button>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {recent.map(term => (
+                    <span key={term} className="inline-flex items-center gap-1 rounded-full border border-border bg-card py-1.5 pl-3 pr-1.5 text-xs font-semibold">
+                      <button type="button" onClick={() => submitSearch(term)} className="max-w-[9rem] truncate">{term}</button>
+                      <button type="button" aria-label={`Remove ${term}`} onClick={() => forgetSearch(term)} className="grid h-5 w-5 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </section>
+            )}
+
             <div className="flex items-center gap-2">
               <Flame className="h-5 w-5 fill-saffron text-saffron" />
               <h2 className="font-display text-xl font-extrabold">Trending now</h2>
