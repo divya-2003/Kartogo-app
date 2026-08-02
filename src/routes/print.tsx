@@ -241,7 +241,7 @@ function UploadModal({
   const [colorMode, setColorMode] = useState<"bw" | "color">(service === "documents" ? "bw" : "color");
   const [copies, setCopies] = useState(1);
   const [notes, setNotes] = useState("");
-  const [address, setAddress] = useState(defaultAddress);
+  const [address] = useState(defaultAddress);
   const [busy, setBusy] = useState(false);
 
   const isImage = !!file && /^image\//.test(file.type);
@@ -286,7 +286,7 @@ function UploadModal({
           address,
         },
       });
-      toast.success("Uploaded — the print shop has your file");
+      toast.success("Added to cart — the print shop has your file");
       await onUploaded();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed");
