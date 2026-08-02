@@ -366,11 +366,72 @@ function LocationPickerClient({
               </form>
             </div>
           ) : (
-          /* Body — saved addresses first, then "Add new address" */
+          /* Body — search + live location first, then saved addresses */
           <div className="mx-auto w-full max-w-lg flex-1 overflow-y-auto px-4 py-5">
 
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-3 focus-within:ring-2 focus-within:ring-ring">
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <input
+                  ref={inputRef}
+                  value={query}
+                  onChange={e => { setQuery(e.target.value); setDenied(null); setRequested(false); }}
+                  placeholder="Search a new address, area or pincode"
+                  className="w-full bg-transparent text-base outline-none"
+                />
+                {query && (
+                  <button type="button" aria-label="Clear" onClick={() => { setQuery(""); setDenied(null); }} className="grid h-6 w-6 place-items-center rounded-full hover:bg-secondary">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {denied ? (
+                <div className="space-y-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                  <div className="flex items-start gap-2">
+                    <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>{denied.reason}</span>
+                  </div>
+                  {requested ? (
+                    <div className="flex items-center justify-center gap-2 rounded-lg bg-leaf/10 px-3 py-2 text-xs font-bold text-leaf">
+                      <Check className="h-3.5 w-3.5" /> Location requested
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => void requestArea()}
+                      disabled={requesting}
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground hover:bg-destructive/90 disabled:opacity-60"
+                    >
+                      {requesting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                      Request Kartogo to your area
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    disabled={loading}
+                    className="flex min-w-[10rem] flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                  >
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                    {loading ? "Checking..." : "Add new address"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={useCurrentLocation}
+                    disabled={locating}
+                    className="flex min-w-[10rem] flex-1 items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/5 py-3 font-semibold text-primary hover:bg-primary/10 disabled:opacity-60"
+                  >
+                    {locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
+                    {locating ? "Detecting..." : "Use current location"}
+                  </button>
+                </div>
+              )}
+            </form>
+
             {savedAddresses.length > 0 && (
-              <div className="mb-6">
+              <div className="mt-6">
                 <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
                   <Clock className="h-3.5 w-3.5" /> Saved addresses
                 </h3>
@@ -415,86 +476,9 @@ function LocationPickerClient({
                 </ul>
               </div>
             )}
-
-            {!adding && savedAddresses.length > 0 ? (
-              <button
-                type="button"
-                onClick={() => setAdding(true)}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary bg-primary/5 py-3 font-bold text-primary hover:bg-primary/10"
-              >
-                <Plus className="h-4 w-4" /> Add new address
-              </button>
-            ) : (
-              <>
-                {savedAddresses.length > 0 && (
-                  <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-foreground">Add new address</h3>
-                )}
-                <form onSubmit={handleSubmit} className="space-y-3">
-                  <div className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-3 focus-within:ring-2 focus-within:ring-ring">
-                    <Search className="h-4 w-4 text-muted-foreground" />
-                    <input
-                      ref={inputRef}
-                      value={query}
-                      onChange={e => { setQuery(e.target.value); setDenied(null); }}
-                      placeholder="Type your area, locality or pincode"
-                      className="w-full bg-transparent text-base outline-none"
-                    />
-                  </div>
-
-                  {denied && (
-                    <div className="space-y-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-                      <div className="flex items-start gap-2">
-                        <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                        <span>{denied.reason}</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setOpen(false);
-                          nav({ to: "/request-service", search: { pincode: denied.pincode ?? undefined, area: denied.area || undefined } });
-                        }}
-                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        <Send className="h-3.5 w-3.5" /> Request Kartogo to your area
-                      </button>
-                    </div>
-                  )}
-
-                  {!denied && (
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        disabled={loading}
-                        className="flex min-w-[10rem] flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
-                      >
-                        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                        {loading ? "Checking..." : "Check & deliver here"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={useCurrentLocation}
-                        disabled={locating}
-                        className="flex min-w-[10rem] flex-1 items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/5 py-3 font-semibold text-primary hover:bg-primary/10 disabled:opacity-60"
-                      >
-                        {locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
-                        {locating ? "Detecting..." : "Use current location"}
-                      </button>
-                    </div>
-                  )}
-                </form>
-
-                {savedAddresses.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => { setAdding(false); setDenied(null); }}
-                    className="mt-3 w-full rounded-xl py-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
-                  >
-                    Back to saved addresses
-                  </button>
-                )}
-              </>
-            )}
           </div>
           )}
+
 
         </div>,
         document.body
