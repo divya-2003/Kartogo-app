@@ -45,7 +45,9 @@ const NAV = [
   { to: "/admin/reports-products", label: "Product analytics", icon: Package },
   { to: "/admin/reports-vendors", label: "Vendor report", icon: BarChart3 },
   { to: "/admin/reports-riders", label: "Rider report", icon: Bike },
+  { to: "/admin/account", label: "Account", icon: UserRound },
 ] as const;
+
 
 function AdminLayout() {
   const path = useRouterState({ select: s => s.location.pathname });
