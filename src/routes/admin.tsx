@@ -126,12 +126,22 @@ function AdminLayout() {
           </SheetContent>
         </Sheet>
         <span className="font-display text-sm font-bold">Admin</span>
-        {unseenCancellations > 0 && (
-          <span className="ml-auto rounded-full bg-destructive px-2 py-0.5 text-[10px] font-bold text-destructive-foreground">
-            {unseenCancellations} new cancel
-          </span>
-        )}
+        <div className="ml-auto flex items-center gap-2">
+          {unseenCancellations > 0 && (
+            <span className="rounded-full bg-destructive px-2 py-0.5 text-[10px] font-bold text-destructive-foreground">
+              {unseenCancellations} new cancel
+            </span>
+          )}
+          <Link
+            to="/admin/account"
+            aria-label="Admin account"
+            className="grid h-9 w-9 place-items-center rounded-full border border-border bg-card hover:bg-secondary"
+          >
+            <UserRound className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
+
 
       <div className="mx-auto grid max-w-7xl gap-6 px-4 pb-6 pt-4 md:grid-cols-[220px_minmax(0,1fr)] md:px-6 md:py-6">
         {/* Desktop sidebar */}
