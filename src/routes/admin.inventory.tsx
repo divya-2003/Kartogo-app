@@ -108,7 +108,7 @@ function InventoryAdmin() {
           <div key={p.id} className="rounded-2xl border border-border bg-card p-4">
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-2">
-                <span className="shrink-0 text-xl">{p.emoji}</span>
+                {p.image ? <img src={p.image} alt={p.name} loading="lazy" className="h-10 w-10 shrink-0 rounded-lg object-cover" /> : <span className="shrink-0 text-xl">{p.emoji}</span>}
                 <div className="min-w-0">
                   <div className="truncate font-semibold">{p.name}</div>
                   <div className="text-xs text-muted-foreground">{CATEGORIES.find(c => c.slug === p.category)?.name ?? p.category} · {p.unit}</div>
@@ -126,6 +126,8 @@ function InventoryAdmin() {
                 <input type="number" defaultValue={p.stock} onBlur={(e) => { const v = Number(e.target.value); if (v !== p.stock) { setStock(p.id, v); toast.success(`${p.name} stock → ${v}`); } }} className="w-full rounded-md border border-input bg-background px-2 py-1.5 outline-none focus:ring-2 focus:ring-ring" />
               </label>
             </div>
+            <button onClick={() => setEditing(p)} className="mt-3 flex w-full items-center justify-center gap-1 rounded-lg border border-border py-2 text-xs font-bold hover:bg-secondary"><Pencil className="h-3 w-3" /> Edit details & picture</button>
+
           </div>
         ))}
       </div>
