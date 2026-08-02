@@ -99,6 +99,7 @@ function SearchPage() {
                 onChange={(e) => submitSearch(e.target.value)}
                 placeholder='Search for "avakaya"'
                 className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                onBlur={() => rememberSearch(input)}
                 aria-label="Search products"
               />
               {input && (
