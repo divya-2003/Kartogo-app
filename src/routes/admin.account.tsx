@@ -3,7 +3,20 @@ import { LogOut, ShieldCheck } from "lucide-react";
 import { StaffAccountCard } from "@/components/StaffAccountCard";
 import { useAuth } from "@/lib/store";
 
-export const Route = createFileRoute("/admin/account")({ component: AdminAccount });
+export const Route = createFileRoute("/admin/account")({
+  component: AdminAccount,
+  head: () => ({
+    meta: [
+      { title: "Admin account — Kartogo" },
+      { name: "description", content: "Manage your Kartogo admin identity and login mobile number." },
+      { property: "og:title", content: "Admin account — Kartogo" },
+      { property: "og:description", content: "Manage your Kartogo admin identity and login mobile number." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+});
+
 
 function AdminAccount() {
   const { logout } = useAuth();
