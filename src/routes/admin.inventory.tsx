@@ -80,7 +80,7 @@ function InventoryAdmin() {
       <div className="hidden overflow-hidden rounded-2xl border border-border bg-card md:block">
         <table className="w-full text-sm">
           <thead className="bg-secondary text-left text-xs uppercase tracking-wider text-muted-foreground">
-            <tr><th className="p-3">Product</th><th className="p-3">Category</th><th className="p-3 w-32">Price (₹)</th><th className="p-3 w-32">Stock</th><th className="p-3">Status</th></tr>
+            <tr><th className="p-3">Product</th><th className="p-3">Category</th><th className="p-3 w-32">Price (₹)</th><th className="p-3 w-32">Stock</th><th className="p-3">Status</th><th className="p-3"></th></tr>
           </thead>
           <tbody className="divide-y divide-border">
             {products.map(p => (
