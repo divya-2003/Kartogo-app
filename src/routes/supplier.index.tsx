@@ -3,9 +3,10 @@ import { useMemo, useState } from "react";
 import { useCatalog } from "@/lib/store";
 import { CATEGORIES, formatINR, type Product } from "@/lib/data";
 import { useSupplier } from "@/lib/supplier-context";
-import { Plus, Pencil, Trash2, X } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { ImagePicker } from "@/components/ImagePicker";
+import { ItemEditor } from "@/components/ItemEditor";
+
 
 export const Route = createFileRoute("/supplier/")({ component: SupplierInventory });
 
