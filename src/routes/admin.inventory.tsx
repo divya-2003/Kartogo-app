@@ -85,7 +85,7 @@ function InventoryAdmin() {
           <tbody className="divide-y divide-border">
             {products.map(p => (
               <tr key={p.id} className="hover:bg-secondary/50">
-                <td className="p-3"><div className="flex items-center gap-2"><span className="text-xl">{p.emoji}</span><div><div className="font-semibold">{p.name}</div><div className="text-xs text-muted-foreground">{p.unit}</div></div></div></td>
+                <td className="p-3"><div className="flex items-center gap-2">{p.image ? <img src={p.image} alt={p.name} loading="lazy" className="h-10 w-10 rounded-lg object-cover" /> : <span className="text-xl">{p.emoji}</span>}<div><div className="font-semibold">{p.name}</div><div className="text-xs text-muted-foreground">{p.unit}</div></div></div></td>
                 <td className="p-3 text-xs">{CATEGORIES.find(c => c.slug === p.category)?.name ?? p.category}</td>
                 <td className="p-3">
                   <input type="number" defaultValue={p.price} onBlur={(e) => { const v = Number(e.target.value); if (v !== p.price) { setPrice(p.id, v); toast.success(`${p.name} → ${formatINR(v)}`); } }} className="w-24 rounded-md border border-input bg-background px-2 py-1 outline-none focus:ring-2 focus:ring-ring" />
@@ -94,6 +94,8 @@ function InventoryAdmin() {
                   <input type="number" defaultValue={p.stock} onBlur={(e) => { const v = Number(e.target.value); if (v !== p.stock) { setStock(p.id, v); toast.success(`${p.name} stock → ${v}`); } }} className="w-24 rounded-md border border-input bg-background px-2 py-1 outline-none focus:ring-2 focus:ring-ring" />
                 </td>
                 <td className="p-3"><span className={`rounded-md px-2 py-0.5 text-xs font-bold ${p.stock === 0 ? "bg-destructive/15 text-destructive" : p.stock <= 5 ? "bg-saffron/30" : "bg-primary/10 text-primary"}`}>{p.stock === 0 ? "Out" : p.stock <= 5 ? "Low" : "OK"}</span></td>
+                <td className="p-3 text-right"><button onClick={() => setEditing(p)} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs hover:bg-secondary"><Pencil className="h-3 w-3" /> Edit</button></td>
+
               </tr>
             ))}
           </tbody>
