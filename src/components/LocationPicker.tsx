@@ -5,8 +5,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { MapPin, Search, X, ChevronDown, Loader2, XCircle, Clock, Check, Trash2, LocateFixed, Pencil, Send, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { checkServiceability, locateByCoords } from "@/lib/serviceability.functions";
+import { createUnserviceableRequestFn } from "@/lib/unserviceable.functions";
 import { deliveryWindow } from "@/lib/serviceability";
-import { useLocation, buildLocationQuery, type SavedLocation } from "@/lib/store";
+import { useLocation, buildLocationQuery, useAuth, type SavedLocation } from "@/lib/store";
 
 export function LocationPicker() {
   const { location, savedAddresses, setLocation, removeSavedAddress, updateSavedAddress } = useLocation();
@@ -99,15 +100,13 @@ function LocationPickerClient({
   // ask for the exact address (door no., apartment, landmark) here — those are
   // collected mandatorily at checkout.
   const startDetails = (p: { query: string; area: string; etaMinutes?: number }) => {
-    setLocation({
-      query: p.query,
-      area: p.area,
-      serviceable: true,
-      etaMinutes: p.etaMinutes,
-      baseQuery: p.query,
-    });
-    toast.success(`Delivering to ${p.area} in ${deliveryWindow(p.etaMinutes)}`);
-    setOpen(false);
+    // Second step: confirm the exact address so deliveries land at the right
+    // door instead of just the right locality.
+    setPending(p);
+    setEditingQuery(null);
+    setDoorNumber("");
+    setApartment("");
+    setLandmark("");
   };
 
   const startEditSaved = (addr: SavedLocation) => {
