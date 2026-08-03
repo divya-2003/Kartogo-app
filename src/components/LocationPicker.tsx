@@ -8,7 +8,9 @@ import { createUnserviceableRequestFn } from "@/lib/unserviceable.functions";
 import { deliveryWindow } from "@/lib/serviceability";
 import { useLocation, buildLocationQuery, useAuth, type SavedLocation } from "@/lib/store";
 
-export function LocationPicker() {
+export type LocationPickerVariant = "chip" | "button";
+
+export function LocationPicker({ variant = "chip", buttonLabel = "Change location" }: { variant?: LocationPickerVariant; buttonLabel?: string } = {}) {
   const { location, savedAddresses, setLocation, removeSavedAddress, updateSavedAddress } = useLocation();
   const [mounted, setMounted] = useState(false);
 
@@ -18,6 +20,13 @@ export function LocationPicker() {
   // picker only after mount prevents SSR from crashing and switching the whole
   // app to client rendering.
   if (!mounted) {
+    if (variant === "button") {
+      return (
+        <button className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3.5 font-display text-sm font-extrabold">
+          <MapPin className="h-4 w-4 text-primary" /> {buttonLabel}
+        </button>
+      );
+    }
     return (
       <button className="flex w-full items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-semibold">
         <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
@@ -32,6 +41,8 @@ export function LocationPicker() {
 
   return (
     <LocationPickerClient
+      variant={variant}
+      buttonLabel={buttonLabel}
       location={location}
       savedAddresses={savedAddresses}
       setLocation={setLocation}
@@ -40,6 +51,7 @@ export function LocationPicker() {
     />
   );
 }
+
 
 function LocationPickerClient({
   location,
