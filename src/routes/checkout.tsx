@@ -34,7 +34,7 @@ function CheckoutPage() {
   const { items, subtotal, clear } = useCart();
   const { products } = useCatalog();
   const { place } = useOrders();
-  const { savedAddresses, deliveryAddresses, addDeliveryAddress, removeDeliveryAddress, removeSavedAddress, updateSavedAddress } = useLocation();
+  const { location, savedAddresses, deliveryAddresses, addDeliveryAddress, removeDeliveryAddress, removeSavedAddress, updateSavedAddress } = useLocation();
   const { balance: walletBalance, refresh: refreshWallet } = useWallet();
   const nav = useNavigate();
 
@@ -62,19 +62,41 @@ function CheckoutPage() {
   const [newLandmark, setNewLandmark] = useState("");
 
   const userName = user?.name?.trim() || "Kartogo User";
+  // The address the customer picked in "Select your location" is always the
+  // default delivery address here — never an older saved one.
+  const currentLocationId = location ? `location:${location.query}` : null;
   const addressOptions = useMemo(() => {
-    const normalizedDelivery = deliveryAddresses.map(addr => ({
-      id: `delivery:${addr.id}`,
-      kind: "delivery" as const,
-      label: addr.label,
-      // Always show the current profile name so a name change reflects on every
-      // saved address, not the possibly-stale name captured when it was added.
-      name: userName,
-      address: addr.address,
-      removableId: addr.id,
-    }));
+    const seen = new Set<string>();
+    const currentOption = location
+      ? [{
+          id: `location:${location.query}`,
+          kind: "location" as const,
+          label: location.area,
+          name: userName,
+          address: location.query || location.area,
+          removableId: location.query,
+        }]
+      : [];
+    currentOption.forEach(o => seen.add(o.address.trim().toLowerCase()));
 
-    const seen = new Set(normalizedDelivery.map(addr => addr.address.trim().toLowerCase()));
+    const normalizedDelivery = deliveryAddresses
+      .filter(addr => {
+        const key = addr.address.trim().toLowerCase();
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .map(addr => ({
+        id: `delivery:${addr.id}`,
+        kind: "delivery" as const,
+        label: addr.label,
+        // Always show the current profile name so a name change reflects on every
+        // saved address, not the possibly-stale name captured when it was added.
+        name: userName,
+        address: addr.address,
+        removableId: addr.id,
+      }));
+
     const savedLocationOptions = savedAddresses
       .filter(addr => {
         const key = (addr.query || addr.area).trim().toLowerCase();
@@ -91,10 +113,15 @@ function CheckoutPage() {
         removableId: addr.query,
       }));
 
-    return [...normalizedDelivery, ...savedLocationOptions];
-  }, [deliveryAddresses, savedAddresses, userName]);
+    return [...currentOption, ...normalizedDelivery, ...savedLocationOptions];
+  }, [location, deliveryAddresses, savedAddresses, userName]);
 
   useEffect(() => { if (user?.name && !name) setName(user.name); }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Follow the location sheet: switching location switches the delivery address.
+  useEffect(() => {
+    if (currentLocationId) setSelectedId(currentLocationId);
+  }, [currentLocationId]);
 
   // Keep a valid selection: default to saved addresses and only show the form when requested.
   useEffect(() => {
@@ -106,6 +133,7 @@ function CheckoutPage() {
       setShowForm(false);
     }
   }, [addressOptions, selectedId]);
+
 
   const baseFee = subtotal === 0 ? 0 : subtotal >= 199 ? 0 : 25;
   const [surge, setSurge] = useState<SurgeConfig | null>(null);
@@ -500,10 +528,19 @@ function CheckoutPage() {
                 </p>
               )}
               {payment === "wallet" && walletBalance < total && (
-                <p className="mt-2 flex items-center gap-1.5 rounded-lg bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive">
-                  <X className="h-3.5 w-3.5" /> Insufficient Kartogo Cash — you need {formatINR(total - walletBalance)} more. Add money from your profile to pay with the wallet.
-                </p>
+                <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive">
+                  <span className="flex items-center gap-1.5">
+                    <X className="h-3.5 w-3.5" /> Insufficient Kartogo Cash — you need {formatINR(total - walletBalance)} more.
+                  </span>
+                  <Link
+                    to="/topup"
+                    className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:bg-primary/90"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Add now
+                  </Link>
+                </div>
               )}
+
 
             </section>
           </div>

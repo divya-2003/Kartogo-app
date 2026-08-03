@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { MapPin, Send, Loader2, Bike, CheckCircle2 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { MapPin, Send, Loader2, Bike, CheckCircle2, User2 } from "lucide-react";
 import { toast } from "sonner";
+import { LocationPicker } from "@/components/LocationPicker";
 import { locateByCoords } from "@/lib/serviceability.functions";
 import { createUnserviceableRequestFn } from "@/lib/unserviceable.functions";
 import { useAuth, useLocation } from "@/lib/store";
@@ -17,13 +19,15 @@ type Denied = { address: string; pincode: string | null; reason: string; lat: nu
  * "coming soon" panel takes over with a one-tap request button.
  */
 export function AutoLocationGate() {
-  const { setLocation } = useLocation();
+  const { setLocation, location } = useLocation();
   const { user } = useAuth();
   const locate = useServerFn(locateByCoords);
   const [denied, setDenied] = useState<Denied | null>(null);
   const [requesting, setRequesting] = useState(false);
   const [requested, setRequested] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+  // Location at the moment we blocked the app — once the customer picks a
+  // different, serviceable address the gate steps aside automatically.
+  const [baselineQuery, setBaselineQuery] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -49,6 +53,7 @@ export function AutoLocationGate() {
             baseQuery: res.address || area,
           });
         } else {
+          setBaselineQuery(location?.query ?? "");
           setDenied({
             address: res.address || "your current location",
             pincode: res.pincode ?? null,
@@ -57,6 +62,7 @@ export function AutoLocationGate() {
             lng,
           });
         }
+
       } catch { /* silent — the manual picker still works */ }
     };
 
@@ -105,7 +111,10 @@ export function AutoLocationGate() {
     }
   }, [denied, user?.phone]);
 
-  if (!denied || dismissed) return null;
+  if (!denied) return null;
+  // Customer picked a different, serviceable address from the location sheet.
+  if (location?.serviceable && location.query !== baselineQuery) return null;
+
 
   return (
     <div className="fixed inset-0 z-[60] flex flex-col bg-background">
@@ -141,16 +150,8 @@ export function AutoLocationGate() {
       </div>
 
       {/* Action */}
-      <div className="px-5 pb-8 pt-2">
-        {requested ? (
-          <button
-            type="button"
-            onClick={() => setDismissed(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-destructive py-4 font-display text-base font-extrabold text-destructive-foreground shadow-pop transition hover:bg-destructive/90"
-          >
-            <MapPin className="h-5 w-5" /> Change location
-          </button>
-        ) : (
+      <div className="space-y-2 px-5 pb-8 pt-2">
+        {!requested && (
           <button
             type="button"
             onClick={() => void sendRequest()}
@@ -161,7 +162,19 @@ export function AutoLocationGate() {
             Request Kartogo in your area
           </button>
         )}
+        <div className="flex items-stretch gap-2">
+          <div className="flex-1">
+            <LocationPicker variant="button" buttonLabel="Change location" />
+          </div>
+          <Link
+            to="/menu"
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3.5 font-display text-sm font-extrabold shadow-pop transition hover:bg-secondary"
+          >
+            <User2 className="h-4 w-4 text-primary" /> Account details
+          </Link>
+        </div>
       </div>
     </div>
   );
 }
+

@@ -55,7 +55,7 @@ function Index() {
   const { products } = useCatalog();
   const { count, subtotal } = useCart();
   const { balance } = useWallet();
-  const [q, setQ] = useState("");
+  
   // Delivery partners / admins who reopen the app land on this default URL — send
   // them to their own portal instead of the customer home page.
   const [roleTarget] = useState(roleRedirectTarget);
@@ -139,21 +139,14 @@ function Index() {
             ))}
           </div>
 
-          {/* search */}
-          <form
-            onSubmit={(e) => { e.preventDefault(); nav({ to: "/search", search: { q } }); }}
-            className="mt-3 pb-4"
-          >
+          {/* search — opens the full Trending / search page */}
+          <Link to="/search" search={{ q: "" }} className="mt-3 block pb-4">
             <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 shadow-pop">
               <Search className="h-5 w-5 text-muted-foreground" />
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder='Search for "avakaya"'
-                className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-              />
+              <span className="w-full truncate text-left text-sm text-muted-foreground">Search for "avakaya"</span>
             </div>
-          </form>
+          </Link>
+
         </div>
       </div>
 
