@@ -274,20 +274,30 @@ function LocationPickerClient({
 
   return (
     <>
-      <button
-        onClick={() => { setDenied(null); setOpen(true); }}
-        className="flex w-full items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-semibold hover:bg-secondary"
-      >
-        <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
-        <span className="min-w-0 flex-1 truncate text-left">
-          {location ? location.area : "Set your location"}
-        </span>
-        <ChevronDown className="h-3 w-3 shrink-0 opacity-60" />
-      </button>
+      {variant === "button" ? (
+        <button
+          onClick={() => { setDenied(null); setOpen(true); }}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3.5 font-display text-sm font-extrabold shadow-pop transition hover:bg-secondary"
+        >
+          <MapPin className="h-4 w-4 text-primary" /> {buttonLabel}
+        </button>
+      ) : (
+        <button
+          onClick={() => { setDenied(null); setOpen(true); }}
+          className="flex w-full items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-semibold hover:bg-secondary"
+        >
+          <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
+          <span className="min-w-0 flex-1 truncate text-left">
+            {location ? location.area : "Set your location"}
+          </span>
+          <ChevronDown className="h-3 w-3 shrink-0 opacity-60" />
+        </button>
+      )}
 
 
       {open && typeof document !== "undefined" && createPortal(
-        <div className="fixed inset-0 z-50 flex flex-col bg-background">
+        <div className="fixed inset-0 z-[70] flex flex-col bg-background">
+
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border px-4 py-4">
             <div>
