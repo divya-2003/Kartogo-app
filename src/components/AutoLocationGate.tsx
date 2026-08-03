@@ -141,16 +141,8 @@ export function AutoLocationGate() {
       </div>
 
       {/* Action */}
-      <div className="px-5 pb-8 pt-2">
-        {requested ? (
-          <button
-            type="button"
-            onClick={() => setDismissed(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-destructive py-4 font-display text-base font-extrabold text-destructive-foreground shadow-pop transition hover:bg-destructive/90"
-          >
-            <MapPin className="h-5 w-5" /> Change location
-          </button>
-        ) : (
+      <div className="space-y-2 px-5 pb-8 pt-2">
+        {!requested && (
           <button
             type="button"
             onClick={() => void sendRequest()}
@@ -161,7 +153,19 @@ export function AutoLocationGate() {
             Request Kartogo in your area
           </button>
         )}
+        <div className="flex items-stretch gap-2">
+          <div className="flex-1">
+            <LocationPicker variant="button" buttonLabel="Change location" />
+          </div>
+          <Link
+            to="/menu"
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3.5 font-display text-sm font-extrabold shadow-pop transition hover:bg-secondary"
+          >
+            <User2 className="h-4 w-4 text-primary" /> Account details
+          </Link>
+        </div>
       </div>
     </div>
   );
 }
+
