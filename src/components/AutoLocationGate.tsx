@@ -19,13 +19,15 @@ type Denied = { address: string; pincode: string | null; reason: string; lat: nu
  * "coming soon" panel takes over with a one-tap request button.
  */
 export function AutoLocationGate() {
-  const { setLocation } = useLocation();
+  const { setLocation, location } = useLocation();
   const { user } = useAuth();
   const locate = useServerFn(locateByCoords);
   const [denied, setDenied] = useState<Denied | null>(null);
   const [requesting, setRequesting] = useState(false);
   const [requested, setRequested] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+  // Location at the moment we blocked the app — once the customer picks a
+  // different, serviceable address the gate steps aside automatically.
+  const [baselineQuery, setBaselineQuery] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
