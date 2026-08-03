@@ -55,7 +55,7 @@ function Index() {
   const { products } = useCatalog();
   const { count, subtotal } = useCart();
   const { balance } = useWallet();
-  const [q, setQ] = useState("");
+  
   // Delivery partners / admins who reopen the app land on this default URL — send
   // them to their own portal instead of the customer home page.
   const [roleTarget] = useState(roleRedirectTarget);
