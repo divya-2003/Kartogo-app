@@ -53,6 +53,7 @@ export function AutoLocationGate() {
             baseQuery: res.address || area,
           });
         } else {
+          setBaselineQuery(location?.query ?? "");
           setDenied({
             address: res.address || "your current location",
             pincode: res.pincode ?? null,
@@ -61,6 +62,7 @@ export function AutoLocationGate() {
             lng,
           });
         }
+
       } catch { /* silent — the manual picker still works */ }
     };
 
