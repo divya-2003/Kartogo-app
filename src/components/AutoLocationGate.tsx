@@ -111,7 +111,10 @@ export function AutoLocationGate() {
     }
   }, [denied, user?.phone]);
 
-  if (!denied || dismissed) return null;
+  if (!denied) return null;
+  // Customer picked a different, serviceable address from the location sheet.
+  if (location?.serviceable && location.query !== baselineQuery) return null;
+
 
   return (
     <div className="fixed inset-0 z-[60] flex flex-col bg-background">
