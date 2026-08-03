@@ -54,12 +54,16 @@ export function LocationPicker({ variant = "chip", buttonLabel = "Change locatio
 
 
 function LocationPickerClient({
+  variant,
+  buttonLabel,
   location,
   savedAddresses,
   setLocation,
   removeSavedAddress,
   updateSavedAddress,
 }: {
+  variant: LocationPickerVariant;
+  buttonLabel: string;
   location: SavedLocation | null;
   savedAddresses: SavedLocation[];
   setLocation: (loc: SavedLocation) => void;
