@@ -34,7 +34,7 @@ function CheckoutPage() {
   const { items, subtotal, clear } = useCart();
   const { products } = useCatalog();
   const { place } = useOrders();
-  const { savedAddresses, deliveryAddresses, addDeliveryAddress, removeDeliveryAddress, removeSavedAddress, updateSavedAddress } = useLocation();
+  const { location, savedAddresses, deliveryAddresses, addDeliveryAddress, removeDeliveryAddress, removeSavedAddress, updateSavedAddress } = useLocation();
   const { balance: walletBalance, refresh: refreshWallet } = useWallet();
   const nav = useNavigate();
 
