@@ -528,10 +528,19 @@ function CheckoutPage() {
                 </p>
               )}
               {payment === "wallet" && walletBalance < total && (
-                <p className="mt-2 flex items-center gap-1.5 rounded-lg bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive">
-                  <X className="h-3.5 w-3.5" /> Insufficient Kartogo Cash — you need {formatINR(total - walletBalance)} more. Add money from your profile to pay with the wallet.
-                </p>
+                <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive">
+                  <span className="flex items-center gap-1.5">
+                    <X className="h-3.5 w-3.5" /> Insufficient Kartogo Cash — you need {formatINR(total - walletBalance)} more.
+                  </span>
+                  <Link
+                    to="/topup"
+                    className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:bg-primary/90"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Add now
+                  </Link>
+                </div>
               )}
+
 
             </section>
           </div>
