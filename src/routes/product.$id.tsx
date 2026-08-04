@@ -144,7 +144,6 @@ function ProductPage() {
                   <ShoppingBag className="h-4 w-4" /> Add to cart
                 </button>
               )}
-              <Link to="/cart" className="rounded-xl border border-border px-6 py-3 font-bold hover:bg-secondary">Go to cart</Link>
               <button
                 onClick={() => { toggle(p.id); toast.success(wished ? "Removed from wishlist" : "Added to wishlist"); }}
                 aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
@@ -154,6 +153,7 @@ function ProductPage() {
                 <Heart className={`h-5 w-5 ${wished ? "fill-primary text-primary" : "text-muted-foreground"}`} />
               </button>
             </div>
+
           </div>
         </div>
 
