@@ -137,6 +137,22 @@ export const placeOrderFn = createServerFn({ method: "POST" })
       walletCharged = true;
     }
 
+    // Hold (reserve) warehouse stock BEFORE the order row is written. The
+    // reservation is transaction-safe, so two customers can never buy the same
+    // last unit. Current stock is untouched until the order is delivered.
+    const { reserveForOrder, releaseForOrder } = await import("./inventory.server");
+    try {
+      await reserveForOrder(id, items.map((i) => ({ productId: i.productId, qty: i.qty })), session.phone);
+    } catch (e) {
+      if (walletCharged) {
+        await supabaseAdmin.rpc("adjust_wallet", {
+          p_phone: session.phone, p_amount: total, p_type: "credit",
+          p_note: `Refund — order ${id} could not be stocked`,
+        });
+      }
+      throw e;
+    }
+
     const { data: row, error } = await supabaseAdmin
       .from("app_orders")
       .insert({
@@ -161,8 +177,9 @@ export const placeOrderFn = createServerFn({ method: "POST" })
 
     if (error) {
       console.error("Failed to save order", error);
-      // Roll the wallet charge back so the customer is never debited for an
-      // order that did not persist.
+      // Roll the wallet charge and the stock hold back so the customer is never
+      // debited — and no stock stays locked — for an order that did not persist.
+      await releaseForOrder(id, "system");
       if (walletCharged) {
         await supabaseAdmin.rpc("adjust_wallet", {
           p_phone: session.phone,
@@ -174,6 +191,7 @@ export const placeOrderFn = createServerFn({ method: "POST" })
       throw new Error("Order could not be saved. Please try again.");
     }
     return row;
+
   });
 
 // Postgres RAISE EXCEPTION messages come back prefixed; strip the noise.
@@ -215,7 +233,13 @@ export const setOrderStatusFn = createServerFn({ method: "POST" })
       console.error("Failed to update order status", error);
       throw new Error(cleanDbError(error?.message) ?? "Order status could not be updated. Please try again.");
     }
+
+    // Delivered -> deduct held stock permanently. Cancelled -> give it back.
+    const { syncInventoryForStatus } = await import("./inventory.server");
+    await syncInventoryForStatus(data.id, data.status, "admin");
+
     return row;
+
   });
 
 // ---------------- Admin: assign delivery partner ----------------
@@ -357,7 +381,12 @@ export const cancelOrderFn = createServerFn({ method: "POST" })
       });
     }
 
+    // Give the held stock back to the shelf.
+    const { releaseForOrder } = await import("./inventory.server");
+    await releaseForOrder(data.id, "customer");
+
     return row;
+
   });
 
 // ---------------- Customer: request a refund/replacement ----------------

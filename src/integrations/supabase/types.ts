@@ -404,6 +404,257 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          current_stock: number
+          id: string
+          inventory_item_id: string | null
+          market_id: string | null
+          product_id: string
+          product_name: string
+          reorder_level: number
+          resolved_at: string | null
+          status: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          current_stock?: number
+          id?: string
+          inventory_item_id?: string | null
+          market_id?: string | null
+          product_id: string
+          product_name?: string
+          reorder_level?: number
+          resolved_at?: string | null
+          status?: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          current_stock?: number
+          id?: string
+          inventory_item_id?: string | null
+          market_id?: string | null
+          product_id?: string
+          product_name?: string
+          reorder_level?: number
+          resolved_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_alerts_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_items: {
+        Row: {
+          available_stock: number | null
+          barcode: string
+          created_at: string
+          current_stock: number
+          id: string
+          market_id: string
+          max_stock: number
+          min_stock: number
+          product_id: string
+          product_name: string
+          reorder_level: number
+          reserved_stock: number
+          selling_price: number
+          sku: string
+          updated_at: string
+        }
+        Insert: {
+          available_stock?: number | null
+          barcode?: string
+          created_at?: string
+          current_stock?: number
+          id?: string
+          market_id: string
+          max_stock?: number
+          min_stock?: number
+          product_id: string
+          product_name?: string
+          reorder_level?: number
+          reserved_stock?: number
+          selling_price?: number
+          sku?: string
+          updated_at?: string
+        }
+        Update: {
+          available_stock?: number | null
+          barcode?: string
+          created_at?: string
+          current_stock?: number
+          id?: string
+          market_id?: string
+          max_stock?: number
+          min_stock?: number
+          product_id?: string
+          product_name?: string
+          reorder_level?: number
+          reserved_stock?: number
+          selling_price?: number
+          sku?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "partner_markets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_notifications: {
+        Row: {
+          audience: string
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          order_id: string | null
+          product_id: string | null
+          purchase_order_id: string | null
+          read: boolean
+          supplier_id: string | null
+          title: string
+        }
+        Insert: {
+          audience?: string
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          order_id?: string | null
+          product_id?: string | null
+          purchase_order_id?: string | null
+          read?: boolean
+          supplier_id?: string | null
+          title: string
+        }
+        Update: {
+          audience?: string
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          order_id?: string | null
+          product_id?: string | null
+          purchase_order_id?: string | null
+          read?: boolean
+          supplier_id?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      inventory_reservations: {
+        Row: {
+          created_at: string
+          id: string
+          market_id: string
+          order_id: string
+          product_id: string
+          quantity: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          market_id: string
+          order_id: string
+          product_id: string
+          quantity: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          market_id?: string
+          order_id?: string
+          product_id?: string
+          quantity?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_reservations_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "partner_markets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_transactions: {
+        Row: {
+          actor: string
+          created_at: string
+          id: string
+          inventory_item_id: string | null
+          market_id: string | null
+          new_quantity: number
+          new_reserved: number
+          old_quantity: number
+          old_reserved: number
+          order_id: string | null
+          product_id: string
+          product_name: string
+          reason: string
+        }
+        Insert: {
+          actor?: string
+          created_at?: string
+          id?: string
+          inventory_item_id?: string | null
+          market_id?: string | null
+          new_quantity?: number
+          new_reserved?: number
+          old_quantity?: number
+          old_reserved?: number
+          order_id?: string | null
+          product_id: string
+          product_name?: string
+          reason: string
+        }
+        Update: {
+          actor?: string
+          created_at?: string
+          id?: string
+          inventory_item_id?: string | null
+          market_id?: string | null
+          new_quantity?: number
+          new_reserved?: number
+          old_quantity?: number
+          old_reserved?: number
+          order_id?: string | null
+          product_id?: string
+          product_name?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_transactions_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       merchants: {
         Row: {
           address: string
@@ -752,6 +1003,27 @@ export type Database = {
         }
         Relationships: []
       }
+      product_costs: {
+        Row: {
+          cost_price: number
+          created_at: string
+          product_id: string
+          updated_at: string
+        }
+        Insert: {
+          cost_price?: number
+          created_at?: string
+          product_id: string
+          updated_at?: string
+        }
+        Update: {
+          cost_price?: number
+          created_at?: string
+          product_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_offers: {
         Row: {
           applies_to_all: boolean
@@ -876,6 +1148,97 @@ export type Database = {
             columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_order_items: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          product_name: string
+          purchase_order_id: string
+          quantity: number
+          unit_cost: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          product_name?: string
+          purchase_order_id: string
+          quantity?: number
+          unit_cost?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          product_name?: string
+          purchase_order_id?: string
+          quantity?: number
+          unit_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_order_items_purchase_order_id_fkey"
+            columns: ["purchase_order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_orders: {
+        Row: {
+          approved_at: string | null
+          auto_generated: boolean
+          created_at: string
+          expected_cost: number
+          id: string
+          market_id: string | null
+          market_name: string
+          notes: string | null
+          status: string
+          supplier_id: string
+          supplier_name: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          auto_generated?: boolean
+          created_at?: string
+          expected_cost?: number
+          id?: string
+          market_id?: string | null
+          market_name?: string
+          notes?: string | null
+          status?: string
+          supplier_id?: string
+          supplier_name?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          auto_generated?: boolean
+          created_at?: string
+          expected_cost?: number
+          id?: string
+          market_id?: string | null
+          market_name?: string
+          notes?: string | null
+          status?: string
+          supplier_id?: string
+          supplier_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_orders_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "partner_markets"
             referencedColumns: ["id"]
           },
         ]
@@ -1161,6 +1524,10 @@ export type Database = {
         }
         Returns: number
       }
+      commit_inventory: {
+        Args: { p_actor?: string; p_order_id: string }
+        Returns: undefined
+      }
       credit_wallet_with_expiry: {
         Args: {
           p_amount: number
@@ -1171,6 +1538,14 @@ export type Database = {
         Returns: number
       }
       expire_wallet_credits: { Args: { p_phone: string }; Returns: undefined }
+      release_inventory: {
+        Args: { p_actor?: string; p_order_id: string }
+        Returns: undefined
+      }
+      reserve_inventory: {
+        Args: { p_actor?: string; p_items: Json; p_order_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       order_status:

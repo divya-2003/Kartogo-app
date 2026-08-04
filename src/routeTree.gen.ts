@@ -43,6 +43,7 @@ import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminPartnersRouteImport } from './routes/admin.partners'
 import { Route as AdminPrintRouteImport } from './routes/admin.print'
 import { Route as AdminProductsRouteImport } from './routes/admin.products'
+import { Route as AdminPurchaseOrdersRouteImport } from './routes/admin.purchase-orders'
 import { Route as AdminRefundRequestsRouteImport } from './routes/admin.refund-requests'
 import { Route as AdminReportsDailyRouteImport } from './routes/admin.reports-daily'
 import { Route as AdminReportsProductsRouteImport } from './routes/admin.reports-products'
@@ -52,6 +53,7 @@ import { Route as AdminSalesRouteImport } from './routes/admin.sales'
 import { Route as AdminStockAlertsRouteImport } from './routes/admin.stock-alerts'
 import { Route as AdminSurgeRouteImport } from './routes/admin.surge'
 import { Route as AdminUnserviceableRouteImport } from './routes/admin.unserviceable'
+import { Route as AdminWimsRouteImport } from './routes/admin.wims'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as RateOrderOrderIdRouteImport } from './routes/rate-order.$orderId'
@@ -230,6 +232,11 @@ const AdminProductsRoute = AdminProductsRouteImport.update({
   path: '/products',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPurchaseOrdersRoute = AdminPurchaseOrdersRouteImport.update({
+  id: '/purchase-orders',
+  path: '/purchase-orders',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminRefundRequestsRoute = AdminRefundRequestsRouteImport.update({
   id: '/refund-requests',
   path: '/refund-requests',
@@ -273,6 +280,11 @@ const AdminSurgeRoute = AdminSurgeRouteImport.update({
 const AdminUnserviceableRoute = AdminUnserviceableRouteImport.update({
   id: '/unserviceable',
   path: '/unserviceable',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminWimsRoute = AdminWimsRouteImport.update({
+  id: '/wims',
+  path: '/wims',
   getParentRoute: () => AdminRoute,
 } as any)
 const CategorySlugRoute = CategorySlugRouteImport.update({
@@ -345,6 +357,7 @@ export interface FileRoutesByFullPath {
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/print': typeof AdminPrintRoute
   '/admin/products': typeof AdminProductsRoute
+  '/admin/purchase-orders': typeof AdminPurchaseOrdersRoute
   '/admin/refund-requests': typeof AdminRefundRequestsRoute
   '/admin/reports-daily': typeof AdminReportsDailyRoute
   '/admin/reports-products': typeof AdminReportsProductsRoute
@@ -354,6 +367,7 @@ export interface FileRoutesByFullPath {
   '/admin/stock-alerts': typeof AdminStockAlertsRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
+  '/admin/wims': typeof AdminWimsRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
@@ -395,6 +409,7 @@ export interface FileRoutesByTo {
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/print': typeof AdminPrintRoute
   '/admin/products': typeof AdminProductsRoute
+  '/admin/purchase-orders': typeof AdminPurchaseOrdersRoute
   '/admin/refund-requests': typeof AdminRefundRequestsRoute
   '/admin/reports-daily': typeof AdminReportsDailyRoute
   '/admin/reports-products': typeof AdminReportsProductsRoute
@@ -404,6 +419,7 @@ export interface FileRoutesByTo {
   '/admin/stock-alerts': typeof AdminStockAlertsRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
+  '/admin/wims': typeof AdminWimsRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
@@ -448,6 +464,7 @@ export interface FileRoutesById {
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/print': typeof AdminPrintRoute
   '/admin/products': typeof AdminProductsRoute
+  '/admin/purchase-orders': typeof AdminPurchaseOrdersRoute
   '/admin/refund-requests': typeof AdminRefundRequestsRoute
   '/admin/reports-daily': typeof AdminReportsDailyRoute
   '/admin/reports-products': typeof AdminReportsProductsRoute
@@ -457,6 +474,7 @@ export interface FileRoutesById {
   '/admin/stock-alerts': typeof AdminStockAlertsRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
+  '/admin/wims': typeof AdminWimsRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
@@ -502,6 +520,7 @@ export interface FileRouteTypes {
     | '/admin/partners'
     | '/admin/print'
     | '/admin/products'
+    | '/admin/purchase-orders'
     | '/admin/refund-requests'
     | '/admin/reports-daily'
     | '/admin/reports-products'
@@ -511,6 +530,7 @@ export interface FileRouteTypes {
     | '/admin/stock-alerts'
     | '/admin/surge'
     | '/admin/unserviceable'
+    | '/admin/wims'
     | '/category/$slug'
     | '/product/$id'
     | '/rate-order/$orderId'
@@ -552,6 +572,7 @@ export interface FileRouteTypes {
     | '/admin/partners'
     | '/admin/print'
     | '/admin/products'
+    | '/admin/purchase-orders'
     | '/admin/refund-requests'
     | '/admin/reports-daily'
     | '/admin/reports-products'
@@ -561,6 +582,7 @@ export interface FileRouteTypes {
     | '/admin/stock-alerts'
     | '/admin/surge'
     | '/admin/unserviceable'
+    | '/admin/wims'
     | '/category/$slug'
     | '/product/$id'
     | '/rate-order/$orderId'
@@ -604,6 +626,7 @@ export interface FileRouteTypes {
     | '/admin/partners'
     | '/admin/print'
     | '/admin/products'
+    | '/admin/purchase-orders'
     | '/admin/refund-requests'
     | '/admin/reports-daily'
     | '/admin/reports-products'
@@ -613,6 +636,7 @@ export interface FileRouteTypes {
     | '/admin/stock-alerts'
     | '/admin/surge'
     | '/admin/unserviceable'
+    | '/admin/wims'
     | '/category/$slug'
     | '/product/$id'
     | '/rate-order/$orderId'
@@ -891,6 +915,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProductsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/purchase-orders': {
+      id: '/admin/purchase-orders'
+      path: '/purchase-orders'
+      fullPath: '/admin/purchase-orders'
+      preLoaderRoute: typeof AdminPurchaseOrdersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/refund-requests': {
       id: '/admin/refund-requests'
       path: '/refund-requests'
@@ -952,6 +983,13 @@ declare module '@tanstack/react-router' {
       path: '/unserviceable'
       fullPath: '/admin/unserviceable'
       preLoaderRoute: typeof AdminUnserviceableRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/wims': {
+      id: '/admin/wims'
+      path: '/wims'
+      fullPath: '/admin/wims'
+      preLoaderRoute: typeof AdminWimsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/category/$slug': {
@@ -1018,6 +1056,7 @@ interface AdminRouteChildren {
   AdminPartnersRoute: typeof AdminPartnersRoute
   AdminPrintRoute: typeof AdminPrintRoute
   AdminProductsRoute: typeof AdminProductsRoute
+  AdminPurchaseOrdersRoute: typeof AdminPurchaseOrdersRoute
   AdminRefundRequestsRoute: typeof AdminRefundRequestsRoute
   AdminReportsDailyRoute: typeof AdminReportsDailyRoute
   AdminReportsProductsRoute: typeof AdminReportsProductsRoute
@@ -1027,6 +1066,7 @@ interface AdminRouteChildren {
   AdminStockAlertsRoute: typeof AdminStockAlertsRoute
   AdminSurgeRoute: typeof AdminSurgeRoute
   AdminUnserviceableRoute: typeof AdminUnserviceableRoute
+  AdminWimsRoute: typeof AdminWimsRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -1042,6 +1082,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminPartnersRoute: AdminPartnersRoute,
   AdminPrintRoute: AdminPrintRoute,
   AdminProductsRoute: AdminProductsRoute,
+  AdminPurchaseOrdersRoute: AdminPurchaseOrdersRoute,
   AdminRefundRequestsRoute: AdminRefundRequestsRoute,
   AdminReportsDailyRoute: AdminReportsDailyRoute,
   AdminReportsProductsRoute: AdminReportsProductsRoute,
@@ -1051,6 +1092,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminStockAlertsRoute: AdminStockAlertsRoute,
   AdminSurgeRoute: AdminSurgeRoute,
   AdminUnserviceableRoute: AdminUnserviceableRoute,
+  AdminWimsRoute: AdminWimsRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 

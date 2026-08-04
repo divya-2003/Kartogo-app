@@ -139,7 +139,13 @@ export const deliverySetStatusFn = createServerFn({ method: "POST" })
       console.error("Delivery status update failed", error);
       throw new Error("Status could not be updated. Please try again.");
     }
+
+    // Keep warehouse stock in step with the delivery lifecycle.
+    const { syncInventoryForStatus } = await import("./inventory.server");
+    await syncInventoryForStatus(data.id, data.status, `driver:${session.driverId}`);
+
     return maskOrderForDriver(row);
+
 
   });
 
