@@ -55,10 +55,9 @@ async function authorize(adminToken: string, supplierToken: string): Promise<Act
 async function productCategories(): Promise<Record<string, string>> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const map: Record<string, string> = {};
-  try {
-    const { CATALOG } = await import("./server-catalog.server");
-    for (const [id, p] of Object.entries(CATALOG)) map[id] = (p as { category: string }).category;
-  } catch { /* catalog optional */ }
+  const { PRODUCTS } = await import("./data");
+  for (const p of PRODUCTS) map[p.id] = p.category;
+
   const { data } = await supabaseAdmin.from("catalog_items").select("id, category");
   for (const r of data ?? []) map[r.id as string] = r.category as string;
   return map;
