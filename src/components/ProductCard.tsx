@@ -125,7 +125,7 @@ export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolea
           ) : null}
         </div>
 
-        {/* Same flow as the product page: quantity stepper + a plain "Go to cart" button */}
+        {/* Quantity stepper only — no "Go to cart" button per latest design */}
         {!out && inCart && (
           <div className="mt-2 flex items-center gap-2">
             <div className="flex items-center gap-1 rounded-xl border border-primary p-0.5">
@@ -133,14 +133,9 @@ export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolea
               <span className="min-w-5 text-center text-sm font-bold">{inCart.qty}</span>
               <button onClick={() => setQty(p.id, inCart.qty + 1)} aria-label="Increase quantity" className="grid h-7 w-7 place-items-center rounded-lg text-primary hover:bg-primary/10">+</button>
             </div>
-            <Link
-              to="/cart"
-              className="flex-1 rounded-xl border border-border px-2 py-2 text-center text-xs font-bold hover:bg-secondary"
-            >
-              Go to cart
-            </Link>
           </div>
         )}
+
 
 
       </div>
