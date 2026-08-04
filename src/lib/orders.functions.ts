@@ -381,7 +381,12 @@ export const cancelOrderFn = createServerFn({ method: "POST" })
       });
     }
 
+    // Give the held stock back to the shelf.
+    const { releaseForOrder } = await import("./inventory.server");
+    await releaseForOrder(data.id, "customer");
+
     return row;
+
   });
 
 // ---------------- Customer: request a refund/replacement ----------------
