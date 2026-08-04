@@ -233,7 +233,13 @@ export const setOrderStatusFn = createServerFn({ method: "POST" })
       console.error("Failed to update order status", error);
       throw new Error(cleanDbError(error?.message) ?? "Order status could not be updated. Please try again.");
     }
+
+    // Delivered -> deduct held stock permanently. Cancelled -> give it back.
+    const { syncInventoryForStatus } = await import("./inventory.server");
+    await syncInventoryForStatus(data.id, data.status, "admin");
+
     return row;
+
   });
 
 // ---------------- Admin: assign delivery partner ----------------
