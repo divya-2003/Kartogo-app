@@ -346,12 +346,14 @@ export const setPurchaseOrderStatusFn = createServerFn({ method: "POST" })
     if (error) throw new Error("Purchase order could not be updated. Please try again.");
 
     // Receiving a delivered PO tops the stock back up.
-    if (data.status === "delivered") {
+    if (data.status === "delivered" && po.market_id) {
+      const marketId = po.market_id as string;
       const { data: lines } = await supabaseAdmin
         .from("purchase_order_items").select("*").eq("purchase_order_id", data.id);
       for (const l of lines ?? []) {
         const { data: item } = await supabaseAdmin.from("inventory_items").select("*")
-          .eq("market_id", po.market_id).eq("product_id", l.product_id).maybeSingle();
+          .eq("market_id", marketId).eq("product_id", l.product_id).maybeSingle();
+
         if (!item) continue;
         const next = Number(item.current_stock) + Number(l.quantity);
         await supabaseAdmin.from("inventory_items")
