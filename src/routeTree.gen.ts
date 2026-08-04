@@ -52,6 +52,7 @@ import { Route as AdminSalesRouteImport } from './routes/admin.sales'
 import { Route as AdminStockAlertsRouteImport } from './routes/admin.stock-alerts'
 import { Route as AdminSurgeRouteImport } from './routes/admin.surge'
 import { Route as AdminUnserviceableRouteImport } from './routes/admin.unserviceable'
+import { Route as AdminWimsRouteImport } from './routes/admin.wims'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as RateOrderOrderIdRouteImport } from './routes/rate-order.$orderId'
@@ -275,6 +276,11 @@ const AdminUnserviceableRoute = AdminUnserviceableRouteImport.update({
   path: '/unserviceable',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminWimsRoute = AdminWimsRouteImport.update({
+  id: '/wims',
+  path: '/wims',
+  getParentRoute: () => AdminRoute,
+} as any)
 const CategorySlugRoute = CategorySlugRouteImport.update({
   id: '/category/$slug',
   path: '/category/$slug',
@@ -354,6 +360,7 @@ export interface FileRoutesByFullPath {
   '/admin/stock-alerts': typeof AdminStockAlertsRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
+  '/admin/wims': typeof AdminWimsRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
@@ -404,6 +411,7 @@ export interface FileRoutesByTo {
   '/admin/stock-alerts': typeof AdminStockAlertsRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
+  '/admin/wims': typeof AdminWimsRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
@@ -457,6 +465,7 @@ export interface FileRoutesById {
   '/admin/stock-alerts': typeof AdminStockAlertsRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
+  '/admin/wims': typeof AdminWimsRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
@@ -511,6 +520,7 @@ export interface FileRouteTypes {
     | '/admin/stock-alerts'
     | '/admin/surge'
     | '/admin/unserviceable'
+    | '/admin/wims'
     | '/category/$slug'
     | '/product/$id'
     | '/rate-order/$orderId'
@@ -561,6 +571,7 @@ export interface FileRouteTypes {
     | '/admin/stock-alerts'
     | '/admin/surge'
     | '/admin/unserviceable'
+    | '/admin/wims'
     | '/category/$slug'
     | '/product/$id'
     | '/rate-order/$orderId'
@@ -613,6 +624,7 @@ export interface FileRouteTypes {
     | '/admin/stock-alerts'
     | '/admin/surge'
     | '/admin/unserviceable'
+    | '/admin/wims'
     | '/category/$slug'
     | '/product/$id'
     | '/rate-order/$orderId'
@@ -954,6 +966,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUnserviceableRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/wims': {
+      id: '/admin/wims'
+      path: '/wims'
+      fullPath: '/admin/wims'
+      preLoaderRoute: typeof AdminWimsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/category/$slug': {
       id: '/category/$slug'
       path: '/category/$slug'
@@ -1027,6 +1046,7 @@ interface AdminRouteChildren {
   AdminStockAlertsRoute: typeof AdminStockAlertsRoute
   AdminSurgeRoute: typeof AdminSurgeRoute
   AdminUnserviceableRoute: typeof AdminUnserviceableRoute
+  AdminWimsRoute: typeof AdminWimsRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -1051,6 +1071,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminStockAlertsRoute: AdminStockAlertsRoute,
   AdminSurgeRoute: AdminSurgeRoute,
   AdminUnserviceableRoute: AdminUnserviceableRoute,
+  AdminWimsRoute: AdminWimsRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
