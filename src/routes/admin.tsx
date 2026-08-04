@@ -28,6 +28,9 @@ const NAV = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { to: "/admin/products", label: "Products", icon: Package2 },
   { to: "/admin/inventory", label: "Inventory", icon: Boxes },
+  { to: "/admin/wims", label: "Warehouse (WIMS)", icon: Boxes },
+  { to: "/admin/purchase-orders", label: "Purchase orders", icon: ClipboardList },
+
   { to: "/admin/orders", label: "Orders", icon: ClipboardList },
   { to: "/admin/cancellations", label: "Cancellations", icon: PackageX },
   { to: "/admin/refund-requests", label: "Refund requests", icon: BadgeIndianRupee },
