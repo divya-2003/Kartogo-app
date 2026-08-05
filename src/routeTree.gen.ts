@@ -60,6 +60,7 @@ import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as RateOrderOrderIdRouteImport } from './routes/rate-order.$orderId'
 import { Route as SupplierIndexRouteImport } from './routes/supplier.index'
 import { Route as SupplierAccountRouteImport } from './routes/supplier.account'
+import { Route as SupplierAiRouteImport } from './routes/supplier.ai'
 import { Route as SupplierOrdersRouteImport } from './routes/supplier.orders'
 import { Route as SupplierSalesRouteImport } from './routes/supplier.sales'
 import { Route as ApiPublicAiDailyForecastRouteImport } from './routes/api/public/ai-daily-forecast'
@@ -319,6 +320,11 @@ const SupplierAccountRoute = SupplierAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => SupplierRoute,
 } as any)
+const SupplierAiRoute = SupplierAiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
+  getParentRoute: () => SupplierRoute,
+} as any)
 const SupplierOrdersRoute = SupplierOrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
@@ -386,6 +392,7 @@ export interface FileRoutesByFullPath {
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
   '/supplier/account': typeof SupplierAccountRoute
+  '/supplier/ai': typeof SupplierAiRoute
   '/supplier/orders': typeof SupplierOrdersRoute
   '/supplier/sales': typeof SupplierSalesRoute
   '/admin/': typeof AdminIndexRoute
@@ -440,6 +447,7 @@ export interface FileRoutesByTo {
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
   '/supplier/account': typeof SupplierAccountRoute
+  '/supplier/ai': typeof SupplierAiRoute
   '/supplier/orders': typeof SupplierOrdersRoute
   '/supplier/sales': typeof SupplierSalesRoute
   '/admin': typeof AdminIndexRoute
@@ -497,6 +505,7 @@ export interface FileRoutesById {
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
   '/supplier/account': typeof SupplierAccountRoute
+  '/supplier/ai': typeof SupplierAiRoute
   '/supplier/orders': typeof SupplierOrdersRoute
   '/supplier/sales': typeof SupplierSalesRoute
   '/admin/': typeof AdminIndexRoute
@@ -555,6 +564,7 @@ export interface FileRouteTypes {
     | '/product/$id'
     | '/rate-order/$orderId'
     | '/supplier/account'
+    | '/supplier/ai'
     | '/supplier/orders'
     | '/supplier/sales'
     | '/admin/'
@@ -609,6 +619,7 @@ export interface FileRouteTypes {
     | '/product/$id'
     | '/rate-order/$orderId'
     | '/supplier/account'
+    | '/supplier/ai'
     | '/supplier/orders'
     | '/supplier/sales'
     | '/admin'
@@ -665,6 +676,7 @@ export interface FileRouteTypes {
     | '/product/$id'
     | '/rate-order/$orderId'
     | '/supplier/account'
+    | '/supplier/ai'
     | '/supplier/orders'
     | '/supplier/sales'
     | '/admin/'
@@ -1060,6 +1072,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SupplierAccountRouteImport
       parentRoute: typeof SupplierRoute
     }
+    '/supplier/ai': {
+      id: '/supplier/ai'
+      path: '/ai'
+      fullPath: '/supplier/ai'
+      preLoaderRoute: typeof SupplierAiRouteImport
+      parentRoute: typeof SupplierRoute
+    }
     '/supplier/orders': {
       id: '/supplier/orders'
       path: '/orders'
@@ -1142,6 +1161,7 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface SupplierRouteChildren {
   SupplierAccountRoute: typeof SupplierAccountRoute
+  SupplierAiRoute: typeof SupplierAiRoute
   SupplierOrdersRoute: typeof SupplierOrdersRoute
   SupplierSalesRoute: typeof SupplierSalesRoute
   SupplierIndexRoute: typeof SupplierIndexRoute
@@ -1149,6 +1169,7 @@ interface SupplierRouteChildren {
 
 const SupplierRouteChildren: SupplierRouteChildren = {
   SupplierAccountRoute: SupplierAccountRoute,
+  SupplierAiRoute: SupplierAiRoute,
   SupplierOrdersRoute: SupplierOrdersRoute,
   SupplierSalesRoute: SupplierSalesRoute,
   SupplierIndexRoute: SupplierIndexRoute,
