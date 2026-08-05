@@ -534,6 +534,8 @@ function CheckoutPage() {
                   </span>
                   <Link
                     to="/topup"
+                    search={{ amount: Math.ceil(total - walletBalance) }}
+
                     className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:bg-primary/90"
                   >
                     <Plus className="h-3.5 w-3.5" /> Add now
