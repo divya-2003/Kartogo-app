@@ -431,7 +431,9 @@ export type GeneratedInsight = {
   reasoning: string;
   recommended_quantity: number | null;
   confidence: number;
-  data: Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: any;
+
 };
 
 const supplierForCategory = async (category: string) => {
