@@ -14,6 +14,123 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_forecasts: {
+        Row: {
+          accuracy: number | null
+          actual_units: number | null
+          available_stock: number
+          confidence: number
+          created_at: string
+          days_to_stockout: number | null
+          forecast_date: string
+          id: string
+          predicted_next_day: number
+          predicted_next_month: number
+          predicted_next_week: number
+          product_id: string
+          product_name: string
+          recommended_quantity: number
+          updated_at: string
+        }
+        Insert: {
+          accuracy?: number | null
+          actual_units?: number | null
+          available_stock?: number
+          confidence?: number
+          created_at?: string
+          days_to_stockout?: number | null
+          forecast_date?: string
+          id?: string
+          predicted_next_day?: number
+          predicted_next_month?: number
+          predicted_next_week?: number
+          product_id: string
+          product_name?: string
+          recommended_quantity?: number
+          updated_at?: string
+        }
+        Update: {
+          accuracy?: number | null
+          actual_units?: number | null
+          available_stock?: number
+          confidence?: number
+          created_at?: string
+          days_to_stockout?: number | null
+          forecast_date?: string
+          id?: string
+          predicted_next_day?: number
+          predicted_next_month?: number
+          predicted_next_week?: number
+          product_id?: string
+          product_name?: string
+          recommended_quantity?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ai_insights: {
+        Row: {
+          audience: string
+          body: string
+          confidence: number
+          created_at: string
+          data: Json
+          id: string
+          kind: string
+          market_id: string | null
+          product_id: string | null
+          product_name: string | null
+          read: boolean
+          reasoning: string
+          recommended_quantity: number | null
+          severity: string
+          status: string
+          supplier_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: string
+          body: string
+          confidence?: number
+          created_at?: string
+          data?: Json
+          id?: string
+          kind: string
+          market_id?: string | null
+          product_id?: string | null
+          product_name?: string | null
+          read?: boolean
+          reasoning?: string
+          recommended_quantity?: number | null
+          severity?: string
+          status?: string
+          supplier_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          body?: string
+          confidence?: number
+          created_at?: string
+          data?: Json
+          id?: string
+          kind?: string
+          market_id?: string | null
+          product_id?: string | null
+          product_name?: string | null
+          read?: boolean
+          reasoning?: string
+          recommended_quantity?: number | null
+          severity?: string
+          status?: string
+          supplier_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       app_orders: {
         Row: {
           address: string
