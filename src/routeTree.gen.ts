@@ -61,6 +61,7 @@ import { Route as SupplierIndexRouteImport } from './routes/supplier.index'
 import { Route as SupplierAccountRouteImport } from './routes/supplier.account'
 import { Route as SupplierOrdersRouteImport } from './routes/supplier.orders'
 import { Route as SupplierSalesRouteImport } from './routes/supplier.sales'
+import { Route as ApiPublicAiDailyForecastRouteImport } from './routes/api/public/ai-daily-forecast'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -322,6 +323,12 @@ const SupplierSalesRoute = SupplierSalesRouteImport.update({
   path: '/sales',
   getParentRoute: () => SupplierRoute,
 } as any)
+const ApiPublicAiDailyForecastRoute =
+  ApiPublicAiDailyForecastRouteImport.update({
+    id: '/api/public/ai-daily-forecast',
+    path: '/api/public/ai-daily-forecast',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -376,6 +383,7 @@ export interface FileRoutesByFullPath {
   '/supplier/sales': typeof SupplierSalesRoute
   '/admin/': typeof AdminIndexRoute
   '/supplier/': typeof SupplierIndexRoute
+  '/api/public/ai-daily-forecast': typeof ApiPublicAiDailyForecastRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -428,6 +436,7 @@ export interface FileRoutesByTo {
   '/supplier/sales': typeof SupplierSalesRoute
   '/admin': typeof AdminIndexRoute
   '/supplier': typeof SupplierIndexRoute
+  '/api/public/ai-daily-forecast': typeof ApiPublicAiDailyForecastRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -483,6 +492,7 @@ export interface FileRoutesById {
   '/supplier/sales': typeof SupplierSalesRoute
   '/admin/': typeof AdminIndexRoute
   '/supplier/': typeof SupplierIndexRoute
+  '/api/public/ai-daily-forecast': typeof ApiPublicAiDailyForecastRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -539,6 +549,7 @@ export interface FileRouteTypes {
     | '/supplier/sales'
     | '/admin/'
     | '/supplier/'
+    | '/api/public/ai-daily-forecast'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -591,6 +602,7 @@ export interface FileRouteTypes {
     | '/supplier/sales'
     | '/admin'
     | '/supplier'
+    | '/api/public/ai-daily-forecast'
   id:
     | '__root__'
     | '/'
@@ -645,6 +657,7 @@ export interface FileRouteTypes {
     | '/supplier/sales'
     | '/admin/'
     | '/supplier/'
+    | '/api/public/ai-daily-forecast'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -673,6 +686,7 @@ export interface RootRouteChildren {
   CategorySlugRoute: typeof CategorySlugRoute
   ProductIdRoute: typeof ProductIdRoute
   RateOrderOrderIdRoute: typeof RateOrderOrderIdRoute
+  ApiPublicAiDailyForecastRoute: typeof ApiPublicAiDailyForecastRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1041,6 +1055,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SupplierSalesRouteImport
       parentRoute: typeof SupplierRoute
     }
+    '/api/public/ai-daily-forecast': {
+      id: '/api/public/ai-daily-forecast'
+      path: '/api/public/ai-daily-forecast'
+      fullPath: '/api/public/ai-daily-forecast'
+      preLoaderRoute: typeof ApiPublicAiDailyForecastRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1142,6 +1163,7 @@ const rootRouteChildren: RootRouteChildren = {
   CategorySlugRoute: CategorySlugRoute,
   ProductIdRoute: ProductIdRoute,
   RateOrderOrderIdRoute: RateOrderOrderIdRoute,
+  ApiPublicAiDailyForecastRoute: ApiPublicAiDailyForecastRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
