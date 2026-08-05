@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, Link, useRouterState, redirect, isRedirect } from "@tanstack/react-router";
+import { Sparkles, createFileRoute, Outlet, Link, useRouterState, redirect, isRedirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { useOrders } from "@/lib/store";
@@ -29,6 +29,7 @@ const NAV = [
   { to: "/admin/products", label: "Products", icon: Package2 },
   { to: "/admin/inventory", label: "Inventory", icon: Boxes },
   { to: "/admin/wims", label: "Warehouse (WIMS)", icon: Boxes },
+  { to: "/admin/ai", label: "AI assistant", icon: Sparkles },
   { to: "/admin/purchase-orders", label: "Purchase orders", icon: ClipboardList },
 
   { to: "/admin/orders", label: "Orders", icon: ClipboardList },
