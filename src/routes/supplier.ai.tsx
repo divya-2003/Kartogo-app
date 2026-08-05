@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Sparkles, Bot, Send, PackageX, ClipboardList, Flame, Gauge } from "lucide-react";
-import { useAuth } from "@/lib/store";
 import { aiOpsDashboardFn, dismissAiInsightFn, markAiInsightsReadFn, aiAssistantFn, type AiChatMessage } from "@/lib/ai-ops.functions";
 import {
   InsightCard, ScoreCard, SectionCard, ProductForecastTable, ForecastChart, ConfidenceBar,
@@ -28,7 +27,8 @@ const SUGGESTED = [
 ];
 
 function SupplierAiPage() {
-  const { supplierToken } = useAuth();
+  const [supplierToken, setSupplierToken] = useState("");
+  useEffect(() => { setSupplierToken(localStorage.getItem("qk_supplier_token") ?? ""); }, []);
   const [data, setData] = useState<Dashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Forecast | null>(null);
