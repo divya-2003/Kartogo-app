@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 import { verifySupplierTokenFn } from "@/lib/supplier.functions";
 import { findSupplierById } from "@/lib/suppliers";
 import { SupplierContext, type SupplierInfo } from "@/lib/supplier-context";
-import { Boxes, ClipboardList, User2, BarChart3 } from "lucide-react";
+import { Boxes, ClipboardList, User2, BarChart3, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/supplier")({
   beforeLoad: async () => {
@@ -31,6 +31,7 @@ const NAV = [
   { to: "/supplier", label: "Inventory", short: "Stock", icon: Boxes },
   { to: "/supplier/orders", label: "Orders", short: "Orders", icon: ClipboardList },
   { to: "/supplier/sales", label: "Sales", short: "Sales", icon: BarChart3 },
+  { to: "/supplier/ai", label: "AI insights", short: "AI", icon: Sparkles },
   { to: "/supplier/account", label: "Account", short: "Account", icon: User2 },
 ] as const;
 
