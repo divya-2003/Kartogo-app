@@ -1,48 +1,47 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-
-type Audience = "admin" | "supplier";
+import { recentAlertNotificationsFn } from "@/lib/notifications.functions";
 
 /**
  * Browser push notifications for inventory alerts.
- * Subscribes to new `inventory_notifications` rows in realtime and raises an OS
- * notification (when the user granted permission) plus an in-app toast.
+ *
+ * Polls the admin-authenticated alert feed (notifications stay server-side —
+ * they are never exposed to anonymous clients) and raises an OS notification
+ * plus an in-app toast for anything new since the page loaded.
  */
-export function usePushNotifications(audience: Audience, enabled = true) {
+export function usePushNotifications(adminToken: string | null, intervalMs = 30_000) {
   const [permission, setPermission] = useState<NotificationPermission | "unsupported">("default");
   const seen = useRef<Set<string>>(new Set());
+  const primed = useRef(false);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !("Notification" in window)) {
-      setPermission("unsupported");
-      return;
-    }
-    setPermission(Notification.permission);
+    if (typeof window === "undefined" || !("Notification" in window)) setPermission("unsupported");
+    else setPermission(Notification.permission);
   }, []);
 
+  const poll = useCallback(async () => {
+    if (!adminToken) return;
+    try {
+      const { notifications } = await recentAlertNotificationsFn({ data: { adminToken } });
+      for (const n of notifications) {
+        if (seen.current.has(n.id)) continue;
+        seen.current.add(n.id);
+        if (!primed.current) continue; // don't replay history on first load
+        toast.warning(n.title, { description: n.body });
+        if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+          try { new Notification(n.title, { body: n.body, tag: n.id }); } catch { /* toast still shows */ }
+        }
+      }
+      primed.current = true;
+    } catch { /* alerts are best-effort */ }
+  }, [adminToken]);
+
   useEffect(() => {
-    if (!enabled) return;
-    const channel = supabase
-      .channel(`inv-notify-${audience}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "inventory_notifications", filter: `audience=eq.${audience}` },
-        (payload) => {
-          const row = payload.new as { id: string; title: string; body: string };
-          if (!row?.id || seen.current.has(row.id)) return;
-          seen.current.add(row.id);
-          toast.warning(row.title, { description: row.body });
-          if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-            try {
-              new Notification(row.title, { body: row.body, tag: row.id });
-            } catch { /* some browsers require a service worker; the toast still shows */ }
-          }
-        },
-      )
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [audience, enabled]);
+    if (!adminToken) return;
+    void poll();
+    const t = setInterval(() => void poll(), intervalMs);
+    return () => clearInterval(t);
+  }, [adminToken, intervalMs, poll]);
 
   const requestPermission = async () => {
     if (typeof Notification === "undefined") return;
