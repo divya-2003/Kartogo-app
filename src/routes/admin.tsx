@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 import { useOrders } from "@/lib/store";
 import { verifyAdminTokenFn } from "@/lib/auth.functions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Sparkles, LayoutDashboard, Package2, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Menu, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound } from "lucide-react";
+import { Sparkles, LayoutDashboard, Package2, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Menu, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound, BellRing } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: async () => {
@@ -30,7 +30,8 @@ const NAV = [
   { to: "/admin/inventory", label: "Inventory", icon: Boxes },
   { to: "/admin/wims", label: "Warehouse (WIMS)", icon: Boxes },
   { to: "/admin/ai", label: "AI assistant", icon: Sparkles },
-  { to: "/admin/purchase-orders", label: "Purchase orders", icon: ClipboardList },
+  { to: "/admin/ai-alerts", label: "AI inventory alerts", icon: BellRing },
+  { to: "/admin/alerts", label: "Alert settings", icon: BellRing },
 
   { to: "/admin/orders", label: "Orders", icon: ClipboardList },
   { to: "/admin/cancellations", label: "Cancellations", icon: PackageX },
