@@ -34,6 +34,7 @@ import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAccountRouteImport } from './routes/admin.account'
 import { Route as AdminAiRouteImport } from './routes/admin.ai'
+import { Route as AdminAiAlertsRouteImport } from './routes/admin.ai-alerts'
 import { Route as AdminCancellationsRouteImport } from './routes/admin.cancellations'
 import { Route as AdminCombosRouteImport } from './routes/admin.combos'
 import { Route as AdminDeliveryRouteImport } from './routes/admin.delivery'
@@ -188,6 +189,11 @@ const AdminAccountRoute = AdminAccountRouteImport.update({
 const AdminAiRoute = AdminAiRouteImport.update({
   id: '/ai',
   path: '/ai',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAiAlertsRoute = AdminAiAlertsRouteImport.update({
+  id: '/ai-alerts',
+  path: '/ai-alerts',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCancellationsRoute = AdminCancellationsRouteImport.update({
@@ -367,6 +373,7 @@ export interface FileRoutesByFullPath {
   '/wishlist': typeof WishlistRoute
   '/admin/account': typeof AdminAccountRoute
   '/admin/ai': typeof AdminAiRoute
+  '/admin/ai-alerts': typeof AdminAiAlertsRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/combos': typeof AdminCombosRoute
   '/admin/delivery': typeof AdminDeliveryRoute
@@ -422,6 +429,7 @@ export interface FileRoutesByTo {
   '/wishlist': typeof WishlistRoute
   '/admin/account': typeof AdminAccountRoute
   '/admin/ai': typeof AdminAiRoute
+  '/admin/ai-alerts': typeof AdminAiAlertsRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/combos': typeof AdminCombosRoute
   '/admin/delivery': typeof AdminDeliveryRoute
@@ -480,6 +488,7 @@ export interface FileRoutesById {
   '/wishlist': typeof WishlistRoute
   '/admin/account': typeof AdminAccountRoute
   '/admin/ai': typeof AdminAiRoute
+  '/admin/ai-alerts': typeof AdminAiAlertsRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/combos': typeof AdminCombosRoute
   '/admin/delivery': typeof AdminDeliveryRoute
@@ -539,6 +548,7 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/admin/account'
     | '/admin/ai'
+    | '/admin/ai-alerts'
     | '/admin/cancellations'
     | '/admin/combos'
     | '/admin/delivery'
@@ -594,6 +604,7 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/admin/account'
     | '/admin/ai'
+    | '/admin/ai-alerts'
     | '/admin/cancellations'
     | '/admin/combos'
     | '/admin/delivery'
@@ -651,6 +662,7 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/admin/account'
     | '/admin/ai'
+    | '/admin/ai-alerts'
     | '/admin/cancellations'
     | '/admin/combos'
     | '/admin/delivery'
@@ -890,6 +902,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAiRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/ai-alerts': {
+      id: '/admin/ai-alerts'
+      path: '/ai-alerts'
+      fullPath: '/admin/ai-alerts'
+      preLoaderRoute: typeof AdminAiAlertsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/cancellations': {
       id: '/admin/cancellations'
       path: '/cancellations'
@@ -1106,6 +1125,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminAccountRoute: typeof AdminAccountRoute
   AdminAiRoute: typeof AdminAiRoute
+  AdminAiAlertsRoute: typeof AdminAiAlertsRoute
   AdminCancellationsRoute: typeof AdminCancellationsRoute
   AdminCombosRoute: typeof AdminCombosRoute
   AdminDeliveryRoute: typeof AdminDeliveryRoute
@@ -1133,6 +1153,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAccountRoute: AdminAccountRoute,
   AdminAiRoute: AdminAiRoute,
+  AdminAiAlertsRoute: AdminAiAlertsRoute,
   AdminCancellationsRoute: AdminCancellationsRoute,
   AdminCombosRoute: AdminCombosRoute,
   AdminDeliveryRoute: AdminDeliveryRoute,
@@ -1210,13 +1231,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
