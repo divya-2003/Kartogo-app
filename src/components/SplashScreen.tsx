@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Zap } from "lucide-react";
+import { Zap, Bike } from "lucide-react";
 import kartogoLogo from "@/assets/kartigo-logo.png.asset.json";
 
 /**
@@ -39,7 +39,7 @@ export function SplashScreen({ minDurationMs = 1800 }: { minDurationMs?: number 
         {/* delivery scooter zipping across the road */}
         <div className="relative mt-8 h-10 w-64 overflow-hidden">
           <div className="absolute bottom-1 left-0 h-0.5 w-full rounded bg-foreground/15" />
-          <div className="absolute bottom-1 animate-splash-ride text-3xl">🛵</div>
+          <Bike className="absolute bottom-1.5 h-8 w-8 animate-splash-ride text-primary" />
         </div>
 
         <div className="mt-4 h-1 w-40 overflow-hidden rounded-full bg-foreground/10">
