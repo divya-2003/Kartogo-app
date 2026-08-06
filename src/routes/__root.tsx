@@ -114,7 +114,9 @@ function RootComponent() {
                   <CartProvider>
                     <WishlistProvider>
                       <Outlet />
+                      <SplashScreen />
                       <Toaster position="top-center" richColors />
+
                     </WishlistProvider>
                   </CartProvider>
                 </DriversProvider>
