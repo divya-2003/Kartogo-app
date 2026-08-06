@@ -35,6 +35,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAccountRouteImport } from './routes/admin.account'
 import { Route as AdminAiRouteImport } from './routes/admin.ai'
 import { Route as AdminAiAlertsRouteImport } from './routes/admin.ai-alerts'
+import { Route as AdminAlertsRouteImport } from './routes/admin.alerts'
 import { Route as AdminCancellationsRouteImport } from './routes/admin.cancellations'
 import { Route as AdminCombosRouteImport } from './routes/admin.combos'
 import { Route as AdminDeliveryRouteImport } from './routes/admin.delivery'
@@ -194,6 +195,11 @@ const AdminAiRoute = AdminAiRouteImport.update({
 const AdminAiAlertsRoute = AdminAiAlertsRouteImport.update({
   id: '/ai-alerts',
   path: '/ai-alerts',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAlertsRoute = AdminAlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCancellationsRoute = AdminCancellationsRouteImport.update({
@@ -374,6 +380,7 @@ export interface FileRoutesByFullPath {
   '/admin/account': typeof AdminAccountRoute
   '/admin/ai': typeof AdminAiRoute
   '/admin/ai-alerts': typeof AdminAiAlertsRoute
+  '/admin/alerts': typeof AdminAlertsRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/combos': typeof AdminCombosRoute
   '/admin/delivery': typeof AdminDeliveryRoute
@@ -430,6 +437,7 @@ export interface FileRoutesByTo {
   '/admin/account': typeof AdminAccountRoute
   '/admin/ai': typeof AdminAiRoute
   '/admin/ai-alerts': typeof AdminAiAlertsRoute
+  '/admin/alerts': typeof AdminAlertsRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/combos': typeof AdminCombosRoute
   '/admin/delivery': typeof AdminDeliveryRoute
@@ -489,6 +497,7 @@ export interface FileRoutesById {
   '/admin/account': typeof AdminAccountRoute
   '/admin/ai': typeof AdminAiRoute
   '/admin/ai-alerts': typeof AdminAiAlertsRoute
+  '/admin/alerts': typeof AdminAlertsRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/combos': typeof AdminCombosRoute
   '/admin/delivery': typeof AdminDeliveryRoute
@@ -549,6 +558,7 @@ export interface FileRouteTypes {
     | '/admin/account'
     | '/admin/ai'
     | '/admin/ai-alerts'
+    | '/admin/alerts'
     | '/admin/cancellations'
     | '/admin/combos'
     | '/admin/delivery'
@@ -605,6 +615,7 @@ export interface FileRouteTypes {
     | '/admin/account'
     | '/admin/ai'
     | '/admin/ai-alerts'
+    | '/admin/alerts'
     | '/admin/cancellations'
     | '/admin/combos'
     | '/admin/delivery'
@@ -663,6 +674,7 @@ export interface FileRouteTypes {
     | '/admin/account'
     | '/admin/ai'
     | '/admin/ai-alerts'
+    | '/admin/alerts'
     | '/admin/cancellations'
     | '/admin/combos'
     | '/admin/delivery'
@@ -909,6 +921,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAiAlertsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/alerts': {
+      id: '/admin/alerts'
+      path: '/alerts'
+      fullPath: '/admin/alerts'
+      preLoaderRoute: typeof AdminAlertsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/cancellations': {
       id: '/admin/cancellations'
       path: '/cancellations'
@@ -1126,6 +1145,7 @@ interface AdminRouteChildren {
   AdminAccountRoute: typeof AdminAccountRoute
   AdminAiRoute: typeof AdminAiRoute
   AdminAiAlertsRoute: typeof AdminAiAlertsRoute
+  AdminAlertsRoute: typeof AdminAlertsRoute
   AdminCancellationsRoute: typeof AdminCancellationsRoute
   AdminCombosRoute: typeof AdminCombosRoute
   AdminDeliveryRoute: typeof AdminDeliveryRoute
@@ -1154,6 +1174,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAccountRoute: AdminAccountRoute,
   AdminAiRoute: AdminAiRoute,
   AdminAiAlertsRoute: AdminAiAlertsRoute,
+  AdminAlertsRoute: AdminAlertsRoute,
   AdminCancellationsRoute: AdminCancellationsRoute,
   AdminCombosRoute: AdminCombosRoute,
   AdminDeliveryRoute: AdminDeliveryRoute,
