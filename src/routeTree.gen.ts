@@ -34,6 +34,8 @@ import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAccountRouteImport } from './routes/admin.account'
 import { Route as AdminAiRouteImport } from './routes/admin.ai'
+import { Route as AdminAiAlertsRouteImport } from './routes/admin.ai-alerts'
+import { Route as AdminAlertsRouteImport } from './routes/admin.alerts'
 import { Route as AdminCancellationsRouteImport } from './routes/admin.cancellations'
 import { Route as AdminCombosRouteImport } from './routes/admin.combos'
 import { Route as AdminDeliveryRouteImport } from './routes/admin.delivery'
@@ -44,7 +46,6 @@ import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminPartnersRouteImport } from './routes/admin.partners'
 import { Route as AdminPrintRouteImport } from './routes/admin.print'
 import { Route as AdminProductsRouteImport } from './routes/admin.products'
-import { Route as AdminPurchaseOrdersRouteImport } from './routes/admin.purchase-orders'
 import { Route as AdminRefundRequestsRouteImport } from './routes/admin.refund-requests'
 import { Route as AdminReportsDailyRouteImport } from './routes/admin.reports-daily'
 import { Route as AdminReportsProductsRouteImport } from './routes/admin.reports-products'
@@ -64,6 +65,7 @@ import { Route as SupplierAiRouteImport } from './routes/supplier.ai'
 import { Route as SupplierOrdersRouteImport } from './routes/supplier.orders'
 import { Route as SupplierSalesRouteImport } from './routes/supplier.sales'
 import { Route as ApiPublicAiDailyForecastRouteImport } from './routes/api/public/ai-daily-forecast'
+import { Route as ApiPublicInventoryDigestRouteImport } from './routes/api/public/inventory-digest'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -190,6 +192,16 @@ const AdminAiRoute = AdminAiRouteImport.update({
   path: '/ai',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAiAlertsRoute = AdminAiAlertsRouteImport.update({
+  id: '/ai-alerts',
+  path: '/ai-alerts',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAlertsRoute = AdminAlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCancellationsRoute = AdminCancellationsRouteImport.update({
   id: '/cancellations',
   path: '/cancellations',
@@ -238,11 +250,6 @@ const AdminPrintRoute = AdminPrintRouteImport.update({
 const AdminProductsRoute = AdminProductsRouteImport.update({
   id: '/products',
   path: '/products',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPurchaseOrdersRoute = AdminPurchaseOrdersRouteImport.update({
-  id: '/purchase-orders',
-  path: '/purchase-orders',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminRefundRequestsRoute = AdminRefundRequestsRouteImport.update({
@@ -341,6 +348,12 @@ const ApiPublicAiDailyForecastRoute =
     path: '/api/public/ai-daily-forecast',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicInventoryDigestRoute =
+  ApiPublicInventoryDigestRouteImport.update({
+    id: '/api/public/inventory-digest',
+    path: '/api/public/inventory-digest',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -367,6 +380,8 @@ export interface FileRoutesByFullPath {
   '/wishlist': typeof WishlistRoute
   '/admin/account': typeof AdminAccountRoute
   '/admin/ai': typeof AdminAiRoute
+  '/admin/ai-alerts': typeof AdminAiAlertsRoute
+  '/admin/alerts': typeof AdminAlertsRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/combos': typeof AdminCombosRoute
   '/admin/delivery': typeof AdminDeliveryRoute
@@ -377,7 +392,6 @@ export interface FileRoutesByFullPath {
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/print': typeof AdminPrintRoute
   '/admin/products': typeof AdminProductsRoute
-  '/admin/purchase-orders': typeof AdminPurchaseOrdersRoute
   '/admin/refund-requests': typeof AdminRefundRequestsRoute
   '/admin/reports-daily': typeof AdminReportsDailyRoute
   '/admin/reports-products': typeof AdminReportsProductsRoute
@@ -398,6 +412,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/supplier/': typeof SupplierIndexRoute
   '/api/public/ai-daily-forecast': typeof ApiPublicAiDailyForecastRoute
+  '/api/public/inventory-digest': typeof ApiPublicInventoryDigestRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -422,6 +437,8 @@ export interface FileRoutesByTo {
   '/wishlist': typeof WishlistRoute
   '/admin/account': typeof AdminAccountRoute
   '/admin/ai': typeof AdminAiRoute
+  '/admin/ai-alerts': typeof AdminAiAlertsRoute
+  '/admin/alerts': typeof AdminAlertsRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/combos': typeof AdminCombosRoute
   '/admin/delivery': typeof AdminDeliveryRoute
@@ -432,7 +449,6 @@ export interface FileRoutesByTo {
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/print': typeof AdminPrintRoute
   '/admin/products': typeof AdminProductsRoute
-  '/admin/purchase-orders': typeof AdminPurchaseOrdersRoute
   '/admin/refund-requests': typeof AdminRefundRequestsRoute
   '/admin/reports-daily': typeof AdminReportsDailyRoute
   '/admin/reports-products': typeof AdminReportsProductsRoute
@@ -453,6 +469,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/supplier': typeof SupplierIndexRoute
   '/api/public/ai-daily-forecast': typeof ApiPublicAiDailyForecastRoute
+  '/api/public/inventory-digest': typeof ApiPublicInventoryDigestRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -480,6 +497,8 @@ export interface FileRoutesById {
   '/wishlist': typeof WishlistRoute
   '/admin/account': typeof AdminAccountRoute
   '/admin/ai': typeof AdminAiRoute
+  '/admin/ai-alerts': typeof AdminAiAlertsRoute
+  '/admin/alerts': typeof AdminAlertsRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/combos': typeof AdminCombosRoute
   '/admin/delivery': typeof AdminDeliveryRoute
@@ -490,7 +509,6 @@ export interface FileRoutesById {
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/print': typeof AdminPrintRoute
   '/admin/products': typeof AdminProductsRoute
-  '/admin/purchase-orders': typeof AdminPurchaseOrdersRoute
   '/admin/refund-requests': typeof AdminRefundRequestsRoute
   '/admin/reports-daily': typeof AdminReportsDailyRoute
   '/admin/reports-products': typeof AdminReportsProductsRoute
@@ -511,6 +529,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/supplier/': typeof SupplierIndexRoute
   '/api/public/ai-daily-forecast': typeof ApiPublicAiDailyForecastRoute
+  '/api/public/inventory-digest': typeof ApiPublicInventoryDigestRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -539,6 +558,8 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/admin/account'
     | '/admin/ai'
+    | '/admin/ai-alerts'
+    | '/admin/alerts'
     | '/admin/cancellations'
     | '/admin/combos'
     | '/admin/delivery'
@@ -549,7 +570,6 @@ export interface FileRouteTypes {
     | '/admin/partners'
     | '/admin/print'
     | '/admin/products'
-    | '/admin/purchase-orders'
     | '/admin/refund-requests'
     | '/admin/reports-daily'
     | '/admin/reports-products'
@@ -570,6 +590,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/supplier/'
     | '/api/public/ai-daily-forecast'
+    | '/api/public/inventory-digest'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -594,6 +615,8 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/admin/account'
     | '/admin/ai'
+    | '/admin/ai-alerts'
+    | '/admin/alerts'
     | '/admin/cancellations'
     | '/admin/combos'
     | '/admin/delivery'
@@ -604,7 +627,6 @@ export interface FileRouteTypes {
     | '/admin/partners'
     | '/admin/print'
     | '/admin/products'
-    | '/admin/purchase-orders'
     | '/admin/refund-requests'
     | '/admin/reports-daily'
     | '/admin/reports-products'
@@ -625,6 +647,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/supplier'
     | '/api/public/ai-daily-forecast'
+    | '/api/public/inventory-digest'
   id:
     | '__root__'
     | '/'
@@ -651,6 +674,8 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/admin/account'
     | '/admin/ai'
+    | '/admin/ai-alerts'
+    | '/admin/alerts'
     | '/admin/cancellations'
     | '/admin/combos'
     | '/admin/delivery'
@@ -661,7 +686,6 @@ export interface FileRouteTypes {
     | '/admin/partners'
     | '/admin/print'
     | '/admin/products'
-    | '/admin/purchase-orders'
     | '/admin/refund-requests'
     | '/admin/reports-daily'
     | '/admin/reports-products'
@@ -682,6 +706,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/supplier/'
     | '/api/public/ai-daily-forecast'
+    | '/api/public/inventory-digest'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -711,6 +736,7 @@ export interface RootRouteChildren {
   ProductIdRoute: typeof ProductIdRoute
   RateOrderOrderIdRoute: typeof RateOrderOrderIdRoute
   ApiPublicAiDailyForecastRoute: typeof ApiPublicAiDailyForecastRoute
+  ApiPublicInventoryDigestRoute: typeof ApiPublicInventoryDigestRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -890,6 +916,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAiRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/ai-alerts': {
+      id: '/admin/ai-alerts'
+      path: '/ai-alerts'
+      fullPath: '/admin/ai-alerts'
+      preLoaderRoute: typeof AdminAiAlertsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/alerts': {
+      id: '/admin/alerts'
+      path: '/alerts'
+      fullPath: '/admin/alerts'
+      preLoaderRoute: typeof AdminAlertsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/cancellations': {
       id: '/admin/cancellations'
       path: '/cancellations'
@@ -958,13 +998,6 @@ declare module '@tanstack/react-router' {
       path: '/products'
       fullPath: '/admin/products'
       preLoaderRoute: typeof AdminProductsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/purchase-orders': {
-      id: '/admin/purchase-orders'
-      path: '/purchase-orders'
-      fullPath: '/admin/purchase-orders'
-      preLoaderRoute: typeof AdminPurchaseOrdersRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/refund-requests': {
@@ -1100,12 +1133,21 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAiDailyForecastRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/inventory-digest': {
+      id: '/api/public/inventory-digest'
+      path: '/api/public/inventory-digest'
+      fullPath: '/api/public/inventory-digest'
+      preLoaderRoute: typeof ApiPublicInventoryDigestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface AdminRouteChildren {
   AdminAccountRoute: typeof AdminAccountRoute
   AdminAiRoute: typeof AdminAiRoute
+  AdminAiAlertsRoute: typeof AdminAiAlertsRoute
+  AdminAlertsRoute: typeof AdminAlertsRoute
   AdminCancellationsRoute: typeof AdminCancellationsRoute
   AdminCombosRoute: typeof AdminCombosRoute
   AdminDeliveryRoute: typeof AdminDeliveryRoute
@@ -1116,7 +1158,6 @@ interface AdminRouteChildren {
   AdminPartnersRoute: typeof AdminPartnersRoute
   AdminPrintRoute: typeof AdminPrintRoute
   AdminProductsRoute: typeof AdminProductsRoute
-  AdminPurchaseOrdersRoute: typeof AdminPurchaseOrdersRoute
   AdminRefundRequestsRoute: typeof AdminRefundRequestsRoute
   AdminReportsDailyRoute: typeof AdminReportsDailyRoute
   AdminReportsProductsRoute: typeof AdminReportsProductsRoute
@@ -1133,6 +1174,8 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAccountRoute: AdminAccountRoute,
   AdminAiRoute: AdminAiRoute,
+  AdminAiAlertsRoute: AdminAiAlertsRoute,
+  AdminAlertsRoute: AdminAlertsRoute,
   AdminCancellationsRoute: AdminCancellationsRoute,
   AdminCombosRoute: AdminCombosRoute,
   AdminDeliveryRoute: AdminDeliveryRoute,
@@ -1143,7 +1186,6 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminPartnersRoute: AdminPartnersRoute,
   AdminPrintRoute: AdminPrintRoute,
   AdminProductsRoute: AdminProductsRoute,
-  AdminPurchaseOrdersRoute: AdminPurchaseOrdersRoute,
   AdminRefundRequestsRoute: AdminRefundRequestsRoute,
   AdminReportsDailyRoute: AdminReportsDailyRoute,
   AdminReportsProductsRoute: AdminReportsProductsRoute,
@@ -1206,6 +1248,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProductIdRoute: ProductIdRoute,
   RateOrderOrderIdRoute: RateOrderOrderIdRoute,
   ApiPublicAiDailyForecastRoute: ApiPublicAiDailyForecastRoute,
+  ApiPublicInventoryDigestRoute: ApiPublicInventoryDigestRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
