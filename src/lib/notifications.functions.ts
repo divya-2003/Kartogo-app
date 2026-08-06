@@ -98,3 +98,23 @@ export const runInventoryDigestFn = createServerFn({ method: "POST" })
     const { dispatchInventoryDigest } = await import("./notify.server");
     return await dispatchInventoryDigest();
   });
+
+/** Recent alert feed used by the admin push/toast poller. */
+export const recentAlertNotificationsFn = createServerFn({ method: "POST" })
+  .inputValidator((d: { adminToken?: string }) => ({ adminToken: str(d?.adminToken, 500) }))
+  .handler(async ({ data }) => {
+    await requireAdmin(data.adminToken);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows } = await supabaseAdmin
+      .from("inventory_notifications")
+      .select("id, title, body, kind, created_at")
+      .eq("audience", "admin")
+      .order("created_at", { ascending: false })
+      .limit(15);
+    return {
+      notifications: (rows ?? []).map((r) => ({
+        id: String(r.id), title: String(r.title), body: String(r.body ?? ""),
+        kind: String(r.kind ?? ""), createdAt: String(r.created_at),
+      })),
+    };
+  });

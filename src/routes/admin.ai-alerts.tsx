@@ -38,7 +38,7 @@ function AiInventoryAlertsPage() {
   const [q, setQ] = useState("");
   const [trendFor, setTrendFor] = useState<InventoryAlertRow | null>(null);
   const [busy, setBusy] = useState("");
-  const { permission, requestPermission } = usePushNotifications("admin");
+  const { permission, requestPermission } = usePushNotifications(adminToken);
 
   const load = useCallback(async () => {
     if (!adminToken) return;
