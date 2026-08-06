@@ -8,6 +8,7 @@ import {
   Link,
 } from "@tanstack/react-router";
 import { Toaster } from "sonner";
+import { SplashScreen } from "@/components/SplashScreen";
 import { CartProvider, AuthProvider, CatalogProvider, OrdersProvider, LocationProvider, WalletProvider, WishlistProvider, DriversProvider } from "@/lib/store";
 
 import appCss from "../styles.css?url";
