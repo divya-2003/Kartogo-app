@@ -772,6 +772,42 @@ export type Database = {
           },
         ]
       }
+      market_replenish_requests: {
+        Row: {
+          created_at: string
+          id: string
+          market_id: string | null
+          market_name: string
+          note: string
+          product_id: string
+          product_name: string
+          quantity: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          market_id?: string | null
+          market_name?: string
+          note?: string
+          product_id?: string
+          product_name?: string
+          quantity?: number
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          market_id?: string | null
+          market_name?: string
+          note?: string
+          product_id?: string
+          product_name?: string
+          quantity?: number
+          status?: string
+        }
+        Relationships: []
+      }
       merchants: {
         Row: {
           address: string
@@ -842,6 +878,78 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      notification_log: {
+        Row: {
+          body: string
+          channel: string
+          created_at: string
+          error: string | null
+          id: string
+          kind: string
+          recipient: string
+          status: string
+          title: string
+        }
+        Insert: {
+          body?: string
+          channel?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          kind?: string
+          recipient?: string
+          status?: string
+          title?: string
+        }
+        Update: {
+          body?: string
+          channel?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          kind?: string
+          recipient?: string
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      notification_recipients: {
+        Row: {
+          active: boolean
+          address: string
+          audience: string
+          channel: string
+          created_at: string
+          id: string
+          kinds: string[]
+          label: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          address: string
+          audience?: string
+          channel?: string
+          created_at?: string
+          id?: string
+          kinds?: string[]
+          label?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          address?: string
+          audience?: string
+          channel?: string
+          created_at?: string
+          id?: string
+          kinds?: string[]
+          label?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       order_call_logs: {
         Row: {
