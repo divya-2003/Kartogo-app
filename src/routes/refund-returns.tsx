@@ -275,12 +275,6 @@ function RefundReturnsPage() {
         >
           <div className="mt-4 space-y-3">
             <ContactRow
-              icon={<Mail className="h-5 w-5" />}
-              label="Email"
-              value="support@kartogo.in"
-              href="mailto:support@kartogo.in"
-            />
-            <ContactRow
               icon={<Phone className="h-5 w-5" />}
               label="Phone"
               value="+91-9110310034"
@@ -328,7 +322,7 @@ function RefundReturnsPage() {
             <AccordionItem value="q4">
               <AccordionTrigger>How will I know my refund status?</AccordionTrigger>
               <AccordionContent>
-                You will receive updates via SMS and email. You can also check the order details in
+                You will receive updates via SMS. You can also check the order details in
                 the My Orders section.
               </AccordionContent>
             </AccordionItem>
