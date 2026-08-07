@@ -11,10 +11,10 @@ import { createServerFn } from "@tanstack/react-start";
 // To enable demo mode in a private environment, set the server secret
 // DEMO_OTP_MODE="true". Leave it unset in production.
 function isDemoOtpMode(): boolean {
-  // Forced on until Twilio is upgraded — SMS delivery is unavailable, so every
-  // OTP request runs in demo mode and returns the freshly generated random code
-  // to the client for on-screen display.
-  return true;
+  // Server-only flag. Must be explicitly set to "true" in a private/staging
+  // environment; it is unset in production, so production always delivers the
+  // code by SMS and never returns it in an API response.
+  return process.env.DEMO_OTP_MODE === "true";
 }
 
 // ---------------- Request an OTP ----------------
