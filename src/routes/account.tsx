@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { useAuth } from "@/lib/store";
 import { toast } from "sonner";
-import { User2, Phone, Mail, MapPin } from "lucide-react";
+import { User2, Phone, MapPin } from "lucide-react";
 
 export const Route = createFileRoute("/account")({
   component: AccountPage,
@@ -16,13 +16,11 @@ function AccountPage() {
   
 
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
 
   useEffect(() => {
     if (!user) return;
     setName(user.name ?? "");
-    setEmail(user.email ?? "");
     setAddress(user.address ?? "");
   }, [user]);
 
@@ -40,7 +38,7 @@ function AccountPage() {
 
   const saveProfile = (e: React.FormEvent) => {
     e.preventDefault();
-    updateProfile({ name, email, address });
+    updateProfile({ name, address });
     toast.success("Profile updated");
     router.history.back();
   };
@@ -74,9 +72,6 @@ function AccountPage() {
               <input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" className="w-full bg-transparent text-base outline-none" />
             </Field>
 
-            <Field icon={<Mail className="h-4 w-4 text-muted-foreground" />} label="Email">
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" className="w-full bg-transparent text-base outline-none" />
-            </Field>
 
             <Field icon={<MapPin className="h-4 w-4 text-muted-foreground" />} label="Default address">
               <textarea value={address} onChange={e => setAddress(e.target.value)} placeholder="House no, street, city, pincode" rows={2} className="w-full resize-none bg-transparent text-base outline-none" />

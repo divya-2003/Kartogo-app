@@ -4,11 +4,13 @@
 // One entry point — `dispatchNotification` — fans a single alert out to every
 // configured channel:
 //   • in-app   → `inventory_notifications` (admin / supplier bell + browser push)
-//   • email    → Resend, when RESEND_API_KEY is configured
 //   • sms      → the existing Twilio connector
-// Every attempt is written to `notification_log` so nothing is silently lost.
+// Every attempt is written to `notification_log` so nothing is silently lost,
+// including the provider error text, which powers the admin "Retry" action.
 //
-// Modular by design: add a channel by adding one `case` in `deliver()`.
+// Email delivery has been removed from Kartogo on purpose — alerts go out over
+// in-app push and SMS only. Adding a channel later means one `case` in
+// `deliver()` plus one entry in the admin channel picker.
 // ============================================================================
 
 export type NotifyKind =
@@ -26,8 +28,8 @@ export type NotifyInput = {
   body: string;
   supplierId?: string | null;
   productId?: string | null;
-  /** Extra one-off recipients (partner supermarket phone / email). */
-  extraRecipients?: { channel: "email" | "sms"; address: string }[];
+  /** Extra one-off recipients (partner supermarket phone). */
+  extraRecipients?: { channel: "sms"; address: string }[];
   /** Skip writing the in-app bell entry (used when the caller already wrote one). */
   skipInApp?: boolean;
 };
@@ -53,41 +55,21 @@ async function log(
   }
 }
 
-async function sendEmail(to: string, subject: string, body: string) {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) throw new Error("Email sending is not configured yet");
-  const from = process.env.NOTIFICATION_FROM_EMAIL || "Kartogo Alerts <onboarding@resend.dev>";
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from,
-      to: [to],
-      subject,
-      html: `<div style="font-family:system-ui,sans-serif;line-height:1.5">
-        <h2 style="margin:0 0 8px">${escapeHtml(subject)}</h2>
-        <p style="white-space:pre-wrap;margin:0 0 16px">${escapeHtml(body)}</p>
-        <p style="color:#666;font-size:12px">Sent automatically by Kartogo inventory intelligence.</p>
-      </div>`,
-    }),
-  });
-  if (!res.ok) throw new Error(`Email provider rejected the message (${res.status})`);
-}
-
-function escapeHtml(s: string) {
-  return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);
-}
-
-async function deliver(kind: string, r: Recipient, title: string, body: string) {
+/** Sends one message on one channel and records the outcome. Never throws. */
+export async function deliver(kind: string, r: Recipient, title: string, body: string): Promise<boolean> {
   try {
-    if (r.channel === "email") await sendEmail(r.address, title, body);
-    else if (r.channel === "sms") {
+    if (r.channel === "sms") {
       const { sendSms } = await import("./sms.server");
       await sendSms(r.address, `${title}\n${body}`.slice(0, 300));
-    } else return;
+    } else {
+      await log(kind, r.channel, r.address, title, body, "failed", `Unsupported channel "${r.channel}"`);
+      return false;
+    }
     await log(kind, r.channel, r.address, title, body, "sent");
+    return true;
   } catch (e) {
     await log(kind, r.channel, r.address, title, body, "failed", e instanceof Error ? e.message : "unknown error");
+    return false;
   }
 }
 
@@ -109,11 +91,12 @@ export async function dispatchNotification(input: NotifyInput): Promise<void> {
       await log(input.kind, "in_app", input.audience, input.title, input.body, "sent");
     }
 
-    // 2) configured email / sms recipients for this audience + kind
+    // 2) configured SMS recipients for this audience + kind
     const { data: rows } = await supabaseAdmin
       .from("notification_recipients")
       .select("channel, address, kinds, audience, active")
-      .eq("active", true);
+      .eq("active", true)
+      .eq("channel", "sms");
 
     const targets: Recipient[] = [
       ...(rows ?? [])

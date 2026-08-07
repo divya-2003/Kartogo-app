@@ -1,15 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 // Scheduled inventory alert digest — low stock, out of stock and supplier
-// reminders fanned out to in-app, email and SMS recipients.
+// reminders fanned out to in-app and SMS recipients.
 // Called by the database scheduler (pg_cron) with the project's anon key.
 export const Route = createFileRoute("/api/public/inventory-digest")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const key = request.headers.get("apikey") ?? "";
-        const expected = process.env.SUPABASE_ANON_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? "";
-        if (!expected || key !== expected) return new Response("Unauthorized", { status: 401 });
+        const { verifyCronRequest } = await import("@/lib/cron-auth.server");
+        const denied = verifyCronRequest(request);
+        if (denied) return denied;
         try {
           const { dispatchInventoryDigest } = await import("@/lib/notify.server");
           return Response.json({ ok: true, ...(await dispatchInventoryDigest()) });

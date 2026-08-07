@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { BellRing, Mail, MessageSquare, Trash2, Send, RefreshCw } from "lucide-react";
+import { BellRing, MessageSquare, Trash2, Send, RefreshCw, RotateCw } from "lucide-react";
 import { useAuth } from "@/lib/store";
 import {
   listNotificationSettingsFn, saveNotificationRecipientFn, deleteNotificationRecipientFn,
-  sendTestNotificationFn, runInventoryDigestFn,
+  sendTestNotificationFn, runInventoryDigestFn, retryNotificationFn,
 } from "@/lib/notifications.functions";
+import { toE164 } from "@/lib/phone";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 export const Route = createFileRoute("/admin/alerts")({
@@ -14,9 +15,9 @@ export const Route = createFileRoute("/admin/alerts")({
   head: () => ({
     meta: [
       { title: "Alert settings — Kartogo admin" },
-      { name: "description", content: "Configure push, email and SMS alerts for low stock, critical stock-outs and supplier reminders." },
+      { name: "description", content: "Configure push and SMS alerts for low stock, critical stock-outs and supplier reminders." },
       { property: "og:title", content: "Alert settings — Kartogo admin" },
-      { property: "og:description", content: "Push, email and SMS alerting for Kartogo inventory intelligence." },
+      { property: "og:description", content: "Push and SMS alerting for Kartogo inventory intelligence." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -36,12 +37,12 @@ type Data = Awaited<ReturnType<typeof listNotificationSettingsFn>>;
 function AlertSettingsPage() {
   const { adminToken } = useAuth();
   const [data, setData] = useState<Data | null>(null);
-  const [channel, setChannel] = useState<"email" | "sms">("email");
   const [audience, setAudience] = useState<"admin" | "supplier">("admin");
   const [address, setAddress] = useState("");
   const [label, setLabel] = useState("");
   const [kinds, setKinds] = useState<string[]>(KINDS.map((k) => k.id));
   const [busy, setBusy] = useState(false);
+  const [retrying, setRetrying] = useState("");
   const { permission, requestPermission } = usePushNotifications(adminToken);
 
   const load = useCallback(async () => {
@@ -56,12 +57,23 @@ function AlertSettingsPage() {
     if (!adminToken) return;
     setBusy(true);
     try {
-      await saveNotificationRecipientFn({ data: { adminToken, audience, channel, address, label, kinds } });
+      await saveNotificationRecipientFn({ data: { adminToken, audience, channel: "sms", address, label, kinds } });
       setAddress(""); setLabel("");
       toast.success("Recipient saved");
       await load();
     } catch (e) { toast.error(e instanceof Error ? e.message : "Could not save"); }
     finally { setBusy(false); }
+  };
+
+  const retry = async (id: string) => {
+    if (!adminToken) return;
+    setRetrying(id);
+    try {
+      await retryNotificationFn({ data: { adminToken, id } });
+      toast.success("Alert re-sent");
+      await load();
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Retry failed"); }
+    finally { setRetrying(""); }
   };
 
   const remove = async (id: string) => {
@@ -76,7 +88,7 @@ function AlertSettingsPage() {
       <div className="flex flex-wrap items-center gap-2">
         <div>
           <h1 className="font-display text-2xl font-extrabold">Alert settings</h1>
-          <p className="text-sm text-muted-foreground">Push, email and SMS alerts for low stock, critical stock-outs and supplier reminders.</p>
+          <p className="text-sm text-muted-foreground">Push and SMS alerts for low stock, critical stock-outs and supplier reminders.</p>
         </div>
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <button onClick={requestPermission} disabled={permission === "granted" || permission === "unsupported"}
@@ -94,13 +106,6 @@ function AlertSettingsPage() {
         </div>
       </div>
 
-      {data && !data.emailConfigured && (
-        <p className="rounded-2xl border border-saffron/40 bg-saffron/10 p-3 text-sm">
-          Email delivery isn't connected yet — add a <span className="font-semibold">RESEND_API_KEY</span> to start sending emails.
-          SMS and in-app push already work.
-        </p>
-      )}
-
       <div className="rounded-2xl border border-border bg-card p-4">
         <h2 className="font-display text-lg font-extrabold">Add a recipient</h2>
         <div className="mt-3 flex flex-wrap items-end gap-2">
@@ -111,23 +116,20 @@ function AlertSettingsPage() {
               <option value="supplier">Suppliers / stores</option>
             </select>
           </label>
-          <label className="text-sm">
-            <span className="mb-1 block text-xs font-semibold text-muted-foreground">Channel</span>
-            <select value={channel} onChange={(e) => setChannel(e.target.value as "email" | "sms")} className="rounded-lg border border-input bg-card px-3 py-2 text-sm">
-              <option value="email">Email</option>
-              <option value="sms">SMS</option>
-            </select>
-          </label>
           <label className="min-w-[200px] flex-1 text-sm">
-            <span className="mb-1 block text-xs font-semibold text-muted-foreground">{channel === "email" ? "Email address" : "Mobile number"}</span>
-            <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder={channel === "email" ? "ops@kartogo.in" : "+919110310034"}
-              className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm" />
+            <span className="mb-1 block text-xs font-semibold text-muted-foreground">Mobile number</span>
+            <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="+919110310034" inputMode="tel"
+              aria-invalid={address.length > 0 && !toE164(address)}
+              className={`w-full rounded-lg border bg-card px-3 py-2 text-sm ${address && !toE164(address) ? "border-destructive" : "border-input"}`} />
+            <span className="mt-1 block text-[11px] text-muted-foreground">
+              {address && !toE164(address) ? "Use international format, e.g. +919110310034" : "Saved as E.164, e.g. +919110310034"}
+            </span>
           </label>
           <label className="min-w-[140px] text-sm">
             <span className="mb-1 block text-xs font-semibold text-muted-foreground">Label</span>
             <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Ops lead" className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm" />
           </label>
-          <button onClick={() => void add()} disabled={busy} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">Add</button>
+          <button onClick={() => void add()} disabled={busy || !toE164(address)} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">Add</button>
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
           {KINDS.map((k) => {
@@ -145,10 +147,10 @@ function AlertSettingsPage() {
       <div className="rounded-2xl border border-border bg-card p-4">
         <h2 className="font-display text-lg font-extrabold">Recipients</h2>
         <div className="mt-3 space-y-2">
-          {(data?.recipients ?? []).length === 0 && <p className="text-sm text-muted-foreground">No email or SMS recipients yet.</p>}
+          {(data?.recipients ?? []).length === 0 && <p className="text-sm text-muted-foreground">No SMS recipients yet.</p>}
           {(data?.recipients ?? []).map((r) => (
             <div key={String(r.id)} className="flex flex-wrap items-center gap-2 rounded-xl border border-border p-3">
-              {r.channel === "email" ? <Mail className="h-4 w-4 text-primary" /> : <MessageSquare className="h-4 w-4 text-primary" />}
+              <MessageSquare className="h-4 w-4 text-primary" />
               <span className="font-semibold">{String(r.address)}</span>
               <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold">{String(r.audience)}</span>
               {r.label ? <span className="text-xs text-muted-foreground">{String(r.label)}</span> : null}
@@ -164,9 +166,9 @@ function AlertSettingsPage() {
       <div className="rounded-2xl border border-border bg-card p-4">
         <h2 className="font-display text-lg font-extrabold">Recent deliveries</h2>
         <div className="mt-3 overflow-x-auto">
-          <table className="w-full min-w-[520px] text-sm">
+          <table className="w-full min-w-[720px] text-sm">
             <thead><tr className="text-left text-xs text-muted-foreground">
-              <th className="py-1">When</th><th>Channel</th><th>To</th><th>Title</th><th>Status</th>
+              <th className="py-1">When</th><th>Channel</th><th>To</th><th>Title</th><th>Status</th><th>Details</th><th></th>
             </tr></thead>
             <tbody>
               {(data?.log ?? []).map((l) => (
@@ -176,6 +178,15 @@ function AlertSettingsPage() {
                   <td className="max-w-[160px] truncate">{String(l.recipient)}</td>
                   <td className="max-w-[200px] truncate">{String(l.title)}</td>
                   <td className={String(l.status) === "sent" ? "text-leaf" : "text-destructive"}>{String(l.status)}</td>
+                  <td className="max-w-[220px] text-xs text-destructive">{l.error ? String(l.error) : ""}</td>
+                  <td className="text-right">
+                    {String(l.status) !== "sent" && String(l.channel) !== "in_app" && (
+                      <button onClick={() => void retry(String(l.id))} disabled={retrying === String(l.id)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs font-semibold hover:bg-secondary disabled:opacity-60">
+                        <RotateCw className={`h-3.5 w-3.5 ${retrying === String(l.id) ? "animate-spin" : ""}`} /> Retry
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

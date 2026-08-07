@@ -7,11 +7,9 @@ export const Route = createFileRoute("/api/public/ai-daily-forecast")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const key = request.headers.get("apikey") ?? "";
-        const expected = process.env.SUPABASE_ANON_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? "";
-        if (!expected || key !== expected) {
-          return new Response("Unauthorized", { status: 401 });
-        }
+        const { verifyCronRequest } = await import("@/lib/cron-auth.server");
+        const denied = verifyCronRequest(request);
+        if (denied) return denied;
         try {
           const { runAnalysis } = await import("@/lib/ai-ops.server");
           const result = await runAnalysis();
