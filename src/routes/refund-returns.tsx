@@ -14,7 +14,6 @@ import {
   Clock,
   Smartphone,
   HelpCircle,
-  Mail,
   Phone,
   ShieldCheck,
   ChevronDown,
