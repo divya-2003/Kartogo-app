@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { ChevronLeft, Headphones, Mail, Phone, MessageCircle } from "lucide-react";
+import { ChevronLeft, Headphones, Phone, MessageCircle } from "lucide-react";
 
 export const Route = createFileRoute("/support")({
   component: SupportPage,
@@ -55,20 +55,6 @@ function SupportPage() {
               <div className="min-w-0 flex-1">
                 <div className="text-sm text-muted-foreground">Customer service</div>
                 <div className="font-semibold">+91 91103 10034</div>
-              </div>
-              <ChevronLeft className="h-5 w-5 rotate-180 text-muted-foreground" />
-            </a>
-
-            <a
-              href="mailto:support@kartogo.in"
-              className="flex items-center gap-4 rounded-xl border border-border p-4 hover:bg-secondary"
-            >
-              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
-                <Mail className="h-5 w-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-sm text-muted-foreground">Email us</div>
-                <div className="truncate font-semibold">support.kartogo.in</div>
               </div>
               <ChevronLeft className="h-5 w-5 rotate-180 text-muted-foreground" />
             </a>
