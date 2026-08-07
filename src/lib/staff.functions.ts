@@ -98,8 +98,15 @@ export const requestMobileChangeOtpFn = createServerFn({ method: "POST" })
     });
     if (error) throw new Error("Could not send a verification code. Please try again.");
 
-    // Demo delivery mode (SMS provider not live yet) — mirrors the login flow.
-    return { ok: true as const, demo: true as const, demoCode: code };
+    // The code is delivered by SMS only. It is returned in the response solely
+    // in private/staging environments where the server-only DEMO_OTP_MODE flag
+    // is explicitly set to "true" (never set in production).
+    if (process.env.DEMO_OTP_MODE === "true") {
+      return { ok: true as const, demo: true as const, demoCode: code };
+    }
+    const { sendSms } = await import("./sms.server");
+    await sendSms(`+91${data.newMobile}`, `Your Kartogo verification code is ${code}. It expires in 5 minutes.`);
+    return { ok: true as const, demo: false as const, demoCode: undefined };
   });
 
 /**
