@@ -65,7 +65,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             name: "Kartogo",
             url: "https://quick-niche-delight.lovable.app",
             areaServed: "Ongole, Andhra Pradesh, India",
-            contactPoint: { "@type": "ContactPoint", telephone: "+91-91103-10034", contactType: "customer service", email: "support@kartogo.in" },
+            contactPoint: { "@type": "ContactPoint", telephone: "+91-91103-10034", contactType: "customer service" },
           },
           {
             "@type": "WebSite",

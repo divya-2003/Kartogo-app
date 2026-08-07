@@ -36,6 +36,7 @@ function AiInventoryAlertsPage() {
   const [market, setMarket] = useState("");
   const [urgency, setUrgency] = useState("");
   const [q, setQ] = useState("");
+  const [minConfidence, setMinConfidence] = useState(0);
   const [trendFor, setTrendFor] = useState<InventoryAlertRow | null>(null);
   const [busy, setBusy] = useState("");
   const { permission, requestPermission } = usePushNotifications(adminToken);
@@ -60,8 +61,9 @@ function AiInventoryAlertsPage() {
     return all.filter((r) =>
       (!market || r.marketId === market) &&
       (!urgency || r.urgency === urgency) &&
+      (r.confidence * 100 >= minConfidence) &&
       (!needle || `${r.productName} ${r.productId} ${r.marketName}`.toLowerCase().includes(needle)));
-  }, [board, market, urgency, q]);
+  }, [board, market, urgency, q, minConfidence]);
 
   const notify = async (r: InventoryAlertRow) => {
     if (!adminToken) return;
@@ -130,6 +132,12 @@ function AiInventoryAlertsPage() {
           <option value="high">Needs attention (yellow)</option>
           <option value="watch">Healthy (green)</option>
         </select>
+        <select value={minConfidence} onChange={(e) => setMinConfidence(Number(e.target.value))} aria-label="Filter by AI confidence" className="rounded-lg border border-input bg-card px-3 py-2 text-sm">
+          <option value={0}>Any AI confidence</option>
+          <option value={50}>Confidence 50%+</option>
+          <option value={70}>Confidence 70%+ (strong history)</option>
+          <option value={85}>Confidence 85%+ (very strong)</option>
+        </select>
       </div>
 
       {loading && !board ? (
@@ -145,6 +153,9 @@ function AiInventoryAlertsPage() {
                   <div className="flex items-center gap-2">
                     <span className="font-display text-base font-extrabold">{r.productName}</span>
                     <span className={`rounded-full border px-2 py-0.5 text-[11px] font-bold capitalize ${HEALTH_STYLE[r.health]}`}>{r.health}</span>
+                    <span className="rounded-full border border-border bg-secondary px-2 py-0.5 text-[11px] font-bold" title="How much historical sales data backs this forecast">
+                      {Math.round(r.confidence * 100)}% confidence
+                    </span>
                   </div>
                   <div className="text-xs text-muted-foreground">{r.marketName}</div>
                 </div>

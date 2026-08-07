@@ -6,9 +6,9 @@ export const Route = createFileRoute("/support")({
   head: () => ({
     meta: [
       { title: "Help & Support — Kartogo" },
-      { name: "description", content: "Reach the Kartogo team in Ongole for order help, refunds, delivery questions and feedback — call, email or message us 24/7." },
+      { name: "description", content: "Reach the Kartogo team in Ongole for order help, refunds, delivery questions and feedback — call or message us 24/7." },
       { property: "og:title", content: "Help & Support — Kartogo" },
-      { property: "og:description", content: "Get help with your Kartogo order — call, email or message our Ongole support team, 24/7." },
+      { property: "og:description", content: "Get help with your Kartogo order — call or message our Ongole support team, 24/7." },
       { property: "og:url", content: "/support" },
     ],
     links: [{ rel: "canonical", href: "/support" }],
@@ -18,9 +18,9 @@ export const Route = createFileRoute("/support")({
         "@context": "https://schema.org",
         "@type": "FAQPage",
         mainEntity: [
-          { "@type": "Question", name: "How do I contact Kartogo customer service?", acceptedAnswer: { "@type": "Answer", text: "Call +91 91103 10034 or email support@kartogo.in — our team responds 24/7." } },
+          { "@type": "Question", name: "How do I contact Kartogo customer service?", acceptedAnswer: { "@type": "Answer", text: "Call or WhatsApp +91 91103 10034 — our team responds 24/7." } },
           { "@type": "Question", name: "How fast is Kartogo delivery?", acceptedAnswer: { "@type": "Answer", text: "Kartogo delivers snacks, pickles, spices, tiffin batter and daily essentials within about 15 minutes across Ongole." } },
-          { "@type": "Question", name: "Can I return or refund an order?", acceptedAnswer: { "@type": "Answer", text: "Yes — reach us within 24 hours of delivery via call or email and we'll arrange a refund or replacement per our returns policy." } },
+          { "@type": "Question", name: "Can I return or refund an order?", acceptedAnswer: { "@type": "Answer", text: "Yes — reach us within 24 hours of delivery by call or WhatsApp and we'll arrange a refund or replacement per our returns policy." } },
         ],
       }),
     }],
@@ -90,7 +90,7 @@ function SupportPage() {
           <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-              <span>For order issues, please share your order ID when you call or email.</span>
+              <span>For order issues, please share your order ID when you call or message.</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
