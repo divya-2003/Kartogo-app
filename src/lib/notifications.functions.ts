@@ -1,19 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
+import { toE164 } from "./phone";
 
 // Admin-managed alert recipients (SMS) + the delivery log.
 // Email delivery was removed from Kartogo — SMS and in-app push only.
 const str = (v: unknown, max = 200) => String(v ?? "").trim().slice(0, max);
 
 const KINDS = ["low_stock", "out_of_stock", "critical", "supplier_reminder", "replenish_request"] as const;
-
-/** Returns a strict E.164 number, or null when the input cannot be one. */
-export function toE164(raw: string): string | null {
-  const cleaned = raw.replace(/[\s()\-.]/g, "");
-  const digits = cleaned.replace(/^\+/, "");
-  if (!/^\d+$/.test(digits)) return null;
-  const withCc = cleaned.startsWith("+") ? `+${digits}` : digits.length === 10 ? `+91${digits}` : `+${digits}`;
-  return /^\+[1-9]\d{7,14}$/.test(withCc) ? withCc : null;
-}
 
 async function requireAdmin(token: string) {
   const { verifyAdminToken } = await import("./auth-tokens.server");
