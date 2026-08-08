@@ -313,7 +313,9 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
           />
         ) : (
         <>
+        {token && <DriverDispatchPanel token={token} onAssigned={() => { void load(); }} />}
         <DailySummary orders={orders} returns={returns} />
+
 
 
         <div className="mb-4 flex flex-wrap gap-2">
