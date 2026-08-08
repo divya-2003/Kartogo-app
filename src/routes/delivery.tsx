@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate, redirect, Link } from "@tanstack/react-router";
+import { DriverDispatchPanel } from "@/components/logistics/DriverDispatchPanel";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { StaffAccountCard } from "@/components/StaffAccountCard";
@@ -313,7 +314,9 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
           />
         ) : (
         <>
+        {token && <DriverDispatchPanel token={token} onAssigned={() => { void load(); }} />}
         <DailySummary orders={orders} returns={returns} />
+
 
 
         <div className="mb-4 flex flex-wrap gap-2">
