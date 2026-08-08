@@ -398,6 +398,150 @@ export type Database = {
         }
         Relationships: []
       }
+      delivery_assignments: {
+        Row: {
+          attempt: number
+          created_at: string
+          distance_meters: number | null
+          driver_id: string
+          drop_latitude: number | null
+          drop_longitude: number | null
+          expires_at: string
+          id: string
+          offered_at: string
+          order_id: string
+          pickup_latitude: number | null
+          pickup_longitude: number | null
+          reason: string | null
+          responded_at: string | null
+          status: Database["public"]["Enums"]["assignment_status"]
+          updated_at: string
+        }
+        Insert: {
+          attempt?: number
+          created_at?: string
+          distance_meters?: number | null
+          driver_id: string
+          drop_latitude?: number | null
+          drop_longitude?: number | null
+          expires_at?: string
+          id?: string
+          offered_at?: string
+          order_id: string
+          pickup_latitude?: number | null
+          pickup_longitude?: number | null
+          reason?: string | null
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["assignment_status"]
+          updated_at?: string
+        }
+        Update: {
+          attempt?: number
+          created_at?: string
+          distance_meters?: number | null
+          driver_id?: string
+          drop_latitude?: number | null
+          drop_longitude?: number | null
+          expires_at?: string
+          id?: string
+          offered_at?: string
+          order_id?: string
+          pickup_latitude?: number | null
+          pickup_longitude?: number | null
+          reason?: string | null
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["assignment_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      delivery_events: {
+        Row: {
+          actor: string
+          created_at: string
+          driver_id: string | null
+          event_type: string
+          id: string
+          order_id: string
+          payload: Json
+        }
+        Insert: {
+          actor?: string
+          created_at?: string
+          driver_id?: string | null
+          event_type: string
+          id?: string
+          order_id: string
+          payload?: Json
+        }
+        Update: {
+          actor?: string
+          created_at?: string
+          driver_id?: string | null
+          event_type?: string
+          id?: string
+          order_id?: string
+          payload?: Json
+        }
+        Relationships: []
+      }
+      delivery_partners: {
+        Row: {
+          active_order_id: string | null
+          completed_orders: number
+          created_at: string
+          current_latitude: number | null
+          current_longitude: number | null
+          driver_id: string
+          id: string
+          last_location_at: string | null
+          mobile_number: string
+          name: string
+          online: boolean
+          rating: number
+          rating_count: number
+          status: Database["public"]["Enums"]["driver_status"]
+          updated_at: string
+          vehicle_type: string
+        }
+        Insert: {
+          active_order_id?: string | null
+          completed_orders?: number
+          created_at?: string
+          current_latitude?: number | null
+          current_longitude?: number | null
+          driver_id: string
+          id?: string
+          last_location_at?: string | null
+          mobile_number: string
+          name: string
+          online?: boolean
+          rating?: number
+          rating_count?: number
+          status?: Database["public"]["Enums"]["driver_status"]
+          updated_at?: string
+          vehicle_type?: string
+        }
+        Update: {
+          active_order_id?: string | null
+          completed_orders?: number
+          created_at?: string
+          current_latitude?: number | null
+          current_longitude?: number | null
+          driver_id?: string
+          id?: string
+          last_location_at?: string | null
+          mobile_number?: string
+          name?: string
+          online?: boolean
+          rating?: number
+          rating_count?: number
+          status?: Database["public"]["Enums"]["driver_status"]
+          updated_at?: string
+          vehicle_type?: string
+        }
+        Relationships: []
+      }
       driver_access_events: {
         Row: {
           active: boolean
@@ -455,6 +599,42 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_locations: {
+        Row: {
+          accuracy: number | null
+          driver_id: string
+          heading: number | null
+          id: string
+          latitude: number
+          longitude: number
+          order_id: string | null
+          recorded_at: string
+          speed: number | null
+        }
+        Insert: {
+          accuracy?: number | null
+          driver_id: string
+          heading?: number | null
+          id?: string
+          latitude: number
+          longitude: number
+          order_id?: string | null
+          recorded_at?: string
+          speed?: number | null
+        }
+        Update: {
+          accuracy?: number | null
+          driver_id?: string
+          heading?: number | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          order_id?: string | null
+          recorded_at?: string
+          speed?: number | null
+        }
+        Relationships: []
+      }
       driver_ratings: {
         Row: {
           comment: string | null
@@ -485,6 +665,36 @@ export type Database = {
           order_id?: string
           rating?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      driver_status_history: {
+        Row: {
+          actor: string
+          created_at: string
+          driver_id: string
+          from_status: Database["public"]["Enums"]["driver_status"] | null
+          id: string
+          order_id: string | null
+          to_status: Database["public"]["Enums"]["driver_status"]
+        }
+        Insert: {
+          actor?: string
+          created_at?: string
+          driver_id: string
+          from_status?: Database["public"]["Enums"]["driver_status"] | null
+          id?: string
+          order_id?: string | null
+          to_status: Database["public"]["Enums"]["driver_status"]
+        }
+        Update: {
+          actor?: string
+          created_at?: string
+          driver_id?: string
+          from_status?: Database["public"]["Enums"]["driver_status"] | null
+          id?: string
+          order_id?: string | null
+          to_status?: Database["public"]["Enums"]["driver_status"]
         }
         Relationships: []
       }
@@ -1773,6 +1983,22 @@ export type Database = {
       }
     }
     Enums: {
+      assignment_status:
+        | "OFFERED"
+        | "ACCEPTED"
+        | "REJECTED"
+        | "EXPIRED"
+        | "CANCELLED"
+        | "COMPLETED"
+      driver_status:
+        | "OFFLINE"
+        | "ONLINE"
+        | "AVAILABLE"
+        | "ASSIGNED"
+        | "PICKING_ORDER"
+        | "EN_ROUTE"
+        | "DELIVERED"
+        | "BREAK"
       order_status:
         | "pending"
         | "accepted"
@@ -1913,6 +2139,24 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      assignment_status: [
+        "OFFERED",
+        "ACCEPTED",
+        "REJECTED",
+        "EXPIRED",
+        "CANCELLED",
+        "COMPLETED",
+      ],
+      driver_status: [
+        "OFFLINE",
+        "ONLINE",
+        "AVAILABLE",
+        "ASSIGNED",
+        "PICKING_ORDER",
+        "EN_ROUTE",
+        "DELIVERED",
+        "BREAK",
+      ],
       order_status: [
         "pending",
         "accepted",
