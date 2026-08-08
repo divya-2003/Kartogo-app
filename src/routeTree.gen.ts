@@ -41,6 +41,7 @@ import { Route as AdminCombosRouteImport } from './routes/admin.combos'
 import { Route as AdminDeliveryRouteImport } from './routes/admin.delivery'
 import { Route as AdminFeedbackRouteImport } from './routes/admin.feedback'
 import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
+import { Route as AdminLogisticsRouteImport } from './routes/admin.logistics'
 import { Route as AdminOffersRouteImport } from './routes/admin.offers'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminPartnersRouteImport } from './routes/admin.partners'
@@ -227,6 +228,11 @@ const AdminInventoryRoute = AdminInventoryRouteImport.update({
   path: '/inventory',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLogisticsRoute = AdminLogisticsRouteImport.update({
+  id: '/logistics',
+  path: '/logistics',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminOffersRoute = AdminOffersRouteImport.update({
   id: '/offers',
   path: '/offers',
@@ -387,6 +393,7 @@ export interface FileRoutesByFullPath {
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/logistics': typeof AdminLogisticsRoute
   '/admin/offers': typeof AdminOffersRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/partners': typeof AdminPartnersRoute
@@ -444,6 +451,7 @@ export interface FileRoutesByTo {
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/logistics': typeof AdminLogisticsRoute
   '/admin/offers': typeof AdminOffersRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/partners': typeof AdminPartnersRoute
@@ -504,6 +512,7 @@ export interface FileRoutesById {
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/logistics': typeof AdminLogisticsRoute
   '/admin/offers': typeof AdminOffersRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/partners': typeof AdminPartnersRoute
@@ -565,6 +574,7 @@ export interface FileRouteTypes {
     | '/admin/delivery'
     | '/admin/feedback'
     | '/admin/inventory'
+    | '/admin/logistics'
     | '/admin/offers'
     | '/admin/orders'
     | '/admin/partners'
@@ -622,6 +632,7 @@ export interface FileRouteTypes {
     | '/admin/delivery'
     | '/admin/feedback'
     | '/admin/inventory'
+    | '/admin/logistics'
     | '/admin/offers'
     | '/admin/orders'
     | '/admin/partners'
@@ -681,6 +692,7 @@ export interface FileRouteTypes {
     | '/admin/delivery'
     | '/admin/feedback'
     | '/admin/inventory'
+    | '/admin/logistics'
     | '/admin/offers'
     | '/admin/orders'
     | '/admin/partners'
@@ -965,6 +977,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminInventoryRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/logistics': {
+      id: '/admin/logistics'
+      path: '/logistics'
+      fullPath: '/admin/logistics'
+      preLoaderRoute: typeof AdminLogisticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/offers': {
       id: '/admin/offers'
       path: '/offers'
@@ -1153,6 +1172,7 @@ interface AdminRouteChildren {
   AdminDeliveryRoute: typeof AdminDeliveryRoute
   AdminFeedbackRoute: typeof AdminFeedbackRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
+  AdminLogisticsRoute: typeof AdminLogisticsRoute
   AdminOffersRoute: typeof AdminOffersRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
   AdminPartnersRoute: typeof AdminPartnersRoute
@@ -1181,6 +1201,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminDeliveryRoute: AdminDeliveryRoute,
   AdminFeedbackRoute: AdminFeedbackRoute,
   AdminInventoryRoute: AdminInventoryRoute,
+  AdminLogisticsRoute: AdminLogisticsRoute,
   AdminOffersRoute: AdminOffersRoute,
   AdminOrdersRoute: AdminOrdersRoute,
   AdminPartnersRoute: AdminPartnersRoute,
@@ -1253,13 +1274,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

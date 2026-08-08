@@ -122,5 +122,16 @@ export const supplierMarkPackedFn = createServerFn({ method: "POST" })
     if (error || !row) {
       throw new Error("Status could not be updated. Please try again.");
     }
+
+    // Phase 3 — the order is ready, so dispatch it to the nearest available
+    // rider. Dispatch problems must never block the supplier's own action.
+    try {
+      const { offerOrder, logEvent } = await import("./logistics/dispatch.server");
+      await logEvent(row.id as string, "order_ready", {}, null, `supplier:${session.supplierId}`);
+      await offerOrder(row.id as string);
+    } catch (e) {
+      console.error("dispatch after pack failed", e);
+    }
+
     return { ok: true as const, id: row.id, status: row.status as SupplierOrder["status"] };
   });

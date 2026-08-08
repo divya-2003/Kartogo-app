@@ -38,6 +38,7 @@ const NAV = [
   { to: "/admin/refund-requests", label: "Refund requests", icon: BadgeIndianRupee },
   { to: "/admin/feedback", label: "Feedback", icon: Star },
   { to: "/admin/delivery", label: "Delivery", icon: Bike },
+  { to: "/admin/logistics", label: "Live logistics", icon: Bike },
   { to: "/admin/print", label: "Print queue", icon: Printer },
   { to: "/admin/partners", label: "Partner markets", icon: Store },
   { to: "/admin/combos", label: "Combo bundles", icon: Package },
