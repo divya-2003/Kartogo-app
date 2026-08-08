@@ -122,12 +122,12 @@ export async function setStatus(
   opts: { orderId?: string | null; actor?: string } = {},
 ): Promise<DeliveryPartner | null> {
   const supabaseAdmin = await db();
-  const patch: Record<string, unknown> = {
+  const patch = {
     status,
     online: status !== "OFFLINE",
     updated_at: new Date().toISOString(),
+    ...(opts.orderId !== undefined ? { active_order_id: opts.orderId } : {}),
   };
-  if (opts.orderId !== undefined) patch["active_order_id"] = opts.orderId;
 
   const { data } = await supabaseAdmin
     .from("delivery_partners").update(patch).eq("driver_id", driverId).select("*").maybeSingle();
