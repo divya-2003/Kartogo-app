@@ -560,6 +560,9 @@ function OrdersPage() {
                         </div>
                       )}
 
+                      <div className="mt-3">
+                        <LiveTrackingCard token={customerToken} orderId={o.id} />
+                      </div>
                     </div>
                   )}
 
