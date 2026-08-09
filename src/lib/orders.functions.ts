@@ -246,9 +246,9 @@ export const setOrderStatusFn = createServerFn({ method: "POST" })
         await dispatch.logEvent(data.id, "order_ready", {}, null, "admin");
         await dispatch.offerOrder(data.id);
       } else if (data.status === "cancelled") {
-        await dispatch.releaseDriver(data.id, "cancelled", { redispatch: false });
-      } else if (data.status === "delivered") {
-        await dispatch.completeDelivery(data.id, "admin");
+        await dispatch.releaseDriver(data.id, "cancelled", false);
+      } else if (data.status === "delivered" && row.delivery_boy_id) {
+        await dispatch.completeAssignment(data.id, String(row.delivery_boy_id));
       }
     } catch (e) {
       console.error("dispatch sync failed", e);
