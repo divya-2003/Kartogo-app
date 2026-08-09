@@ -40,6 +40,8 @@ export type Product = {
   image?: string;
   description: string;
   tags?: string[];
+  /** Max units a single customer can buy per order. undefined/0 = no limit. */
+  maxPerOrder?: number;
 };
 
 export const CATEGORIES: Category[] = [

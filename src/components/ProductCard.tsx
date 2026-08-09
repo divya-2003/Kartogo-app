@@ -115,26 +115,31 @@ export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolea
             >
               <BellRing className="h-3 w-3" /> {notified ? "NOTIFYING" : notifying ? "…" : "NOTIFY ME"}
             </button>
-          ) : !inCart ? (
+          ) : inCart ? (
+            /* Quantity stepper sits to the RIGHT of the price, not below it */
+            <div className="flex shrink-0 items-center gap-1 rounded-xl border border-primary p-0.5">
+              <button onClick={() => setQty(p.id, inCart.qty - 1)} aria-label="Decrease quantity" className="grid h-7 w-7 place-items-center rounded-lg text-primary hover:bg-primary/10">−</button>
+              <span className="min-w-5 text-center text-sm font-bold">{inCart.qty}</span>
+              <button
+                onClick={() => setQty(p.id, inCart.qty + 1)}
+                disabled={!!p.maxPerOrder && inCart.qty >= p.maxPerOrder}
+                aria-label="Increase quantity"
+                className="grid h-7 w-7 place-items-center rounded-lg text-primary hover:bg-primary/10 disabled:opacity-40"
+              >+</button>
+            </div>
+          ) : (
             <button
               onClick={handleAdd}
               className="inline-flex items-center gap-1 rounded-lg border border-primary px-3 py-1.5 text-xs font-bold text-primary transition hover:bg-primary hover:text-primary-foreground"
             >
               <Plus className="h-3 w-3" /> ADD
             </button>
-          ) : null}
+          )}
         </div>
-
-        {/* Quantity stepper only — no "Go to cart" button per latest design */}
-        {!out && inCart && (
-          <div className="mt-2 flex items-center gap-2">
-            <div className="flex items-center gap-1 rounded-xl border border-primary p-0.5">
-              <button onClick={() => setQty(p.id, inCart.qty - 1)} aria-label="Decrease quantity" className="grid h-7 w-7 place-items-center rounded-lg text-primary hover:bg-primary/10">−</button>
-              <span className="min-w-5 text-center text-sm font-bold">{inCart.qty}</span>
-              <button onClick={() => setQty(p.id, inCart.qty + 1)} aria-label="Increase quantity" className="grid h-7 w-7 place-items-center rounded-lg text-primary hover:bg-primary/10">+</button>
-            </div>
-          </div>
+        {!out && !!p.maxPerOrder && (
+          <div className="mt-1 text-[11px] font-semibold text-muted-foreground">Max {p.maxPerOrder} per order</div>
         )}
+
 
 
 

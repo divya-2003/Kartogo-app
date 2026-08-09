@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import { PRODUCTS, DELIVERY_BOYS, type Product } from "./data";
 import { requestOtpFn, verifyOtpFn, adminLoginFn } from "./auth.functions";
 import { getWalletFn, addMoneyFn, getTopupsFn, recordFailedTopupFn, type WalletTxnRow, type TopupRow } from "./wallet.functions";
@@ -58,14 +59,31 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const products = useProductsValue();
 
   const value = useMemo<CartCtx>(() => {
+    // Per-product purchase cap configured by admin / supplier.
+    const capFor = (id: string) => {
+      const p = products.find(p => p.id === id);
+      const m = p?.maxPerOrder;
+      return m && m > 0 ? m : Infinity;
+    };
+    const clamp = (id: string, qty: number) => {
+      const cap = capFor(id);
+      if (qty > cap) {
+        const p = products.find(p => p.id === id);
+        toast.info(`You can buy up to ${cap} of ${p?.name ?? "this item"} per order`);
+        return cap;
+      }
+      return qty;
+    };
     const add: CartCtx["add"] = (id, qty = 1) =>
       setItems(prev => {
         const ex = prev.find(i => i.productId === id);
-        return ex ? prev.map(i => i.productId === id ? { ...i, qty: i.qty + qty } : i) : [...prev, { productId: id, qty }];
+        return ex
+          ? prev.map(i => i.productId === id ? { ...i, qty: clamp(id, i.qty + qty) } : i)
+          : [...prev, { productId: id, qty: clamp(id, qty) }];
       });
     const remove: CartCtx["remove"] = (id) => setItems(prev => prev.filter(i => i.productId !== id));
     const setQty: CartCtx["setQty"] = (id, qty) =>
-      setItems(prev => qty <= 0 ? prev.filter(i => i.productId !== id) : prev.map(i => i.productId === id ? { ...i, qty } : i));
+      setItems(prev => qty <= 0 ? prev.filter(i => i.productId !== id) : prev.map(i => i.productId === id ? { ...i, qty: clamp(id, qty) } : i));
     const clear = () => setItems([]);
     const count = items.reduce((s, i) => s + i.qty, 0);
     const subtotal = items.reduce((s, i) => {
@@ -494,6 +512,7 @@ function rowToProduct(r: CatalogItemRow): Product {
     emoji: r.emoji,
     image: r.image ?? undefined,
     description: r.description,
+    maxPerOrder: r.max_per_order == null ? undefined : Number(r.max_per_order),
   };
 }
 
@@ -562,7 +581,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       supplierToken, adminToken: at,
       id: p.id, name: p.name, category: p.category, price: p.price,
       mrp: p.mrp, unit: p.unit, stock: p.stock, emoji: p.emoji,
-      image: p.image, description: p.description,
+      image: p.image, description: p.description, maxPerOrder: p.maxPerOrder ?? null,
     } }).then(refreshCatalog).catch(() => { /* keep optimistic */ });
   };
 
