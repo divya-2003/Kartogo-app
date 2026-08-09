@@ -235,6 +235,7 @@ export type Database = {
           emoji: string
           id: string
           image: string | null
+          max_per_order: number | null
           mrp: number | null
           name: string
           price: number
@@ -250,6 +251,7 @@ export type Database = {
           emoji?: string
           id: string
           image?: string | null
+          max_per_order?: number | null
           mrp?: number | null
           name: string
           price?: number
@@ -265,6 +267,7 @@ export type Database = {
           emoji?: string
           id?: string
           image?: string | null
+          max_per_order?: number | null
           mrp?: number | null
           name?: string
           price?: number
