@@ -127,6 +127,9 @@ function ProductPage() {
               {p.mrp && p.mrp > p.price && <div className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">{Math.round((1 - p.price / p.mrp) * 100)}% OFF</div>}
             </div>
             <p className="mt-4 text-muted-foreground">{p.description}</p>
+            {!!p.maxPerOrder && (
+              <div className="mt-2 text-sm font-semibold text-muted-foreground">Max {p.maxPerOrder} per order</div>
+            )}
             {p.stock <= 0 && (
               <div className="mt-6">
                 <div className="text-sm font-semibold text-destructive">Out of stock</div>
@@ -137,7 +140,7 @@ function ProductPage() {
                 <div className="flex items-center gap-2 rounded-xl border border-primary p-1">
                   <button aria-label="Decrease quantity" onClick={() => setQty(p.id, inCart.qty - 1)} className="grid h-9 w-9 place-items-center rounded-lg text-primary hover:bg-primary/10"><Minus className="h-4 w-4" /></button>
                   <span className="min-w-8 text-center font-bold">{inCart.qty}</span>
-                  <button aria-label="Increase quantity" onClick={() => setQty(p.id, inCart.qty + 1)} className="grid h-9 w-9 place-items-center rounded-lg text-primary hover:bg-primary/10"><Plus className="h-4 w-4" /></button>
+                  <button aria-label="Increase quantity" disabled={!!p.maxPerOrder && inCart.qty >= p.maxPerOrder} onClick={() => setQty(p.id, inCart.qty + 1)} className="grid h-9 w-9 place-items-center rounded-lg text-primary hover:bg-primary/10 disabled:opacity-40"><Plus className="h-4 w-4" /></button>
                 </div>
               ) : (
                 <button disabled={p.stock <= 0} onClick={handleAdd} className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground">
