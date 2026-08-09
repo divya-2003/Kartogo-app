@@ -221,6 +221,18 @@ export const claimOrderFn = createServerFn({ method: "POST" })
     if (error || !row) {
       throw new Error("This order was already taken by another partner");
     }
+
+    // Self-claim is a manual assignment — reflect it in the logistics layer.
+    try {
+      const { ensurePartner, setStatus } = await import("./logistics/partners.server");
+      const { logEvent } = await import("./logistics/dispatch.server");
+      await ensurePartner(session.driverId);
+      await setStatus(session.driverId, "ASSIGNED", { orderId: data.id });
+      await logEvent(data.id, "driver_accepted", { selfClaimed: true }, session.driverId, "driver");
+    } catch (e) {
+      console.error("logistics claim sync failed", e);
+    }
+
     return maskOrderForDriver(row);
   });
 
