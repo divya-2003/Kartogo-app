@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { DeliveryProgress } from "@/components/DeliveryProgress";
+import { LiveTrackingCard } from "@/components/logistics/LiveTrackingCard";
 import {
   useAuth,
   useOrders,
