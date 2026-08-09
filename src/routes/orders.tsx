@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { DeliveryProgress } from "@/components/DeliveryProgress";
+import { LiveTrackingCard } from "@/components/logistics/LiveTrackingCard";
 import {
   useAuth,
   useOrders,
@@ -560,6 +561,9 @@ function OrdersPage() {
                         </div>
                       )}
 
+                      <div className="mt-3">
+                        <LiveTrackingCard token={customerToken} orderId={o.id} />
+                      </div>
                     </div>
                   )}
 

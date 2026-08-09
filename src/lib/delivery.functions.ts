@@ -144,6 +144,24 @@ export const deliverySetStatusFn = createServerFn({ method: "POST" })
     const { syncInventoryForStatus } = await import("./inventory.server");
     await syncInventoryForStatus(data.id, data.status, `driver:${session.driverId}`);
 
+    // Phase 7 — mirror the order lifecycle onto the rider's live status so the
+    // control tower and customer tracking stay accurate.
+    try {
+      const { setStatus } = await import("./logistics/partners.server");
+      const dispatch = await import("./logistics/dispatch.server");
+      if (data.status === "packed") {
+        await setStatus(session.driverId, "PICKING_ORDER", { orderId: data.id });
+        await dispatch.logEvent(data.id, "picked_up", {}, session.driverId, "driver");
+      } else if (data.status === "out_for_delivery") {
+        await setStatus(session.driverId, "EN_ROUTE", { orderId: data.id });
+        await dispatch.logEvent(data.id, "en_route", {}, session.driverId, "driver");
+      } else if (data.status === "delivered") {
+        await dispatch.completeAssignment(data.id, session.driverId);
+      }
+    } catch (e) {
+      console.error("logistics status sync failed", e);
+    }
+
     return maskOrderForDriver(row);
 
 
@@ -203,6 +221,18 @@ export const claimOrderFn = createServerFn({ method: "POST" })
     if (error || !row) {
       throw new Error("This order was already taken by another partner");
     }
+
+    // Self-claim is a manual assignment — reflect it in the logistics layer.
+    try {
+      const { ensurePartner, setStatus } = await import("./logistics/partners.server");
+      const { logEvent } = await import("./logistics/dispatch.server");
+      await ensurePartner(session.driverId);
+      await setStatus(session.driverId, "ASSIGNED", { orderId: data.id });
+      await logEvent(data.id, "driver_accepted", { selfClaimed: true }, session.driverId, "driver");
+    } catch (e) {
+      console.error("logistics claim sync failed", e);
+    }
+
     return maskOrderForDriver(row);
   });
 

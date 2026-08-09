@@ -238,6 +238,22 @@ export const setOrderStatusFn = createServerFn({ method: "POST" })
     const { syncInventoryForStatus } = await import("./inventory.server");
     await syncInventoryForStatus(data.id, data.status, "admin");
 
+    // Phase 3/7 — keep dispatch in step with the order lifecycle. Never let a
+    // logistics hiccup fail the admin's status change.
+    try {
+      const dispatch = await import("./logistics/dispatch.server");
+      if (data.status === "packed") {
+        await dispatch.logEvent(data.id, "order_ready", {}, null, "admin");
+        await dispatch.offerOrder(data.id);
+      } else if (data.status === "cancelled") {
+        await dispatch.releaseDriver(data.id, "cancelled", false);
+      } else if (data.status === "delivered" && row.delivery_boy_id) {
+        await dispatch.completeAssignment(data.id, String(row.delivery_boy_id));
+      }
+    } catch (e) {
+      console.error("dispatch sync failed", e);
+    }
+
     return row;
 
   });
