@@ -51,6 +51,16 @@ export function ItemEditor({
             <NumField label="MRP ₹" value={p.mrp ?? 0} onChange={(v) => setP({ ...p, mrp: v })} />
             <NumField label="Stock" value={p.stock} onChange={(v) => setP({ ...p, stock: v })} />
           </div>
+          <label className="block">
+            <div className="mb-1 text-xs font-semibold text-muted-foreground">Max per customer / order (0 = no limit)</div>
+            <input
+              type="number"
+              min={0}
+              value={p.maxPerOrder ?? 0}
+              onChange={(e) => { const v = Math.max(0, Math.floor(Number(e.target.value) || 0)); setP({ ...p, maxPerOrder: v || undefined }); }}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
+            />
+          </label>
           <ImagePicker value={p.image} onChange={(v) => setP({ ...p, image: v })} />
           <textarea value={p.description} onChange={(e) => setP({ ...p, description: e.target.value })} rows={3} placeholder="Description" className="rounded-lg border border-input bg-background px-3 py-2 outline-none" />
         </div>
