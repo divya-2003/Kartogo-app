@@ -17,6 +17,7 @@ export type CatalogItemRow = {
   image: string | null;
   description: string;
   source: string;
+  max_per_order: number | null;
 };
 
 const str = (v: unknown, max = 500): string => String(v ?? "").trim().slice(0, max);
@@ -56,7 +57,7 @@ export const listCatalogItemsFn = createServerFn({ method: "GET" }).handler(asyn
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("catalog_items")
-    .select("id, name, category, price, mrp, unit, stock, emoji, image, description, source")
+    .select("id, name, category, price, mrp, unit, stock, emoji, image, description, source, max_per_order")
     .order("created_at", { ascending: true });
   if (error) {
     console.error("Failed to list catalog items", error);
@@ -71,6 +72,7 @@ export const upsertCatalogItemFn = createServerFn({ method: "POST" })
     supplierToken?: string; adminToken?: string;
     id?: string; name?: string; category?: string; price?: number; mrp?: number;
     unit?: string; stock?: number; emoji?: string; image?: string; description?: string;
+    maxPerOrder?: number | null;
   }) => ({
     supplierToken: data?.supplierToken ? String(data.supplierToken) : "",
     adminToken: data?.adminToken ? String(data.adminToken) : "",
@@ -84,6 +86,7 @@ export const upsertCatalogItemFn = createServerFn({ method: "POST" })
     emoji: str(data?.emoji, 8) || "🛒",
     image: data?.image ? String(data.image).trim().slice(0, 2_000_000) : null,
     description: str(data?.description, 2000),
+    maxPerOrder: data?.maxPerOrder == null || num(data?.maxPerOrder) <= 0 ? null : Math.floor(num(data?.maxPerOrder)),
   }))
   .handler(async ({ data }) => {
     const who = await authorize(data.supplierToken, data.adminToken);
@@ -102,6 +105,7 @@ export const upsertCatalogItemFn = createServerFn({ method: "POST" })
       emoji: data.emoji,
       image: data.image,
       description: data.description,
+      max_per_order: data.maxPerOrder,
       source: who.source,
     }, { onConflict: "id" });
     if (error) { console.error("upsert catalog", error); throw new Error("Could not save item"); }
