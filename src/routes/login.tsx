@@ -2,8 +2,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useAuth } from "@/lib/store";
 import { toast } from "sonner";
-import { Phone, KeyRound, ShieldCheck } from "lucide-react";
+import { KeyRound, ShieldCheck } from "lucide-react";
 import kartigoLogo from "@/assets/kartigo-logo.png.asset.json";
+import { PhoneNumberInput } from "@/components/PhoneNumberInput";
+import { usePhoneCountryDetection } from "@/hooks/use-phone-country";
+import { toE164, validatePhoneNumber, getCountry } from "@/lib/phone";
 
 export const Route = createFileRoute("/login")({
   validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
@@ -17,6 +20,7 @@ function LoginPage() {
   const { sendOtp, verifyOtp, adminLogin } = useAuth();
   const nav = useNavigate();
   const { redirect } = Route.useSearch();
+  const { country, setCountry } = usePhoneCountryDetection();
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [passcode, setPasscode] = useState("");
@@ -24,12 +28,20 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [demoCode, setDemoCode] = useState<string | null>(null);
 
+  // The E.164 number is what the OTP backend receives; the UI keeps showing
+  // whatever the customer typed.
+  const e164 = toE164(phone, country);
+  const displayNumber = e164 ?? `${getCountry(country).dialCode} ${phone}`;
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!/^\d{10}$/.test(phone)) { toast.error("Enter a valid 10-digit mobile"); return; }
+    if (!validatePhoneNumber(phone, country) || !e164) {
+      toast.error("Please enter a valid mobile number.");
+      return;
+    }
     setLoading(true);
     try {
-      const { demo, demoCode } = await sendOtp(phone);
+      const { demo, demoCode } = await sendOtp(e164);
       setStage("otp");
       if (demo && demoCode) {
         setDemoCode(demoCode);
@@ -37,12 +49,13 @@ function LoginPage() {
         toast.success(`Demo mode: use OTP ${demoCode}`);
       } else {
         setDemoCode(null);
-        toast.success(`OTP sent to +91 ${phone}`);
+        toast.success(`OTP sent to ${displayNumber}`);
       }
     } catch (err) {
       toast.error((err as Error).message);
     } finally { setLoading(false); }
   };
+
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
