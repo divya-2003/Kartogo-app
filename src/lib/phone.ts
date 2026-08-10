@@ -206,3 +206,13 @@ export function detectCountryFromTimezone(tz?: string): CountryCode | null {
     return null;
   }
 }
+
+/**
+ * Server-side guard: the frontend may send any user-typed format, so the
+ * backend re-parses and normalizes before it is used for auth/OTP.
+ */
+export function normalizeIncomingPhone(raw: unknown): string {
+  const canonical = canonicalPhone(String(raw ?? ""));
+  if (!canonical) throw new Error("Please enter a valid mobile number.");
+  return canonical;
+}

@@ -1,15 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { canonicalPhone, canonicalToE164 } from "./phone";
-
-// The frontend may send any user-typed format. The server is the only place
-// that decides what a phone number "is": it re-parses and normalizes to the
-// canonical storage key (10-digit national for India, E.164 elsewhere) so the
-// same person never becomes two accounts.
-function normalizeIncomingPhone(raw: unknown): string {
-  const canonical = canonicalPhone(String(raw ?? ""));
-  if (!canonical) throw new Error("Please enter a valid mobile number.");
-  return canonical;
-}
+import { canonicalPhone, canonicalToE164, normalizeIncomingPhone } from "./phone";
 
 // ---------------- Demo OTP mode ----------------
 // Demo mode is ONLY for private/staging builds where real SMS is unavailable
