@@ -1,4 +1,15 @@
 import { createServerFn } from "@tanstack/react-start";
+import { canonicalPhone, canonicalToE164 } from "./phone";
+
+// The frontend may send any user-typed format. The server is the only place
+// that decides what a phone number "is": it re-parses and normalizes to the
+// canonical storage key (10-digit national for India, E.164 elsewhere) so the
+// same person never becomes two accounts.
+function normalizeIncomingPhone(raw: unknown): string {
+  const canonical = canonicalPhone(String(raw ?? ""));
+  if (!canonical) throw new Error("Please enter a valid mobile number.");
+  return canonical;
+}
 
 // ---------------- Demo OTP mode ----------------
 // Demo mode is ONLY for private/staging builds where real SMS is unavailable
@@ -22,9 +33,7 @@ function isDemoOtpMode(): boolean {
 // and delivers it by SMS. The code is NEVER returned to the client.
 export const requestOtpFn = createServerFn({ method: "POST" })
   .inputValidator((data: { phone: string }) => {
-    const phone = String(data?.phone ?? "");
-    if (!/^\d{10}$/.test(phone)) throw new Error("Enter a valid 10-digit mobile number");
-    return { phone };
+    return { phone: normalizeIncomingPhone(data?.phone) };
   })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -71,7 +80,7 @@ export const requestOtpFn = createServerFn({ method: "POST" })
     }
 
     try {
-      await sendSms(`+91${phone}`, `Your Kartogo verification code is ${code}. It expires in 5 minutes.`);
+      await sendSms(canonicalToE164(phone) ?? `+91${phone}`, `Your Kartogo verification code is ${code}. It expires in 5 minutes.`);
     } catch (err) {
       // Twilio trial accounts can only text verified numbers, and the connector
       // may not be configured yet. Rather than blocking login, fall back to
@@ -95,9 +104,8 @@ export const requestOtpFn = createServerFn({ method: "POST" })
 // status is never granted here — it only flags whether to prompt for a passcode.
 export const verifyOtpFn = createServerFn({ method: "POST" })
   .inputValidator((data: { phone: string; code: string }) => {
-    const phone = String(data?.phone ?? "");
+    const phone = normalizeIncomingPhone(data?.phone);
     const code = String(data?.code ?? "");
-    if (!/^\d{10}$/.test(phone)) throw new Error("Invalid phone number");
     if (!/^\d{4,8}$/.test(code)) throw new Error("Enter the code you received");
     return { phone, code };
   })
@@ -198,6 +206,7 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
 
     return {
       ok: true as const,
+      phone: data.phone,
       token: issueCustomerToken(data.phone),
       isAdminPhone: !!staff && staff.role === "admin" && isStaffActive,
       delivery,
@@ -211,7 +220,7 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
 export const adminLoginFn = createServerFn({ method: "POST" })
   .inputValidator((data: { passcode: string; phone?: string }) => ({
     passcode: String(data?.passcode ?? ""),
-    phone: data?.phone ? String(data.phone) : "",
+    phone: data?.phone ? (canonicalPhone(String(data.phone)) ?? String(data.phone)) : "",
   }))
   .handler(async ({ data }) => {
     const { createHash, timingSafeEqual } = await import("node:crypto");
