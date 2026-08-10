@@ -2,8 +2,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useAuth } from "@/lib/store";
 import { toast } from "sonner";
-import { Phone, KeyRound, ShieldCheck } from "lucide-react";
+import { KeyRound, ShieldCheck } from "lucide-react";
 import kartigoLogo from "@/assets/kartigo-logo.png.asset.json";
+import { PhoneNumberInput } from "@/components/PhoneNumberInput";
+import { usePhoneCountryDetection } from "@/hooks/use-phone-country";
+import { toE164, validatePhoneNumber, getCountry } from "@/lib/phone";
 
 export const Route = createFileRoute("/login")({
   validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
@@ -17,6 +20,7 @@ function LoginPage() {
   const { sendOtp, verifyOtp, adminLogin } = useAuth();
   const nav = useNavigate();
   const { redirect } = Route.useSearch();
+  const { country, setCountry } = usePhoneCountryDetection();
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [passcode, setPasscode] = useState("");
@@ -24,12 +28,20 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [demoCode, setDemoCode] = useState<string | null>(null);
 
+  // The E.164 number is what the OTP backend receives; the UI keeps showing
+  // whatever the customer typed.
+  const e164 = toE164(phone, country);
+  const displayNumber = e164 ?? `${getCountry(country).dialCode} ${phone}`;
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!/^\d{10}$/.test(phone)) { toast.error("Enter a valid 10-digit mobile"); return; }
+    if (!validatePhoneNumber(phone, country) || !e164) {
+      toast.error("Please enter a valid mobile number.");
+      return;
+    }
     setLoading(true);
     try {
-      const { demo, demoCode } = await sendOtp(phone);
+      const { demo, demoCode } = await sendOtp(e164);
       setStage("otp");
       if (demo && demoCode) {
         setDemoCode(demoCode);
@@ -37,18 +49,19 @@ function LoginPage() {
         toast.success(`Demo mode: use OTP ${demoCode}`);
       } else {
         setDemoCode(null);
-        toast.success(`OTP sent to +91 ${phone}`);
+        toast.success(`OTP sent to ${displayNumber}`);
       }
     } catch (err) {
       toast.error((err as Error).message);
     } finally { setLoading(false); }
   };
 
+
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { isAdminPhone, delivery, deliveryPending, supplier } = await verifyOtp(phone, otp);
+      const { isAdminPhone, delivery, deliveryPending, supplier } = await verifyOtp(e164 ?? phone, otp);
       // Clear tokens belonging to OTHER roles so a device that previously
       // hosted a supplier/delivery/admin session doesn't bounce a new customer
       // (or a different role) back to the wrong portal via roleRedirectTarget.
@@ -114,7 +127,7 @@ function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await adminLogin(passcode, phone);
+      await adminLogin(passcode, e164 ?? phone);
       toast.success("Welcome back, admin!");
       nav({ to: "/admin" });
     } catch (err) {
@@ -144,19 +157,19 @@ function LoginPage() {
             <form onSubmit={handleSend} className="mt-6 space-y-4">
               <div>
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Mobile number</label>
-                <div className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-2 focus-within:ring-2 focus-within:ring-ring">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">+91</span>
-                  <input
-                    autoFocus inputMode="numeric" maxLength={10}
-                    value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, ""))}
-                    placeholder="10-digit mobile" className="w-full bg-transparent text-base outline-none"
-                  />
-                </div>
+                <PhoneNumberInput
+                  autoFocus
+                  country={country}
+                  onCountryChange={setCountry}
+                  value={phone}
+                  onValueChange={setPhone}
+                />
               </div>
               <button disabled={loading} className="w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
                 {loading ? "Sending..." : "Send OTP"}
               </button>
+              <p className="text-center text-xs text-muted-foreground">An OTP will be sent to your mobile number.</p>
+
             </form>
           )}
 
@@ -169,7 +182,7 @@ function LoginPage() {
                 </div>
               )}
               <div>
-                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Enter OTP sent to +91 {phone}</label>
+                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Enter OTP sent to {displayNumber}</label>
                 <div className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-2 focus-within:ring-2 focus-within:ring-ring">
                   <KeyRound className="h-4 w-4 text-muted-foreground" />
                   <input

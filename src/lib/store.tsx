@@ -284,7 +284,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     verifyOtp: async (phone, otp) => {
       const res = await verifyOtpFn({ data: { phone, code: otp } });
-      const u: User = { phone, role: "customer" };
+      // The server returns the canonical phone key — always trust that over
+      // whatever formatting the user typed.
+      const u: User = { phone: res.phone ?? phone, role: "customer" };
       setUser(u);
       setCustomerToken(res.token);
       // A new login is not yet an admin session until the passcode is provided.
