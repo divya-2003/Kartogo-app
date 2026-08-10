@@ -61,7 +61,7 @@ function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { isAdminPhone, delivery, deliveryPending, supplier } = await verifyOtp(phone, otp);
+      const { isAdminPhone, delivery, deliveryPending, supplier } = await verifyOtp(e164 ?? phone, otp);
       // Clear tokens belonging to OTHER roles so a device that previously
       // hosted a supplier/delivery/admin session doesn't bounce a new customer
       // (or a different role) back to the wrong portal via roleRedirectTarget.
@@ -127,7 +127,7 @@ function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await adminLogin(passcode, phone);
+      await adminLogin(passcode, e164 ?? phone);
       toast.success("Welcome back, admin!");
       nav({ to: "/admin" });
     } catch (err) {
@@ -182,7 +182,7 @@ function LoginPage() {
                 </div>
               )}
               <div>
-                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Enter OTP sent to +91 {phone}</label>
+                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Enter OTP sent to {displayNumber}</label>
                 <div className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-2 focus-within:ring-2 focus-within:ring-ring">
                   <KeyRound className="h-4 w-4 text-muted-foreground" />
                   <input
