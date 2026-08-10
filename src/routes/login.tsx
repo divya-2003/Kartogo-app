@@ -157,19 +157,19 @@ function LoginPage() {
             <form onSubmit={handleSend} className="mt-6 space-y-4">
               <div>
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Mobile number</label>
-                <div className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-2 focus-within:ring-2 focus-within:ring-ring">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">+91</span>
-                  <input
-                    autoFocus inputMode="numeric" maxLength={10}
-                    value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, ""))}
-                    placeholder="10-digit mobile" className="w-full bg-transparent text-base outline-none"
-                  />
-                </div>
+                <PhoneNumberInput
+                  autoFocus
+                  country={country}
+                  onCountryChange={setCountry}
+                  value={phone}
+                  onValueChange={setPhone}
+                />
               </div>
               <button disabled={loading} className="w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
                 {loading ? "Sending..." : "Send OTP"}
               </button>
+              <p className="text-center text-xs text-muted-foreground">An OTP will be sent to your mobile number.</p>
+
             </form>
           )}
 
