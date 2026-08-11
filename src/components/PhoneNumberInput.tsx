@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CountryCode } from "libphonenumber-js";
 import { ChevronDown, Phone, Search } from "lucide-react";
-import { getCountry, getCountryList } from "@/lib/phone";
+import { getCountry, getCountryList, maxNationalDigits } from "@/lib/phone";
 
 type Props = {
   country: CountryCode;
@@ -25,6 +25,13 @@ export function PhoneNumberInput({
   const [query, setQuery] = useState("");
   const wrapRef = useRef<HTMLDivElement>(null);
   const selected = getCountry(country);
+  // Cap typing at the national length for the selected country (India → 10).
+  const maxDigits = useMemo(() => maxNationalDigits(country), [country]);
+
+  // Trim the number when the user switches to a shorter-format country.
+  useEffect(() => {
+    if (value.length > maxDigits) onValueChange(value.slice(0, maxDigits));
+  }, [maxDigits, value, onValueChange]);
 
   const results = useMemo(() => {
     const list = getCountryList();

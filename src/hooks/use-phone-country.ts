@@ -48,7 +48,9 @@ export function usePhoneCountryDetection() {
       setUserChosen(true);
       return;
     }
-    const local = detectCountryFromLocale() ?? detectCountryFromTimezone();
+    // Timezone tracks the device's actual location; browser locale is often
+    // left at en-US, so it is only a secondary hint.
+    const local = detectCountryFromTimezone() ?? detectCountryFromLocale();
     if (local) {
       setCountryState(local);
       return;
