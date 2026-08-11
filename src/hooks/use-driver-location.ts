@@ -3,6 +3,37 @@ import { GPS_INTERVAL_MS, GPS_MIN_MOVE_METERS, type DriverStatus, type GeoPoint 
 import { haversineMeters } from "@/lib/logistics/geo";
 import { pingDriverLocationFn } from "@/lib/logistics.functions";
 
+const QUEUE_KEY = "kartogo_gps_queue";
+const MAX_QUEUE = 200;
+
+type QueuedPing = {
+  lat: number;
+  lng: number;
+  accuracy?: number;
+  speed?: number;
+  heading?: number;
+  at: number;
+};
+
+function readQueue(): QueuedPing[] {
+  try {
+    const raw = localStorage.getItem(QUEUE_KEY);
+    const parsed = raw ? (JSON.parse(raw) as QueuedPing[]) : [];
+    return Array.isArray(parsed) ? parsed.slice(-MAX_QUEUE) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeQueue(q: QueuedPing[]) {
+  try {
+    if (q.length === 0) localStorage.removeItem(QUEUE_KEY);
+    else localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 type Options = {
   token: string | null;
   /** Tracking only runs while the rider is online. */
@@ -14,6 +45,8 @@ export type DriverLocationState = {
   error: string | null;
   permission: "unknown" | "granted" | "denied" | "unsupported";
   lastSentAt: number | null;
+  /** Pings captured while offline that are still waiting to sync. */
+  queued: number;
 };
 
 /**
@@ -29,9 +62,13 @@ export function useDriverLocation({ token, enabled }: Options): DriverLocationSt
     error: null,
     permission: "unknown",
     lastSentAt: null,
+    queued: 0,
   });
   const latest = useRef<GeolocationPosition | null>(null);
   const lastSent = useRef<GeoPoint | null>(null);
+  // Offline buffer: pings taken while the network is down are replayed in
+  // order the moment connectivity returns, so the trail has no holes.
+  const queue = useRef<QueuedPing[]>(readQueue());
 
   useEffect(() => {
     if (!enabled || !token) return;
@@ -65,27 +102,52 @@ export function useDriverLocation({ token, enabled }: Options): DriverLocationSt
 
     const timer = setInterval(async () => {
       const pos = latest.current;
-      if (!pos) return;
-      const point = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      if (lastSent.current && haversineMeters(lastSent.current, point) < GPS_MIN_MOVE_METERS) return;
-      try {
-        const res = await pingDriverLocationFn({
-          data: {
-            token,
+      if (pos) {
+        const point = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        const moved = !lastSent.current || haversineMeters(lastSent.current, point) >= GPS_MIN_MOVE_METERS;
+        if (moved) {
+          queue.current.push({
             lat: point.lat,
             lng: point.lng,
             accuracy: pos.coords.accuracy ?? undefined,
             speed: pos.coords.speed ?? undefined,
             heading: pos.coords.heading ?? undefined,
-          },
-        });
-        if (res?.accepted) {
-          lastSent.current = point;
-          setState((s) => ({ ...s, lastSentAt: Date.now() }));
+            at: Date.now(),
+          });
+          if (queue.current.length > MAX_QUEUE) queue.current = queue.current.slice(-MAX_QUEUE);
         }
-      } catch {
-        // Offline / flaky network — the next tick retries.
       }
+
+      // Drain oldest-first; stop at the first failure and retry next tick.
+      while (queue.current.length > 0) {
+        const ping = queue.current[0]!;
+        try {
+          const res = await pingDriverLocationFn({
+            data: {
+              token,
+              lat: ping.lat,
+              lng: ping.lng,
+              accuracy: ping.accuracy,
+              speed: ping.speed,
+              heading: ping.heading,
+            },
+          });
+          queue.current.shift();
+          if (res?.accepted) {
+            lastSent.current = { lat: ping.lat, lng: ping.lng };
+            setState((s) => ({ ...s, lastSentAt: Date.now(), error: null }));
+          }
+        } catch {
+          setState((s) => ({
+            ...s,
+            error: "You're offline — locations are saved and will sync automatically.",
+          }));
+          break;
+        }
+      }
+
+      writeQueue(queue.current);
+      setState((s) => (s.queued === queue.current.length ? s : { ...s, queued: queue.current.length }));
     }, GPS_INTERVAL_MS);
 
     return () => {
