@@ -7,6 +7,7 @@ import { AutoLocationGate } from "@/components/AutoLocationGate";
 import { ProductCard } from "@/components/ProductCard";
 import { CATEGORIES, formatINR } from "@/lib/data";
 import { useCatalog, useAuth, useLocation, useCart, useWallet } from "@/lib/store";
+import { COUPONS as PROMO_COUPONS } from "@/lib/promo";
 import promoBanner from "@/assets/promo-banner.jpg";
 
 export const Route = createFileRoute("/")({
