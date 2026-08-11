@@ -12,22 +12,8 @@ export const Route = createFileRoute("/checkout")({
   head: () => ({ meta: [{ title: "Checkout — Kartogo" }] }),
 });
 
-// Available promo codes. `type` "flat" = rupees off, "pct" = percentage off (capped).
-type Coupon = { type: "flat" | "pct"; value: number; minSubtotal: number; maxOff?: number; desc: string };
-const COUPONS: Record<string, Coupon> = {
-  SAVE50: { type: "flat", value: 50, minSubtotal: 299, desc: "₹50 off on orders above ₹299" },
-  KART10: { type: "pct", value: 10, minSubtotal: 199, maxOff: 100, desc: "10% off (up to ₹100) above ₹199" },
-  BIG100: { type: "flat", value: 100, minSubtotal: 599, desc: "₹100 off on orders above ₹599" },
-};
-
-function computeDiscount(code: string | null, subtotal: number): number {
-  if (!code) return 0;
-  const c = COUPONS[code];
-  if (!c || subtotal < c.minSubtotal) return 0;
-  const raw = c.type === "flat" ? c.value : Math.floor((subtotal * c.value) / 100);
-  const capped = c.maxOff ? Math.min(raw, c.maxOff) : raw;
-  return Math.min(capped, subtotal);
-}
+// Promo rules live in one shared module so the storefront cards, this checkout
+// preview and the server-side order validation always agree on the same codes.
 
 function CheckoutPage() {
   const { user, setName: setProfileName } = useAuth();
