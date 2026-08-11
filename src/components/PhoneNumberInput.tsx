@@ -72,9 +72,9 @@ export function PhoneNumberInput({
           autoFocus={autoFocus}
           inputMode="tel"
           autoComplete="tel-national"
-          maxLength={18}
+          maxLength={maxDigits}
           value={value}
-          onChange={e => onValueChange(e.target.value.replace(/[^\d\s]/g, ""))}
+          onChange={e => onValueChange(e.target.value.replace(/\D/g, "").slice(0, maxDigits))}
           placeholder={placeholder}
           className="w-full min-w-0 bg-transparent text-base outline-none"
         />
