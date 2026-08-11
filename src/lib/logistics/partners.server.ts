@@ -230,11 +230,13 @@ async function applyGeofence(
 
   await setStatus(driverId, next, { orderId, actor: "geofence" });
   const { logEvent } = await import("./dispatch.server");
-  await logEvent(orderId, next === "ARRIVED_AT_STORE" ? "arrived_at_store" : "arrived_at_customer", {
+  await logEvent(
+    orderId,
+    next === "ARRIVED_AT_STORE" ? "arrived_at_store" : "arrived_at_customer",
+    { lat: point.lat, lng: point.lng, radiusMeters: GEOFENCE_RADIUS_METERS },
     driverId,
-    actor: "geofence",
-    payload: { lat: point.lat, lng: point.lng, radiusMeters: GEOFENCE_RADIUS_METERS },
-  });
+    "geofence",
+  );
   return next;
 }
 
