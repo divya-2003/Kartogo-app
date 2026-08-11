@@ -6,7 +6,7 @@
 // management screens stay the single place riders are created.
 
 import type { DeliveryPartner, DriverStatus, GeoPoint, VehicleType } from "./types";
-import { GPS_MIN_MOVE_METERS, DRIVER_STALE_MS } from "./types";
+import { GPS_MIN_MOVE_METERS, DRIVER_STALE_MS, GEOFENCE_RADIUS_METERS } from "./types";
 import { haversineMeters, isValidPoint } from "./geo";
 
 type Row = {
@@ -138,6 +138,8 @@ export type LocationPingResult = {
   accepted: boolean;
   reason?: "no_movement" | "invalid" | "unknown_driver";
   movedMeters?: number;
+  /** Set when this ping crossed a 50 m arrival geofence. */
+  geofence?: "ARRIVED_AT_STORE" | "ARRIVED_AT_CUSTOMER";
 };
 
 /**
@@ -186,7 +188,54 @@ export async function recordLocation(
     order_id: meta.orderId ?? partner.activeOrderId,
   });
 
-  return { accepted: true, movedMeters: Number.isFinite(moved) ? moved : 0 };
+  const geofence = await applyGeofence(partner.driverId, partner.status, partner.activeOrderId, point);
+
+  return { accepted: true, movedMeters: Number.isFinite(moved) ? moved : 0, ...(geofence ? { geofence } : {}) };
+}
+
+/**
+ * Geofenced arrivals — the rider never taps "I reached the store".
+ *
+ * Whenever an accepted assignment has a pickup/drop pin, crossing inside the
+ * 50 m radius flips the status automatically and writes an audit event. It is
+ * idempotent: once the status has already advanced, nothing happens.
+ */
+async function applyGeofence(
+  driverId: string,
+  status: DriverStatus,
+  orderId: string | null,
+  point: GeoPoint,
+): Promise<"ARRIVED_AT_STORE" | "ARRIVED_AT_CUSTOMER" | null> {
+  if (!orderId) return null;
+  const supabaseAdmin = await db();
+  const { data: assignment } = await supabaseAdmin
+    .from("delivery_assignments")
+    .select("pickup_latitude, pickup_longitude, drop_latitude, drop_longitude")
+    .eq("order_id", orderId)
+    .eq("driver_id", driverId)
+    .eq("status", "ACCEPTED")
+    .maybeSingle();
+  if (!assignment) return null;
+
+  const pickup = { lat: assignment.pickup_latitude as number, lng: assignment.pickup_longitude as number };
+  const drop = { lat: assignment.drop_latitude as number, lng: assignment.drop_longitude as number };
+
+  const near = (target: GeoPoint) =>
+    isValidPoint(target) && haversineMeters(point, target) <= GEOFENCE_RADIUS_METERS;
+
+  let next: "ARRIVED_AT_STORE" | "ARRIVED_AT_CUSTOMER" | null = null;
+  if ((status === "ASSIGNED" || status === "PICKING_ORDER") && near(pickup)) next = "ARRIVED_AT_STORE";
+  else if (status === "EN_ROUTE" && near(drop)) next = "ARRIVED_AT_CUSTOMER";
+  if (!next) return null;
+
+  await setStatus(driverId, next, { orderId, actor: "geofence" });
+  const { logEvent } = await import("./dispatch.server");
+  await logEvent(orderId, next === "ARRIVED_AT_STORE" ? "arrived_at_store" : "arrived_at_customer", {
+    driverId,
+    actor: "geofence",
+    payload: { lat: point.lat, lng: point.lng, radiusMeters: GEOFENCE_RADIUS_METERS },
+  });
+  return next;
 }
 
 /** Phase 9 — last known location is what we fall back to when GPS drops out. */
