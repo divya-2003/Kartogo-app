@@ -3,8 +3,10 @@ import {
   parsePhoneNumberFromString,
   getCountries,
   getCountryCallingCode,
+  getExampleNumber,
   type CountryCode,
 } from "libphonenumber-js";
+import examples from "libphonenumber-js/examples.mobile.json";
 
 export const DEFAULT_COUNTRY: CountryCode = "IN";
 
@@ -215,4 +217,19 @@ export function normalizeIncomingPhone(raw: unknown): string {
   const canonical = canonicalPhone(String(raw ?? ""));
   if (!canonical) throw new Error("Please enter a valid mobile number.");
   return canonical;
+}
+
+/**
+ * How many national digits a mobile number may have in a country (India → 10,
+ * excluding the +91 dial code). Derived from libphonenumber's example numbers
+ * so every country stays correct without a hand-maintained table.
+ */
+export function maxNationalDigits(country: CountryCode = DEFAULT_COUNTRY): number {
+  try {
+    const example = getExampleNumber(country, examples);
+    const len = example?.nationalNumber?.length ?? 0;
+    return len > 0 ? len : 15;
+  } catch {
+    return 15;
+  }
 }
