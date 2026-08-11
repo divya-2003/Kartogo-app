@@ -6,28 +6,15 @@ import { formatINR } from "@/lib/data";
 import { toast } from "sonner";
 import { Banknote, Smartphone, Wallet, MapPin, Plus, Check, Trash2, X, Tag, Pencil, Flame } from "lucide-react";
 import { getSurgeConfigFn, SURGE_REASON_LABELS, type SurgeConfig } from "@/lib/surge.functions";
+import { COUPONS, computeDiscount } from "@/lib/promo";
 
 export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
   head: () => ({ meta: [{ title: "Checkout — Kartogo" }] }),
 });
 
-// Available promo codes. `type` "flat" = rupees off, "pct" = percentage off (capped).
-type Coupon = { type: "flat" | "pct"; value: number; minSubtotal: number; maxOff?: number; desc: string };
-const COUPONS: Record<string, Coupon> = {
-  SAVE50: { type: "flat", value: 50, minSubtotal: 299, desc: "₹50 off on orders above ₹299" },
-  KART10: { type: "pct", value: 10, minSubtotal: 199, maxOff: 100, desc: "10% off (up to ₹100) above ₹199" },
-  BIG100: { type: "flat", value: 100, minSubtotal: 599, desc: "₹100 off on orders above ₹599" },
-};
-
-function computeDiscount(code: string | null, subtotal: number): number {
-  if (!code) return 0;
-  const c = COUPONS[code];
-  if (!c || subtotal < c.minSubtotal) return 0;
-  const raw = c.type === "flat" ? c.value : Math.floor((subtotal * c.value) / 100);
-  const capped = c.maxOff ? Math.min(raw, c.maxOff) : raw;
-  return Math.min(capped, subtotal);
-}
+// Promo rules live in one shared module so the storefront cards, this checkout
+// preview and the server-side order validation always agree on the same codes.
 
 function CheckoutPage() {
   const { user, setName: setProfileName } = useAuth();
@@ -582,7 +569,27 @@ function CheckoutPage() {
                     </div>
                     <button onClick={applyPromo} className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90">Apply</button>
                   </div>
-                  <p className="mt-2 text-xs text-muted-foreground">Try <span className="font-semibold text-primary">SAVE50</span>, <span className="font-semibold text-primary">KART10</span> or <span className="font-semibold text-primary">BIG100</span></p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {Object.entries(COUPONS).map(([code, c]) => {
+                      const eligible = subtotal >= c.minSubtotal;
+                      return (
+                        <button
+                          key={code}
+                          type="button"
+                          onClick={() => {
+                            if (!eligible) { toast.error(`Add ${formatINR(c.minSubtotal - subtotal)} more to use ${code}`); return; }
+                            setAppliedCode(code);
+                            setPromoInput("");
+                            toast.success(`${code} applied — you saved ${formatINR(computeDiscount(code, subtotal))}!`);
+                          }}
+                          className={`rounded-lg border px-2.5 py-1.5 text-left text-[11px] ${eligible ? "border-primary/40 bg-primary/5" : "border-border opacity-70"}`}
+                        >
+                          <span className="font-bold text-primary">{code}</span>
+                          <span className="ml-1 text-muted-foreground">{c.desc}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </>
               )}
             </div>

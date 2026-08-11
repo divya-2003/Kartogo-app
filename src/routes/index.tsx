@@ -7,6 +7,7 @@ import { AutoLocationGate } from "@/components/AutoLocationGate";
 import { ProductCard } from "@/components/ProductCard";
 import { CATEGORIES, formatINR } from "@/lib/data";
 import { useCatalog, useAuth, useLocation, useCart, useWallet } from "@/lib/store";
+import { COUPONS as PROMO_COUPONS } from "@/lib/promo";
 import promoBanner from "@/assets/promo-banner.jpg";
 
 export const Route = createFileRoute("/")({
@@ -42,11 +43,13 @@ const STORE_TABS = [
   { label: "Pooja", tag: "From ₹35", slug: "pooja" },
 ];
 
-const COUPONS = [
-  { flat: "₹50 OFF", above: "above ₹1000" },
-  { flat: "₹100 OFF", above: "above ₹1800" },
-  { flat: "₹150 OFF", above: "above ₹1999" },
-];
+// Derived from the single shared coupon table so the storefront never shows an
+// offer the checkout engine would reject.
+const COUPONS = Object.entries(PROMO_COUPONS).map(([code, c]) => ({
+  code,
+  flat: `₹${c.value} OFF`,
+  above: `above ₹${c.minSubtotal}`,
+}));
 
 function Index() {
   const { ready } = useAuth();
@@ -210,11 +213,12 @@ function Index() {
           <h2 className="font-display text-xl font-extrabold">Coupons & offers</h2>
           <div className="mt-3 flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {COUPONS.map(c => (
-              <div key={c.flat} className="flex w-36 shrink-0 flex-col items-center gap-1 rounded-2xl border border-leaf/30 bg-leaf/10 p-3 text-center">
+              <div key={c.code} className="flex w-36 shrink-0 flex-col items-center gap-1 rounded-2xl border border-leaf/30 bg-leaf/10 p-3 text-center">
                 <Ticket className="h-5 w-5 text-leaf" />
                 <div className="text-[11px] font-bold uppercase text-muted-foreground">Flat</div>
                 <div className="font-display text-lg font-extrabold text-foreground">{c.flat}</div>
                 <div className="rounded-full bg-card px-2 py-0.5 text-[11px] font-semibold">{c.above}</div>
+                <div className="text-[11px] font-bold tracking-wide text-primary">Code: {c.code}</div>
               </div>
             ))}
           </div>
