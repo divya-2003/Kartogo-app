@@ -14,7 +14,9 @@ export const DRIVER_STATUSES = [
   "AVAILABLE",
   "ASSIGNED",
   "PICKING_ORDER",
+  "ARRIVED_AT_STORE",
   "EN_ROUTE",
+  "ARRIVED_AT_CUSTOMER",
   "DELIVERED",
   "BREAK",
 ] as const;
@@ -24,7 +26,16 @@ export type DriverStatus = (typeof DRIVER_STATUSES)[number];
 export const DISPATCHABLE_STATUSES: readonly DriverStatus[] = ["ONLINE", "AVAILABLE"];
 
 /** Statuses that mean the rider is currently working an order. */
-export const BUSY_STATUSES: readonly DriverStatus[] = ["ASSIGNED", "PICKING_ORDER", "EN_ROUTE"];
+export const BUSY_STATUSES: readonly DriverStatus[] = [
+  "ASSIGNED",
+  "PICKING_ORDER",
+  "ARRIVED_AT_STORE",
+  "EN_ROUTE",
+  "ARRIVED_AT_CUSTOMER",
+];
+
+/** Radius inside which a rider counts as "arrived" without tapping anything. */
+export const GEOFENCE_RADIUS_METERS = 50;
 
 export const DRIVER_STATUS_LABEL: Record<DriverStatus, string> = {
   OFFLINE: "Offline",
@@ -32,7 +43,9 @@ export const DRIVER_STATUS_LABEL: Record<DriverStatus, string> = {
   AVAILABLE: "Available",
   ASSIGNED: "Assigned",
   PICKING_ORDER: "Picking up",
+  ARRIVED_AT_STORE: "At the store",
   EN_ROUTE: "On the way",
+  ARRIVED_AT_CUSTOMER: "At your door",
   DELIVERED: "Delivered",
   BREAK: "On break",
 };
@@ -172,6 +185,8 @@ export type DeliveryEventType =
   | "picked_up"
   | "en_route"
   | "driver_nearby"
+  | "arrived_at_store"
+  | "arrived_at_customer"
   | "delivered"
   | "cancelled"
   | "driver_released"

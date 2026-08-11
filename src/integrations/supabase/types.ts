@@ -1999,7 +1999,9 @@ export type Database = {
         | "AVAILABLE"
         | "ASSIGNED"
         | "PICKING_ORDER"
+        | "ARRIVED_AT_STORE"
         | "EN_ROUTE"
+        | "ARRIVED_AT_CUSTOMER"
         | "DELIVERED"
         | "BREAK"
       order_status:
@@ -2156,7 +2158,9 @@ export const Constants = {
         "AVAILABLE",
         "ASSIGNED",
         "PICKING_ORDER",
+        "ARRIVED_AT_STORE",
         "EN_ROUTE",
+        "ARRIVED_AT_CUSTOMER",
         "DELIVERED",
         "BREAK",
       ],

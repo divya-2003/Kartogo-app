@@ -66,6 +66,7 @@ export function DriverDispatchPanel({ token, onAssigned }: Props) {
         <Badge variant="secondary" className="gap-1">
           <MapPin className="h-3 w-3" />
           {gps.point ? "GPS live" : gps.permission === "denied" ? "GPS off" : "Locating…"}
+          {gps.queued > 0 ? ` · ${gps.queued} queued` : ""}
         </Badge>
         <div className="ml-auto flex items-center gap-2">
           {online ? (
