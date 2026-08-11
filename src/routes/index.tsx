@@ -42,11 +42,13 @@ const STORE_TABS = [
   { label: "Pooja", tag: "From ₹35", slug: "pooja" },
 ];
 
-const COUPONS = [
-  { flat: "₹50 OFF", above: "above ₹1000" },
-  { flat: "₹100 OFF", above: "above ₹1800" },
-  { flat: "₹150 OFF", above: "above ₹1999" },
-];
+// Derived from the single shared coupon table so the storefront never shows an
+// offer the checkout engine would reject.
+const COUPONS = Object.entries(PROMO_COUPONS).map(([code, c]) => ({
+  code,
+  flat: `₹${c.value} OFF`,
+  above: `above ₹${c.minSubtotal}`,
+}));
 
 function Index() {
   const { ready } = useAuth();
