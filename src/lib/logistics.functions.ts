@@ -102,7 +102,16 @@ export const getDriverDispatchFn = createServerFn({ method: "POST" })
   .inputValidator((data: { token: string }) => ({ token: str(data?.token) }))
   .handler(async ({ data }): Promise<{
     partner: DeliveryPartner | null;
-    offer: (DeliveryAssignment & { orderTotal: number; itemCount: number; area: string }) | null;
+    offer:
+      | (DeliveryAssignment & {
+          orderTotal: number;
+          itemCount: number;
+          area: string;
+          payout: number;
+          payoutReasons: string[];
+          batchedOrders: number;
+        })
+      | null;
   }> => {
     const session = await requireDriver(data.token);
     const { sweepExpiredOffers } = await import("./logistics/dispatch.server");
@@ -128,6 +137,14 @@ export const getDriverDispatchFn = createServerFn({ method: "POST" })
       .from("app_orders").select("total, items, address").eq("id", row.order_id as string).maybeSingle();
     const items = (order?.items ?? []) as unknown[];
 
+    const drop = row.drop_latitude != null
+      ? { lat: row.drop_latitude as number, lng: row.drop_longitude as number } : null;
+    const { quoteOrderPayout, batchMatesFor } = await import("./logistics/dispatch.server");
+    const [payout, mates] = await Promise.all([
+      quoteOrderPayout(row.order_id as string, Number(row.distance_meters ?? 0), drop),
+      batchMatesFor(row.order_id as string),
+    ]);
+
     return {
       partner,
       offer: {
@@ -139,14 +156,17 @@ export const getDriverDispatchFn = createServerFn({ method: "POST" })
         distanceMeters: row.distance_meters as number | null,
         pickup: row.pickup_latitude != null
           ? { lat: row.pickup_latitude as number, lng: row.pickup_longitude as number } : null,
-        drop: row.drop_latitude != null
-          ? { lat: row.drop_latitude as number, lng: row.drop_longitude as number } : null,
+        drop,
         offeredAt: row.offered_at as string,
         expiresAt: row.expires_at as string,
         respondedAt: null,
         reason: null,
         orderTotal: Number(order?.total ?? 0),
         itemCount: items.length,
+        /** Dynamic payout for this run (distance + peak/traffic/demand + batch bonus). */
+        payout: payout.amount,
+        payoutReasons: payout.reasons,
+        batchedOrders: mates.length,
         // Coarse area only — the full address unlocks after acceptance.
         area: String(order?.address ?? "").split(",").slice(-2).join(",").trim(),
       },

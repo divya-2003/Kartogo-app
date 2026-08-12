@@ -105,7 +105,7 @@ export function DriverDispatchPanel({ token, onAssigned }: Props) {
               style={{ width: `${(secondsLeft / ACCEPT_WINDOW_SECONDS) * 100}%` }}
             />
           </div>
-          <dl className="mt-3 grid grid-cols-3 gap-2 text-sm">
+          <dl className="mt-3 grid grid-cols-4 gap-2 text-sm">
             <div>
               <dt className="text-xs text-muted-foreground">Order</dt>
               <dd className="font-medium">#{offer.orderId.slice(-6)}</dd>
@@ -118,7 +118,25 @@ export function DriverDispatchPanel({ token, onAssigned }: Props) {
               <dt className="text-xs text-muted-foreground">To pickup</dt>
               <dd className="font-medium">{formatDistance(offer.distanceMeters)}</dd>
             </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">You earn</dt>
+              <dd className="font-bold text-primary">₹{offer.payout}</dd>
+            </div>
           </dl>
+          {(offer.payoutReasons.length > 0 || offer.batchedOrders > 0) && (
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              {offer.batchedOrders > 0 && (
+                <Badge variant="secondary">
+                  +{offer.batchedOrders} order{offer.batchedOrders > 1 ? "s" : ""} on the same route
+                </Badge>
+              )}
+              {offer.payoutReasons.map((r) => (
+                <Badge key={r} className="bg-primary/15 text-primary hover:bg-primary/15">
+                  {r}
+                </Badge>
+              ))}
+            </div>
+          )}
           {offer.area && <p className="mt-2 text-xs text-muted-foreground">Drop area: {offer.area}</p>}
           <div className="mt-3 flex items-center gap-2">
             <Button className="flex-1" disabled={busy} onClick={() => void respond(true)}>

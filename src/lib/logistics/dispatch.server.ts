@@ -18,6 +18,8 @@ import {
   type GeoPoint,
 } from "./types";
 import { haversineMeters, isValidPoint } from "./geo";
+import { quoteDriverPayout, type PayoutQuote } from "./pricing";
+import { buildBatches, MAX_BATCH_SIZE, type BatchCandidate } from "./batching";
 import { ensurePartner, listDispatchable, setStatus, getPartner } from "./partners.server";
 
 async function db() {
@@ -97,7 +99,7 @@ async function dropPointFor(orderId: string): Promise<GeoPoint | null> {
 }
 
 type OfferOutcome =
-  | { ok: true; driverId: string; expiresAt: string; attempt: number }
+  | { ok: true; driverId: string; expiresAt: string; attempt: number; payout?: number }
   | { ok: false; reason: "no_drivers" | "already_offered" | "order_closed" };
 
 /**
@@ -179,10 +181,144 @@ export async function offerOrder(
   // Unique partial index — another dispatch cycle got there first.
   if (error) return { ok: false, reason: "already_offered" };
 
-  await logEvent(orderId, "driver_offered", { attempt, distanceMeters: chosen.distanceMeters }, chosen.driverId);
-  void notifyDriverSms(chosen.driverId, `Kartogo: new delivery ${orderId}. Open the app to accept within ${ACCEPT_WINDOW_SECONDS}s.`);
+  const payout = await quoteOrderPayout(orderId, chosen.distanceMeters, drop);
+  await logEvent(
+    orderId,
+    "driver_offered",
+    { attempt, distanceMeters: chosen.distanceMeters, payout: payout.amount, surge: payout.reasons },
+    chosen.driverId,
+  );
+  void notifyDriverSms(
+    chosen.driverId,
+    `Kartogo: new delivery ${orderId} — you earn ₹${payout.amount}. Accept within ${ACCEPT_WINDOW_SECONDS}s.`,
+  );
 
-  return { ok: true, driverId: chosen.driverId, expiresAt, attempt };
+  return { ok: true, driverId: chosen.driverId, expiresAt, attempt, payout: payout.amount };
+}
+
+// ---------------------------------------------------------------------------
+// Dynamic payouts — how stretched the fleet is right now feeds the surge.
+// ---------------------------------------------------------------------------
+
+async function fleetPressure(): Promise<{ waitingOrders: number; freeDrivers: number }> {
+  try {
+    const supabaseAdmin = await db();
+    const [{ data: orders }, free] = await Promise.all([
+      supabaseAdmin
+        .from("app_orders")
+        .select("id, status, delivery_boy_id")
+        .in("status", ["placed", "packed"])
+        .is("delivery_boy_id", null),
+      listDispatchable(),
+    ]);
+    return { waitingOrders: (orders ?? []).length, freeDrivers: free.length };
+  } catch {
+    return { waitingOrders: 0, freeDrivers: 1 };
+  }
+}
+
+/**
+ * What a rider earns for one order right now: base + distance, lifted by peak
+ * hour, traffic, weather and live demand, plus a bonus per batched order.
+ */
+export async function quoteOrderPayout(
+  orderId: string,
+  pickupDistanceMeters: number,
+  drop?: GeoPoint | null,
+): Promise<PayoutQuote> {
+  const pickup = await pickupPointFor(orderId);
+  const rideMeters =
+    pickup && isValidPoint(drop ?? null) ? haversineMeters(pickup, drop as GeoPoint) : 0;
+  const approach = Number.isFinite(pickupDistanceMeters) ? pickupDistanceMeters : 0;
+  const { waitingOrders, freeDrivers } = await fleetPressure();
+  const batchedWith = Math.max(0, (await batchMatesFor(orderId)).length);
+
+  return quoteDriverPayout({
+    distanceMeters: rideMeters + approach,
+    waitingOrders,
+    freeDrivers,
+    batchedWith,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Batching — pool orders leaving the same store along the same corridor.
+// ---------------------------------------------------------------------------
+
+/** Unassigned orders that would ride the same corridor as `orderId`. */
+export async function batchMatesFor(orderId: string): Promise<string[]> {
+  try {
+    const supabaseAdmin = await db();
+    const pickup = await pickupPointFor(orderId);
+    if (!pickup) return [];
+
+    const { data: rows } = await supabaseAdmin
+      .from("app_orders")
+      .select("id, address, created_at, status, delivery_boy_id")
+      .in("status", ["placed", "packed"])
+      .is("delivery_boy_id", null)
+      .order("created_at", { ascending: true })
+      .limit(25);
+
+    const pool = (rows ?? []).filter((r) => r.id === orderId || r.id !== orderId);
+    if (!pool.some((r) => r.id === orderId)) return [];
+
+    const { geocodeAddress } = await import("./directions.server");
+    const candidates: BatchCandidate[] = [];
+    for (const r of pool) {
+      const point = await geocodeAddress(String(r.address ?? ""));
+      if (!isValidPoint(point)) continue;
+      candidates.push({
+        orderId: r.id as string,
+        marketId: null, // single dark-store phase: every order leaves the same market
+        drop: point,
+        createdAt: String(r.created_at ?? ""),
+      });
+    }
+
+    const batch = buildBatches(pickup, candidates).find((b) => b.orderIds.includes(orderId));
+    return (batch?.orderIds ?? []).filter((id) => id !== orderId).slice(0, MAX_BATCH_SIZE - 1);
+  } catch (e) {
+    console.error("batching failed", e);
+    return [];
+  }
+}
+
+/**
+ * After a rider accepts, hand them the corridor-mates of that order so one run
+ * covers several drops instead of dispatching a second rider down the same road.
+ */
+async function attachBatchMates(orderId: string, driverId: string) {
+  const mates = await batchMatesFor(orderId);
+  if (!mates.length) return;
+  const supabaseAdmin = await db();
+  const pickup = await pickupPointFor(orderId);
+
+  for (const mateId of mates) {
+    const { data: locked } = await supabaseAdmin
+      .from("app_orders")
+      .update({ delivery_boy_id: driverId, updated_at: new Date().toISOString() })
+      .eq("id", mateId)
+      .is("delivery_boy_id", null)
+      .in("status", ["placed", "packed"])
+      .select("id")
+      .maybeSingle();
+    if (!locked) continue;
+
+    await supabaseAdmin.from("delivery_assignments").insert({
+      order_id: mateId,
+      driver_id: driverId,
+      status: "ACCEPTED",
+      attempt: 1,
+      pickup_latitude: pickup?.lat ?? null,
+      pickup_longitude: pickup?.lng ?? null,
+      expires_at: new Date(Date.now() + ACCEPT_WINDOW_SECONDS * 1000).toISOString(),
+      responded_at: new Date().toISOString(),
+      reason: `batched_with:${orderId}`,
+    });
+    await logEvent(mateId, "driver_accepted", { batchedWith: orderId }, driverId, `driver:${driverId}`);
+    void notifyCustomerSms(mateId, `Kartogo: a delivery partner is picking up your order ${mateId}.`);
+  }
 }
 
 /** Phase 4 — rider accepts. Locks the order to them. */
@@ -219,6 +355,8 @@ export async function acceptOffer(orderId: string, driverId: string) {
   await setStatus(driverId, "PICKING_ORDER", { orderId });
   await logEvent(orderId, "driver_accepted", {}, driverId, `driver:${driverId}`);
   void notifyCustomerSms(orderId, `Kartogo: a delivery partner is picking up your order ${orderId}.`);
+  // Multi-order run: sweep up corridor-mates leaving the same store.
+  await attachBatchMates(orderId, driverId);
   return { ok: true as const };
 }
 
