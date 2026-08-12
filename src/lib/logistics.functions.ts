@@ -102,7 +102,16 @@ export const getDriverDispatchFn = createServerFn({ method: "POST" })
   .inputValidator((data: { token: string }) => ({ token: str(data?.token) }))
   .handler(async ({ data }): Promise<{
     partner: DeliveryPartner | null;
-    offer: (DeliveryAssignment & { orderTotal: number; itemCount: number; area: string }) | null;
+    offer:
+      | (DeliveryAssignment & {
+          orderTotal: number;
+          itemCount: number;
+          area: string;
+          payout: number;
+          payoutReasons: string[];
+          batchedOrders: number;
+        })
+      | null;
   }> => {
     const session = await requireDriver(data.token);
     const { sweepExpiredOffers } = await import("./logistics/dispatch.server");
