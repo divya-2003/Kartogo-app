@@ -355,6 +355,8 @@ export async function acceptOffer(orderId: string, driverId: string) {
   await setStatus(driverId, "PICKING_ORDER", { orderId });
   await logEvent(orderId, "driver_accepted", {}, driverId, `driver:${driverId}`);
   void notifyCustomerSms(orderId, `Kartogo: a delivery partner is picking up your order ${orderId}.`);
+  // Multi-order run: sweep up corridor-mates leaving the same store.
+  await attachBatchMates(orderId, driverId);
   return { ok: true as const };
 }
 
