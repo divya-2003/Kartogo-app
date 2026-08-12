@@ -99,7 +99,7 @@ async function dropPointFor(orderId: string): Promise<GeoPoint | null> {
 }
 
 type OfferOutcome =
-  | { ok: true; driverId: string; expiresAt: string; attempt: number }
+  | { ok: true; driverId: string; expiresAt: string; attempt: number; payout?: number }
   | { ok: false; reason: "no_drivers" | "already_offered" | "order_closed" };
 
 /**
