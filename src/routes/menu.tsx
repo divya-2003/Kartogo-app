@@ -232,7 +232,54 @@ function MenuPage() {
           <Row onClick={() => soon("E-Gift Cards")} icon={<CreditCard className="h-5 w-5" />} label="E-Gift Cards" />
           <Row to="/support" icon={<Headphones className="h-5 w-5" />} label="Help & Support" />
           <Row to="/account" icon={<UserCircle2 className="h-5 w-5" />} label="Profile" />
-          <Row onClick={() => soon("Rewards")} icon={<Gift className="h-5 w-5" />} label="Rewards" last />
+          {/* Refer & earn (expandable) */}
+          <div>
+            <button
+              onClick={() => setShowRefer(v => !v)}
+              aria-expanded={showRefer}
+              className="flex w-full items-center gap-3 px-4 py-4 text-left hover:bg-secondary"
+            >
+              <div className="text-muted-foreground"><Gift className="h-5 w-5" /></div>
+              <div className="flex-1">
+                <div className="font-semibold">Refer &amp; earn</div>
+                <div className="text-xs text-muted-foreground">
+                  {referral ? `${referral.invited} friend${referral.invited === 1 ? "" : "s"} joined · ₹${referral.reward} each` : "Invite friends, both get Kartogo Cash"}
+                </div>
+              </div>
+              <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${showRefer ? "rotate-180" : ""}`} />
+            </button>
+            {showRefer && (
+              <div className="space-y-3 px-4 pb-4">
+                <div className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3">
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-xs text-muted-foreground">Your code</span>
+                    <span className="block truncate font-display text-lg font-extrabold tracking-wide text-primary">{referral?.code ?? "—"}</span>
+                  </span>
+                  <button
+                    onClick={() => {
+                      if (!referral?.code) return;
+                      void navigator.clipboard?.writeText(referral.code);
+                      toast.success("Referral code copied");
+                    }}
+                    className="rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:bg-primary/90"
+                  >
+                    Copy
+                  </button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    value={friendCode}
+                    onChange={e => setFriendCode(e.target.value.toUpperCase())}
+                    placeholder="Have a friend's code?"
+                    maxLength={24}
+                    className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm uppercase outline-none focus:ring-2 focus:ring-ring"
+                  />
+                  <button onClick={() => void claimReferral()} className="rounded-lg border border-border px-4 py-2 text-sm font-bold hover:bg-secondary">Apply</button>
+                </div>
+              </div>
+            )}
+          </div>
+
         </div>
 
 
