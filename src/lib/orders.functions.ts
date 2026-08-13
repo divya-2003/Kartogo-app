@@ -103,16 +103,20 @@ export const placeOrderFn = createServerFn({ method: "POST" })
       : 0;
     const fee = baseFee + surgeAmount;
 
+    // Promotions are re-derived from the promo_codes table: validity window,
+    // basket floor, total cap, per-customer cap and first-order-only rules all
+    // enforced here, never from whatever the client claims.
     let promoCode: string | null = null;
     let discount = 0;
     if (data.promoCode) {
-      const code = data.promoCode.toUpperCase();
-      const c = COUPONS[code];
-      if (c && subtotal >= c.minSubtotal) {
-        promoCode = code;
-        discount = computeDiscount(code, subtotal);
+      const { evaluatePromo } = await import("./promo.server");
+      const verdict = await evaluatePromo(data.promoCode, subtotal, session.phone);
+      if (verdict.ok) {
+        promoCode = verdict.code;
+        discount = verdict.discount;
       }
     }
+
 
     const total = Math.max(0, subtotal + fee - discount);
     const id = `OK${Date.now().toString().slice(-6)}`;
