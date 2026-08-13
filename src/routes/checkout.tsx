@@ -6,7 +6,9 @@ import { formatINR } from "@/lib/data";
 import { toast } from "sonner";
 import { Banknote, Smartphone, Wallet, MapPin, Plus, Check, Trash2, X, Tag, Pencil, Flame } from "lucide-react";
 import { getSurgeConfigFn, SURGE_REASON_LABELS, type SurgeConfig } from "@/lib/surge.functions";
-import { COUPONS, computeDiscount } from "@/lib/promo";
+import { computeDiscount, type PromoRule } from "@/lib/promo";
+import { listPromoRulesFn, validatePromoFn } from "@/lib/promo.functions";
+
 
 export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
@@ -135,7 +137,22 @@ function CheckoutPage() {
   }, []);
   const surgeAmount = surge?.enabled && subtotal > 0 ? Math.round(surge.amount) : 0;
   const fee = baseFee + surgeAmount;
-  const discount = useMemo(() => computeDiscount(appliedCode, subtotal), [appliedCode, subtotal]);
+
+  // Promo codes are admin-managed in the backend; the checkout previews them
+  // and the server re-validates before the order is written.
+  const [promoRules, setPromoRules] = useState<PromoRule[]>([]);
+  useEffect(() => {
+    let alive = true;
+    listPromoRulesFn()
+      .then(r => { if (alive) setPromoRules(r); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
+  const discount = useMemo(
+    () => computeDiscount(appliedCode, subtotal, promoRules),
+    [appliedCode, subtotal, promoRules],
+  );
   const total = Math.max(0, subtotal + fee - discount);
   // GST is inclusive in listed prices (5% slab) — show it as a breakdown line
   // so the estimate stays transparent without changing what's payable.
@@ -149,19 +166,23 @@ function CheckoutPage() {
 
 
 
-  const applyPromo = () => {
-    const code = promoInput.trim().toUpperCase();
+  const tryPromo = async (raw: string) => {
+    const code = raw.trim().toUpperCase();
     if (!code) { toast.error("Enter a promo code"); return; }
-    const coupon = COUPONS[code];
-    if (!coupon) { toast.error("Invalid promo code"); return; }
-    if (subtotal < coupon.minSubtotal) {
-      toast.error(`Add ${formatINR(coupon.minSubtotal - subtotal)} more to use ${code}`);
-      return;
+    try {
+      const token = JSON.parse(localStorage.getItem("qk_customer_token") || "null");
+      const verdict = await validatePromoFn({ data: { token: token ?? "", code, subtotal } });
+      if (!verdict.ok) { toast.error(verdict.reason); return; }
+      setAppliedCode(verdict.code);
+      setPromoInput("");
+      toast.success(`${verdict.code} applied — you saved ${formatINR(verdict.discount)}!`);
+    } catch {
+      toast.error("Could not check that promo code");
     }
-    setAppliedCode(code);
-    setPromoInput("");
-    toast.success(`${code} applied — you saved ${formatINR(computeDiscount(code, subtotal))}!`);
   };
+
+  const applyPromo = () => { void tryPromo(promoInput); };
+
 
   const removePromo = () => {
     setAppliedCode(null);
@@ -570,26 +591,22 @@ function CheckoutPage() {
                     <button onClick={applyPromo} className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90">Apply</button>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {Object.entries(COUPONS).map(([code, c]) => {
-                      const eligible = subtotal >= c.minSubtotal;
+                    {promoRules.map(rule => {
+                      const eligible = subtotal >= rule.minSubtotal;
                       return (
                         <button
-                          key={code}
+                          key={rule.code}
                           type="button"
-                          onClick={() => {
-                            if (!eligible) { toast.error(`Add ${formatINR(c.minSubtotal - subtotal)} more to use ${code}`); return; }
-                            setAppliedCode(code);
-                            setPromoInput("");
-                            toast.success(`${code} applied — you saved ${formatINR(computeDiscount(code, subtotal))}!`);
-                          }}
+                          onClick={() => { void tryPromo(rule.code); }}
                           className={`rounded-lg border px-2.5 py-1.5 text-left text-[11px] ${eligible ? "border-primary/40 bg-primary/5" : "border-border opacity-70"}`}
                         >
-                          <span className="font-bold text-primary">{code}</span>
-                          <span className="ml-1 text-muted-foreground">{c.desc}</span>
+                          <span className="font-bold text-primary">{rule.code}</span>
+                          <span className="ml-1 text-muted-foreground">{rule.description}</span>
                         </button>
                       );
                     })}
                   </div>
+
                 </>
               )}
             </div>
