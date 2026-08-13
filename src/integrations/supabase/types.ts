@@ -373,6 +373,9 @@ export type Database = {
           id: string
           name: string
           phone: string
+          referral_code: string | null
+          referral_rewarded: boolean
+          referred_by: string | null
           saved_addresses: Json
           updated_at: string
           user_id: string | null
@@ -384,6 +387,9 @@ export type Database = {
           id?: string
           name?: string
           phone: string
+          referral_code?: string | null
+          referral_rewarded?: boolean
+          referred_by?: string | null
           saved_addresses?: Json
           updated_at?: string
           user_id?: string | null
@@ -395,6 +401,9 @@ export type Database = {
           id?: string
           name?: string
           phone?: string
+          referral_code?: string | null
+          referral_rewarded?: boolean
+          referred_by?: string | null
           saved_addresses?: Json
           updated_at?: string
           user_id?: string | null
@@ -1589,6 +1598,87 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string
+          description: string
+          discount_type: string
+          discount_value: number
+          ends_at: string | null
+          first_order_only: boolean
+          id: string
+          is_active: boolean
+          max_discount: number | null
+          min_subtotal: number
+          per_customer_limit: number
+          starts_at: string | null
+          updated_at: string
+          usage_limit: number | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string
+          discount_type?: string
+          discount_value?: number
+          ends_at?: string | null
+          first_order_only?: boolean
+          id?: string
+          is_active?: boolean
+          max_discount?: number | null
+          min_subtotal?: number
+          per_customer_limit?: number
+          starts_at?: string | null
+          updated_at?: string
+          usage_limit?: number | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string
+          discount_type?: string
+          discount_value?: number
+          ends_at?: string | null
+          first_order_only?: boolean
+          id?: string
+          is_active?: boolean
+          max_discount?: number | null
+          min_subtotal?: number
+          per_customer_limit?: number
+          starts_at?: string | null
+          updated_at?: string
+          usage_limit?: number | null
+        }
+        Relationships: []
+      }
+      promo_redemptions: {
+        Row: {
+          code: string
+          created_at: string
+          discount: number
+          id: string
+          order_id: string | null
+          phone: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          discount?: number
+          id?: string
+          order_id?: string | null
+          phone: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          discount?: number
+          id?: string
+          order_id?: string | null
+          phone?: string
+        }
+        Relationships: []
       }
       purchase_order_items: {
         Row: {
