@@ -77,7 +77,7 @@ export const placeOrderFn = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { verifyCustomerToken } = await import("./auth-tokens.server");
     const { CATALOG } = await import("./server-catalog.server");
-    const { COUPONS, computeDiscount, deliveryFee } = await import("./promo");
+    const { deliveryFee } = await import("./promo");
     const { loadSurgeConfig } = await import("./surge.functions");
 
     const session = verifyCustomerToken(data.token);
