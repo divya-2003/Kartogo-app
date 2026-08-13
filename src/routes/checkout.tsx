@@ -6,7 +6,9 @@ import { formatINR } from "@/lib/data";
 import { toast } from "sonner";
 import { Banknote, Smartphone, Wallet, MapPin, Plus, Check, Trash2, X, Tag, Pencil, Flame } from "lucide-react";
 import { getSurgeConfigFn, SURGE_REASON_LABELS, type SurgeConfig } from "@/lib/surge.functions";
-import { COUPONS, computeDiscount } from "@/lib/promo";
+import { computeDiscount, type PromoRule } from "@/lib/promo";
+import { listPromoRulesFn, validatePromoFn } from "@/lib/promo.functions";
+
 
 export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
