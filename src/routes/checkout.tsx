@@ -137,7 +137,22 @@ function CheckoutPage() {
   }, []);
   const surgeAmount = surge?.enabled && subtotal > 0 ? Math.round(surge.amount) : 0;
   const fee = baseFee + surgeAmount;
-  const discount = useMemo(() => computeDiscount(appliedCode, subtotal), [appliedCode, subtotal]);
+
+  // Promo codes are admin-managed in the backend; the checkout previews them
+  // and the server re-validates before the order is written.
+  const [promoRules, setPromoRules] = useState<PromoRule[]>([]);
+  useEffect(() => {
+    let alive = true;
+    listPromoRulesFn()
+      .then(r => { if (alive) setPromoRules(r); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
+  const discount = useMemo(
+    () => computeDiscount(appliedCode, subtotal, promoRules),
+    [appliedCode, subtotal, promoRules],
+  );
   const total = Math.max(0, subtotal + fee - discount);
   // GST is inclusive in listed prices (5% slab) — show it as a breakdown line
   // so the estimate stays transparent without changing what's payable.
@@ -151,19 +166,23 @@ function CheckoutPage() {
 
 
 
-  const applyPromo = () => {
-    const code = promoInput.trim().toUpperCase();
+  const tryPromo = async (raw: string) => {
+    const code = raw.trim().toUpperCase();
     if (!code) { toast.error("Enter a promo code"); return; }
-    const coupon = COUPONS[code];
-    if (!coupon) { toast.error("Invalid promo code"); return; }
-    if (subtotal < coupon.minSubtotal) {
-      toast.error(`Add ${formatINR(coupon.minSubtotal - subtotal)} more to use ${code}`);
-      return;
+    try {
+      const token = JSON.parse(localStorage.getItem("qk_customer_token") || "null");
+      const verdict = await validatePromoFn({ data: { token: token ?? "", code, subtotal } });
+      if (!verdict.ok) { toast.error(verdict.reason); return; }
+      setAppliedCode(verdict.code);
+      setPromoInput("");
+      toast.success(`${verdict.code} applied — you saved ${formatINR(verdict.discount)}!`);
+    } catch {
+      toast.error("Could not check that promo code");
     }
-    setAppliedCode(code);
-    setPromoInput("");
-    toast.success(`${code} applied — you saved ${formatINR(computeDiscount(code, subtotal))}!`);
   };
+
+  const applyPromo = () => { void tryPromo(promoInput); };
+
 
   const removePromo = () => {
     setAppliedCode(null);
