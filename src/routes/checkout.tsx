@@ -591,26 +591,22 @@ function CheckoutPage() {
                     <button onClick={applyPromo} className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90">Apply</button>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {Object.entries(COUPONS).map(([code, c]) => {
-                      const eligible = subtotal >= c.minSubtotal;
+                    {promoRules.map(rule => {
+                      const eligible = subtotal >= rule.minSubtotal;
                       return (
                         <button
-                          key={code}
+                          key={rule.code}
                           type="button"
-                          onClick={() => {
-                            if (!eligible) { toast.error(`Add ${formatINR(c.minSubtotal - subtotal)} more to use ${code}`); return; }
-                            setAppliedCode(code);
-                            setPromoInput("");
-                            toast.success(`${code} applied — you saved ${formatINR(computeDiscount(code, subtotal))}!`);
-                          }}
+                          onClick={() => { void tryPromo(rule.code); }}
                           className={`rounded-lg border px-2.5 py-1.5 text-left text-[11px] ${eligible ? "border-primary/40 bg-primary/5" : "border-border opacity-70"}`}
                         >
-                          <span className="font-bold text-primary">{code}</span>
-                          <span className="ml-1 text-muted-foreground">{c.desc}</span>
+                          <span className="font-bold text-primary">{rule.code}</span>
+                          <span className="ml-1 text-muted-foreground">{rule.description}</span>
                         </button>
                       );
                     })}
                   </div>
+
                 </>
               )}
             </div>
