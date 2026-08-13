@@ -194,7 +194,13 @@ export const placeOrderFn = createServerFn({ method: "POST" })
       }
       throw new Error("Order could not be saved. Please try again.");
     }
+
+    if (promoCode && discount > 0) {
+      const { recordRedemption } = await import("./promo.server");
+      await recordRedemption(promoCode, session.phone, id, discount);
+    }
     return row;
+
 
   });
 
