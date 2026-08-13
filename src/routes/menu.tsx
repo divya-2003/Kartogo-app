@@ -1,5 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getReferralFn, applyReferralFn } from "@/lib/promo.functions";
+
 import { useAuth, useLocation, useWallet } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { toast } from "sonner";
