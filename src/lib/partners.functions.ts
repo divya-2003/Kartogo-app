@@ -133,9 +133,9 @@ export const setMarketOperationsFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await requireAdmin(data.adminToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const patch: Record<string, unknown> = {};
-    if (data.acceptingOrders !== undefined) patch["accepting_orders"] = data.acceptingOrders;
-    if (data.prepMinutes !== undefined) patch["prep_minutes"] = data.prepMinutes;
+    const patch: { accepting_orders?: boolean; prep_minutes?: number } = {};
+    if (data.acceptingOrders !== undefined) patch.accepting_orders = data.acceptingOrders;
+    if (data.prepMinutes !== undefined) patch.prep_minutes = data.prepMinutes;
     if (!Object.keys(patch).length) throw new Error("Nothing to update");
 
     const { data: row, error } = await supabaseAdmin
