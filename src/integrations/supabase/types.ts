@@ -1260,6 +1260,60 @@ export type Database = {
         }
         Relationships: []
       }
+      order_substitutions: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          order_id: string
+          original_price: number
+          product_id: string
+          product_name: string
+          quantity: number
+          replacement_name: string | null
+          replacement_price: number
+          replacement_product_id: string | null
+          responded_at: string | null
+          status: string
+          suggested_by: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          order_id: string
+          original_price?: number
+          product_id: string
+          product_name: string
+          quantity?: number
+          replacement_name?: string | null
+          replacement_price?: number
+          replacement_product_id?: string | null
+          responded_at?: string | null
+          status?: string
+          suggested_by?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          order_id?: string
+          original_price?: number
+          product_id?: string
+          product_name?: string
+          quantity?: number
+          replacement_name?: string | null
+          replacement_price?: number
+          replacement_product_id?: string | null
+          responded_at?: string | null
+          status?: string
+          suggested_by?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           commission_amount: number
@@ -1359,6 +1413,7 @@ export type Database = {
       }
       partner_markets: {
         Row: {
+          accepting_orders: boolean
           address: string
           created_at: string
           id: string
@@ -1368,9 +1423,11 @@ export type Database = {
           name: string
           notes: string | null
           phone: string | null
+          prep_minutes: number
           updated_at: string
         }
         Insert: {
+          accepting_orders?: boolean
           address: string
           created_at?: string
           id?: string
@@ -1380,9 +1437,11 @@ export type Database = {
           name: string
           notes?: string | null
           phone?: string | null
+          prep_minutes?: number
           updated_at?: string
         }
         Update: {
+          accepting_orders?: boolean
           address?: string
           created_at?: string
           id?: string
@@ -1392,6 +1451,7 @@ export type Database = {
           name?: string
           notes?: string | null
           phone?: string | null
+          prep_minutes?: number
           updated_at?: string
         }
         Relationships: []
