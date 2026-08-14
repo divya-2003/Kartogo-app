@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Store, Plus, Pencil, Trash2, LocateFixed, MapPin, X, ExternalLink, Loader2, Power } from "lucide-react";
+import { Store, Plus, Pencil, Trash2, LocateFixed, MapPin, X, ExternalLink, Loader2, Power, PauseCircle, Timer } from "lucide-react";
 import {
   listPartnerMarketsFn,
   upsertPartnerMarketFn,
   deletePartnerMarketFn,
+  setMarketOperationsFn,
   type PartnerMarket,
 } from "@/lib/partners.functions";
 
@@ -64,6 +65,28 @@ function AdminPartnersPage() {
         lat: m.lat, lng: m.lng, notes: m.notes, isActive: !m.isActive,
       }});
       toast.success(!m.isActive ? "Market activated" : "Market deactivated");
+      load();
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
+  };
+
+  const toggleAccepting = async (m: PartnerMarket) => {
+    const token = adminToken(); if (!token) return;
+    try {
+      await setMarketOperationsFn({ data: { adminToken: token, id: m.id, acceptingOrders: !m.acceptingOrders } });
+      toast.success(!m.acceptingOrders ? "Store is taking orders" : "Store paused");
+      load();
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
+  };
+
+  const changePrep = async (m: PartnerMarket) => {
+    const token = adminToken(); if (!token) return;
+    const raw = prompt(`Typical preparation time for ${m.name} (minutes)`, String(m.prepMinutes));
+    if (raw === null) return;
+    const mins = Math.round(Number(raw));
+    if (!Number.isFinite(mins) || mins < 1 || mins > 180) { toast.error("Enter 1–180 minutes"); return; }
+    try {
+      await setMarketOperationsFn({ data: { adminToken: token, id: m.id, prepMinutes: mins } });
+      toast.success("Prep time updated");
       load();
     } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
   };
@@ -166,6 +189,18 @@ function AdminPartnersPage() {
                   className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-secondary"
                 >
                   <Power className="h-3.5 w-3.5" /> {m.isActive ? "Deactivate" : "Activate"}
+                </button>
+                <button
+                  onClick={() => toggleAccepting(m)}
+                  className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-secondary"
+                >
+                  <PauseCircle className="h-3.5 w-3.5" /> {m.acceptingOrders ? "Pause orders" : "Resume orders"}
+                </button>
+                <button
+                  onClick={() => changePrep(m)}
+                  className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-secondary"
+                >
+                  <Timer className="h-3.5 w-3.5" /> Prep time
                 </button>
                 <button
                   onClick={() => remove(m)}
