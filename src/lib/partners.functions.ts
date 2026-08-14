@@ -10,6 +10,8 @@ export type PartnerMarket = {
   lng: number | null;
   notes: string | null;
   isActive: boolean;
+  acceptingOrders: boolean;
+  prepMinutes: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -23,6 +25,8 @@ type Row = {
   lng: number | null;
   notes: string | null;
   is_active: boolean;
+  accepting_orders?: boolean | null;
+  prep_minutes?: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -36,6 +40,8 @@ const rowToMarket = (r: Row): PartnerMarket => ({
   lng: r.lng,
   notes: r.notes,
   isActive: r.is_active,
+  acceptingOrders: r.accepting_orders ?? true,
+  prepMinutes: Number(r.prep_minutes ?? 12),
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });
@@ -107,4 +113,33 @@ export const deletePartnerMarketFn = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin.from("partner_markets").delete().eq("id", data.id);
     if (error) throw new Error("Could not delete partner market");
     return { ok: true };
+  });
+
+// ---------------- Merchant tools — live store operations ----------------
+// Lets ops flip a supermarket between "taking orders" and "paused" without
+// deactivating it, and keep its typical preparation time honest so customer
+// ETAs stay believable.
+export const setMarketOperationsFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        adminToken: z.string().min(1),
+        id: z.string().uuid(),
+        acceptingOrders: z.boolean().optional(),
+        prepMinutes: z.number().int().min(1).max(180).optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data }) => {
+    await requireAdmin(data.adminToken);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const patch: Record<string, unknown> = {};
+    if (data.acceptingOrders !== undefined) patch["accepting_orders"] = data.acceptingOrders;
+    if (data.prepMinutes !== undefined) patch["prep_minutes"] = data.prepMinutes;
+    if (!Object.keys(patch).length) throw new Error("Nothing to update");
+
+    const { data: row, error } = await supabaseAdmin
+      .from("partner_markets").update(patch).eq("id", data.id).select("*").maybeSingle();
+    if (error || !row) throw new Error("Could not update store operations");
+    return rowToMarket(row as Row);
   });
