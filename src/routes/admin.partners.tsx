@@ -121,8 +121,6 @@ function AdminPartnersPage() {
                     </span>
                     <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold">~{m.prepMinutes} min prep</span>
                   </div>
-
-                  </div>
                   <div className="mt-1 flex items-start gap-1 text-xs text-muted-foreground">
                     <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                     <span className="line-clamp-2">{m.address}</span>
