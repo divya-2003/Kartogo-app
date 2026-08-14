@@ -116,6 +116,12 @@ function AdminPartnersPage() {
                     <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${m.isActive ? "bg-leaf/15 text-leaf" : "bg-muted text-muted-foreground"}`}>
                       {m.isActive ? "Active" : "Inactive"}
                     </span>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${m.acceptingOrders ? "bg-primary/10 text-primary" : "bg-destructive/15 text-destructive"}`}>
+                      {m.acceptingOrders ? "Taking orders" : "Paused"}
+                    </span>
+                    <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold">~{m.prepMinutes} min prep</span>
+                  </div>
+
                   </div>
                   <div className="mt-1 flex items-start gap-1 text-xs text-muted-foreground">
                     <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
