@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { listSupplierOrdersFn, supplierMarkPackedFn, type SupplierOrder } from "@/lib/supplier.functions";
 import { formatINR } from "@/lib/data";
-import { CheckCircle2, RotateCcw, Clock, Package } from "lucide-react";
+import { CheckCircle2, RotateCcw, Clock, Package, Replace } from "lucide-react";
+import { toast } from "sonner";
+import { suggestSubstitutionFn } from "@/lib/substitutions.functions";
 
 export const Route = createFileRoute("/supplier/orders")({ component: SupplierOrders });
 
@@ -43,6 +45,38 @@ function SupplierOrders() {
       setError(e instanceof Error ? e.message : "Could not update order");
     } finally {
       setBusyId(null);
+    }
+  };
+
+  // Block 5 — offer the customer a replacement for an item we cannot pack.
+  const offerReplacement = async (
+    orderId: string,
+    it: { productId: string; name: string; qty: number; price: number },
+  ) => {
+    const token = getToken();
+    if (!token) return;
+    const replacementName = prompt(`Replacement for "${it.name}"`, "");
+    if (!replacementName || !replacementName.trim()) return;
+    const priceRaw = prompt(`Price per unit for "${replacementName.trim()}" (₹)`, String(it.price));
+    if (priceRaw === null) return;
+    const price = Number(priceRaw);
+    if (!Number.isFinite(price) || price < 0) { toast.error("Enter a valid price"); return; }
+    const note = prompt("Note for the customer (optional)", "") ?? "";
+    try {
+      await suggestSubstitutionFn({ data: {
+        token,
+        orderId,
+        productId: it.productId,
+        productName: it.name,
+        quantity: it.qty,
+        originalPrice: it.price,
+        replacementName: replacementName.trim(),
+        replacementPrice: price,
+        note: note.trim() || null,
+      }});
+      toast.success("Replacement sent to the customer");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not send the replacement");
     }
   };
 
@@ -128,9 +162,19 @@ function SupplierOrders() {
               </div>
               <ul className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
                 {o.items.map((it) => (
-                  <li key={it.productId} className="flex items-center justify-between">
+                  <li key={it.productId} className="flex items-center justify-between gap-2">
                     <span>{it.name} <span className="text-muted-foreground">× {it.qty}</span></span>
-                    <span className="font-semibold">{formatINR(it.price * it.qty)}</span>
+                    <span className="flex items-center gap-2">
+                      {(o.status === "placed" || o.status === "packed") && (
+                        <button
+                          onClick={() => offerReplacement(o.id, it)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2 py-1 text-[11px] font-semibold hover:bg-secondary"
+                        >
+                          <Replace className="h-3 w-3" /> Replace
+                        </button>
+                      )}
+                      <span className="font-semibold">{formatINR(it.price * it.qty)}</span>
+                    </span>
                   </li>
                 ))}
               </ul>

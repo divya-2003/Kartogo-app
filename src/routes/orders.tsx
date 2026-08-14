@@ -35,8 +35,9 @@ import { downloadInvoice } from "@/lib/invoice";
 import { submitReviewsFn } from "@/lib/reviews.functions";
 import { initiateMaskedCallFn } from "@/lib/chat.functions";
 import { OrderChat } from "@/components/OrderChat";
+import { listMySubstitutionsFn, respondSubstitutionFn, type OrderSubstitution } from "@/lib/substitutions.functions";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -144,6 +145,32 @@ function OrdersPage() {
   const [ratedOrderIds, setRatedOrderIds] = useState<Set<string>>(new Set());
   const [ratedLoaded, setRatedLoaded] = useState(false);
   const [chatOrderId, setChatOrderId] = useState<string | null>(null);
+
+  // Block 5 — replacements the store proposed for out-of-stock items.
+  const [subs, setSubs] = useState<OrderSubstitution[]>([]);
+  const [subBusy, setSubBusy] = useState<string | null>(null);
+  const loadSubs = useCallback(async () => {
+    if (!customerToken) { setSubs([]); return; }
+    try {
+      const res = await listMySubstitutionsFn({ data: { token: customerToken } });
+      setSubs(res.substitutions);
+    } catch { /* non-fatal */ }
+  }, [customerToken]);
+  useEffect(() => { void loadSubs(); }, [loadSubs]);
+
+  const respondSub = async (id: string, approve: boolean) => {
+    if (!customerToken) return;
+    setSubBusy(id);
+    try {
+      await respondSubstitutionFn({ data: { token: customerToken, id, approve } });
+      toast.success(approve ? "Replacement approved" : "Item removed and refunded to Kartogo Cash");
+      setSubs((prev) => prev.filter((s) => s.id !== id));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not update the replacement");
+    } finally {
+      setSubBusy(null);
+    }
+  };
 
   const maskedCall = async (orderId: string) => {
     if (!customerToken) { toast.error("Please log in again"); return; }
@@ -560,6 +587,37 @@ function OrdersPage() {
                           </div>
                         </div>
                       )}
+
+                      {subs.filter((s) => s.orderId === o.id).map((s) => (
+                        <div key={s.id} className="mt-3 rounded-xl border border-saffron/50 bg-saffron/10 p-3">
+                          <div className="text-sm font-bold">Replacement suggested</div>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {s.productName} is out of stock. The store offers {s.replacementName} at {formatINR(s.replacementPrice)} each
+                            {s.replacementPrice !== s.originalPrice
+                              ? s.replacementPrice < s.originalPrice
+                                ? " — the difference comes back as Kartogo Cash."
+                                : " — your bill goes up by the difference."
+                              : "."}
+                          </p>
+                          {s.note && <p className="mt-1 text-xs italic text-muted-foreground">"{s.note}"</p>}
+                          <div className="mt-2 flex items-center gap-2">
+                            <button
+                              disabled={subBusy === s.id}
+                              onClick={() => void respondSub(s.id, true)}
+                              className="rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground disabled:opacity-60"
+                            >
+                              Accept replacement
+                            </button>
+                            <button
+                              disabled={subBusy === s.id}
+                              onClick={() => void respondSub(s.id, false)}
+                              className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold disabled:opacity-60"
+                            >
+                              Remove & refund
+                            </button>
+                          </div>
+                        </div>
+                      ))}
 
                       <div className="mt-3">
                         <LiveTrackingCard token={customerToken} orderId={o.id} />
