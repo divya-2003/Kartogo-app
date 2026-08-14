@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import type { OrderSubstitution } from "./substitutions.server";
+import type { OrderSubstitution, SubstitutionRow } from "./substitutions.server";
 
 export type { OrderSubstitution };
 
@@ -28,7 +28,7 @@ export const suggestSubstitutionFn = createServerFn({ method: "POST" })
     if (!session) throw new Error("Supplier authorization required");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { toSubstitution, type SubstitutionRow } = await import("./substitutions.server");
+    const { toSubstitution } = await import("./substitutions.server");
 
     const { data: existing } = await supabaseAdmin
       .from("order_substitutions")
@@ -69,7 +69,7 @@ export const listMySubstitutionsFn = createServerFn({ method: "POST" })
     if (!session) return { substitutions: [] as OrderSubstitution[] };
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { toSubstitution, type SubstitutionRow } = await import("./substitutions.server");
+    const { toSubstitution } = await import("./substitutions.server");
 
     const { data: orders } = await supabaseAdmin
       .from("app_orders")
@@ -101,7 +101,7 @@ export const respondSubstitutionFn = createServerFn({ method: "POST" })
     if (!session) throw new Error("Please log in");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { applySubstitutionDecision, type SubstitutionRow } = await import("./substitutions.server");
+    const { applySubstitutionDecision } = await import("./substitutions.server");
 
     const { data: row } = await supabaseAdmin
       .from("order_substitutions")
