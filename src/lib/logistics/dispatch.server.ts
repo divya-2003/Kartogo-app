@@ -17,6 +17,7 @@ import {
   type DriverCandidate,
   type GeoPoint,
 } from "./types";
+import { ensureGeoIndex } from "./geo-index";
 import { haversineMeters, isValidPoint } from "./geo";
 import { quoteDriverPayout, type PayoutQuote } from "./pricing";
 import { buildBatches, MAX_BATCH_SIZE, type BatchCandidate } from "./batching";
@@ -157,10 +158,19 @@ export async function offerOrder(
     return { ok: false, reason: "no_drivers" };
   }
 
+  const origin = pickup ?? candidates[0]!.location;
   const strategy = logisticsCapabilities.dispatch;
-  candidates = strategy
-    ? await strategy.rank({ orderId, pickup: pickup ?? candidates[0]!.location, candidates })
-    : candidates.sort((a, b) => a.distanceMeters - b.distanceMeters);
+  if (strategy) {
+    candidates = await strategy.rank({ orderId, pickup: origin, candidates });
+  } else {
+    // Phase 7 — grid geo index keeps the nearest-rider search sub-linear as
+    // the fleet grows; it degrades to a plain sort for small fleets.
+    ensureGeoIndex();
+    const index = logisticsCapabilities.geoIndex;
+    candidates = index
+      ? await index.nearest(origin, candidates, Math.min(candidates.length, 10))
+      : candidates.sort((a, b) => a.distanceMeters - b.distanceMeters);
+  }
 
   const chosen = candidates[0]!;
   const drop = await dropPointFor(orderId);
