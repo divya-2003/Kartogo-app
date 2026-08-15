@@ -1,10 +1,9 @@
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ShoppingBag, Search, User2, LayoutDashboard, LogOut, ShieldCheck } from "lucide-react";
+import { Link, useRouterState } from "@tanstack/react-router";
+import { ShoppingBag, Search, User2, LayoutDashboard, ShieldCheck } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useCart, useAuth } from "@/lib/store";
 import { LocationPicker } from "@/components/LocationPicker";
 import { SearchOverlay } from "@/components/SearchOverlay";
-import { toast } from "sonner";
 import kartigoLogo from "@/assets/kartigo-logo.png.asset.json";
 
 const SEARCH_TERMS = ["avakaya", "maggi", "agarbatti", "milk", "bread", "paneer"];
@@ -52,8 +51,7 @@ function useTypewriterPlaceholder(terms: string[]) {
 export function Header() {
   const placeholder = useTypewriterPlaceholder(SEARCH_TERMS);
   const { count } = useCart();
-  const { user, logout } = useAuth();
-  const nav = useNavigate();
+  const { user } = useAuth();
   const [searchOpen, setSearchOpen] = useState(false);
   const location = useRouterState({ select: s => s.location.pathname });
   const isAdminArea = location.startsWith("/admin");
@@ -63,12 +61,6 @@ export function Header() {
   const hideUserActions = isCheckout || isOrders || isSupplierArea;
   const hideBrowse = isAdminArea || isSupplierArea || isCheckout || isOrders;
   const isAdmin = user?.role === "admin";
-
-  const handleLogout = () => {
-    logout();
-    toast.success("Signed out");
-    nav({ to: "/login" });
-  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
