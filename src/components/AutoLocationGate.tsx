@@ -120,12 +120,24 @@ export function AutoLocationGate() {
     <div className="fixed inset-0 z-[60] flex flex-col bg-background">
       {/* Header */}
       <div className="bg-gradient-to-b from-[oklch(0.9_0.07_70)] to-background px-5 pb-6 pt-6">
-        <h2 className="font-display text-3xl font-extrabold tracking-tight">Unserviceable area</h2>
-        <p className="mt-1 flex items-center gap-1.5 truncate text-sm font-semibold text-muted-foreground">
-          <MapPin className="h-4 w-4 shrink-0 text-primary" />
-          <span className="truncate">{denied.address}</span>
-        </p>
+        <div className="flex items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <h2 className="font-display text-3xl font-extrabold tracking-tight">Unserviceable area</h2>
+            <p className="mt-1 flex items-center gap-1.5 truncate text-sm font-semibold text-muted-foreground">
+              <MapPin className="h-4 w-4 shrink-0 text-primary" />
+              <span className="truncate">{denied.address}</span>
+            </p>
+          </div>
+          <Link
+            to="/menu"
+            aria-label="Account details"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card shadow-pop transition hover:bg-secondary"
+          >
+            <User2 className="h-4 w-4 text-primary" />
+          </Link>
+        </div>
       </div>
+
 
       {/* Coming soon illustration */}
       <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
