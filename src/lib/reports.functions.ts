@@ -371,14 +371,22 @@ export const getProductAnalyticsFn = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { CATALOG, PRODUCT_CATEGORY } = await import("./server-catalog.server");
 
-    const [ordersRes, catalogRes] = await Promise.all([
+    const [ordersRes, catalogRes, invRes] = await Promise.all([
       supabaseAdmin.from("app_orders").select("id, created_at, status, items").neq("status", "cancelled"),
       supabaseAdmin.from("catalog_items").select("id, name, category, stock, price"),
+      // Seed products often have no catalog_items row yet; warehouse stock is
+      // the next-best source of truth so availability isn't reported as zero.
+      supabaseAdmin.from("inventory_items").select("product_id, current_stock, reserved_stock"),
     ]);
     if (ordersRes.error) throw new Error("Could not load product analytics");
 
     const orders = (ordersRes.data ?? []) as { id: string; created_at: string; status: string; items: unknown }[];
     const catalog = (catalogRes.data ?? []) as { id: string; name: string; category: string; stock: number; price: number }[];
+    const invByProduct = new Map<string, number>();
+    for (const r of (invRes.data ?? []) as { product_id: string; current_stock: number; reserved_stock: number }[]) {
+      const avail = Math.max(0, Number(r.current_stock ?? 0) - Number(r.reserved_stock ?? 0));
+      invByProduct.set(r.product_id, (invByProduct.get(r.product_id) ?? 0) + avail);
+    }
 
     const map = new Map<string, ProductRow>();
     // Seed with catalog + fallback CATALOG for names/categories
@@ -393,8 +401,10 @@ export const getProductAnalyticsFn = createServerFn({ method: "POST" })
         category: c?.category || PRODUCT_CATEGORY[pid] || "—",
         unitsSold: 0, revenue: 0, ordersCount: 0, averageSellingPrice: 0,
         lastSoldDate: null,
-        currentStock: c?.stock ?? 0,
-        available: (c?.stock ?? 0) > 0,
+        currentStock: c?.stock ?? invByProduct.get(pid) ?? 0,
+        // A product with neither a catalog row nor a warehouse row is a bundled
+        // seed item — still sellable, so don't report it as out of stock.
+        available: c ? c.stock > 0 : invByProduct.has(pid) ? (invByProduct.get(pid) ?? 0) > 0 : true,
       };
       map.set(pid, row);
       return row;
