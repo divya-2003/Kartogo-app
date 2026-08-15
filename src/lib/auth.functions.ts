@@ -75,14 +75,12 @@ export const requestOtpFn = createServerFn({ method: "POST" })
       // Twilio trial accounts can only text verified numbers, and the connector
       // may not be configured yet. Rather than blocking login, fall back to
       // showing the freshly generated code in the UI (demo delivery).
-      const msg = err instanceof Error ? err.message : "";
-      if (msg.includes("verified phone numbers") || msg.includes("not configured")) {
-        return { ok: true as const, demo: true as const, demoCode: code };
-      }
-      if (otpRow?.id) {
-        await supabaseAdmin.from("otp_codes").update({ consumed: true }).eq("id", otpRow.id);
-      }
-      throw err;
+      // Until the paid SMS plan is live, ANY delivery failure (trial-account
+      // restrictions, unsupported country, missing connector) falls back to
+      // showing the freshly generated random code in the UI — identically for
+      // Indian and international numbers.
+      console.warn("SMS delivery failed, falling back to on-screen code", err);
+      return { ok: true as const, demo: true as const, demoCode: code };
     }
     return { ok: true as const, demo: false as const };
 

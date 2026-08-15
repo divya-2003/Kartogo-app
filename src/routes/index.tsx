@@ -23,13 +23,25 @@ export const Route = createFileRoute("/")({
 /** Detects a saved admin/delivery/supplier session and returns where to send the user. */
 function roleRedirectTarget(): "/delivery" | "/admin" | "/supplier" | "/delivery-request" | null {
   if (typeof window === "undefined") return null;
+  // Tokens are written by different flows — some raw, some JSON-encoded. Read
+  // both shapes so a portal session is never missed (which would drop a
+  // supplier/rider/admin onto the customer home page).
+  const read = (key: string): string | null => {
+    let raw: string | null = null;
+    try { raw = localStorage.getItem(key); } catch { return null; }
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      return typeof parsed === "string" && parsed ? parsed : raw;
+    } catch { return raw; }
+  };
   try {
-    if (localStorage.getItem("qk_delivery_token") && localStorage.getItem("qk_delivery_driver")) return "/delivery";
+    if (read("qk_delivery_token")) return "/delivery";
     // A paused rider waiting for approval belongs on the waiting screen, never
     // on the customer home page.
-    if (localStorage.getItem("qk_delivery_pending_token")) return "/delivery-request";
-    if (JSON.parse(localStorage.getItem("qk_admin_token") || "null")) return "/admin";
-    if (JSON.parse(localStorage.getItem("qk_supplier_token") || "null") && localStorage.getItem("qk_supplier")) return "/supplier";
+    if (read("qk_delivery_pending_token")) return "/delivery-request";
+    if (read("qk_admin_token")) return "/admin";
+    if (read("qk_supplier_token")) return "/supplier";
   } catch { /* noop */ }
   return null;
 }
