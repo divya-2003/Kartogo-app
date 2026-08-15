@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useCatalog } from "@/lib/store";
 import { CATEGORIES, formatINR, type Product } from "@/lib/data";
 import { useSupplier } from "@/lib/supplier-context";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ClipboardCheck, PackageCheck } from "lucide-react";
+import { listPurchaseOrdersFn, setPurchaseOrderStatusFn } from "@/lib/inventory.functions";
 import { toast } from "sonner";
 import { ItemEditor } from "@/components/ItemEditor";
 
@@ -23,6 +24,48 @@ function SupplierInventory() {
     .filter((p) => cats.has(p.category))
     .filter((p) => !filter || p.name.toLowerCase().includes(filter.toLowerCase()));
 
+  // Reorder (purchase) requests approved by admin, scoped to this supplier's
+  // categories so each portal only sees what it has to fulfil.
+  type PoLine = { product_id: string; product_name: string; quantity: number; unit_cost: number };
+  type Po = { id: string; market_name: string; status: string; expected_cost: number; created_at: string; items: PoLine[] };
+  const [pos, setPos] = useState<Po[]>([]);
+  const [poBusy, setPoBusy] = useState<string | null>(null);
+
+  const loadPos = async () => {
+    let token: string | null = null;
+    try { token = JSON.parse(localStorage.getItem("qk_supplier_token") || "null"); } catch { token = null; }
+    if (!token) return;
+    try {
+      const res = await listPurchaseOrdersFn({ data: { supplierToken: token } });
+      setPos(res.purchaseOrders as unknown as Po[]);
+    } catch { /* keep last good */ }
+  };
+  useEffect(() => { void loadPos(); }, []);
+
+  const catOf = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const p of products) m.set(p.id, p.category);
+    return m;
+  }, [products]);
+
+  const myPos = pos.filter(po =>
+    (po.status === "approved" || po.status === "pending_approval") &&
+    (po.items ?? []).some(l => cats.has(catOf.get(l.product_id) ?? "")),
+  );
+
+  const markDelivered = async (id: string) => {
+    let token: string | null = null;
+    try { token = JSON.parse(localStorage.getItem("qk_supplier_token") || "null"); } catch { token = null; }
+    if (!token) return;
+    setPoBusy(id);
+    try {
+      await setPurchaseOrderStatusFn({ data: { supplierToken: token, id, status: "delivered" } });
+      toast.success("Marked as delivered");
+      await loadPos();
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Could not update"); }
+    finally { setPoBusy(null); }
+  };
+
   const defaultCat = myCategories[0]?.slug ?? "snacks";
   const EMPTY: Product = { id: "", name: "", category: defaultCat, price: 0, unit: "", stock: 0, emoji: "🛒", description: "" };
 
@@ -40,6 +83,50 @@ function SupplierInventory() {
           </button>
         </div>
       </div>
+
+      {/* Approved reorder requests from admin */}
+      {myPos.length > 0 && (
+        <section className="rounded-2xl border border-primary/30 bg-primary/5 p-4">
+          <h2 className="flex items-center gap-2 font-display text-lg font-bold">
+            <ClipboardCheck className="h-5 w-5 text-primary" /> Reorder requests ({myPos.length})
+          </h2>
+          <p className="text-xs text-muted-foreground">Approved by admin — restock these and mark them delivered.</p>
+          <div className="mt-3 space-y-3">
+            {myPos.map(po => (
+              <div key={po.id} className="rounded-xl border border-border bg-card p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="truncate font-semibold">{po.market_name || "Store"}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {new Date(po.created_at).toLocaleDateString()} · {formatINR(Number(po.expected_cost) || 0)}
+                    </div>
+                  </div>
+                  <span className={`rounded-md px-2 py-0.5 text-xs font-bold ${po.status === "approved" ? "bg-leaf/15 text-leaf" : "bg-saffron/30"}`}>
+                    {po.status.replace("_", " ")}
+                  </span>
+                </div>
+                <ul className="mt-2 space-y-1 text-sm">
+                  {(po.items ?? []).filter(l => cats.has(catOf.get(l.product_id) ?? "")).map(l => (
+                    <li key={l.product_id} className="flex items-center justify-between gap-2">
+                      <span className="truncate">{l.product_name}</span>
+                      <span className="shrink-0 font-semibold">x{l.quantity}</span>
+                    </li>
+                  ))}
+                </ul>
+                {po.status === "approved" && (
+                  <button
+                    onClick={() => void markDelivered(po.id)}
+                    disabled={poBusy === po.id}
+                    className="mt-3 inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                  >
+                    <PackageCheck className="h-3.5 w-3.5" /> {poBusy === po.id ? "Saving…" : "Mark delivered"}
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Desktop / laptop: table */}
       <div className="hidden overflow-hidden rounded-2xl border border-border bg-card md:block">
