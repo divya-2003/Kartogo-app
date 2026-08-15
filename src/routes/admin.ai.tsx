@@ -42,6 +42,9 @@ function AdminAiPage() {
 
   const [messages, setMessages] = useState<AiChatMessage[]>([]);
   const [question, setQuestion] = useState("");
+  // Optional dataset the admin uploads so the assistant can analyse it next to
+  // the live business data (CSV / TSV / JSON / plain text).
+  const [dataFile, setDataFile] = useState<{ name: string; text: string } | null>(null);
   const [thinking, setThinking] = useState(false);
   const chatEnd = useRef<HTMLDivElement>(null);
 
@@ -99,10 +102,12 @@ function AdminAiPage() {
     if (!q || !adminToken || thinking) return;
     setQuestion("");
     const history = messages;
-    setMessages([...history, { role: "user", content: q }]);
+    setMessages([...history, { role: "user", content: dataFile ? `${q}\n\n📎 ${dataFile.name}` : q }]);
     setThinking(true);
     try {
-      const { answer } = await aiAssistantFn({ data: { adminToken, question: q, history } });
+      const { answer } = await aiAssistantFn({
+        data: { adminToken, question: q, history, fileName: dataFile?.name, fileText: dataFile?.text },
+      });
       setMessages((m) => [...m, { role: "assistant", content: answer }]);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "The assistant could not answer that.";
@@ -170,9 +175,36 @@ function AdminAiPage() {
               {thinking && <div className="w-fit rounded-2xl bg-secondary px-3 py-2 text-sm text-muted-foreground">Analysing your data…</div>}
               <div ref={chatEnd} />
             </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold hover:bg-secondary">
+                <Paperclip className="h-4 w-4" /> Add data file
+                <input
+                  type="file"
+                  accept=".csv,.tsv,.txt,.json,.md"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    e.target.value = "";
+                    if (!f) return;
+                    if (f.size > 2_000_000) { toast.error("File must be under 2 MB"); return; }
+                    const text = await f.text();
+                    setDataFile({ name: f.name, text });
+                    toast.success(`${f.name} attached`);
+                  }}
+                />
+              </label>
+              {dataFile && (
+                <span className="inline-flex items-center gap-2 rounded-xl border border-primary/40 bg-primary/5 px-3 py-2 text-xs font-semibold text-primary">
+                  {dataFile.name}
+                  <button type="button" onClick={() => setDataFile(null)} aria-label="Remove file" className="text-muted-foreground hover:text-destructive">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </span>
+              )}
+            </div>
             <form
               onSubmit={(e) => { e.preventDefault(); void ask(question); }}
-              className="mt-3 flex items-center gap-2"
+              className="mt-2 flex items-center gap-2"
             >
               <input
                 value={question}
