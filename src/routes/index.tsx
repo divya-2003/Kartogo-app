@@ -90,6 +90,7 @@ function Index() {
 
 
   const bestsellerIds = new Set(products.slice(0, 10).map(p => p.id));
+  const combos = products.filter(p => p.category === "combos").slice(0, 10);
   const local = products.filter(p => ["pickles", "local-snacks", "tiffin-batter", "spice-powders"].includes(p.category)).slice(0, 8);
   const dealProduct = products.find(p => p.mrp && p.mrp > p.price) ?? products[0];
 
@@ -235,6 +236,22 @@ function Index() {
             ))}
           </div>
         </div>
+
+        {/* ---------- Combo bundles ---------- */}
+        {combos.length > 0 && (
+          <div className="mt-6">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <h2 className="font-display text-xl font-extrabold">Combo bundles</h2>
+                <p className="text-sm text-muted-foreground">Curated packs at one bundled price.</p>
+              </div>
+              <Link to="/category/$slug" params={{ slug: "combos" }} className="shrink-0 text-sm font-bold text-primary">See all</Link>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+              {combos.map(p => <ProductCard key={p.id} p={p} />)}
+            </div>
+          </div>
+        )}
 
         {/* ---------- From Ongole homes ---------- */}
         <div className="mt-6">
