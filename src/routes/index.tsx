@@ -23,13 +23,25 @@ export const Route = createFileRoute("/")({
 /** Detects a saved admin/delivery/supplier session and returns where to send the user. */
 function roleRedirectTarget(): "/delivery" | "/admin" | "/supplier" | "/delivery-request" | null {
   if (typeof window === "undefined") return null;
+  // Tokens are written by different flows — some raw, some JSON-encoded. Read
+  // both shapes so a portal session is never missed (which would drop a
+  // supplier/rider/admin onto the customer home page).
+  const read = (key: string): string | null => {
+    let raw: string | null = null;
+    try { raw = localStorage.getItem(key); } catch { return null; }
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      return typeof parsed === "string" && parsed ? parsed : raw;
+    } catch { return raw; }
+  };
   try {
-    if (localStorage.getItem("qk_delivery_token") && localStorage.getItem("qk_delivery_driver")) return "/delivery";
+    if (read("qk_delivery_token")) return "/delivery";
     // A paused rider waiting for approval belongs on the waiting screen, never
     // on the customer home page.
-    if (localStorage.getItem("qk_delivery_pending_token")) return "/delivery-request";
-    if (JSON.parse(localStorage.getItem("qk_admin_token") || "null")) return "/admin";
-    if (JSON.parse(localStorage.getItem("qk_supplier_token") || "null") && localStorage.getItem("qk_supplier")) return "/supplier";
+    if (read("qk_delivery_pending_token")) return "/delivery-request";
+    if (read("qk_admin_token")) return "/admin";
+    if (read("qk_supplier_token")) return "/supplier";
   } catch { /* noop */ }
   return null;
 }
@@ -78,6 +90,7 @@ function Index() {
 
 
   const bestsellerIds = new Set(products.slice(0, 10).map(p => p.id));
+  const combos = products.filter(p => p.category === "combos").slice(0, 10);
   const local = products.filter(p => ["pickles", "local-snacks", "tiffin-batter", "spice-powders"].includes(p.category)).slice(0, 8);
   const dealProduct = products.find(p => p.mrp && p.mrp > p.price) ?? products[0];
 
@@ -223,6 +236,22 @@ function Index() {
             ))}
           </div>
         </div>
+
+        {/* ---------- Combo bundles ---------- */}
+        {combos.length > 0 && (
+          <div className="mt-6">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <h2 className="font-display text-xl font-extrabold">Combo bundles</h2>
+                <p className="text-sm text-muted-foreground">Curated packs at one bundled price.</p>
+              </div>
+              <Link to="/category/$slug" params={{ slug: "combos" }} className="shrink-0 text-sm font-bold text-primary">See all</Link>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+              {combos.map(p => <ProductCard key={p.id} p={p} />)}
+            </div>
+          </div>
+        )}
 
         {/* ---------- From Ongole homes ---------- */}
         <div className="mt-6">

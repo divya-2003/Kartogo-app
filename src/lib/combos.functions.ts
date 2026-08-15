@@ -83,6 +83,32 @@ const upsertSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
+/**
+ * Combos are surfaced to shoppers as ordinary catalogue products (own "Combos"
+ * category) so search, category pages, cart and checkout validation all work
+ * without special-casing. The combo row stays the source of truth for its
+ * contents; this mirror row is what customers actually add to the cart.
+ */
+async function syncComboToCatalog(c: Combo) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  if (!c.isActive) {
+    await supabaseAdmin.from("catalog_items").delete().eq("id", c.id);
+    return;
+  }
+  await supabaseAdmin.from("catalog_items").upsert({
+    id: c.id,
+    name: c.name,
+    category: "combos",
+    price: c.price,
+    unit: `${c.items.reduce((n, i) => n + i.qty, 0)} items combo`,
+    stock: 999,
+    emoji: c.emoji || "🎁",
+    image: c.image,
+    description: c.description || c.items.map(i => `${i.name} x${i.qty}`).join(", "),
+    source: "combo",
+  });
+}
+
 export const upsertComboFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => upsertSchema.parse(d))
   .handler(async ({ data }) => {
@@ -103,12 +129,16 @@ export const upsertComboFn = createServerFn({ method: "POST" })
       const { data: row, error } = await supabaseAdmin.from("combos")
         .update(payload).eq("id", data.id).select("*").maybeSingle();
       if (error || !row) throw new Error("Could not save combo");
-      return toCombo(row as Row);
+      const combo = toCombo(row as Row);
+      await syncComboToCatalog(combo);
+      return combo;
     }
     const { data: row, error } = await supabaseAdmin.from("combos")
       .insert(payload).select("*").maybeSingle();
     if (error || !row) throw new Error("Could not create combo");
-    return toCombo(row as Row);
+    const combo = toCombo(row as Row);
+    await syncComboToCatalog(combo);
+    return combo;
   });
 
 export const deleteComboFn = createServerFn({ method: "POST" })
@@ -122,5 +152,6 @@ export const deleteComboFn = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("combos").delete().eq("id", data.id);
     if (error) throw new Error("Could not delete combo");
+    await supabaseAdmin.from("catalog_items").delete().eq("id", data.id);
     return { ok: true };
   });

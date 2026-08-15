@@ -160,9 +160,13 @@ export const approveReorderSuggestionFn = createServerFn({ method: "POST" })
 export type AiChatMessage = { role: "user" | "assistant"; content: string };
 
 export const aiAssistantFn = createServerFn({ method: "POST" })
-  .inputValidator((d: { adminToken?: string; supplierToken?: string; question?: string; history?: AiChatMessage[] }) => ({
+  .inputValidator((d: { adminToken?: string; supplierToken?: string; question?: string; history?: AiChatMessage[]; fileName?: string; fileText?: string }) => ({
     adminToken: str(d?.adminToken), supplierToken: str(d?.supplierToken),
     question: str(d?.question, 800),
+    // Optional uploaded dataset (CSV / TSV / JSON / plain text) the assistant
+    // should analyse alongside the live business data.
+    fileName: str(d?.fileName, 200),
+    fileText: str(d?.fileText, 200_000),
     history: (Array.isArray(d?.history) ? d.history : []).slice(-8).map((m) => ({
       role: m.role === "assistant" ? ("assistant" as const) : ("user" as const),
       content: str(m.content, 2000),
@@ -208,7 +212,7 @@ export const aiAssistantFn = createServerFn({ method: "POST" })
 
     const system = [
       "You are Kartogo's AI Operations Assistant for an Indian quick-commerce grocery business.",
-      "Answer only from the BUSINESS DATA JSON provided. Never invent numbers.",
+      "Answer only from the BUSINESS DATA JSON (and the UPLOADED FILE, when one is provided). Never invent numbers.",
       "Always explain the reasoning with the actual figures (units sold, days of cover, trend %).",
       "Amounts are in Indian rupees (₹). Be concise: short paragraphs or bullet points.",
       "You may recommend restocking quantities, but state clearly that purchase orders need admin approval.",
@@ -218,11 +222,20 @@ export const aiAssistantFn = createServerFn({ method: "POST" })
 
     try {
       const result = streamText({
-        model: gateway("google/gemini-2.5-flash"),
+        model: gateway("google/gemini-3.5-flash"),
         system,
         messages: [
           ...data.history,
-          { role: "user" as const, content: `BUSINESS DATA:\n${context}\n\nQUESTION: ${data.question}` },
+          {
+            role: "user" as const,
+            content: [
+              `BUSINESS DATA:\n${context}`,
+              data.fileText
+                ? `\n\nUPLOADED FILE "${data.fileName || "dataset"}" (analyse this together with the business data):\n${data.fileText.slice(0, 200_000)}`
+                : "",
+              `\n\nQUESTION: ${data.question}`,
+            ].join(""),
+          },
         ],
       });
       const answer = await result.text;

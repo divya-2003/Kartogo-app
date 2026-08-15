@@ -120,12 +120,24 @@ export function AutoLocationGate() {
     <div className="fixed inset-0 z-[60] flex flex-col bg-background">
       {/* Header */}
       <div className="bg-gradient-to-b from-[oklch(0.9_0.07_70)] to-background px-5 pb-6 pt-6">
-        <h2 className="font-display text-3xl font-extrabold tracking-tight">Unserviceable area</h2>
-        <p className="mt-1 flex items-center gap-1.5 truncate text-sm font-semibold text-muted-foreground">
-          <MapPin className="h-4 w-4 shrink-0 text-primary" />
-          <span className="truncate">{denied.address}</span>
-        </p>
+        <div className="flex items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <h2 className="font-display text-3xl font-extrabold tracking-tight">Unserviceable area</h2>
+            <p className="mt-1 flex items-center gap-1.5 truncate text-sm font-semibold text-muted-foreground">
+              <MapPin className="h-4 w-4 shrink-0 text-primary" />
+              <span className="truncate">{denied.address}</span>
+            </p>
+          </div>
+          <Link
+            to="/menu"
+            aria-label="Account details"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card shadow-pop transition hover:bg-secondary"
+          >
+            <User2 className="h-4 w-4 text-primary" />
+          </Link>
+        </div>
       </div>
+
 
       {/* Coming soon illustration */}
       <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
@@ -149,9 +161,9 @@ export function AutoLocationGate() {
         )}
       </div>
 
-      {/* Action */}
-      <div className="space-y-2 px-5 pb-8 pt-2">
-        {!requested && (
+      {/* Action — one primary button at a time: request first, then change location */}
+      <div className="px-5 pb-8 pt-2">
+        {!requested ? (
           <button
             type="button"
             onClick={() => void sendRequest()}
@@ -161,20 +173,12 @@ export function AutoLocationGate() {
             {requesting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
             Request Kartogo in your area
           </button>
+        ) : (
+          <LocationPicker variant="button" buttonLabel="Change location" />
         )}
-        <div className="flex items-stretch gap-2">
-          <div className="flex-1">
-            <LocationPicker variant="button" buttonLabel="Change location" />
-          </div>
-          <Link
-            to="/menu"
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3.5 font-display text-sm font-extrabold shadow-pop transition hover:bg-secondary"
-          >
-            <User2 className="h-4 w-4 text-primary" /> Account details
-          </Link>
-        </div>
       </div>
     </div>
   );
 }
+
 
