@@ -151,13 +151,13 @@ export function Header() {
             </Link>
           )}
 
-          {/* Admin logout */}
+          {/* Admin account */}
           {user && isAdmin && (
-            <button onClick={handleLogout} title="Sign out" className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium hover:bg-secondary">
-              <LogOut className="h-4 w-4" />
-              <span className="hidden md:inline">Logout</span>
-            </button>
+            <Link to="/admin/account" aria-label="Admin account" title="Account" className="inline-flex items-center gap-1 rounded-full border border-border bg-card p-2 hover:bg-secondary">
+              <User2 className="h-4 w-4" />
+            </Link>
           )}
+
         </div>
       </div>
 
