@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Sparkles, RefreshCw, AlertTriangle, Bot, Send, Gauge, Truck, Flame, Snowflake, PackageX, ClipboardList } from "lucide-react";
+import { Sparkles, RefreshCw, AlertTriangle, Bot, Send, Gauge, Truck, Flame, Snowflake, PackageX, ClipboardList, Paperclip, X } from "lucide-react";
 import { useAuth } from "@/lib/store";
 import {
   aiOpsDashboardFn, runAiAnalysisFn, dismissAiInsightFn, markAiInsightsReadFn,
