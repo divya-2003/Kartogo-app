@@ -367,13 +367,26 @@ export const setPurchaseOrderStatusFn = createServerFn({ method: "POST" })
       }
     }
 
-    await supabaseAdmin.from("inventory_notifications").insert({
+    const label = data.status.replace("_", " ");
+    const rows = [{
       audience: "admin",
-      title: `Purchase order ${data.status.replace("_", " ")}`,
-      body: `Purchase order for ${po.market_name || "store"} is now ${data.status.replace("_", " ")}.`,
+      title: `Purchase order ${label}`,
+      body: `Purchase order for ${po.market_name || "store"} is now ${label}.`,
       kind: "purchase_order",
       purchase_order_id: data.id,
-    });
+    }];
+    // An approved reorder must land on the supplier's own page, not only the
+    // admin feed — that is who has to fulfil it.
+    if (data.status === "approved" || data.status === "rejected") {
+      rows.push({
+        audience: "supplier",
+        title: `Reorder request ${label}`,
+        body: `Admin ${label} the reorder for ${po.market_name || "store"}. Please review and fulfil it.`,
+        kind: "purchase_order",
+        purchase_order_id: data.id,
+      });
+    }
+    await supabaseAdmin.from("inventory_notifications").insert(rows);
     return { ok: true };
   });
 
