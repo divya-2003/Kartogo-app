@@ -51,7 +51,7 @@ export const requestOtpFn = createServerFn({ method: "POST" })
     // Invalidate any earlier unused codes for this phone.
     await supabaseAdmin.from("otp_codes").update({ consumed: true }).eq("phone", phone).eq("consumed", false);
 
-    const { data: otpRow, error } = await supabaseAdmin
+    const { error } = await supabaseAdmin
       .from("otp_codes")
       .insert({ phone, code_hash: codeHash, expires_at: expiresAt })
       .select("id")
