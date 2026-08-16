@@ -1,10 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { toast } from "sonner";
 import { useAuth, useWallet } from "@/lib/store";
 import { formatINR } from "@/lib/data";
-import { getWalletHistoryFn } from "@/lib/refund.functions";
-import { ChevronLeft, Wallet, ArrowDownLeft, ArrowUpRight, CheckCircle2, XCircle, Download } from "lucide-react";
+import { ChevronLeft, Wallet, ArrowDownLeft, ArrowUpRight, CheckCircle2, XCircle } from "lucide-react";
 
 export const Route = createFileRoute("/wallet")({
   component: WalletPage,
@@ -22,18 +19,11 @@ function formatWhen(at: number) {
   });
 }
 
-function csvEscape(v: string | number | null | undefined): string {
-  if (v === null || v === undefined) return "";
-  const s = String(v);
-  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
-}
-
 function WalletPage() {
-  const { user, customerToken } = useAuth();
+  const { user } = useAuth();
   const { balance, txns, topups } = useWallet();
   const nav = useNavigate();
-  const [exporting, setExporting] = useState(false);
+
 
   const exportCsv = async () => {
     if (!customerToken) return;
