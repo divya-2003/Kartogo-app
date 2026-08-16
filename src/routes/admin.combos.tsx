@@ -227,6 +227,10 @@ function ComboEditor({ initial, mode, onClose, onSaved }: {
               className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
           </div>
 
+          {/* Combo photo — mirrored onto the catalogue card customers see. */}
+          <ImagePicker value={image} onChange={setImage} />
+
+
           <div className="rounded-xl border border-border bg-secondary/40 p-3">
             <div className="font-display text-sm font-bold">Items in this combo</div>
             {items.length === 0 ? (
