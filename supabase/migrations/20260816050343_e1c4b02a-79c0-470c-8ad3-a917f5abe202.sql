@@ -1,0 +1,1 @@
+ALTER TABLE public.promo_codes ADD COLUMN IF NOT EXISTS product_ids jsonb NOT NULL DEFAULT '[]'::jsonb;

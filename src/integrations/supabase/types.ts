@@ -1673,6 +1673,7 @@ export type Database = {
           max_discount: number | null
           min_subtotal: number
           per_customer_limit: number
+          product_ids: Json
           starts_at: string | null
           updated_at: string
           usage_limit: number | null
@@ -1690,6 +1691,7 @@ export type Database = {
           max_discount?: number | null
           min_subtotal?: number
           per_customer_limit?: number
+          product_ids?: Json
           starts_at?: string | null
           updated_at?: string
           usage_limit?: number | null
@@ -1707,6 +1709,7 @@ export type Database = {
           max_discount?: number | null
           min_subtotal?: number
           per_customer_limit?: number
+          product_ids?: Json
           starts_at?: string | null
           updated_at?: string
           usage_limit?: number | null
