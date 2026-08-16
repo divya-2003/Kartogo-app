@@ -28,6 +28,16 @@ export const validatePromoFn = createServerFn({ method: "POST" })
         token: z.string().optional().default(""),
         code: z.string().max(40),
         subtotal: z.number().min(0).max(10_000_000),
+        items: z
+          .array(
+            z.object({
+              productId: z.string().max(120),
+              price: z.number().min(0).max(1_000_000),
+              qty: z.number().int().min(1).max(999),
+            }),
+          )
+          .max(200)
+          .optional(),
       })
       .parse(data),
   )
@@ -35,7 +45,7 @@ export const validatePromoFn = createServerFn({ method: "POST" })
     const { verifyCustomerToken } = await import("./auth-tokens.server");
     const session = data.token ? verifyCustomerToken(data.token) : null;
     const { evaluatePromo } = await import("./promo.server");
-    return evaluatePromo(data.code, data.subtotal, session?.phone ?? null);
+    return evaluatePromo(data.code, data.subtotal, session?.phone ?? null, data.items);
   });
 
 /** Customer: personal referral code + how many friends have joined. */
@@ -138,6 +148,8 @@ const promoSchema = z.object({
   perCustomerLimit: z.number().int().min(1).max(1000).default(1),
   firstOrderOnly: z.boolean().default(false),
   isActive: z.boolean().default(true),
+  /** Empty = whole basket. Otherwise the code only discounts these products. */
+  productIds: z.array(z.string().max(120)).max(500).default([]),
 });
 
 export const listAdminPromosFn = createServerFn({ method: "POST" })
