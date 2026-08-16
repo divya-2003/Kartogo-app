@@ -53,11 +53,15 @@ export type PromoEvaluation =
 /**
  * Can `phone` use `code` on a basket of `subtotal` right now?
  * Returns the exact rupee discount when yes, a human reason when no.
+ *
+ * When the code is limited to selected products, only those lines of the
+ * basket count towards the minimum and the discount.
  */
 export async function evaluatePromo(
   code: string,
   subtotal: number,
   phone: string | null,
+  items?: BasketLine[],
 ): Promise<PromoEvaluation> {
   const upper = String(code ?? "").trim().toUpperCase();
   if (!upper) return { ok: false, reason: "Enter a promo code" };
@@ -76,9 +80,15 @@ export async function evaluatePromo(
   if (rule.endsAt && new Date(rule.endsAt).getTime() < now) {
     return { ok: false, reason: "This offer has expired" };
   }
-  if (subtotal < rule.minSubtotal) {
-    return { ok: false, reason: `Add items worth ₹${Math.ceil(rule.minSubtotal - subtotal)} more to use ${upper}` };
+
+  const applicable = eligibleSubtotal(rule, subtotal, items);
+  if (rule.productIds.length && applicable <= 0) {
+    return { ok: false, reason: `${upper} applies only to selected products, which aren't in your cart` };
   }
+  if (applicable < rule.minSubtotal) {
+    return { ok: false, reason: `Add items worth ₹${Math.ceil(rule.minSubtotal - applicable)} more to use ${upper}` };
+  }
+
 
   if (rule.usageLimit != null) {
     const { count } = await supabaseAdmin
