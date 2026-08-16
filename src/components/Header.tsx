@@ -61,6 +61,12 @@ export function Header() {
   const hideUserActions = isCheckout || isOrders || isSupplierArea;
   const hideBrowse = isAdminArea || isSupplierArea || isCheckout || isOrders;
   const isAdmin = user?.role === "admin";
+  const router = useRouter();
+  const isHome = location === "/";
+  const goBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) router.history.back();
+    else void router.navigate({ to: isAdmin ? "/admin" : "/" });
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
