@@ -19,7 +19,27 @@ export type PromoRule = {
   perCustomerLimit: number;
   firstOrderOnly: boolean;
   isActive: boolean;
+  /** Empty = applies to the whole basket. Otherwise only these products count. */
+  productIds: string[];
 };
+
+/** One basket line, in the shape both the cart preview and the server use. */
+export type BasketLine = { productId: string; price: number; qty: number };
+
+/**
+ * The part of the basket a rule may discount. Whole-basket codes see the full
+ * subtotal; product-targeted codes only see the selected items.
+ */
+export function eligibleSubtotal(
+  rule: Pick<PromoRule, "productIds">,
+  subtotal: number,
+  items?: BasketLine[],
+): number {
+  if (!rule.productIds?.length) return subtotal;
+  if (!items?.length) return 0;
+  const set = new Set(rule.productIds);
+  return items.reduce((n, i) => (set.has(i.productId) ? n + i.price * i.qty : n), 0);
+}
 
 export type Coupon = {
   type: "flat" | "pct";
