@@ -73,11 +73,13 @@ export function computeDiscount(
   code: string | null,
   subtotal: number,
   rules?: PromoRule[],
+  items?: BasketLine[],
 ): number {
   if (!code) return 0;
   const upper = code.toUpperCase();
   const rule = rules?.find((r) => r.code === upper);
-  if (rule) return discountForRule(rule, subtotal);
+  if (rule) return discountForRule(rule, eligibleSubtotal(rule, subtotal, items));
+
 
   const c = COUPONS[upper];
   if (!c || subtotal < c.minSubtotal) return 0;
