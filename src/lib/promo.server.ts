@@ -117,7 +117,7 @@ export async function evaluatePromo(
     }
   }
 
-  const discount = discountForRule(rule, subtotal);
+  const discount = discountForRule(rule, applicable);
   if (discount <= 0) return { ok: false, reason: "This code gives no discount on your basket" };
   return { ok: true, code: upper, discount, description: rule.description };
 }
