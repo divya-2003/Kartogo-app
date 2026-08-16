@@ -78,10 +78,14 @@ const adminToken = () => {
   try { return JSON.parse(localStorage.getItem("qk_admin_token") || "null") ?? ""; } catch { return ""; }
 };
 
+type CatalogRow = { id: string; name: string; category: string };
+
 function AdminPromosPage() {
   const [promos, setPromos] = useState<AdminPromo[]>([]);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [busy, setBusy] = useState(false);
+  const [catalog, setCatalog] = useState<CatalogRow[]>([]);
+  const [productQuery, setProductQuery] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -93,8 +97,35 @@ function AdminPromosPage() {
 
   useEffect(() => { void load(); }, [load]);
 
+  useEffect(() => {
+    listCatalogItemsFn()
+      .then(rows => setCatalog((rows as CatalogRow[]).map(r => ({ id: r.id, name: r.name, category: r.category }))))
+      .catch(() => {});
+  }, []);
+
+  const filteredCatalog = useMemo(() => {
+    const q = productQuery.trim().toLowerCase();
+    const rows = q
+      ? catalog.filter(c => c.name.toLowerCase().includes(q) || c.category.toLowerCase().includes(q))
+      : catalog;
+    return rows.slice(0, 300);
+  }, [catalog, productQuery]);
+
+  const toggleProduct = (id: string) => {
+    if (!draft) return;
+    const has = draft.productIds.includes(id);
+    setDraft({
+      ...draft,
+      productIds: has ? draft.productIds.filter(p => p !== id) : [...draft.productIds, id],
+    });
+  };
+
   const save = async () => {
     if (!draft) return;
+    if (draft.limitToProducts && draft.productIds.length === 0) {
+      toast.error("Select at least one product, or uncheck “Only selected products”.");
+      return;
+    }
     setBusy(true);
     try {
       await savePromoFn({
@@ -114,6 +145,7 @@ function AdminPromosPage() {
             perCustomerLimit: Number(draft.perCustomerLimit) || 1,
             firstOrderOnly: draft.firstOrderOnly,
             isActive: draft.isActive,
+            productIds: draft.limitToProducts ? draft.productIds : [],
           },
         },
       });
