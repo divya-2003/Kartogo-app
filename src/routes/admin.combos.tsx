@@ -5,6 +5,7 @@ import { Layers, Plus, Pencil, Trash2, X, Power, Loader2 } from "lucide-react";
 import { listAllCombosFn, upsertComboFn, deleteComboFn, type Combo, type ComboItem } from "@/lib/combos.functions";
 import { useCatalog } from "@/lib/store";
 import { formatINR } from "@/lib/data";
+import { ImagePicker } from "@/components/ImagePicker";
 
 export const Route = createFileRoute("/admin/combos")({
   component: () => <CombosManager mode="admin" />,
@@ -149,6 +150,7 @@ function ComboEditor({ initial, mode, onClose, onSaved }: {
   const [name, setName] = useState(initial?.name ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [emoji, setEmoji] = useState(initial?.emoji ?? "🎁");
+  const [image, setImage] = useState<string | undefined>(initial?.image ?? undefined);
   const [price, setPrice] = useState<string>(initial?.price != null ? String(initial.price) : "");
   const [items, setItems] = useState<ComboItem[]>(initial?.items ?? []);
   const [saving, setSaving] = useState(false);
@@ -185,7 +187,7 @@ function ComboEditor({ initial, mode, onClose, onSaved }: {
       await upsertComboFn({ data: {
         ...auth, id: initial?.id, name: name.trim(),
         description: description.trim() || null,
-        image: null, emoji: emoji || null,
+        image: image ?? null, emoji: emoji || null,
         price: priceN, items,
         category: null, isActive: initial?.isActive ?? true,
       }});
@@ -225,6 +227,10 @@ function ComboEditor({ initial, mode, onClose, onSaved }: {
             <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2}
               className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
           </div>
+
+          {/* Combo photo — mirrored onto the catalogue card customers see. */}
+          <ImagePicker value={image} onChange={setImage} />
+
 
           <div className="rounded-xl border border-border bg-secondary/40 p-3">
             <div className="font-display text-sm font-bold">Items in this combo</div>

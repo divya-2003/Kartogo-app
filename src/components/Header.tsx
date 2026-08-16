@@ -1,5 +1,5 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import { ShoppingBag, Search, User2, LayoutDashboard, ShieldCheck } from "lucide-react";
+import { Link, useRouterState, useRouter } from "@tanstack/react-router";
+import { ShoppingBag, Search, User2, LayoutDashboard, ShieldCheck, ChevronLeft } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useCart, useAuth } from "@/lib/store";
 import { LocationPicker } from "@/components/LocationPicker";
@@ -61,18 +61,42 @@ export function Header() {
   const hideUserActions = isCheckout || isOrders || isSupplierArea;
   const hideBrowse = isAdminArea || isSupplierArea || isCheckout || isOrders;
   const isAdmin = user?.role === "admin";
+  const router = useRouter();
+  const isHome = location === "/";
+  const goBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) router.history.back();
+    else void router.navigate({ to: isAdmin ? "/admin" : "/" });
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 md:px-6">
-        <Link to={isAdmin && isAdminArea ? "/admin" : "/"} className="flex items-center gap-2">
-          <div className="grid h-9 w-9 place-items-center overflow-hidden rounded-xl bg-[#15205a]">
-            <img src={kartogoLogo} alt="Kartogo - Neighborhood Store" className="h-full w-full object-contain p-1" />
+        {/* Inside the app the logo tile becomes a back button; only the landing
+            screen keeps the brand mark. */}
+        {isHome ? (
+          <Link to="/" className="flex items-center gap-2">
+            <div className="grid h-9 w-9 place-items-center overflow-hidden rounded-xl bg-[#15205a]">
+              <img src={kartogoLogo} alt="Kartogo - Neighborhood Store" className="h-full w-full object-contain p-1" />
+            </div>
+            <div className="leading-tight">
+              <div className="font-display text-lg font-bold tracking-tight">Kartogo</div>
+            </div>
+          </Link>
+        ) : (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={goBack}
+              aria-label="Go back"
+              className="grid h-9 w-9 place-items-center rounded-xl border border-border bg-card hover:bg-secondary"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <div className="font-display text-lg font-bold tracking-tight">
+              Kartogo{isAdminArea && <span className="ml-1 text-xs font-semibold text-primary">· Admin</span>}
+            </div>
           </div>
-          <div className="leading-tight">
-            <div className="font-display text-lg font-bold tracking-tight">Kartogo{isAdminArea && <span className="ml-1 text-xs font-semibold text-primary">· Admin</span>}</div>
-          </div>
-        </Link>
+        )}
 
         {!hideBrowse && !isAdmin && (
           <div className="hidden md:block">

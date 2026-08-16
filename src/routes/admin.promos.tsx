@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { BadgePercent, Plus, Trash2, Save, X } from "lucide-react";
+import { BadgePercent, Plus, Trash2, Save, X, Search } from "lucide-react";
 import {
   listAdminPromosFn,
   savePromoFn,
   deletePromoFn,
   type AdminPromo,
 } from "@/lib/promo.functions";
+import { listCatalogItemsFn } from "@/lib/catalog.functions";
 
 export const Route = createFileRoute("/admin/promos")({
   component: AdminPromosPage,
@@ -33,6 +34,8 @@ type Draft = {
   perCustomerLimit: number;
   firstOrderOnly: boolean;
   isActive: boolean;
+  limitToProducts: boolean;
+  productIds: string[];
 };
 
 const blank = (): Draft => ({
@@ -49,6 +52,8 @@ const blank = (): Draft => ({
   perCustomerLimit: 1,
   firstOrderOnly: false,
   isActive: true,
+  limitToProducts: false,
+  productIds: [],
 });
 
 const toDraft = (p: AdminPromo): Draft => ({
@@ -65,16 +70,22 @@ const toDraft = (p: AdminPromo): Draft => ({
   perCustomerLimit: p.perCustomerLimit,
   firstOrderOnly: p.firstOrderOnly,
   isActive: p.isActive,
+  limitToProducts: (p.productIds ?? []).length > 0,
+  productIds: p.productIds ?? [],
 });
 
 const adminToken = () => {
   try { return JSON.parse(localStorage.getItem("qk_admin_token") || "null") ?? ""; } catch { return ""; }
 };
 
+type CatalogRow = { id: string; name: string; category: string };
+
 function AdminPromosPage() {
   const [promos, setPromos] = useState<AdminPromo[]>([]);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [busy, setBusy] = useState(false);
+  const [catalog, setCatalog] = useState<CatalogRow[]>([]);
+  const [productQuery, setProductQuery] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -86,8 +97,36 @@ function AdminPromosPage() {
 
   useEffect(() => { void load(); }, [load]);
 
+  useEffect(() => {
+    listCatalogItemsFn()
+      .then(res => setCatalog(res.items.map(r => ({ id: r.id, name: r.name, category: r.category }))))
+      .catch(() => {});
+  }, []);
+
+
+  const filteredCatalog = useMemo(() => {
+    const q = productQuery.trim().toLowerCase();
+    const rows = q
+      ? catalog.filter(c => c.name.toLowerCase().includes(q) || c.category.toLowerCase().includes(q))
+      : catalog;
+    return rows.slice(0, 300);
+  }, [catalog, productQuery]);
+
+  const toggleProduct = (id: string) => {
+    if (!draft) return;
+    const has = draft.productIds.includes(id);
+    setDraft({
+      ...draft,
+      productIds: has ? draft.productIds.filter(p => p !== id) : [...draft.productIds, id],
+    });
+  };
+
   const save = async () => {
     if (!draft) return;
+    if (draft.limitToProducts && draft.productIds.length === 0) {
+      toast.error("Select at least one product, or uncheck “Only selected products”.");
+      return;
+    }
     setBusy(true);
     try {
       await savePromoFn({
@@ -107,6 +146,7 @@ function AdminPromosPage() {
             perCustomerLimit: Number(draft.perCustomerLimit) || 1,
             firstOrderOnly: draft.firstOrderOnly,
             isActive: draft.isActive,
+            productIds: draft.limitToProducts ? draft.productIds : [],
           },
         },
       });
@@ -209,11 +249,48 @@ function AdminPromosPage() {
                 onChange={e => setDraft({ ...draft, isActive: e.target.checked })} />
               Active
             </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={draft.limitToProducts}
+                onChange={e => setDraft({ ...draft, limitToProducts: e.target.checked })} />
+              Select products
+            </label>
             <button onClick={save} disabled={busy}
               className="ml-auto flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
               <Save className="h-4 w-4" /> {busy ? "Saving…" : "Save code"}
             </button>
           </div>
+
+          {/* Product targeting — the code then only discounts these items. */}
+          {draft.limitToProducts && (
+            <div className="mt-4 rounded-xl border border-border bg-background p-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative flex-1 min-w-[180px]">
+                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    value={productQuery}
+                    onChange={e => setProductQuery(e.target.value)}
+                    placeholder="Search products"
+                    className="w-full rounded-lg border border-input bg-background py-2 pl-8 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <span className="text-xs font-semibold text-muted-foreground">{draft.productIds.length} selected</span>
+                <button type="button" onClick={() => setDraft({ ...draft, productIds: [] })}
+                  className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-muted">Clear</button>
+              </div>
+              <div className="mt-3 max-h-64 space-y-1 overflow-y-auto pr-1">
+                {filteredCatalog.map(c => (
+                  <label key={c.id} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-muted">
+                    <input type="checkbox" checked={draft.productIds.includes(c.id)} onChange={() => toggleProduct(c.id)} />
+                    <span className="truncate">{c.name}</span>
+                    <span className="ml-auto shrink-0 text-[11px] uppercase text-muted-foreground">{c.category}</span>
+                  </label>
+                ))}
+                {filteredCatalog.length === 0 && (
+                  <p className="px-2 py-3 text-sm text-muted-foreground">No products match that search.</p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -4,7 +4,7 @@
 // before an order is written: validity window, minimum basket, total usage cap,
 // per-customer cap and first-order-only rules are all enforced server side.
 
-import { discountForRule, type PromoRule } from "./promo";
+import { discountForRule, eligibleSubtotal, type BasketLine, type PromoRule } from "./promo";
 
 async function db() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -12,7 +12,7 @@ async function db() {
 }
 
 const SELECT =
-  "id, code, description, discount_type, discount_value, min_subtotal, max_discount, starts_at, ends_at, usage_limit, per_customer_limit, first_order_only, is_active";
+  "id, code, description, discount_type, discount_value, min_subtotal, max_discount, starts_at, ends_at, usage_limit, per_customer_limit, first_order_only, is_active, product_ids";
 
 type Row = Record<string, unknown>;
 
@@ -29,6 +29,7 @@ export const toRule = (r: Row): PromoRule => ({
   perCustomerLimit: Number(r["per_customer_limit"] ?? 1),
   firstOrderOnly: !!r["first_order_only"],
   isActive: !!r["is_active"],
+  productIds: Array.isArray(r["product_ids"]) ? (r["product_ids"] as unknown[]).map(String) : [],
 });
 
 export async function listPromoRules(activeOnly = true): Promise<PromoRule[]> {
@@ -52,11 +53,15 @@ export type PromoEvaluation =
 /**
  * Can `phone` use `code` on a basket of `subtotal` right now?
  * Returns the exact rupee discount when yes, a human reason when no.
+ *
+ * When the code is limited to selected products, only those lines of the
+ * basket count towards the minimum and the discount.
  */
 export async function evaluatePromo(
   code: string,
   subtotal: number,
   phone: string | null,
+  items?: BasketLine[],
 ): Promise<PromoEvaluation> {
   const upper = String(code ?? "").trim().toUpperCase();
   if (!upper) return { ok: false, reason: "Enter a promo code" };
@@ -75,9 +80,15 @@ export async function evaluatePromo(
   if (rule.endsAt && new Date(rule.endsAt).getTime() < now) {
     return { ok: false, reason: "This offer has expired" };
   }
-  if (subtotal < rule.minSubtotal) {
-    return { ok: false, reason: `Add items worth ₹${Math.ceil(rule.minSubtotal - subtotal)} more to use ${upper}` };
+
+  const applicable = eligibleSubtotal(rule, subtotal, items);
+  if (rule.productIds.length && applicable <= 0) {
+    return { ok: false, reason: `${upper} applies only to selected products, which aren't in your cart` };
   }
+  if (applicable < rule.minSubtotal) {
+    return { ok: false, reason: `Add items worth ₹${Math.ceil(rule.minSubtotal - applicable)} more to use ${upper}` };
+  }
+
 
   if (rule.usageLimit != null) {
     const { count } = await supabaseAdmin
@@ -106,7 +117,7 @@ export async function evaluatePromo(
     }
   }
 
-  const discount = discountForRule(rule, subtotal);
+  const discount = discountForRule(rule, applicable);
   if (discount <= 0) return { ok: false, reason: "This code gives no discount on your basket" };
   return { ok: true, code: upper, discount, description: rule.description };
 }

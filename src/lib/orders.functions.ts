@@ -110,7 +110,12 @@ export const placeOrderFn = createServerFn({ method: "POST" })
     let discount = 0;
     if (data.promoCode) {
       const { evaluatePromo } = await import("./promo.server");
-      const verdict = await evaluatePromo(data.promoCode, subtotal, session.phone);
+      const verdict = await evaluatePromo(
+        data.promoCode,
+        subtotal,
+        session.phone,
+        items.map((i) => ({ productId: i.productId, price: i.price, qty: i.qty })),
+      );
       if (verdict.ok) {
         promoCode = verdict.code;
         discount = verdict.discount;

@@ -8,7 +8,7 @@ import { Banknote, Smartphone, Wallet, MapPin, Plus, Check, Trash2, X, Tag, Penc
 import { getSurgeConfigFn, SURGE_REASON_LABELS, type SurgeConfig } from "@/lib/surge.functions";
 import { computeDiscount, type PromoRule } from "@/lib/promo";
 import { listPromoRulesFn, validatePromoFn } from "@/lib/promo.functions";
-import { useActiveOffers, OFFER_TONE_CLASS } from "@/lib/use-offers";
+
 
 
 export const Route = createFileRoute("/checkout")({
@@ -142,9 +142,6 @@ function CheckoutPage() {
   // Promo codes are admin-managed in the backend; the checkout previews them
   // and the server re-validates before the order is written.
   const [promoRules, setPromoRules] = useState<PromoRule[]>([]);
-  // Admin-authored "Additional offers" shown alongside promo codes so every
-  // active offer is visible at checkout, not just on the product pages.
-  const { offers: extraOffers } = useActiveOffers();
   useEffect(() => {
     let alive = true;
     listPromoRulesFn()
@@ -153,9 +150,19 @@ function CheckoutPage() {
     return () => { alive = false; };
   }, []);
 
+  // Basket lines, so product-targeted promo codes only discount the items
+  // the admin selected for that offer.
+  const basketLines = useMemo(
+    () => items.map(i => {
+      const p = products.find(pr => pr.id === i.productId);
+      return { productId: i.productId, price: p?.price ?? 0, qty: i.qty };
+    }),
+    [items, products],
+  );
+
   const discount = useMemo(
-    () => computeDiscount(appliedCode, subtotal, promoRules),
-    [appliedCode, subtotal, promoRules],
+    () => computeDiscount(appliedCode, subtotal, promoRules, basketLines),
+    [appliedCode, subtotal, promoRules, basketLines],
   );
   const total = Math.max(0, subtotal + fee - discount);
   // GST is inclusive in listed prices (5% slab) — show it as a breakdown line
@@ -175,7 +182,7 @@ function CheckoutPage() {
     if (!code) { toast.error("Enter a promo code"); return; }
     try {
       const token = JSON.parse(localStorage.getItem("qk_customer_token") || "null");
-      const verdict = await validatePromoFn({ data: { token: token ?? "", code, subtotal } });
+      const verdict = await validatePromoFn({ data: { token: token ?? "", code, subtotal, items: basketLines } });
       if (!verdict.ok) { toast.error(verdict.reason); return; }
       setAppliedCode(verdict.code);
       setPromoInput("");
@@ -610,23 +617,6 @@ function CheckoutPage() {
                       );
                     })}
                   </div>
-
-                  {extraOffers.length > 0 && (
-                    <div className="mt-3 border-t border-border pt-3">
-                      <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Additional offers</div>
-                      <div className="mt-2 space-y-2">
-                        {extraOffers.map(o => (
-                          <div key={o.id} className={`rounded-lg border px-2.5 py-1.5 text-[11px] ${OFFER_TONE_CLASS[o.tone] ?? OFFER_TONE_CLASS.primary}`}>
-                            <div className="flex items-center gap-2">
-                              {o.badge && <span className="rounded bg-background/60 px-1.5 py-0.5 text-[10px] font-bold">{o.badge}</span>}
-                              <span className="font-bold">{o.title}</span>
-                            </div>
-                            {o.description && <div className="mt-0.5 opacity-80">{o.description}</div>}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </>
               )}
             </div>
@@ -676,8 +666,18 @@ function CheckoutPage() {
               )}
             </div>
 
-            <button disabled={placing || !selectedId} onClick={handlePlace} className="mt-5 w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
-              {placing ? "Placing order..." : "Place order"}
+            {/* Kartogo Cash orders are blocked outright when the balance can't
+                cover the total — the server would reject them anyway. */}
+            <button
+              disabled={placing || !selectedId || (payment === "wallet" && walletBalance < total)}
+              onClick={handlePlace}
+              className="mt-5 w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+            >
+              {placing
+                ? "Placing order..."
+                : payment === "wallet" && walletBalance < total
+                  ? `Insufficient Kartogo Cash — add ${formatINR(total - walletBalance)}`
+                  : "Place order"}
             </button>
           </aside>
         </div>
