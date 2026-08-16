@@ -99,9 +99,10 @@ function AdminPromosPage() {
 
   useEffect(() => {
     listCatalogItemsFn()
-      .then(rows => setCatalog((rows as CatalogRow[]).map(r => ({ id: r.id, name: r.name, category: r.category }))))
+      .then(res => setCatalog(res.items.map(r => ({ id: r.id, name: r.name, category: r.category }))))
       .catch(() => {});
   }, []);
+
 
   const filteredCatalog = useMemo(() => {
     const q = productQuery.trim().toLowerCase();
