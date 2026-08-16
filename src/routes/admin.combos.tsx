@@ -186,7 +186,7 @@ function ComboEditor({ initial, mode, onClose, onSaved }: {
       await upsertComboFn({ data: {
         ...auth, id: initial?.id, name: name.trim(),
         description: description.trim() || null,
-        image: null, emoji: emoji || null,
+        image: image ?? null, emoji: emoji || null,
         price: priceN, items,
         category: null, isActive: initial?.isActive ?? true,
       }});
