@@ -666,8 +666,18 @@ function CheckoutPage() {
               )}
             </div>
 
-            <button disabled={placing || !selectedId} onClick={handlePlace} className="mt-5 w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
-              {placing ? "Placing order..." : "Place order"}
+            {/* Kartogo Cash orders are blocked outright when the balance can't
+                cover the total — the server would reject them anyway. */}
+            <button
+              disabled={placing || !selectedId || (payment === "wallet" && walletBalance < total)}
+              onClick={handlePlace}
+              className="mt-5 w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+            >
+              {placing
+                ? "Placing order..."
+                : payment === "wallet" && walletBalance < total
+                  ? `Insufficient Kartogo Cash — add ${formatINR(total - walletBalance)}`
+                  : "Place order"}
             </button>
           </aside>
         </div>
