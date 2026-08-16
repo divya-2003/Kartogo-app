@@ -150,9 +150,19 @@ function CheckoutPage() {
     return () => { alive = false; };
   }, []);
 
+  // Basket lines, so product-targeted promo codes only discount the items
+  // the admin selected for that offer.
+  const basketLines = useMemo(
+    () => items.map(i => {
+      const p = products.find(pr => pr.id === i.productId);
+      return { productId: i.productId, price: p?.price ?? 0, qty: i.qty };
+    }),
+    [items, products],
+  );
+
   const discount = useMemo(
-    () => computeDiscount(appliedCode, subtotal, promoRules),
-    [appliedCode, subtotal, promoRules],
+    () => computeDiscount(appliedCode, subtotal, promoRules, basketLines),
+    [appliedCode, subtotal, promoRules, basketLines],
   );
   const total = Math.max(0, subtotal + fee - discount);
   // GST is inclusive in listed prices (5% slab) — show it as a breakdown line
