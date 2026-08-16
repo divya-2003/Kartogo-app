@@ -97,36 +97,3 @@ export const listRefundAuditLogFn = createServerFn({ method: "POST" })
     if (error) throw new Error("Could not load audit log. Please try again.");
     return (rows ?? []) as RefundAuditRow[];
   });
-
-// -------- 12-month wallet history for CSV export (token-scoped) --------
-export type WalletHistoryRow = {
-  id: string;
-  type: "credit" | "debit";
-  amount: number;
-  note: string;
-  created_at: string;
-  expires_at: string | null;
-  expired_at: string | null;
-};
-
-export const getWalletHistoryFn = createServerFn({ method: "POST" })
-  .inputValidator((data: { token?: string }) => ({ token: String(data?.token ?? "") }))
-  .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { verifyCustomerToken } = await import("./auth-tokens.server");
-    const session = verifyCustomerToken(data.token);
-    if (!session) throw new Error("Please log in to export your wallet history");
-
-    const since = new Date();
-    since.setMonth(since.getMonth() - 12);
-
-    const { data: rows, error } = await supabaseAdmin
-      .from("wallet_transactions")
-      .select("id, type, amount, note, created_at, expires_at, expired_at")
-      .eq("phone", session.phone)
-      .gte("created_at", since.toISOString())
-      .order("created_at", { ascending: false })
-      .limit(5000);
-    if (error) throw new Error("Could not load wallet history. Please try again.");
-    return { rows: (rows ?? []) as WalletHistoryRow[], since: since.toISOString() };
-  });

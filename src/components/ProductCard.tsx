@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import type { Product } from "@/lib/data";
 import { formatINR } from "@/lib/data";
 import { useCart, useAuth, useWishlist } from "@/lib/store";
-import { useProductOffers, OFFER_TONE_CLASS } from "@/lib/use-offers";
+
 import { createStockAlertFn } from "@/lib/stock-alerts.functions";
 
 export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolean }) {
@@ -13,7 +13,7 @@ export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolea
   const { user } = useAuth();
   const { has, toggle } = useWishlist();
   const nav = useNavigate();
-  const offers = useProductOffers(p.id);
+  
   const [notifying, setNotifying] = useState(false);
   const [notified, setNotified] = useState(false);
   const inCart = items.find(i => i.productId === p.id);
@@ -93,15 +93,6 @@ export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolea
           {p.name}
         </Link>
         <div className="text-xs text-muted-foreground">{p.unit}</div>
-        {offers.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {offers.slice(0, 2).map(o => (
-              <span key={o.id} className={`rounded-md border px-1.5 py-0.5 text-[10px] font-bold ${OFFER_TONE_CLASS[o.tone] ?? OFFER_TONE_CLASS.primary}`}>
-                {o.badge || o.title}
-              </span>
-            ))}
-          </div>
-        )}
         <div className="mt-1 flex items-end justify-between gap-2">
           <div>
             <div className="font-display text-base font-bold">{formatINR(p.price)}</div>
