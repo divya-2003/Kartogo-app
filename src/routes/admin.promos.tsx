@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { BadgePercent, Plus, Trash2, Save, X } from "lucide-react";
+import { BadgePercent, Plus, Trash2, Save, X, Search } from "lucide-react";
 import {
   listAdminPromosFn,
   savePromoFn,
   deletePromoFn,
   type AdminPromo,
 } from "@/lib/promo.functions";
+import { listCatalogItemsFn } from "@/lib/catalog.functions";
 
 export const Route = createFileRoute("/admin/promos")({
   component: AdminPromosPage,
@@ -33,6 +34,8 @@ type Draft = {
   perCustomerLimit: number;
   firstOrderOnly: boolean;
   isActive: boolean;
+  limitToProducts: boolean;
+  productIds: string[];
 };
 
 const blank = (): Draft => ({
@@ -49,6 +52,8 @@ const blank = (): Draft => ({
   perCustomerLimit: 1,
   firstOrderOnly: false,
   isActive: true,
+  limitToProducts: false,
+  productIds: [],
 });
 
 const toDraft = (p: AdminPromo): Draft => ({
@@ -65,6 +70,8 @@ const toDraft = (p: AdminPromo): Draft => ({
   perCustomerLimit: p.perCustomerLimit,
   firstOrderOnly: p.firstOrderOnly,
   isActive: p.isActive,
+  limitToProducts: (p.productIds ?? []).length > 0,
+  productIds: p.productIds ?? [],
 });
 
 const adminToken = () => {
