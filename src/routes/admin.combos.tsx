@@ -149,6 +149,7 @@ function ComboEditor({ initial, mode, onClose, onSaved }: {
   const [name, setName] = useState(initial?.name ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [emoji, setEmoji] = useState(initial?.emoji ?? "🎁");
+  const [image, setImage] = useState<string | undefined>(initial?.image ?? undefined);
   const [price, setPrice] = useState<string>(initial?.price != null ? String(initial.price) : "");
   const [items, setItems] = useState<ComboItem[]>(initial?.items ?? []);
   const [saving, setSaving] = useState(false);
