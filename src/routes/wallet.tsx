@@ -25,40 +25,6 @@ function WalletPage() {
   const nav = useNavigate();
 
 
-  const exportCsv = async () => {
-    if (!customerToken) return;
-    setExporting(true);
-    try {
-      const { rows, since } = await getWalletHistoryFn({ data: { token: customerToken } });
-      const header = ["Date", "Type", "Amount (INR)", "Note", "Expires at", "Expired at"];
-      const lines = [header.join(",")];
-      for (const r of rows) {
-        lines.push([
-          csvEscape(new Date(r.created_at).toISOString()),
-          csvEscape(r.type),
-          csvEscape(Number(r.amount).toFixed(2)),
-          csvEscape(r.note ?? ""),
-          csvEscape(r.expires_at ? new Date(r.expires_at).toISOString() : ""),
-          csvEscape(r.expired_at ? new Date(r.expired_at).toISOString() : ""),
-        ].join(","));
-      }
-      const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      const today = new Date().toISOString().slice(0, 10);
-      a.href = url;
-      a.download = `kartogo-wallet-${today}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success(`Exported ${rows.length} transactions since ${new Date(since).toLocaleDateString("en-IN")}`);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not export wallet history");
-    } finally {
-      setExporting(false);
-    }
-  };
 
   if (!user) {
     return (
