@@ -197,6 +197,7 @@ export const savePromoFn = createServerFn({ method: "POST" })
       usage_limit: p.usageLimit,
       per_customer_limit: p.perCustomerLimit,
       first_order_only: p.firstOrderOnly,
+      product_ids: p.productIds,
       is_active: p.isActive,
       updated_at: new Date().toISOString(),
     };
