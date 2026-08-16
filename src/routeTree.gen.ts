@@ -42,7 +42,6 @@ import { Route as AdminDeliveryRouteImport } from './routes/admin.delivery'
 import { Route as AdminFeedbackRouteImport } from './routes/admin.feedback'
 import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
 import { Route as AdminLogisticsRouteImport } from './routes/admin.logistics'
-import { Route as AdminOffersRouteImport } from './routes/admin.offers'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminPartnersRouteImport } from './routes/admin.partners'
 import { Route as AdminPrintRouteImport } from './routes/admin.print'
@@ -235,11 +234,6 @@ const AdminLogisticsRoute = AdminLogisticsRouteImport.update({
   path: '/logistics',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminOffersRoute = AdminOffersRouteImport.update({
-  id: '/offers',
-  path: '/offers',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminOrdersRoute = AdminOrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
@@ -406,7 +400,6 @@ export interface FileRoutesByFullPath {
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/logistics': typeof AdminLogisticsRoute
-  '/admin/offers': typeof AdminOffersRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/print': typeof AdminPrintRoute
@@ -466,7 +459,6 @@ export interface FileRoutesByTo {
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/logistics': typeof AdminLogisticsRoute
-  '/admin/offers': typeof AdminOffersRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/print': typeof AdminPrintRoute
@@ -529,7 +521,6 @@ export interface FileRoutesById {
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/logistics': typeof AdminLogisticsRoute
-  '/admin/offers': typeof AdminOffersRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/print': typeof AdminPrintRoute
@@ -593,7 +584,6 @@ export interface FileRouteTypes {
     | '/admin/feedback'
     | '/admin/inventory'
     | '/admin/logistics'
-    | '/admin/offers'
     | '/admin/orders'
     | '/admin/partners'
     | '/admin/print'
@@ -653,7 +643,6 @@ export interface FileRouteTypes {
     | '/admin/feedback'
     | '/admin/inventory'
     | '/admin/logistics'
-    | '/admin/offers'
     | '/admin/orders'
     | '/admin/partners'
     | '/admin/print'
@@ -715,7 +704,6 @@ export interface FileRouteTypes {
     | '/admin/feedback'
     | '/admin/inventory'
     | '/admin/logistics'
-    | '/admin/offers'
     | '/admin/orders'
     | '/admin/partners'
     | '/admin/print'
@@ -1009,13 +997,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLogisticsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/offers': {
-      id: '/admin/offers'
-      path: '/offers'
-      fullPath: '/admin/offers'
-      preLoaderRoute: typeof AdminOffersRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/orders': {
       id: '/admin/orders'
       path: '/orders'
@@ -1212,7 +1193,6 @@ interface AdminRouteChildren {
   AdminFeedbackRoute: typeof AdminFeedbackRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
   AdminLogisticsRoute: typeof AdminLogisticsRoute
-  AdminOffersRoute: typeof AdminOffersRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
   AdminPartnersRoute: typeof AdminPartnersRoute
   AdminPrintRoute: typeof AdminPrintRoute
@@ -1242,7 +1222,6 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminFeedbackRoute: AdminFeedbackRoute,
   AdminInventoryRoute: AdminInventoryRoute,
   AdminLogisticsRoute: AdminLogisticsRoute,
-  AdminOffersRoute: AdminOffersRoute,
   AdminOrdersRoute: AdminOrdersRoute,
   AdminPartnersRoute: AdminPartnersRoute,
   AdminPrintRoute: AdminPrintRoute,

@@ -103,13 +103,6 @@ function WalletPage() {
         {/* History */}
         <div className="mb-3 mt-8 flex flex-wrap items-center gap-3">
           <h2 className="font-display text-xl font-bold">Transaction history</h2>
-          <button
-            onClick={exportCsv}
-            disabled={exporting}
-            className="ml-auto flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold hover:bg-secondary disabled:opacity-60"
-          >
-            <Download className="h-3.5 w-3.5" /> {exporting ? "Exporting…" : "Export CSV (12 mo)"}
-          </button>
         </div>
         {txns.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-border bg-card p-5 text-sm text-muted-foreground shadow-pop">

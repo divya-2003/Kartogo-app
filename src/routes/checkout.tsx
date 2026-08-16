@@ -8,7 +8,7 @@ import { Banknote, Smartphone, Wallet, MapPin, Plus, Check, Trash2, X, Tag, Penc
 import { getSurgeConfigFn, SURGE_REASON_LABELS, type SurgeConfig } from "@/lib/surge.functions";
 import { computeDiscount, type PromoRule } from "@/lib/promo";
 import { listPromoRulesFn, validatePromoFn } from "@/lib/promo.functions";
-import { useActiveOffers, OFFER_TONE_CLASS } from "@/lib/use-offers";
+
 
 
 export const Route = createFileRoute("/checkout")({
@@ -142,9 +142,6 @@ function CheckoutPage() {
   // Promo codes are admin-managed in the backend; the checkout previews them
   // and the server re-validates before the order is written.
   const [promoRules, setPromoRules] = useState<PromoRule[]>([]);
-  // Admin-authored "Additional offers" shown alongside promo codes so every
-  // active offer is visible at checkout, not just on the product pages.
-  const { offers: extraOffers } = useActiveOffers();
   useEffect(() => {
     let alive = true;
     listPromoRulesFn()
@@ -610,23 +607,6 @@ function CheckoutPage() {
                       );
                     })}
                   </div>
-
-                  {extraOffers.length > 0 && (
-                    <div className="mt-3 border-t border-border pt-3">
-                      <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Additional offers</div>
-                      <div className="mt-2 space-y-2">
-                        {extraOffers.map(o => (
-                          <div key={o.id} className={`rounded-lg border px-2.5 py-1.5 text-[11px] ${OFFER_TONE_CLASS[o.tone] ?? OFFER_TONE_CLASS.primary}`}>
-                            <div className="flex items-center gap-2">
-                              {o.badge && <span className="rounded bg-background/60 px-1.5 py-0.5 text-[10px] font-bold">{o.badge}</span>}
-                              <span className="font-bold">{o.title}</span>
-                            </div>
-                            {o.description && <div className="mt-0.5 opacity-80">{o.description}</div>}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </>
               )}
             </div>
