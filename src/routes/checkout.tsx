@@ -182,7 +182,7 @@ function CheckoutPage() {
     if (!code) { toast.error("Enter a promo code"); return; }
     try {
       const token = JSON.parse(localStorage.getItem("qk_customer_token") || "null");
-      const verdict = await validatePromoFn({ data: { token: token ?? "", code, subtotal } });
+      const verdict = await validatePromoFn({ data: { token: token ?? "", code, subtotal, items: basketLines } });
       if (!verdict.ok) { toast.error(verdict.reason); return; }
       setAppliedCode(verdict.code);
       setPromoInput("");
