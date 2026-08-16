@@ -5,6 +5,7 @@ import { Layers, Plus, Pencil, Trash2, X, Power, Loader2 } from "lucide-react";
 import { listAllCombosFn, upsertComboFn, deleteComboFn, type Combo, type ComboItem } from "@/lib/combos.functions";
 import { useCatalog } from "@/lib/store";
 import { formatINR } from "@/lib/data";
+import { ImagePicker } from "@/components/ImagePicker";
 
 export const Route = createFileRoute("/admin/combos")({
   component: () => <CombosManager mode="admin" />,
