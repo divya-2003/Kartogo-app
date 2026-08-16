@@ -249,11 +249,48 @@ function AdminPromosPage() {
                 onChange={e => setDraft({ ...draft, isActive: e.target.checked })} />
               Active
             </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={draft.limitToProducts}
+                onChange={e => setDraft({ ...draft, limitToProducts: e.target.checked })} />
+              Select products
+            </label>
             <button onClick={save} disabled={busy}
               className="ml-auto flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
               <Save className="h-4 w-4" /> {busy ? "Saving…" : "Save code"}
             </button>
           </div>
+
+          {/* Product targeting — the code then only discounts these items. */}
+          {draft.limitToProducts && (
+            <div className="mt-4 rounded-xl border border-border bg-background p-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative flex-1 min-w-[180px]">
+                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    value={productQuery}
+                    onChange={e => setProductQuery(e.target.value)}
+                    placeholder="Search products"
+                    className="w-full rounded-lg border border-input bg-background py-2 pl-8 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <span className="text-xs font-semibold text-muted-foreground">{draft.productIds.length} selected</span>
+                <button type="button" onClick={() => setDraft({ ...draft, productIds: [] })}
+                  className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-muted">Clear</button>
+              </div>
+              <div className="mt-3 max-h-64 space-y-1 overflow-y-auto pr-1">
+                {filteredCatalog.map(c => (
+                  <label key={c.id} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-muted">
+                    <input type="checkbox" checked={draft.productIds.includes(c.id)} onChange={() => toggleProduct(c.id)} />
+                    <span className="truncate">{c.name}</span>
+                    <span className="ml-auto shrink-0 text-[11px] uppercase text-muted-foreground">{c.category}</span>
+                  </label>
+                ))}
+                {filteredCatalog.length === 0 && (
+                  <p className="px-2 py-3 text-sm text-muted-foreground">No products match that search.</p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
