@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { BadgeCheck, Fingerprint, Phone, ShieldCheck, KeyRound, Loader2 } from "lucide-react";
+import { PhoneNumberInput } from "@/components/PhoneNumberInput";
+import { validatePhoneNumber, toE164 } from "@/lib/phone";
+import type { CountryCode } from "libphonenumber-js";
 import { getStaffProfileFn, requestMobileChangeOtpFn, confirmMobileChangeFn, type StaffProfile } from "@/lib/staff.functions";
 
 export type StaffRole = "admin" | "vendor" | "delivery_partner";
@@ -44,6 +47,7 @@ export function StaffAccountCard({ role }: { role: StaffRole }) {
   const [loading, setLoading] = useState(true);
   const [stage, setStage] = useState<"idle" | "number" | "otp">("idle");
   const [newMobile, setNewMobile] = useState("");
+  const [country, setCountry] = useState<CountryCode>("IN");
   const [code, setCode] = useState("");
   const [demoCode, setDemoCode] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -67,10 +71,10 @@ export function StaffAccountCard({ role }: { role: StaffRole }) {
     e.preventDefault();
     const token = readToken(role);
     if (!token) { toast.error("Session expired. Please sign in again."); return; }
-    if (!/^\d{10}$/.test(newMobile)) { toast.error("Enter a valid 10-digit mobile number"); return; }
+    if (!validatePhoneNumber(newMobile, country)) { toast.error("Enter a valid mobile number for the selected country"); return; }
     setBusy(true);
     try {
-      const res = await requestMobileChangeOtpFn({ data: { role, token, newMobile } });
+      const res = await requestMobileChangeOtpFn({ data: { role, token, newMobile: toE164(newMobile, country) ?? newMobile } });
       setStage("otp");
       if (res.demo && res.demoCode) {
         setDemoCode(res.demoCode);
@@ -91,7 +95,7 @@ export function StaffAccountCard({ role }: { role: StaffRole }) {
     if (!token) { toast.error("Session expired. Please sign in again."); return; }
     setBusy(true);
     try {
-      const res = await confirmMobileChangeFn({ data: { role, token, newMobile, code } });
+      const res = await confirmMobileChangeFn({ data: { role, token, newMobile: toE164(newMobile, country) ?? newMobile, code } });
       if (res.token) writeToken(role, res.token);
       setProfile(res.profile);
       setStage("idle");
@@ -122,7 +126,7 @@ export function StaffAccountCard({ role }: { role: StaffRole }) {
       <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
         <Field label="Name" value={profile.fullName} />
         <Field label="Role" value={ROLE_LABEL[profile.role]} />
-        <Field label="Mobile number" value={`+91 ${profile.mobileNumber}`} icon={Phone} />
+        <Field label="Mobile number" value={/^\d{10}$/.test(profile.mobileNumber) ? `+91 ${profile.mobileNumber}` : profile.mobileNumber} icon={Phone} />
         <Field label="Status" value={profile.status === "active" ? "Active" : "Inactive"} icon={ShieldCheck} />
         <div className="sm:col-span-2">
           <dt className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -152,17 +156,14 @@ export function StaffAccountCard({ role }: { role: StaffRole }) {
             <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground" htmlFor="new-mobile">
               New mobile number
             </label>
-            <div className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-2 focus-within:ring-2 focus-within:ring-ring">
-              <Phone className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">+91</span>
-              <input
-                id="new-mobile" inputMode="numeric" maxLength={10} autoFocus
-                value={newMobile}
-                onChange={e => setNewMobile(e.target.value.replace(/\D/g, ""))}
-                placeholder="10-digit mobile"
-                className="w-full bg-transparent text-base outline-none"
-              />
-            </div>
+            <PhoneNumberInput
+              country={country}
+              onCountryChange={setCountry}
+              value={newMobile}
+              onValueChange={setNewMobile}
+              autoFocus
+              placeholder="Enter new mobile number"
+            />
             <div className="flex flex-wrap items-center gap-2">
               <button disabled={busy} className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
                 {busy && <Loader2 className="h-4 w-4 animate-spin" />} Send OTP

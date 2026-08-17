@@ -57,13 +57,20 @@ export const listCatalogItemsFn = createServerFn({ method: "GET" }).handler(asyn
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("catalog_items")
-    .select("id, name, category, price, mrp, unit, stock, emoji, image, description, source, max_per_order")
+    .select("id, name, category, price, mrp, unit, stock, emoji, image, description, source, max_per_order, is_deleted")
     .order("created_at", { ascending: true });
   if (error) {
     console.error("Failed to list catalog items", error);
-    return { items: [] as CatalogItemRow[] };
+    return { items: [] as CatalogItemRow[], deletedIds: [] as string[] };
   }
-  return { items: (data ?? []) as CatalogItemRow[] };
+  const rows = (data ?? []) as (CatalogItemRow & { is_deleted?: boolean })[];
+  // Deleted items are kept in the database as a record of the removal, but they
+  // never appear in a catalogue listing again — the ids are returned so the app
+  // can also hide any bundled seed product a supplier has deleted.
+  return {
+    items: rows.filter(r => !r.is_deleted) as CatalogItemRow[],
+    deletedIds: rows.filter(r => r.is_deleted).map(r => r.id),
+  };
 });
 
 // ---------------- Upsert (add or edit) an item ----------------
@@ -107,6 +114,9 @@ export const upsertCatalogItemFn = createServerFn({ method: "POST" })
       description: data.description,
       max_per_order: data.maxPerOrder,
       source: who.source,
+      is_deleted: false,
+      deleted_at: null,
+      deleted_by: null,
     }, { onConflict: "id" });
     if (error) { console.error("upsert catalog", error); throw new Error("Could not save item"); }
     await confirmRestockAlerts(data.id, data.stock);
@@ -114,20 +124,42 @@ export const upsertCatalogItemFn = createServerFn({ method: "POST" })
   });
 
 // ---------------- Delete ----------------
+// Deleting keeps a record in the supplier database: the row stays with the item
+// name, marked as deleted, with who removed it and when. It disappears from
+// every catalogue listing (customer, admin, supplier) immediately.
 export const deleteCatalogItemFn = createServerFn({ method: "POST" })
-  .inputValidator((data: { supplierToken?: string; adminToken?: string; id?: string }) => ({
+  .inputValidator((data: { supplierToken?: string; adminToken?: string; id?: string; name?: string; category?: string }) => ({
     supplierToken: data?.supplierToken ? String(data.supplierToken) : "",
     adminToken: data?.adminToken ? String(data.adminToken) : "",
     id: str(data?.id, 80),
+    name: str(data?.name, 200),
+    category: str(data?.category, 80),
   }))
   .handler(async ({ data }) => {
     const who = await authorize(data.supplierToken, data.adminToken);
     if (!who) throw new Error("Not authorized to edit the catalog");
     if (!data.id) throw new Error("Item id required");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("catalog_items").delete().eq("id", data.id);
-    if (error) throw new Error("Could not delete item");
-    return { ok: true };
+
+    const { data: existing } = await supabaseAdmin
+      .from("catalog_items").select("name, category").eq("id", data.id).maybeSingle();
+
+    const { error } = await supabaseAdmin.from("catalog_items").upsert({
+      id: data.id,
+      name: existing?.name || data.name || data.id,
+      category: existing?.category || data.category || "snacks",
+      price: 0,
+      unit: "",
+      stock: 0,
+      emoji: "🗑️",
+      description: "",
+      source: who.source,
+      is_deleted: true,
+      deleted_at: new Date().toISOString(),
+      deleted_by: who.source,
+    }, { onConflict: "id" });
+    if (error) { console.error("delete catalog", error); throw new Error("Could not delete item"); }
+    return { ok: true, name: existing?.name || data.name || data.id };
   });
 
 // ---------------- Quick edits: price / stock ----------------

@@ -9,6 +9,7 @@ import {
   type AdminPromo,
 } from "@/lib/promo.functions";
 import { listCatalogItemsFn } from "@/lib/catalog.functions";
+import { PRODUCTS, CATEGORIES } from "@/lib/data";
 
 export const Route = createFileRoute("/admin/promos")({
   component: AdminPromosPage,
@@ -97,9 +98,20 @@ function AdminPromosPage() {
 
   useEffect(() => { void load(); }, [load]);
 
+  // The picker must list EVERY product in the inventory: the bundled catalogue
+  // plus everything suppliers/admins added, minus deleted items.
   useEffect(() => {
+    const catName = (slug: string) => CATEGORIES.find(c => c.slug === slug)?.name ?? slug;
+    const seed: CatalogRow[] = PRODUCTS.map(p => ({ id: p.id, name: p.name, category: catName(p.category) }));
+    setCatalog(seed);
     listCatalogItemsFn()
-      .then(res => setCatalog(res.items.map(r => ({ id: r.id, name: r.name, category: r.category }))))
+      .then(res => {
+        const gone = new Set(res.deletedIds ?? []);
+        const server = res.items.map(r => ({ id: r.id, name: r.name, category: catName(r.category) }));
+        const byId = new Map<string, CatalogRow>();
+        for (const row of [...seed, ...server]) if (!gone.has(row.id)) byId.set(row.id, row);
+        setCatalog([...byId.values()].sort((a, b) => a.name.localeCompare(b.name)));
+      })
       .catch(() => {});
   }, []);
 
@@ -109,7 +121,7 @@ function AdminPromosPage() {
     const rows = q
       ? catalog.filter(c => c.name.toLowerCase().includes(q) || c.category.toLowerCase().includes(q))
       : catalog;
-    return rows.slice(0, 300);
+    return rows;
   }, [catalog, productQuery]);
 
   const toggleProduct = (id: string) => {
