@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Zap, Bike } from "lucide-react";
-import kartogoLogo from "@/assets/kartogo-logo.png";
+import kartogoLogo from "@/assets/kartogo-mark.png";
 
 /**
  * Animated launch screen. Shows once per browser session while the app boots
@@ -30,7 +30,7 @@ export function SplashScreen({ minDurationMs = 1800 }: { minDurationMs?: number 
       }`}
     >
       <div className="flex flex-col items-center px-6 text-center">
-        <img src={kartogoLogo} alt="" width={96} height={96} className="h-24 w-24 animate-splash-pop rounded-3xl object-contain shadow-pop" />
+        <img src={kartogoLogo} alt="" width={96} height={96} className="h-24 w-24 animate-splash-pop rounded-3xl bg-[#0d1b4a] object-cover object-center shadow-pop" />
         <div className="mt-4 animate-splash-rise font-display text-4xl font-extrabold tracking-tight text-foreground">Kartogo</div>
         <div className="mt-1 flex animate-splash-rise items-center gap-1.5 text-sm font-semibold text-muted-foreground [animation-delay:120ms]">
           <Zap className="h-4 w-4 fill-saffron text-saffron" /> Ongole's 15-minute neighbourhood store
