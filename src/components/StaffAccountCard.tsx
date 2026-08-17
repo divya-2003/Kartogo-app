@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { BadgeCheck, Fingerprint, Phone, ShieldCheck, KeyRound, Loader2 } from "lucide-react";
+import { PhoneNumberInput } from "@/components/PhoneNumberInput";
+import { validatePhoneNumber, toE164 } from "@/lib/phone";
 import { getStaffProfileFn, requestMobileChangeOtpFn, confirmMobileChangeFn, type StaffProfile } from "@/lib/staff.functions";
 
 export type StaffRole = "admin" | "vendor" | "delivery_partner";
@@ -67,10 +69,11 @@ export function StaffAccountCard({ role }: { role: StaffRole }) {
     e.preventDefault();
     const token = readToken(role);
     if (!token) { toast.error("Session expired. Please sign in again."); return; }
-    if (!/^\d{10}$/.test(newMobile)) { toast.error("Enter a valid 10-digit mobile number"); return; }
+    const check = validatePhoneNumber(newMobile);
+    if (!check.valid) { toast.error(check.error ?? "Enter a valid mobile number"); return; }
     setBusy(true);
     try {
-      const res = await requestMobileChangeOtpFn({ data: { role, token, newMobile } });
+      const res = await requestMobileChangeOtpFn({ data: { role, token, newMobile: toE164(newMobile) ?? newMobile } });
       setStage("otp");
       if (res.demo && res.demoCode) {
         setDemoCode(res.demoCode);
@@ -91,7 +94,7 @@ export function StaffAccountCard({ role }: { role: StaffRole }) {
     if (!token) { toast.error("Session expired. Please sign in again."); return; }
     setBusy(true);
     try {
-      const res = await confirmMobileChangeFn({ data: { role, token, newMobile, code } });
+      const res = await confirmMobileChangeFn({ data: { role, token, newMobile: toE164(newMobile) ?? newMobile, code } });
       if (res.token) writeToken(role, res.token);
       setProfile(res.profile);
       setStage("idle");

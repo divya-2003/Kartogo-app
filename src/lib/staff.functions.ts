@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { canonicalPhone, canonicalToE164 } from "./phone";
 
 export type StaffProfile = {
   userId: string;
@@ -17,8 +18,18 @@ const sessionSchema = z.object({
   token: z.string().min(1),
 });
 
+// Mobile numbers may be Indian or international. Everything is normalised to a
+// single canonical form before it touches the database, so the same person is
+// always recognised no matter how the number was typed.
 const changeSchema = sessionSchema.extend({
-  newMobile: z.string().regex(/^\d{10}$/, "Enter a valid 10-digit mobile number"),
+  newMobile: z.string().min(6).max(20).transform((v, ctx) => {
+    const canonical = canonicalPhone(v);
+    if (!canonical) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Enter a valid mobile number with country code" });
+      return z.NEVER;
+    }
+    return canonical;
+  }),
 });
 
 const confirmSchema = changeSchema.extend({
@@ -105,7 +116,7 @@ export const requestMobileChangeOtpFn = createServerFn({ method: "POST" })
       return { ok: true as const, demo: true as const, demoCode: code };
     }
     const { sendSms } = await import("./sms.server");
-    await sendSms(`+91${data.newMobile}`, `Your Kartogo verification code is ${code}. It expires in 5 minutes.`);
+    await sendSms(canonicalToE164(data.newMobile) ?? `+91${data.newMobile}`, `Your Kartogo verification code is ${code}. It expires in 5 minutes.`);
     return { ok: true as const, demo: false as const, demoCode: undefined };
   });
 
