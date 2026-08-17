@@ -75,7 +75,7 @@ export function Header() {
             screen keeps the brand mark. */}
         {isHome ? (
           <Link to="/" className="flex items-center gap-2">
-            <div className="h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-[#0d1b४a]">
+            <div className="h-9 w-9 shrink-0 overflow-hidden rounded-xl bg-[#0d1b4a]">
               <img
                 src={kartogoLogo}
                 alt="Kartogo - Neighborhood Store"
