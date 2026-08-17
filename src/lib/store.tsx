@@ -521,8 +521,6 @@ function rowToProduct(r: CatalogItemRow): Product {
 export function CatalogProvider({ children }: { children: ReactNode }) {
   const { customerToken, adminToken } = useAuth();
   const [supplierProducts, setSupplierProducts] = useState<Product[]>([]);
-  // Seed products a supplier/admin has deleted — hidden everywhere.
-  const [deletedIds, setDeletedIds] = useState<string[]>([]);
   // Local overrides for seed PRODUCTS (stock/price tweaks). Supplier-added items
   // now come from the server so every browser sees them.
   const [seedOverrides, setSeedOverrides] = useState<Record<string, Partial<Product>>>({});
@@ -533,7 +531,6 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     try {
       const res = await listCatalogItemsFn();
       setSupplierProducts(res.items.map(rowToProduct));
-      setDeletedIds(res.deletedIds ?? []);
     } catch { /* keep last good */ }
   }, []);
 
@@ -565,12 +562,10 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
     // the bundled seed data — otherwise an out-of-stock item keeps showing as
     // available for every other shopper.
     const serverById = new Map(supplierProducts.map(p => [p.id, p]));
-    const gone = new Set(deletedIds);
-    const seed = PRODUCTS.filter(p => !gone.has(p.id))
-      .map(p => ({ ...p, ...(seedOverrides[p.id] ?? {}), ...(serverById.get(p.id) ?? {}) }));
+    const seed = PRODUCTS.map(p => ({ ...p, ...(seedOverrides[p.id] ?? {}), ...(serverById.get(p.id) ?? {}) }));
     const seen = new Set(seed.map(p => p.id));
-    return [...seed, ...supplierProducts.filter(p => !seen.has(p.id) && !gone.has(p.id))];
-  }, [supplierProducts, seedOverrides, deletedIds]);
+    return [...seed, ...supplierProducts.filter(p => !seen.has(p.id))];
+  }, [supplierProducts, seedOverrides]);
 
   const tokens = () => ({
     supplierToken: read<string | null>("qk_supplier_token", null) ?? "",
@@ -607,11 +602,9 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       pushToServer(p);
     },
     remove: (id) => {
-      const gone = findProduct(id);
       setSupplierProducts(prev => prev.filter(p => p.id !== id));
-      setDeletedIds(prev => (prev.includes(id) ? prev : [...prev, id]));
       const { supplierToken, adminToken } = tokens();
-      void deleteCatalogItemFn({ data: { supplierToken, adminToken, id, name: gone?.name, category: gone?.category } })
+      void deleteCatalogItemFn({ data: { supplierToken, adminToken, id } })
         .then(refreshCatalog).catch(() => {});
     },
     setStock: (id, stock) => {

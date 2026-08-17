@@ -153,7 +153,7 @@ function SupplierInventory() {
                 </td>
                 <td className="p-3 text-right">
                   <button onClick={() => setEditing(p)} className="mr-1 inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs hover:bg-secondary"><Pencil className="h-3 w-3" /> Edit</button>
-                  <button onClick={() => { if (confirm(`Delete "${p.name}" from your inventory?`)) { remove(p.id); toast.success(`${p.name} is deleted from your inventory`); } }} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-destructive hover:bg-destructive/10"><Trash2 className="h-3 w-3" /> Delete</button>
+                  <button onClick={() => { if (confirm(`Delete ${p.name}?`)) { remove(p.id); toast.success("Item removed"); } }} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-destructive hover:bg-destructive/10"><Trash2 className="h-3 w-3" /> Delete</button>
                 </td>
               </tr>
             ))}
@@ -187,7 +187,7 @@ function SupplierInventory() {
             </div>
             <div className="mt-3 flex justify-end gap-2 border-t border-border pt-3">
               <button onClick={() => setEditing(p)} className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-semibold hover:bg-secondary"><Pencil className="h-3 w-3" /> Edit</button>
-              <button onClick={() => { if (confirm(`Delete "${p.name}" from your inventory?`)) { remove(p.id); toast.success(`${p.name} is deleted from your inventory`); } }} className="inline-flex items-center gap-1 rounded-md border border-destructive/30 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/10"><Trash2 className="h-3 w-3" /> Delete</button>
+              <button onClick={() => { if (confirm(`Delete ${p.name}?`)) { remove(p.id); toast.success("Item removed"); } }} className="inline-flex items-center gap-1 rounded-md border border-destructive/30 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/10"><Trash2 className="h-3 w-3" /> Delete</button>
             </div>
           </div>
         ))}

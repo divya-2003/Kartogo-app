@@ -231,13 +231,10 @@ export type Database = {
         Row: {
           category: string
           created_at: string
-          deleted_at: string | null
-          deleted_by: string | null
           description: string
           emoji: string
           id: string
           image: string | null
-          is_deleted: boolean
           max_per_order: number | null
           mrp: number | null
           name: string
@@ -250,13 +247,10 @@ export type Database = {
         Insert: {
           category: string
           created_at?: string
-          deleted_at?: string | null
-          deleted_by?: string | null
           description?: string
           emoji?: string
           id: string
           image?: string | null
-          is_deleted?: boolean
           max_per_order?: number | null
           mrp?: number | null
           name: string
@@ -269,13 +263,10 @@ export type Database = {
         Update: {
           category?: string
           created_at?: string
-          deleted_at?: string | null
-          deleted_by?: string | null
           description?: string
           emoji?: string
           id?: string
           image?: string | null
-          is_deleted?: boolean
           max_per_order?: number | null
           mrp?: number | null
           name?: string
