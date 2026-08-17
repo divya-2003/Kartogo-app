@@ -126,7 +126,7 @@ export function StaffAccountCard({ role }: { role: StaffRole }) {
       <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
         <Field label="Name" value={profile.fullName} />
         <Field label="Role" value={ROLE_LABEL[profile.role]} />
-        <Field label="Mobile number" value={`+91 ${profile.mobileNumber}`} icon={Phone} />
+        <Field label="Mobile number" value={/^\d{10}$/.test(profile.mobileNumber) ? `+91 ${profile.mobileNumber}` : profile.mobileNumber} icon={Phone} />
         <Field label="Status" value={profile.status === "active" ? "Active" : "Inactive"} icon={ShieldCheck} />
         <div className="sm:col-span-2">
           <dt className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
