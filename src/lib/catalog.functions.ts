@@ -140,11 +140,23 @@ export const deleteCatalogItemFn = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     // Soft delete: the row stays in the suppliers' database, flagged as deleted
     // with the timestamp and who removed it, so history and audits survive.
-    const { error } = await supabaseAdmin
+    const now = new Date().toISOString();
+    const { data: updated, error } = await supabaseAdmin
       .from("catalog_items")
-      .update({ is_deleted: true, deleted_at: new Date().toISOString(), deleted_by: who.source })
-      .eq("id", data.id);
+      .update({ is_deleted: true, deleted_at: now, deleted_by: who.source })
+      .eq("id", data.id)
+      .select("id");
     if (error) throw new Error("Could not delete item");
+    if (!updated || updated.length === 0) {
+      // Bundled seed item that was never edited: record a tombstone row so the
+      // deletion (and its date) is stored and the item stays hidden everywhere.
+      const { error: insErr } = await supabaseAdmin.from("catalog_items").insert({
+        id: data.id, name: data.id, category: "deleted", price: 0, unit: "",
+        stock: 0, emoji: "🛒", description: "", source: who.source,
+        is_deleted: true, deleted_at: now, deleted_by: who.source,
+      });
+      if (insErr) throw new Error("Could not delete item");
+    }
     return { ok: true };
   });
 
