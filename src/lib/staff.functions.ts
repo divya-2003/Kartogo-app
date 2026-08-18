@@ -1,5 +1,19 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { canonicalPhone, canonicalToE164, normalizeIncomingPhone } from "./phone";
+
+/**
+ * Accept Indian AND international numbers. The value is normalised to a
+ * canonical form (bare 10 digits for India, full E.164 digits otherwise) so a
+ * number typed as +91 98..., 098... or +1 415... always resolves to one row.
+ */
+function normalizeNewMobile(raw: unknown): string {
+  const canonical = canonicalPhone(String(raw ?? "")) ?? normalizeIncomingPhone(raw);
+  if (!canonical || !/^\d{8,15}$/.test(canonical)) {
+    throw new Error("Enter a valid mobile number, including the country code for international numbers");
+  }
+  return canonical;
+}
 
 export type StaffProfile = {
   userId: string;
@@ -18,7 +32,7 @@ const sessionSchema = z.object({
 });
 
 const changeSchema = sessionSchema.extend({
-  newMobile: z.string().regex(/^\d{10}$/, "Enter a valid 10-digit mobile number"),
+  newMobile: z.string().min(6).transform(normalizeNewMobile),
 });
 
 const confirmSchema = changeSchema.extend({
@@ -105,7 +119,7 @@ export const requestMobileChangeOtpFn = createServerFn({ method: "POST" })
       return { ok: true as const, demo: true as const, demoCode: code };
     }
     const { sendSms } = await import("./sms.server");
-    await sendSms(`+91${data.newMobile}`, `Your Kartogo verification code is ${code}. It expires in 5 minutes.`);
+    await sendSms(canonicalToE164(data.newMobile) ?? `+${data.newMobile}`, `Your Kartogo verification code is ${code}. It expires in 5 minutes.`);
     return { ok: true as const, demo: false as const, demoCode: undefined };
   });
 
@@ -144,7 +158,7 @@ export const confirmMobileChangeFn = createServerFn({ method: "POST" })
     await supabaseAdmin.from("otp_codes").update({ consumed: true }).eq("id", row.id);
 
     const { changeStaffMobile } = await import("./staff.server");
-    const updated = await changeStaffMobile(account.userId, data.newMobile);
+    const updated = await changeStaffMobile(account.userId, data.newMobile, `${account.role}:${account.userId}`);
 
     // Re-issue the session token so it carries the new number (same user_id).
     const tokens = await import("./auth-tokens.server");
