@@ -58,6 +58,7 @@ export const listCatalogItemsFn = createServerFn({ method: "GET" }).handler(asyn
   const { data, error } = await supabaseAdmin
     .from("catalog_items")
     .select("id, name, category, price, mrp, unit, stock, emoji, image, description, source, max_per_order")
+    .eq("is_deleted", false)
     .order("created_at", { ascending: true });
   if (error) {
     console.error("Failed to list catalog items", error);
@@ -107,6 +108,9 @@ export const upsertCatalogItemFn = createServerFn({ method: "POST" })
       description: data.description,
       max_per_order: data.maxPerOrder,
       source: who.source,
+      is_deleted: false,
+      deleted_at: null,
+      deleted_by: null,
     }, { onConflict: "id" });
     if (error) { console.error("upsert catalog", error); throw new Error("Could not save item"); }
     await confirmRestockAlerts(data.id, data.stock);
@@ -125,7 +129,12 @@ export const deleteCatalogItemFn = createServerFn({ method: "POST" })
     if (!who) throw new Error("Not authorized to edit the catalog");
     if (!data.id) throw new Error("Item id required");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("catalog_items").delete().eq("id", data.id);
+    // Soft delete: the row stays in the suppliers' database, flagged as deleted
+    // with the timestamp and who removed it, so history and audits survive.
+    const { error } = await supabaseAdmin
+      .from("catalog_items")
+      .update({ is_deleted: true, deleted_at: new Date().toISOString(), deleted_by: who.source })
+      .eq("id", data.id);
     if (error) throw new Error("Could not delete item");
     return { ok: true };
   });
