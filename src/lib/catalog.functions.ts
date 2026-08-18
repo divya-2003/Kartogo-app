@@ -58,12 +58,22 @@ export const listCatalogItemsFn = createServerFn({ method: "GET" }).handler(asyn
   const { data, error } = await supabaseAdmin
     .from("catalog_items")
     .select("id, name, category, price, mrp, unit, stock, emoji, image, description, source, max_per_order")
+    .eq("is_deleted", false)
     .order("created_at", { ascending: true });
   if (error) {
     console.error("Failed to list catalog items", error);
-    return { items: [] as CatalogItemRow[] };
+    return { items: [] as CatalogItemRow[], deletedIds: [] as string[] };
   }
-  return { items: (data ?? []) as CatalogItemRow[] };
+  // Soft-deleted ids come back too so the app can also hide bundled seed items
+  // a supplier removed from their inventory.
+  const { data: gone } = await supabaseAdmin
+    .from("catalog_items")
+    .select("id")
+    .eq("is_deleted", true);
+  return {
+    items: (data ?? []) as CatalogItemRow[],
+    deletedIds: ((gone ?? []) as { id: string }[]).map(r => r.id),
+  };
 });
 
 // ---------------- Upsert (add or edit) an item ----------------
@@ -107,6 +117,9 @@ export const upsertCatalogItemFn = createServerFn({ method: "POST" })
       description: data.description,
       max_per_order: data.maxPerOrder,
       source: who.source,
+      is_deleted: false,
+      deleted_at: null,
+      deleted_by: null,
     }, { onConflict: "id" });
     if (error) { console.error("upsert catalog", error); throw new Error("Could not save item"); }
     await confirmRestockAlerts(data.id, data.stock);
@@ -125,8 +138,25 @@ export const deleteCatalogItemFn = createServerFn({ method: "POST" })
     if (!who) throw new Error("Not authorized to edit the catalog");
     if (!data.id) throw new Error("Item id required");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("catalog_items").delete().eq("id", data.id);
+    // Soft delete: the row stays in the suppliers' database, flagged as deleted
+    // with the timestamp and who removed it, so history and audits survive.
+    const now = new Date().toISOString();
+    const { data: updated, error } = await supabaseAdmin
+      .from("catalog_items")
+      .update({ is_deleted: true, deleted_at: now, deleted_by: who.source })
+      .eq("id", data.id)
+      .select("id");
     if (error) throw new Error("Could not delete item");
+    if (!updated || updated.length === 0) {
+      // Bundled seed item that was never edited: record a tombstone row so the
+      // deletion (and its date) is stored and the item stays hidden everywhere.
+      const { error: insErr } = await supabaseAdmin.from("catalog_items").insert({
+        id: data.id, name: data.id, category: "deleted", price: 0, unit: "",
+        stock: 0, emoji: "🛒", description: "", source: who.source,
+        is_deleted: true, deleted_at: now, deleted_by: who.source,
+      });
+      if (insErr) throw new Error("Could not delete item");
+    }
     return { ok: true };
   });
 

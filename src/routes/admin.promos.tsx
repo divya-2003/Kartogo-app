@@ -8,7 +8,7 @@ import {
   deletePromoFn,
   type AdminPromo,
 } from "@/lib/promo.functions";
-import { listCatalogItemsFn } from "@/lib/catalog.functions";
+import { useCatalog } from "@/lib/store";
 
 export const Route = createFileRoute("/admin/promos")({
   component: AdminPromosPage,
@@ -84,7 +84,12 @@ function AdminPromosPage() {
   const [promos, setPromos] = useState<AdminPromo[]>([]);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [busy, setBusy] = useState(false);
-  const [catalog, setCatalog] = useState<CatalogRow[]>([]);
+  // Every item in the live inventory (seed catalogue + supplier/admin added).
+  const { products } = useCatalog();
+  const catalog = useMemo<CatalogRow[]>(
+    () => products.map(p => ({ id: p.id, name: p.name, category: p.category })),
+    [products],
+  );
   const [productQuery, setProductQuery] = useState("");
 
   const load = useCallback(async () => {
@@ -97,19 +102,13 @@ function AdminPromosPage() {
 
   useEffect(() => { void load(); }, [load]);
 
-  useEffect(() => {
-    listCatalogItemsFn()
-      .then(res => setCatalog(res.items.map(r => ({ id: r.id, name: r.name, category: r.category }))))
-      .catch(() => {});
-  }, []);
-
 
   const filteredCatalog = useMemo(() => {
     const q = productQuery.trim().toLowerCase();
     const rows = q
       ? catalog.filter(c => c.name.toLowerCase().includes(q) || c.category.toLowerCase().includes(q))
       : catalog;
-    return rows.slice(0, 300);
+    return rows;
   }, [catalog, productQuery]);
 
   const toggleProduct = (id: string) => {

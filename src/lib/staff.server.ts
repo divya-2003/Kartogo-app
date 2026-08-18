@@ -117,7 +117,7 @@ export const MOBILE_IN_USE = "This mobile number is already in use.";
  * The user_id, role, ref_id and every row that references them are untouched,
  * so order history, earnings, analytics, notifications and settings survive.
  */
-export async function changeStaffMobile(userId: string, newMobile: string): Promise<StaffAccount> {
+export async function changeStaffMobile(userId: string, newMobile: string, actor?: string): Promise<StaffAccount> {
   const account = await findStaffById(userId);
   if (!account) throw new Error("Account not found");
   if (account.mobileNumber === newMobile) return account;
@@ -138,11 +138,16 @@ export async function changeStaffMobile(userId: string, newMobile: string): Prom
   }
 
   // Audit log — who changed, from what, to what, when.
-  await supabaseAdmin.from("mobile_number_changes").insert({
+  const { error: auditError } = await supabaseAdmin.from("mobile_number_changes").insert({
     user_id: userId,
     old_mobile_number: account.mobileNumber,
     new_mobile_number: newMobile,
   });
+  if (auditError) {
+    console.error("[staff] mobile change audit log failed", {
+      userId, role: account.role, actor: actor ?? account.role, error: auditError.message,
+    });
+  }
 
   // Keep the delivery roster row in sync so assignments keep resolving.
   if (account.role === "delivery_partner" && account.refId) {
