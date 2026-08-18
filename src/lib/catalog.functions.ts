@@ -62,9 +62,18 @@ export const listCatalogItemsFn = createServerFn({ method: "GET" }).handler(asyn
     .order("created_at", { ascending: true });
   if (error) {
     console.error("Failed to list catalog items", error);
-    return { items: [] as CatalogItemRow[] };
+    return { items: [] as CatalogItemRow[], deletedIds: [] as string[] };
   }
-  return { items: (data ?? []) as CatalogItemRow[] };
+  // Soft-deleted ids come back too so the app can also hide bundled seed items
+  // a supplier removed from their inventory.
+  const { data: gone } = await supabaseAdmin
+    .from("catalog_items")
+    .select("id")
+    .eq("is_deleted", true);
+  return {
+    items: (data ?? []) as CatalogItemRow[],
+    deletedIds: ((gone ?? []) as { id: string }[]).map(r => r.id),
+  };
 });
 
 // ---------------- Upsert (add or edit) an item ----------------
