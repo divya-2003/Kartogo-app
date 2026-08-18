@@ -139,8 +139,8 @@ function LoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
       {/* Brand */}
       <div className="mb-8 flex flex-col items-center gap-3">
-        <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-2xl bg-[#15205a] shadow-pop">
-          <img src={kartogoLogo} alt="Kartogo" className="h-full w-full object-contain p-1" />
+        <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-2xl bg-[#03103b] shadow-pop">
+          <img src={kartogoLogo} alt="Kartogo" className="h-full w-full scale-110 object-cover" />
         </div>
         <div className="text-center">
           <h1 className="font-display text-3xl font-bold tracking-tight">Kartogo</h1>
