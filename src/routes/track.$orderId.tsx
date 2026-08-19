@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -50,11 +50,25 @@ const HEADLINE: Record<OrderStatus, { title: string; sub: string }> = {
   cancelled: { title: "Cancelled", sub: "This order was cancelled." },
 };
 
-/** Decorative street map with the rider riding the dashed route. */
+/** Decorative street map with the rider riding a smooth curved route. */
+const ROUTE_D =
+  "M60 196 C 110 196, 120 150, 168 142 S 236 138, 258 104 S 292 66, 336 58";
+
 function RouteMap({ progress, moving }: { progress: number; moving: boolean }) {
+  const pathRef = useRef<SVGPathElement | null>(null);
+  const [pos, setPos] = useState<{ x: number; y: number }>({ x: 60, y: 196 });
+
+  useEffect(() => {
+    const path = pathRef.current;
+    if (!path) return;
+    const t = Math.min(1, Math.max(0, progress / 100));
+    const p = path.getPointAtLength(path.getTotalLength() * t);
+    setPos({ x: p.x, y: p.y });
+  }, [progress]);
+
   return (
     <div className="relative h-56 w-full overflow-hidden bg-secondary/60 sm:h-72">
-      <svg viewBox="0 0 400 240" className="h-full w-full" aria-hidden>
+      <svg viewBox="0 0 400 240" className="h-full w-full" preserveAspectRatio="none">
         <rect width="400" height="240" className="fill-muted" />
         {Array.from({ length: 9 }).map((_, i) => (
           <rect key={`h${i}`} x="0" y={i * 28 + 10} width="400" height="8" className="fill-background/70" />
@@ -62,43 +76,56 @@ function RouteMap({ progress, moving }: { progress: number; moving: boolean }) {
         {Array.from({ length: 13 }).map((_, i) => (
           <rect key={`v${i}`} x={i * 32 + 8} y="0" width="8" height="240" className="fill-background/70" />
         ))}
+        <path d={ROUTE_D} className="stroke-primary/25" strokeWidth="11" fill="none" strokeLinecap="round" />
         <path
-          d="M60 190 L150 190 L150 120 L250 120 L250 60 L330 60"
-          className="stroke-primary/25"
-          strokeWidth="10"
-          fill="none"
-          strokeLinecap="round"
-        />
-        <path
-          d="M60 190 L150 190 L150 120 L250 120 L250 60 L330 60"
+          ref={pathRef}
+          d={ROUTE_D}
           className="stroke-primary"
           strokeWidth="5"
           strokeDasharray="14 12"
           fill="none"
           strokeLinecap="round"
         />
+
+        {/* Store */}
+        <g>
+          <circle cx="60" cy="196" r="13" className="fill-card stroke-primary" strokeWidth="2.5" />
+        </g>
+        {/* Home */}
+        <circle cx="336" cy="58" r="13" className="fill-card stroke-primary" strokeWidth="2.5" />
+
+        {/* Rider marker rides exactly on the curve */}
+        <circle
+          cx={pos.x}
+          cy={pos.y}
+          r="15"
+          className={`fill-primary ${moving ? "animate-pulse" : ""}`}
+          style={{ transition: "cx 700ms ease-out, cy 700ms ease-out" }}
+        />
       </svg>
 
-      <span className="absolute left-[13%] top-[76%] grid h-9 w-9 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-primary bg-card text-primary shadow-pop">
-        <Store className="h-4 w-4" />
-      </span>
-      <span className="absolute left-[82%] top-[22%] grid h-9 w-9 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-primary bg-card text-primary shadow-pop">
-        <Home className="h-4 w-4" />
-      </span>
-
-      <div
-        className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 transition-[left] duration-700 ease-out"
-        style={{ left: `${Math.min(92, Math.max(14, progress))}%` }}
+      <span
+        className="pointer-events-none absolute grid h-6 w-6 -translate-x-1/2 -translate-y-1/2 place-items-center text-primary-foreground transition-[left,top] duration-700 ease-out"
+        style={{ left: `${(pos.x / 400) * 100}%`, top: `${(pos.y / 240) * 100}%` }}
       >
-        <span
-          className={`grid h-11 w-11 place-items-center rounded-full bg-primary text-primary-foreground shadow-pop ${moving ? "animate-bounce" : ""}`}
-        >
-          <Bike className="h-5 w-5" />
-        </span>
-      </div>
+        <Bike className="h-4 w-4" />
+      </span>
+      <span
+        className="pointer-events-none absolute grid h-6 w-6 -translate-x-1/2 -translate-y-1/2 place-items-center text-primary"
+        style={{ left: `${(60 / 400) * 100}%`, top: `${(196 / 240) * 100}%` }}
+      >
+        <Store className="h-3.5 w-3.5" />
+      </span>
+      <span
+        className="pointer-events-none absolute grid h-6 w-6 -translate-x-1/2 -translate-y-1/2 place-items-center text-primary"
+        style={{ left: `${(336 / 400) * 100}%`, top: `${(58 / 240) * 100}%` }}
+      >
+        <Home className="h-3.5 w-3.5" />
+      </span>
     </div>
   );
 }
+
 
 function TrackOrderPage() {
   const { orderId } = Route.useParams();
