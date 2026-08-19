@@ -112,21 +112,25 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false })
       .limit(1);
 
+    // Expected, user-correctable problems are RETURNED (not thrown) so they
+    // surface as a toast instead of an unhandled server-function error.
+    const fail = (error: string) => ({ ok: false as const, error });
+
     const row = rows?.[0];
-    if (!row) throw new Error("Please request a new OTP");
+    if (!row) return fail("Please request a new OTP");
     if (new Date(row.expires_at).getTime() < Date.now()) {
       await supabaseAdmin.from("otp_codes").update({ consumed: true }).eq("id", row.id);
-      throw new Error("Your code has expired. Request a new one.");
+      return fail("Your code has expired. Request a new one.");
     }
     if (row.attempts >= 5) {
       await supabaseAdmin.from("otp_codes").update({ consumed: true }).eq("id", row.id);
-      throw new Error("Too many incorrect attempts. Request a new OTP.");
+      return fail("Too many incorrect attempts. Request a new OTP.");
     }
 
     const hash = createHash("sha256").update(`${data.phone}:${data.code}`).digest("hex");
     if (hash !== row.code_hash) {
       await supabaseAdmin.from("otp_codes").update({ attempts: row.attempts + 1 }).eq("id", row.id);
-      throw new Error("Incorrect OTP");
+      return fail("Incorrect OTP");
     }
 
     await supabaseAdmin.from("otp_codes").update({ consumed: true }).eq("id", row.id);

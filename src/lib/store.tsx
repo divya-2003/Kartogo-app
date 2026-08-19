@@ -284,6 +284,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     verifyOtp: async (phone, otp) => {
       const res = await verifyOtpFn({ data: { phone, code: otp } });
+      if (!res.ok) throw new Error(res.error);
       // The server returns the canonical phone key — always trust that over
       // whatever formatting the user typed.
       const u: User = { phone: res.phone ?? phone, role: "customer" };
