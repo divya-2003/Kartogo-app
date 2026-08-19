@@ -65,6 +65,7 @@ import { Route as SupplierAccountRouteImport } from './routes/supplier.account'
 import { Route as SupplierAiRouteImport } from './routes/supplier.ai'
 import { Route as SupplierOrdersRouteImport } from './routes/supplier.orders'
 import { Route as SupplierSalesRouteImport } from './routes/supplier.sales'
+import { Route as TrackOrderIdRouteImport } from './routes/track.$orderId'
 import { Route as ApiPublicAiDailyForecastRouteImport } from './routes/api/public/ai-daily-forecast'
 import { Route as ApiPublicDispatchSweepRouteImport } from './routes/api/public/dispatch-sweep'
 import { Route as ApiPublicInventoryDigestRouteImport } from './routes/api/public/inventory-digest'
@@ -349,6 +350,11 @@ const SupplierSalesRoute = SupplierSalesRouteImport.update({
   path: '/sales',
   getParentRoute: () => SupplierRoute,
 } as any)
+const TrackOrderIdRoute = TrackOrderIdRouteImport.update({
+  id: '/track/$orderId',
+  path: '/track/$orderId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicAiDailyForecastRoute =
   ApiPublicAiDailyForecastRouteImport.update({
     id: '/api/public/ai-daily-forecast',
@@ -422,6 +428,7 @@ export interface FileRoutesByFullPath {
   '/supplier/ai': typeof SupplierAiRoute
   '/supplier/orders': typeof SupplierOrdersRoute
   '/supplier/sales': typeof SupplierSalesRoute
+  '/track/$orderId': typeof TrackOrderIdRoute
   '/admin/': typeof AdminIndexRoute
   '/supplier/': typeof SupplierIndexRoute
   '/api/public/ai-daily-forecast': typeof ApiPublicAiDailyForecastRoute
@@ -481,6 +488,7 @@ export interface FileRoutesByTo {
   '/supplier/ai': typeof SupplierAiRoute
   '/supplier/orders': typeof SupplierOrdersRoute
   '/supplier/sales': typeof SupplierSalesRoute
+  '/track/$orderId': typeof TrackOrderIdRoute
   '/admin': typeof AdminIndexRoute
   '/supplier': typeof SupplierIndexRoute
   '/api/public/ai-daily-forecast': typeof ApiPublicAiDailyForecastRoute
@@ -543,6 +551,7 @@ export interface FileRoutesById {
   '/supplier/ai': typeof SupplierAiRoute
   '/supplier/orders': typeof SupplierOrdersRoute
   '/supplier/sales': typeof SupplierSalesRoute
+  '/track/$orderId': typeof TrackOrderIdRoute
   '/admin/': typeof AdminIndexRoute
   '/supplier/': typeof SupplierIndexRoute
   '/api/public/ai-daily-forecast': typeof ApiPublicAiDailyForecastRoute
@@ -606,6 +615,7 @@ export interface FileRouteTypes {
     | '/supplier/ai'
     | '/supplier/orders'
     | '/supplier/sales'
+    | '/track/$orderId'
     | '/admin/'
     | '/supplier/'
     | '/api/public/ai-daily-forecast'
@@ -665,6 +675,7 @@ export interface FileRouteTypes {
     | '/supplier/ai'
     | '/supplier/orders'
     | '/supplier/sales'
+    | '/track/$orderId'
     | '/admin'
     | '/supplier'
     | '/api/public/ai-daily-forecast'
@@ -726,6 +737,7 @@ export interface FileRouteTypes {
     | '/supplier/ai'
     | '/supplier/orders'
     | '/supplier/sales'
+    | '/track/$orderId'
     | '/admin/'
     | '/supplier/'
     | '/api/public/ai-daily-forecast'
@@ -759,6 +771,7 @@ export interface RootRouteChildren {
   CategorySlugRoute: typeof CategorySlugRoute
   ProductIdRoute: typeof ProductIdRoute
   RateOrderOrderIdRoute: typeof RateOrderOrderIdRoute
+  TrackOrderIdRoute: typeof TrackOrderIdRoute
   ApiPublicAiDailyForecastRoute: typeof ApiPublicAiDailyForecastRoute
   ApiPublicDispatchSweepRoute: typeof ApiPublicDispatchSweepRoute
   ApiPublicInventoryDigestRoute: typeof ApiPublicInventoryDigestRoute
@@ -1158,6 +1171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SupplierSalesRouteImport
       parentRoute: typeof SupplierRoute
     }
+    '/track/$orderId': {
+      id: '/track/$orderId'
+      path: '/track/$orderId'
+      fullPath: '/track/$orderId'
+      preLoaderRoute: typeof TrackOrderIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/ai-daily-forecast': {
       id: '/api/public/ai-daily-forecast'
       path: '/api/public/ai-daily-forecast'
@@ -1288,6 +1308,7 @@ const rootRouteChildren: RootRouteChildren = {
   CategorySlugRoute: CategorySlugRoute,
   ProductIdRoute: ProductIdRoute,
   RateOrderOrderIdRoute: RateOrderOrderIdRoute,
+  TrackOrderIdRoute: TrackOrderIdRoute,
   ApiPublicAiDailyForecastRoute: ApiPublicAiDailyForecastRoute,
   ApiPublicDispatchSweepRoute: ApiPublicDispatchSweepRoute,
   ApiPublicInventoryDigestRoute: ApiPublicInventoryDigestRoute,
