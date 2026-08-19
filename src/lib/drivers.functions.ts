@@ -17,7 +17,9 @@ export const listDriverAvailabilityFn = createServerFn({ method: "POST" })
   .inputValidator((data: { adminToken?: string }) => ({ adminToken: String(data?.adminToken ?? "") }))
   .handler(async ({ data }): Promise<DriverAvailabilityRow[]> => {
     const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    // Not an admin (missing / expired token): return nothing instead of
+    // throwing, so non-admin surfaces just render an empty roster.
+    if (!verifyAdminToken(data.adminToken)) return [];
     const { listRoster } = await import("./driver-roster.server");
     return listRoster();
   });
