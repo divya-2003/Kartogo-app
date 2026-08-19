@@ -561,6 +561,13 @@ function OrdersPage() {
                   {/* Live tracking for active orders */}
                   {active && (
                     <div className="px-4 pb-4">
+                      <Link
+                        to="/track/$orderId"
+                        params={{ orderId: o.id }}
+                        className="mb-3 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground hover:bg-primary/90"
+                      >
+                        <Truck className="h-4 w-4" /> Track live
+                      </Link>
                       <DeliveryProgress
                         status={o.status}
                         eta={etaText(o.status, statusSince[o.id], now)}
