@@ -282,15 +282,18 @@ function OrdersPage() {
   // observed. Existing server-side ratings prevent repeat prompts across devices.
   useEffect(() => {
     if (!customerToken || driverRateTarget) return;
-    const deliveredOrder = mine.find(
+    const unreviewedCandidates = mine.filter(
       (order) =>
         order.status === "delivered" &&
         !!order.deliveryBoyId &&
         !checkedDriverRatingsRef.current.has(order.id),
     );
+    for (const order of unreviewedCandidates) checkedDriverRatingsRef.current.add(order.id);
+    const deliveredOrder = unreviewedCandidates.sort(
+      (a, b) => (b.updatedAt ?? b.createdAt) - (a.updatedAt ?? a.createdAt),
+    )[0];
     if (!deliveredOrder) return;
 
-    checkedDriverRatingsRef.current.add(deliveredOrder.id);
     void getDriverRatingForOrderFn({
       data: { customerToken, orderId: deliveredOrder.id },
     })
