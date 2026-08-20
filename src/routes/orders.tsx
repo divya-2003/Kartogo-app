@@ -1,7 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
-import { DeliveryProgress } from "@/components/DeliveryProgress";
-import { LiveTrackingCard } from "@/components/logistics/LiveTrackingCard";
 import {
   useAuth,
   useOrders,
@@ -13,7 +11,7 @@ import {
   type Order,
 } from "@/lib/store";
 import { formatINR, type Product } from "@/lib/data";
-import { etaText, formatDeliveryDuration } from "@/lib/eta";
+import { formatDeliveryDuration } from "@/lib/eta";
 import { paymentBreakdown, PAYMENT_LABELS } from "@/lib/payment";
 import { refundEligibility } from "@/lib/refund";
 import {
@@ -33,8 +31,7 @@ import {
 } from "lucide-react";
 import { downloadInvoice } from "@/lib/invoice";
 import { submitReviewsFn } from "@/lib/reviews.functions";
-import { initiateMaskedCallFn } from "@/lib/chat.functions";
-import { OrderChat } from "@/components/OrderChat";
+import { getDriverRatingForOrderFn, submitDriverRatingFn } from "@/lib/driver-ratings.functions";
 import { listMySubstitutionsFn, respondSubstitutionFn, type OrderSubstitution } from "@/lib/substitutions.functions";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -142,9 +139,10 @@ function OrdersPage() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [reportTarget, setReportTarget] = useState<Order | null>(null);
   const [rateTarget, setRateTarget] = useState<Order | null>(null);
+  const [driverRateTarget, setDriverRateTarget] = useState<Order | null>(null);
   const [ratedOrderIds, setRatedOrderIds] = useState<Set<string>>(new Set());
   const [ratedLoaded, setRatedLoaded] = useState(false);
-  const [chatOrderId, setChatOrderId] = useState<string | null>(null);
+  const checkedDriverRatingsRef = useRef(new Set<string>());
 
   // Block 5 — replacements the store proposed for out-of-stock items.
   const [subs, setSubs] = useState<OrderSubstitution[]>([]);
@@ -171,18 +169,6 @@ function OrdersPage() {
       setSubBusy(null);
     }
   };
-
-  const maskedCall = async (orderId: string) => {
-    if (!customerToken) { toast.error("Please log in again"); return; }
-    try {
-      const res = await initiateMaskedCallFn({ data: { token: customerToken, orderId } });
-      toast.success(res.message);
-    } catch (err) {
-      toast.error((err as Error).message);
-    }
-  };
-
-
 
   useEffect(() => {
     try {
@@ -291,6 +277,33 @@ function OrdersPage() {
     () => orders.filter((o) => o.customerPhone === userPhone),
     [orders, userPhone],
   );
+
+  // Ask for delivery-partner feedback as soon as a newly delivered order is
+  // observed. Existing server-side ratings prevent repeat prompts across devices.
+  useEffect(() => {
+    if (!customerToken || driverRateTarget) return;
+    const unreviewedCandidates = mine.filter(
+      (order) =>
+        order.status === "delivered" &&
+        !!order.deliveryBoyId &&
+        !checkedDriverRatingsRef.current.has(order.id),
+    );
+    for (const order of unreviewedCandidates) checkedDriverRatingsRef.current.add(order.id);
+    const deliveredOrder = unreviewedCandidates.sort(
+      (a, b) => (b.updatedAt ?? b.createdAt) - (a.updatedAt ?? a.createdAt),
+    )[0];
+    if (!deliveredOrder) return;
+
+    void getDriverRatingForOrderFn({
+      data: { customerToken, orderId: deliveredOrder.id },
+    })
+      .then((rating) => {
+        if (!rating) setDriverRateTarget(deliveredOrder);
+      })
+      .catch(() => {
+        checkedDriverRatingsRef.current.delete(deliveredOrder.id);
+      });
+  }, [customerToken, driverRateTarget, mine]);
 
   // If the user lands here from the Refund & Returns CTA, open the report
   // issue modal for their most recent order and clean the search param.
@@ -558,7 +571,7 @@ function OrdersPage() {
                     })}
                   </div>
 
-                  {/* Live tracking for active orders */}
+                  {/* Active orders link to the dedicated tracking page. */}
                   {active && (
                     <div className="px-4 pb-4">
                       <Link
@@ -568,32 +581,6 @@ function OrdersPage() {
                       >
                         <Truck className="h-4 w-4" /> Track live
                       </Link>
-                      <DeliveryProgress
-                        status={o.status}
-                        eta={etaText(o.status, statusSince[o.id], now)}
-                      />
-                      {boy && (
-                        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-primary/5 px-3 py-2 text-sm">
-                          <span>Delivery partner: <span className="font-semibold">{boy.name}</span></span>
-                          <span className="text-xs text-muted-foreground">Number is private</span>
-                          <div className="ml-auto flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => setChatOrderId(o.id)}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold hover:bg-secondary"
-                            >
-                              💬 Chat
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => void maskedCall(o.id)}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold hover:bg-secondary"
-                            >
-                              📞 Call
-                            </button>
-                          </div>
-                        </div>
-                      )}
 
                       {subs.filter((s) => s.orderId === o.id).map((s) => (
                         <div key={s.id} className="mt-3 rounded-xl border border-saffron/50 bg-saffron/10 p-3">
@@ -626,9 +613,6 @@ function OrdersPage() {
                         </div>
                       ))}
 
-                      <div className="mt-3">
-                        <LiveTrackingCard token={customerToken} orderId={o.id} />
-                      </div>
                     </div>
                   )}
 
@@ -930,13 +914,33 @@ function OrdersPage() {
           }}
         />
       )}
-      {chatOrderId && customerToken && (
-        <OrderChat
-          token={customerToken}
-          orderId={chatOrderId}
-          myRole="customer"
-          peerLabel="Delivery partner"
-          onClose={() => setChatOrderId(null)}
+      {driverRateTarget && driverRateTarget.deliveryBoyId && (
+        <RateOrderModal
+          order={driverRateTarget}
+          title="Rate your delivery partner"
+          subtitle={DELIVERY_BOYS.find((driver) => driver.id === driverRateTarget.deliveryBoyId)?.name ?? "Your delivery partner"}
+          initialRating={0}
+          onClose={() => setDriverRateTarget(null)}
+          onSubmit={async ({ rating, feedback }) => {
+            const target = driverRateTarget;
+            const driverId = target.deliveryBoyId;
+            if (!customerToken || !driverId) return;
+            try {
+              await submitDriverRatingFn({
+                data: {
+                  customerToken,
+                  orderId: target.id,
+                  driverId,
+                  rating,
+                  comment: feedback,
+                },
+              });
+              toast.success("Thanks for rating your delivery partner!");
+              setDriverRateTarget(null);
+            } catch (error) {
+              toast.error(error instanceof Error ? error.message : "Could not save driver feedback");
+            }
+          }}
         />
       )}
     </div>
@@ -1345,11 +1349,15 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 
 function RateOrderModal({
   order,
+  title = "Rate your order",
+  subtitle,
   initialRating,
   onClose,
   onSubmit,
 }: {
   order: Order;
+  title?: string;
+  subtitle?: string;
   initialRating: number;
   onClose: () => void;
   onSubmit: (data: { rating: number; feedback: string }) => void;
@@ -1370,8 +1378,8 @@ function RateOrderModal({
       >
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 className="font-display text-lg font-bold">Rate your order</h2>
-            <p className="text-xs text-muted-foreground">Order {order.id}</p>
+            <h2 className="font-display text-lg font-bold">{title}</h2>
+            <p className="text-xs text-muted-foreground">{subtitle ?? `Order ${order.id}`}</p>
           </div>
           <button
             onClick={onClose}

@@ -15,10 +15,6 @@ type Row = {
   id: string; order_id: string; driver_id: string; customer_phone: string;
   rating: number; comment: string | null; created_at: string;
 };
-const toRating = (r: Row): DriverRating => ({
-  id: r.id, orderId: r.order_id, driverId: r.driver_id,
-  customerPhone: r.customer_phone, rating: r.rating, comment: r.comment, createdAt: r.created_at,
-});
 
 // Submit / update a driver rating. Customer must own the order.
 export const submitDriverRatingFn = createServerFn({ method: "POST" })
@@ -68,7 +64,17 @@ export const getDriverRatingForOrderFn = createServerFn({ method: "POST" })
     const { data: row } = await supabaseAdmin
       .from("driver_ratings").select("*")
       .eq("order_id", data.orderId).eq("customer_phone", session.phone).maybeSingle();
-    return row ? toRating(row as Row) : null;
+    if (!row) return null;
+    const rating = row as Row;
+    return {
+      id: rating.id,
+      orderId: rating.order_id,
+      driverId: rating.driver_id,
+      customerPhone: rating.customer_phone,
+      rating: rating.rating,
+      comment: rating.comment,
+      createdAt: rating.created_at,
+    } satisfies DriverRating;
   });
 
 // Aggregate for a driver — driver's own portal.
