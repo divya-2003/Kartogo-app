@@ -332,6 +332,174 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_category_preferences: {
+        Row: {
+          category: string
+          id: string
+          interest_score: number
+          last_activity_at: string | null
+          phone: string
+          purchase_count: number
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          category: string
+          id?: string
+          interest_score?: number
+          last_activity_at?: string | null
+          phone: string
+          purchase_count?: number
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          category?: string
+          id?: string
+          interest_score?: number
+          last_activity_at?: string | null
+          phone?: string
+          purchase_count?: number
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
+      customer_events: {
+        Row: {
+          category: string | null
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          order_id: string | null
+          phone: string | null
+          product_id: string | null
+          search_query: string | null
+          session_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          order_id?: string | null
+          phone?: string | null
+          product_id?: string | null
+          search_query?: string | null
+          session_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          order_id?: string | null
+          phone?: string | null
+          product_id?: string | null
+          search_query?: string | null
+          session_id?: string | null
+        }
+        Relationships: []
+      }
+      customer_product_preferences: {
+        Row: {
+          average_purchase_interval_days: number | null
+          cart_count: number
+          favorite_count: number
+          id: string
+          interest_score: number
+          last_added_to_cart_at: string | null
+          last_purchased_at: string | null
+          last_searched_at: string | null
+          last_viewed_at: string | null
+          phone: string
+          product_id: string
+          purchase_count: number
+          search_count: number
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          average_purchase_interval_days?: number | null
+          cart_count?: number
+          favorite_count?: number
+          id?: string
+          interest_score?: number
+          last_added_to_cart_at?: string | null
+          last_purchased_at?: string | null
+          last_searched_at?: string | null
+          last_viewed_at?: string | null
+          phone: string
+          product_id: string
+          purchase_count?: number
+          search_count?: number
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          average_purchase_interval_days?: number | null
+          cart_count?: number
+          favorite_count?: number
+          id?: string
+          interest_score?: number
+          last_added_to_cart_at?: string | null
+          last_purchased_at?: string | null
+          last_searched_at?: string | null
+          last_viewed_at?: string | null
+          phone?: string
+          product_id?: string
+          purchase_count?: number
+          search_count?: number
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
+      customer_replenishment_predictions: {
+        Row: {
+          average_purchase_interval_days: number | null
+          confidence_score: number
+          created_at: string
+          days_until_predicted_purchase: number | null
+          id: string
+          last_purchase_at: string | null
+          phone: string
+          predicted_next_purchase_at: string | null
+          product_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          average_purchase_interval_days?: number | null
+          confidence_score?: number
+          created_at?: string
+          days_until_predicted_purchase?: number | null
+          id?: string
+          last_purchase_at?: string | null
+          phone: string
+          predicted_next_purchase_at?: string | null
+          product_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          average_purchase_interval_days?: number | null
+          confidence_score?: number
+          created_at?: string
+          days_until_predicted_purchase?: number | null
+          id?: string
+          last_purchase_at?: string | null
+          phone?: string
+          predicted_next_purchase_at?: string | null
+          product_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customer_wallets: {
         Row: {
           balance: number
@@ -1519,6 +1687,33 @@ export type Database = {
         }
         Relationships: []
       }
+      product_associations: {
+        Row: {
+          associated_product_id: string
+          association_score: number
+          co_purchase_count: number
+          id: string
+          product_id: string
+          updated_at: string
+        }
+        Insert: {
+          associated_product_id: string
+          association_score?: number
+          co_purchase_count?: number
+          id?: string
+          product_id: string
+          updated_at?: string
+        }
+        Update: {
+          associated_product_id?: string
+          association_score?: number
+          co_purchase_count?: number
+          id?: string
+          product_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_costs: {
         Row: {
           cost_price: number
@@ -1579,6 +1774,42 @@ export type Database = {
           title?: string
           tone?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      product_recommendations: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          phone: string
+          product_id: string
+          reason: string
+          recommendation_type: string
+          score: number
+          source_product_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          phone: string
+          product_id: string
+          reason?: string
+          recommendation_type: string
+          score?: number
+          source_product_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          phone?: string
+          product_id?: string
+          reason?: string
+          recommendation_type?: string
+          score?: number
+          source_product_id?: string | null
         }
         Relationships: []
       }
@@ -1842,6 +2073,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      recommendation_settings: {
+        Row: {
+          cart_weight: number
+          favorite_weight: number
+          id: number
+          min_co_purchase_count: number
+          min_recommendation_score: number
+          purchase_weight: number
+          recommendation_limit: number
+          repeat_purchase_bonus: number
+          search_weight: number
+          updated_at: string
+          view_weight: number
+        }
+        Insert: {
+          cart_weight?: number
+          favorite_weight?: number
+          id?: number
+          min_co_purchase_count?: number
+          min_recommendation_score?: number
+          purchase_weight?: number
+          recommendation_limit?: number
+          repeat_purchase_bonus?: number
+          search_weight?: number
+          updated_at?: string
+          view_weight?: number
+        }
+        Update: {
+          cart_weight?: number
+          favorite_weight?: number
+          id?: number
+          min_co_purchase_count?: number
+          min_recommendation_score?: number
+          purchase_weight?: number
+          recommendation_limit?: number
+          repeat_purchase_bonus?: number
+          search_weight?: number
+          updated_at?: string
+          view_weight?: number
+        }
+        Relationships: []
       }
       refund_audit_log: {
         Row: {
