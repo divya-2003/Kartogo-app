@@ -236,8 +236,19 @@ export async function recomputeCustomer(phone: string): Promise<void> {
     if (!a.lastPurchased || iso > a.lastPurchased) a.lastPurchased = iso;
   }
 
-  const prefRows: Record<string, unknown>[] = [];
-  const predictionRows: Record<string, unknown>[] = [];
+  const prefRows: {
+    phone: string; product_id: string; interest_score: number; view_count: number;
+    search_count: number; cart_count: number; purchase_count: number; favorite_count: number;
+    last_viewed_at: string | null; last_searched_at: string | null;
+    last_added_to_cart_at: string | null; last_purchased_at: string | null;
+    average_purchase_interval_days: number | null; updated_at: string;
+  }[] = [];
+  const predictionRows: {
+    phone: string; product_id: string; last_purchase_at: string;
+    average_purchase_interval_days: number; predicted_next_purchase_at: string;
+    days_until_predicted_purchase: number; confidence_score: number;
+    status: string; updated_at: string;
+  }[] = [];
   const nowIso = new Date().toISOString();
 
   for (const [productId, a] of byProduct) {
