@@ -47,6 +47,7 @@ import { Route as AdminPartnersRouteImport } from './routes/admin.partners'
 import { Route as AdminPrintRouteImport } from './routes/admin.print'
 import { Route as AdminProductsRouteImport } from './routes/admin.products'
 import { Route as AdminPromosRouteImport } from './routes/admin.promos'
+import { Route as AdminRecommendationsRouteImport } from './routes/admin.recommendations'
 import { Route as AdminRefundRequestsRouteImport } from './routes/admin.refund-requests'
 import { Route as AdminReportsDailyRouteImport } from './routes/admin.reports-daily'
 import { Route as AdminReportsProductsRouteImport } from './routes/admin.reports-products'
@@ -260,6 +261,11 @@ const AdminPromosRoute = AdminPromosRouteImport.update({
   path: '/promos',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminRecommendationsRoute = AdminRecommendationsRouteImport.update({
+  id: '/recommendations',
+  path: '/recommendations',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminRefundRequestsRoute = AdminRefundRequestsRouteImport.update({
   id: '/refund-requests',
   path: '/refund-requests',
@@ -411,6 +417,7 @@ export interface FileRoutesByFullPath {
   '/admin/print': typeof AdminPrintRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/promos': typeof AdminPromosRoute
+  '/admin/recommendations': typeof AdminRecommendationsRoute
   '/admin/refund-requests': typeof AdminRefundRequestsRoute
   '/admin/reports-daily': typeof AdminReportsDailyRoute
   '/admin/reports-products': typeof AdminReportsProductsRoute
@@ -471,6 +478,7 @@ export interface FileRoutesByTo {
   '/admin/print': typeof AdminPrintRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/promos': typeof AdminPromosRoute
+  '/admin/recommendations': typeof AdminRecommendationsRoute
   '/admin/refund-requests': typeof AdminRefundRequestsRoute
   '/admin/reports-daily': typeof AdminReportsDailyRoute
   '/admin/reports-products': typeof AdminReportsProductsRoute
@@ -534,6 +542,7 @@ export interface FileRoutesById {
   '/admin/print': typeof AdminPrintRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/promos': typeof AdminPromosRoute
+  '/admin/recommendations': typeof AdminRecommendationsRoute
   '/admin/refund-requests': typeof AdminRefundRequestsRoute
   '/admin/reports-daily': typeof AdminReportsDailyRoute
   '/admin/reports-products': typeof AdminReportsProductsRoute
@@ -598,6 +607,7 @@ export interface FileRouteTypes {
     | '/admin/print'
     | '/admin/products'
     | '/admin/promos'
+    | '/admin/recommendations'
     | '/admin/refund-requests'
     | '/admin/reports-daily'
     | '/admin/reports-products'
@@ -658,6 +668,7 @@ export interface FileRouteTypes {
     | '/admin/print'
     | '/admin/products'
     | '/admin/promos'
+    | '/admin/recommendations'
     | '/admin/refund-requests'
     | '/admin/reports-daily'
     | '/admin/reports-products'
@@ -720,6 +731,7 @@ export interface FileRouteTypes {
     | '/admin/print'
     | '/admin/products'
     | '/admin/promos'
+    | '/admin/recommendations'
     | '/admin/refund-requests'
     | '/admin/reports-daily'
     | '/admin/reports-products'
@@ -1045,6 +1057,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPromosRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/recommendations': {
+      id: '/admin/recommendations'
+      path: '/recommendations'
+      fullPath: '/admin/recommendations'
+      preLoaderRoute: typeof AdminRecommendationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/refund-requests': {
       id: '/admin/refund-requests'
       path: '/refund-requests'
@@ -1218,6 +1237,7 @@ interface AdminRouteChildren {
   AdminPrintRoute: typeof AdminPrintRoute
   AdminProductsRoute: typeof AdminProductsRoute
   AdminPromosRoute: typeof AdminPromosRoute
+  AdminRecommendationsRoute: typeof AdminRecommendationsRoute
   AdminRefundRequestsRoute: typeof AdminRefundRequestsRoute
   AdminReportsDailyRoute: typeof AdminReportsDailyRoute
   AdminReportsProductsRoute: typeof AdminReportsProductsRoute
@@ -1247,6 +1267,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminPrintRoute: AdminPrintRoute,
   AdminProductsRoute: AdminProductsRoute,
   AdminPromosRoute: AdminPromosRoute,
+  AdminRecommendationsRoute: AdminRecommendationsRoute,
   AdminRefundRequestsRoute: AdminRefundRequestsRoute,
   AdminReportsDailyRoute: AdminReportsDailyRoute,
   AdminReportsProductsRoute: AdminReportsProductsRoute,
