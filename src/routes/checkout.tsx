@@ -22,7 +22,7 @@ export const Route = createFileRoute("/checkout")({
 // preview and the server-side order validation always agree on the same codes.
 
 function CheckoutPage() {
-  const { user, setName: setProfileName } = useAuth();
+  const { user, setName: setProfileName, customerToken } = useAuth();
   const { items, subtotal, clear } = useCart();
   const { products } = useCatalog();
   const { place } = useOrders();
