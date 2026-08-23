@@ -5,6 +5,8 @@ import { deliveryWindow } from "@/lib/serviceability";
 import { LocationPicker } from "@/components/LocationPicker";
 import { AutoLocationGate } from "@/components/AutoLocationGate";
 import { ProductCard } from "@/components/ProductCard";
+import { RecommendationRow } from "@/components/RecommendationRow";
+import { useRecommendationBundle, useCustomerTracking } from "@/hooks/use-recommendations";
 import { CATEGORIES, formatINR } from "@/lib/data";
 import { useCatalog, useAuth, useLocation, useCart, useWallet } from "@/lib/store";
 import { COUPONS as PROMO_COUPONS } from "@/lib/promo";
@@ -70,6 +72,13 @@ function Index() {
   const { products } = useCatalog();
   const { count, subtotal } = useCart();
   const { balance } = useWallet();
+  const { bundle } = useRecommendationBundle(8);
+  const track = useCustomerTracking();
+
+  useEffect(() => {
+    track.trackAppOpened();
+    track.trackHomeViewed();
+  }, [track]);
   
   // Delivery partners / admins who reopen the app land on this default URL — send
   // them to their own portal instead of the customer home page.
@@ -236,6 +245,33 @@ function Index() {
             ))}
           </div>
         </div>
+
+        {/* ---------- Personalised recommendations (real behaviour, never mock) ---------- */}
+        <RecommendationRow
+          title="You may need again"
+          subtitle="Based on how often you reorder these."
+          items={bundle.replenishment}
+        />
+        <RecommendationRow
+          title="Buy again"
+          subtitle="Straight from your past orders."
+          items={bundle.buyAgain}
+        />
+        <RecommendationRow
+          title="Recommended for you"
+          subtitle="Picked from what you browse and buy."
+          items={bundle.personalized}
+        />
+        <RecommendationRow
+          title="Frequently bought together"
+          subtitle="Shoppers usually add these alongside your picks."
+          items={bundle.frequentlyBoughtTogether}
+        />
+        <RecommendationRow
+          title="Popular near you"
+          subtitle="Trending with Ongole shoppers this week."
+          items={bundle.popular}
+        />
 
         {/* ---------- Combo bundles ---------- */}
         {combos.length > 0 && (
