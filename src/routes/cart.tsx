@@ -3,6 +3,9 @@ import { Header } from "@/components/Header";
 import { useCart, useCatalog } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { Trash2, Plus, Minus, ShoppingBag } from "lucide-react";
+import { useEffect } from "react";
+import { RecommendationRow } from "@/components/RecommendationRow";
+import { useFrequentlyBoughtTogether, useCustomerTracking } from "@/hooks/use-recommendations";
 
 export const Route = createFileRoute("/cart")({
   component: CartPage,
@@ -13,6 +16,9 @@ function CartPage() {
   const { items, setQty, remove, subtotal } = useCart();
   const { products } = useCatalog();
   const nav = useNavigate();
+  const track = useCustomerTracking();
+  const { items: alsoNeed } = useFrequentlyBoughtTogether(items.map(i => i.productId), 4);
+  useEffect(() => { track.trackCartView(); }, [track]);
   const fee = subtotal === 0 ? 0 : subtotal >= 199 ? 0 : 25;
   const total = subtotal + fee;
 
@@ -71,6 +77,15 @@ function CartPage() {
               <button onClick={() => nav({ to: "/checkout" })} className="mt-5 w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90">Proceed to checkout</button>
             </aside>
           </div>
+        )}
+        {items.length > 0 && (
+          <RecommendationRow
+            title="You may also need"
+            subtitle="Often bought with what's in your cart."
+            items={alsoNeed}
+            limit={4}
+            compact
+          />
         )}
       </div>
     </div>

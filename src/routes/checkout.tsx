@@ -2,6 +2,8 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { Header } from "@/components/Header";
 import { useAuth, useCart, useCatalog, useOrders, useLocation, useWallet, buildLocationQuery, type SavedLocation } from "@/lib/store";
+import { ingestOrderFn } from "@/lib/recommendations.functions";
+import { customerEventService } from "@/lib/recommendations.client";
 import { formatINR } from "@/lib/data";
 import { toast } from "sonner";
 import { Banknote, Smartphone, Wallet, MapPin, Plus, Check, Trash2, X, Tag, Pencil, Flame } from "lucide-react";
@@ -20,7 +22,7 @@ export const Route = createFileRoute("/checkout")({
 // preview and the server-side order validation always agree on the same codes.
 
 function CheckoutPage() {
-  const { user, setName: setProfileName } = useAuth();
+  const { user, setName: setProfileName, customerToken } = useAuth();
   const { items, subtotal, clear } = useCart();
   const { products } = useCatalog();
   const { place } = useOrders();
@@ -316,6 +318,11 @@ function CheckoutPage() {
         paymentMethod: payment,
       });
       clear();
+      // Feed the recommendation engine: purchase events, refreshed preferences,
+      // replenishment predictions and co-purchase associations. Idempotent, and
+      // never allowed to block the confirmation.
+      void ingestOrderFn({ data: { token: customerToken ?? "", orderId: order.id } }).catch(() => {});
+      customerEventService.trackOrderPlaced(order.id);
       if (payment === "wallet") void refreshWallet();
       toast.success(`Order ${order.id} placed!`);
       nav({ to: "/orders", search: { open: order.id } });

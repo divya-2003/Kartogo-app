@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ChevronLeft, Home, LayoutGrid, TrendingUp, Printer, Search, Flame, X, Clock } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
 import { useCatalog } from "@/lib/store";
+import { customerEventService } from "@/lib/recommendations.client";
 import { z } from "zod";
 
 const SearchSchema = z.object({ q: z.string().optional().default("") });
@@ -40,6 +41,7 @@ function SearchPage() {
   const rememberSearch = (value: string) => {
     const term = value.trim();
     if (term.length < 2) return;
+    customerEventService.trackSearch(term);
     setRecent(prev => {
       const next = [term, ...prev.filter(t => t.toLowerCase() !== term.toLowerCase())].slice(0, 8);
       try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)); } catch { /* ignore */ }

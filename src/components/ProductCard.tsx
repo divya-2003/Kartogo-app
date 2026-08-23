@@ -7,6 +7,7 @@ import { formatINR } from "@/lib/data";
 import { useCart, useAuth, useWishlist } from "@/lib/store";
 
 import { createStockAlertFn } from "@/lib/stock-alerts.functions";
+import { customerEventService } from "@/lib/recommendations.client";
 
 export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolean }) {
   const { items, add, setQty } = useCart();
@@ -24,11 +25,13 @@ export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolea
     e.preventDefault();
     e.stopPropagation();
     toggle(p.id);
+    customerEventService.trackProductFavorite(p.id, !wished);
     toast.success(wished ? "Removed from wishlist" : "Added to wishlist");
   };
 
   const handleAdd = () => {
     add(p.id);
+    customerEventService.trackAddToCart(p.id);
     if (!user) {
       toast.info("Please login to add items to your cart");
       nav({ to: "/login", search: { redirect: "/" } });
