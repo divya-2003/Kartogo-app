@@ -14,7 +14,7 @@ export function RecommendationRow({
   limit = 8,
   compact,
 }: {
-  title: string;
+  title?: string;
   subtitle?: string;
   items: Recommendation[];
   limit?: number;
@@ -37,7 +37,7 @@ export function RecommendationRow({
 
   return (
     <section className="mt-6">
-      <h2 className="font-display text-xl font-extrabold">{title}</h2>
+      {title ? <h2 className="font-display text-xl font-extrabold">{title}</h2> : null}
       {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}
       <div className={`mt-3 grid gap-3 ${compact ? "grid-cols-2 md:grid-cols-4" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-5"}`}>
         {resolved.map(({ rec, product }) => (
