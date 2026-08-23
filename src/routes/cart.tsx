@@ -78,6 +78,15 @@ function CartPage() {
             </aside>
           </div>
         )}
+        {items.length > 0 && (
+          <RecommendationRow
+            title="You may also need"
+            subtitle="Often bought with what's in your cart."
+            items={alsoNeed}
+            limit={4}
+            compact
+          />
+        )}
       </div>
     </div>
   );
