@@ -5,6 +5,9 @@ import { useCart, useCatalog, useAuth, useWishlist } from "@/lib/store";
 import { formatINR, PRODUCTS } from "@/lib/data";
 import { getProductRatingsFn } from "@/lib/reviews.functions";
 import { Plus, Minus, ShoppingBag, Heart, Star } from "lucide-react";
+import { useEffect, useMemo } from "react";
+import { RecommendationRow } from "@/components/RecommendationRow";
+import { useFrequentlyBoughtTogether, useCustomerTracking } from "@/hooks/use-recommendations";
 
 function Stars({ value, className = "h-4 w-4" }: { value: number; className?: string }) {
   return (
@@ -80,12 +83,20 @@ function ProductPage() {
   const { user } = useAuth();
   const { has, toggle } = useWishlist();
   const nav = useNavigate();
+  const track = useCustomerTracking();
+  const { items: together } = useFrequentlyBoughtTogether(id ? [id] : [], 4);
+  const { products: allProducts } = useCatalog();
+  useEffect(() => { if (p) track.trackProductView(p.id, p.category); }, [p, track]);
+  const addAll = useMemo(() => together
+    .map(r => allProducts.find(x => x.id === r.productId))
+    .filter((x): x is NonNullable<typeof x> => Boolean(x && x.stock > 0)), [together, allProducts]);
   if (!p) throw notFound();
   const inCart = items.find(i => i.productId === p.id);
   const wished = has(p.id);
 
   const handleAdd = () => {
     add(p.id);
+    track.trackAddToCart(p.id);
     if (!user) {
       toast.info("Please login to add items to your cart");
       nav({ to: "/login", search: { redirect: "/" } });
@@ -160,6 +171,26 @@ function ProductPage() {
           </div>
         </div>
 
+        {addAll.length > 0 && (
+          <div className="mt-8">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="font-display text-xl font-extrabold">Frequently bought together</h2>
+                <p className="text-sm text-muted-foreground">Only items currently in stock are shown.</p>
+              </div>
+              <button
+                onClick={() => {
+                  addAll.forEach(x => { add(x.id); track.trackRecommendationAddedToCart(x.id, "FREQUENTLY_BOUGHT_TOGETHER"); });
+                  toast.success(`Added ${addAll.length} item${addAll.length > 1 ? "s" : ""} to cart`);
+                }}
+                className="shrink-0 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90"
+              >
+                Add all to cart
+              </button>
+            </div>
+            <RecommendationRow title="" items={together} limit={4} compact />
+          </div>
+        )}
       </div>
     </div>
   );
