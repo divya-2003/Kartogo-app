@@ -183,7 +183,7 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
     return () => { alive = false; clearInterval(t); };
   }, [blocked, driver.phone, load]);
 
-  }, [blocked, driver.id, load]);
+
 
 
 
