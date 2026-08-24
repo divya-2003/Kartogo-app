@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useAuth, useWallet } from "@/lib/store";
 import { formatINR } from "@/lib/data";
-import { ChevronLeft, Wallet, ArrowDownLeft, ArrowUpRight, CheckCircle2, XCircle } from "lucide-react";
+import { ChevronLeft, Wallet, ArrowDownLeft, ArrowUpRight, CheckCircle2, XCircle, Clock } from "lucide-react";
 
 export const Route = createFileRoute("/wallet")({
   component: WalletPage,
