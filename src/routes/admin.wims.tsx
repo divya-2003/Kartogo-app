@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Boxes, RefreshCw, Plus, AlertTriangle, PackageX, IndianRupee, Radio, Bell } from "lucide-react";
 import { useAuth } from "@/lib/store";
-import { supabase } from "@/integrations/supabase/client";
 import { PRODUCTS } from "@/lib/data";
 import {
   listInventoryFn, upsertInventoryItemFn, adjustStockFn, inventoryDashboardFn,
