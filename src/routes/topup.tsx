@@ -186,15 +186,19 @@ function TopUpPage() {
         {stage === "success" && (
           <div className="mt-4 rounded-2xl border border-border bg-card p-8 text-center shadow-pop">
             <CheckCircle2 className="mx-auto h-14 w-14 text-leaf" />
-            <h1 className="mt-4 font-display text-2xl font-bold">Payment successful</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{formatINR(amt)} has been added to your Kartogo Cash.</p>
-            <div className="mt-2 text-sm">New balance: <span className="font-bold">{formatINR(balance)}</span></div>
+            <h1 className="mt-4 font-display text-2xl font-bold">Payment submitted</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {formatINR(amt)} will be added to your Kartogo Cash as soon as the payment is verified. You can track it
+              in your top-up history.
+            </p>
+            <div className="mt-2 text-sm">Current balance: <span className="font-bold">{formatINR(balance)}</span></div>
             <div className="mt-6 flex gap-2">
               <Link to="/wallet" className="flex-1 rounded-xl border border-border py-3 font-bold hover:bg-secondary">View wallet</Link>
               <button onClick={() => nav({ to: "/" })} className="flex-1 rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90">Done</button>
             </div>
           </div>
         )}
+
 
         {stage === "failed" && (
           <div className="mt-4 rounded-2xl border border-border bg-card p-8 text-center shadow-pop">
