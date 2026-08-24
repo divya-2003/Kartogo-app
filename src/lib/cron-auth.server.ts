@@ -1,9 +1,8 @@
 // Server-only auth for scheduled/public webhook endpoints.
 //
-// Callers (the database scheduler) must present the project key either as an
-// `apikey` header or as `Authorization: Bearer <key>`. Comparison is
-// length-checked and constant-time so the endpoint can't be probed, and an
-// optional `CRON_SECRET` header check can be layered on top when set.
+// Callers (the database scheduler) MUST present the server-only `CRON_SECRET`
+// in the `x-cron-secret` header. The public anon/publishable key is NOT
+// accepted — it ships in every browser bundle and is not a secret.
 import { timingSafeEqual } from "node:crypto";
 
 function safeEqual(a: string, b: string): boolean {
@@ -15,18 +14,13 @@ function safeEqual(a: string, b: string): boolean {
 
 /** Returns null when authorised, or a 401 Response when not. */
 export function verifyCronRequest(request: Request): Response | null {
-  const expected = process.env.SUPABASE_ANON_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? "";
-  if (!expected) return new Response("Unauthorized", { status: 401 });
+  const cronSecret = process.env.CRON_SECRET?.trim() ?? "";
+  // Fail closed: without a configured server-only secret nothing is authorised.
+  if (!cronSecret) return new Response("Unauthorized", { status: 401 });
 
+  const header = (request.headers.get("x-cron-secret") ?? "").trim();
   const bearer = (request.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "").trim();
-  const apikey = (request.headers.get("apikey") ?? "").trim();
-  if (!safeEqual(apikey, expected) && !safeEqual(bearer, expected)) {
-    return new Response("Unauthorized", { status: 401 });
-  }
-
-  // Optional second factor: when CRON_SECRET is configured it must also match.
-  const cronSecret = process.env.CRON_SECRET?.trim();
-  if (cronSecret && !safeEqual((request.headers.get("x-cron-secret") ?? "").trim(), cronSecret)) {
+  if (!safeEqual(header, cronSecret) && !safeEqual(bearer, cronSecret)) {
     return new Response("Unauthorized", { status: 401 });
   }
 
