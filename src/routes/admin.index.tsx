@@ -4,6 +4,7 @@ import { useCatalog, useOrders, useAuth } from "@/lib/store";
 import type { Order } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { PendingTopups } from "@/components/PendingTopups";
 import { StaffAccountCard } from "@/components/StaffAccountCard";
 import { IndianRupee, ShoppingBag, AlertTriangle, Truck, ShieldCheck } from "lucide-react";
 
@@ -108,7 +109,7 @@ function Dashboard() {
         <Stat icon={<IndianRupee className="h-5 w-5" />} label="This year's revenue" value={formatINR(yearlyRevenue)} accent onClick={() => setOpenPeriod("year")} />
       </div>
 
-
+      <PendingTopups />
 
       <Dialog open={openPeriod !== null} onOpenChange={(o) => !o && setOpenPeriod(null)}>
         <DialogContent className="max-w-md">

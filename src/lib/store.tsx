@@ -394,7 +394,7 @@ export type WalletTxn = {
   /** When the credit was expired and offset by the system. */
   expiredAt: number | null;
 };
-export type WalletTopup = { id: string; amount: number; status: "success" | "failed"; at: number };
+export type WalletTopup = { id: string; amount: number; status: "pending" | "success" | "failed"; at: number };
 type WalletCtx = {
   balance: number;
   txns: WalletTxn[];

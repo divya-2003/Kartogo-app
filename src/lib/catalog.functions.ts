@@ -26,16 +26,55 @@ const num = (v: unknown): number => {
   return Number.isFinite(n) ? n : 0;
 };
 
-async function authorize(supplierToken: string, adminToken: string): Promise<{ source: "supplier" | "admin" } | null> {
+type Who = { source: "supplier" | "admin"; categories: string[] | null };
+
+async function authorize(supplierToken: string, adminToken: string): Promise<Who | null> {
   if (adminToken) {
     const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (verifyAdminToken(adminToken)) return { source: "admin" };
+    if (verifyAdminToken(adminToken)) return { source: "admin", categories: null };
   }
   if (supplierToken) {
     const { verifySupplierToken } = await import("./auth-tokens.server");
-    if (verifySupplierToken(supplierToken)) return { source: "supplier" };
+    const s = verifySupplierToken(supplierToken);
+    if (s) {
+      const { findSupplierById } = await import("./suppliers");
+      const sup = findSupplierById(s.supplierId);
+      return { source: "supplier", categories: sup?.categories ?? [] };
+    }
   }
   return null;
+}
+
+/** Current category of a catalog product (seed catalog + supplier-added items). */
+async function categoryOf(productId: string): Promise<string | null> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("catalog_items")
+    .select("category")
+    .eq("id", productId)
+    .maybeSingle();
+  if (data?.category) return String(data.category);
+  const { PRODUCTS } = await import("./data");
+  return PRODUCTS.find((p) => p.id === productId)?.category ?? null;
+}
+
+/**
+ * A supplier may only touch products inside the categories they own. Admins are
+ * unrestricted. Brand-new items must be created inside an owned category.
+ */
+async function assertCanTouch(who: Who, productId: string, nextCategory?: string) {
+  if (who.source === "admin") return;
+  const owned = who.categories ?? [];
+  const current = await categoryOf(productId);
+  if (current && !owned.includes(current)) {
+    throw new Error("This product is outside your supplier categories");
+  }
+  if (nextCategory && !owned.includes(nextCategory)) {
+    throw new Error("You can only manage products in your own categories");
+  }
+  if (!current && !nextCategory) {
+    throw new Error("This product is outside your supplier categories");
+  }
 }
 
 // When an item comes back into stock, close out the "Notify me" restock
@@ -103,6 +142,7 @@ export const upsertCatalogItemFn = createServerFn({ method: "POST" })
     if (!who) throw new Error("Not authorized to edit the catalog");
     if (!data.id) throw new Error("Item id required");
     if (!data.name) throw new Error("Item name required");
+    await assertCanTouch(who, data.id, data.category || "snacks");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("catalog_items").upsert({
       id: data.id,
@@ -137,6 +177,7 @@ export const deleteCatalogItemFn = createServerFn({ method: "POST" })
     const who = await authorize(data.supplierToken, data.adminToken);
     if (!who) throw new Error("Not authorized to edit the catalog");
     if (!data.id) throw new Error("Item id required");
+    await assertCanTouch(who, data.id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     // Soft delete: the row stays in the suppliers' database, flagged as deleted
     // with the timestamp and who removed it, so history and audits survive.
@@ -171,6 +212,7 @@ export const setCatalogPriceFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const who = await authorize(data.supplierToken, data.adminToken);
     if (!who) throw new Error("Not authorized");
+    await assertCanTouch(who, data.id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("catalog_items").update({ price: data.price }).eq("id", data.id);
     if (error) throw new Error("Could not update price");
@@ -187,6 +229,7 @@ export const setCatalogStockFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const who = await authorize(data.supplierToken, data.adminToken);
     if (!who) throw new Error("Not authorized");
+    await assertCanTouch(who, data.id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("catalog_items").update({ stock: data.stock }).eq("id", data.id);
     if (error) throw new Error("Could not update stock");

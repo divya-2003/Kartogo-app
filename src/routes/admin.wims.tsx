@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Boxes, RefreshCw, Plus, AlertTriangle, PackageX, IndianRupee, Radio, Bell } from "lucide-react";
 import { useAuth } from "@/lib/store";
-import { supabase } from "@/integrations/supabase/client";
 import { PRODUCTS } from "@/lib/data";
 import {
   listInventoryFn, upsertInventoryItemFn, adjustStockFn, inventoryDashboardFn,
@@ -79,14 +78,12 @@ function WimsPage() {
 
   useEffect(() => { void load(); }, [load]);
 
-  // Live inventory — any stock change anywhere refreshes this screen instantly.
+  // Near-live inventory: refresh on a short timer. Stock tables are not exposed
+  // to browser realtime, so nothing sensitive is streamed to clients.
   useEffect(() => {
-    const channel = supabase
-      .channel("wims-admin")
-      .on("postgres_changes", { event: "*", schema: "public", table: "inventory_items" }, () => { void load(); })
-      .on("postgres_changes", { event: "*", schema: "public", table: "inventory_alerts" }, () => { void load(); })
-      .subscribe((status) => setLive(status === "SUBSCRIBED"));
-    return () => { void supabase.removeChannel(channel); };
+    setLive(true);
+    const t = setInterval(() => { void load(); }, 15000);
+    return () => { setLive(false); clearInterval(t); };
   }, [load]);
 
   const productOptions = useMemo(() => PRODUCTS.map((p) => ({ id: p.id, name: p.name, price: p.price })), []);

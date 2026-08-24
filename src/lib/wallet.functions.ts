@@ -18,7 +18,7 @@ export type WalletTxnRow = {
 export type TopupRow = {
   id: string;
   amount: number;
-  status: "success" | "failed";
+  status: "pending" | "success" | "failed";
   created_at: string;
 };
 
@@ -76,16 +76,21 @@ export const getTopupsFn = createServerFn({ method: "POST" })
     return { topups: await loadTopups(session.phone) };
   });
 
-// ---------------- Top up money (token-scoped, server-side credit) ----------------
-// NOTE: In production this must be gated behind a real payment gateway callback.
-// The key security property fixed here is that the balance is server state — a
-// client can no longer simply write a number into localStorage to pay for free.
+// ---------------- Request a top up (token-scoped, NO automatic credit) ----------------
+// SECURITY: The client can no longer credit its own wallet. A top-up is only
+// recorded as `pending` here; Kartogo Cash is added exclusively by
+// `confirmWalletTopupFn`, which requires a verified payment (admin review today,
+// a signature-verified PSP callback when the gateway is wired in).
 export const addMoneyFn = createServerFn({ method: "POST" })
-  .inputValidator((data: { token?: string; amount: number }) => {
+  .inputValidator((data: { token?: string; amount: number; reference?: string }) => {
     const amount = Math.round(Number(data?.amount) || 0);
     if (amount <= 0) throw new Error("Enter a valid amount");
     if (amount > 100000) throw new Error("Amount is too large");
-    return { token: data?.token ? String(data.token) : "", amount };
+    return {
+      token: data?.token ? String(data.token) : "",
+      amount,
+      reference: data?.reference ? String(data.reference).trim().slice(0, 120) : "",
+    };
   })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -94,28 +99,86 @@ export const addMoneyFn = createServerFn({ method: "POST" })
     const session = verifyCustomerToken(data.token);
     if (!session) throw new Error("Please log in to add money");
 
-    const { error } = await supabaseAdmin.rpc("adjust_wallet", {
-      p_phone: session.phone,
-      p_amount: data.amount,
-      p_type: "credit",
-      p_note: "Added to wallet",
-    });
+    const { error } = await supabaseAdmin
+      .from("wallet_topups")
+      .insert({ phone: session.phone, amount: data.amount, status: "pending", reference: data.reference || null });
     if (error) {
-      console.error("Failed to top up wallet", error);
-      // Record the failed attempt so the customer sees it in their history.
-      await supabaseAdmin
-        .from("wallet_topups")
-        .insert({ phone: session.phone, amount: data.amount, status: "failed" });
-      throw new Error("Could not add money. Please try again.");
+      console.error("Failed to record top-up request", error);
+      throw new Error("Could not submit your top-up. Please try again.");
     }
 
-    // Record the successful top-up for history.
-    await supabaseAdmin
-      .from("wallet_topups")
-      .insert({ phone: session.phone, amount: data.amount, status: "success" });
-
     const wallet = await loadWallet(session.phone);
-    return { ...wallet, topups: await loadTopups(session.phone) };
+    return { ...wallet, topups: await loadTopups(session.phone), pending: true };
+  });
+
+// ---------------- Confirm a top-up (payment verified) ----------------
+// Credits Kartogo Cash only once a human/admin (or, later, a signature-verified
+// payment gateway callback) has confirmed the money actually arrived.
+export const confirmWalletTopupFn = createServerFn({ method: "POST" })
+  .inputValidator((data: { adminToken?: string; topupId?: string; approve?: boolean }) => ({
+    adminToken: data?.adminToken ? String(data.adminToken) : "",
+    topupId: String(data?.topupId ?? "").trim().slice(0, 60),
+    approve: data?.approve !== false,
+  }))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { verifyAdminToken } = await import("./auth-tokens.server");
+    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    if (!data.topupId) throw new Error("Top-up id required");
+
+    const { data: row } = await supabaseAdmin
+      .from("wallet_topups")
+      .select("id, phone, amount, status")
+      .eq("id", data.topupId)
+      .maybeSingle();
+    if (!row || row.status !== "pending") throw new Error("This top-up is no longer pending");
+
+    if (!data.approve) {
+      await supabaseAdmin
+        .from("wallet_topups")
+        .update({ status: "failed", reviewed_at: new Date().toISOString(), reviewed_by: "admin" })
+        .eq("id", row.id)
+        .eq("status", "pending");
+      return { ok: true, credited: false };
+    }
+
+    // Flip to success first so a double click can never credit twice.
+    const { data: claimed } = await supabaseAdmin
+      .from("wallet_topups")
+      .update({ status: "success", reviewed_at: new Date().toISOString(), reviewed_by: "admin" })
+      .eq("id", row.id)
+      .eq("status", "pending")
+      .select("id");
+    if (!claimed || claimed.length === 0) throw new Error("This top-up is no longer pending");
+
+    const { error } = await supabaseAdmin.rpc("adjust_wallet", {
+      p_phone: row.phone as string,
+      p_amount: Number(row.amount),
+      p_type: "credit",
+      p_note: "Wallet top-up (payment verified)",
+    });
+    if (error) {
+      console.error("Failed to credit verified top-up", error);
+      await supabaseAdmin.from("wallet_topups").update({ status: "pending" }).eq("id", row.id);
+      throw new Error("Could not credit the wallet. Please try again.");
+    }
+    return { ok: true, credited: true };
+  });
+
+// ---------------- Admin: list pending top-ups ----------------
+export const listPendingTopupsFn = createServerFn({ method: "POST" })
+  .inputValidator((data: { adminToken?: string }) => ({ adminToken: data?.adminToken ? String(data.adminToken) : "" }))
+  .handler(async ({ data }) => {
+    const { verifyAdminToken } = await import("./auth-tokens.server");
+    if (!verifyAdminToken(data.adminToken)) return { topups: [] as (TopupRow & { phone: string })[] };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows } = await supabaseAdmin
+      .from("wallet_topups")
+      .select("id, phone, amount, status, created_at")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(100);
+    return { topups: (rows ?? []) as (TopupRow & { phone: string })[] };
   });
 
 // ---------------- Record a failed / cancelled top-up (token-scoped) ----------------
