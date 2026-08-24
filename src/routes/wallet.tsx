@@ -108,24 +108,28 @@ function WalletPage() {
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-pop">
             {topups.map((t, i) => {
               const ok = t.status === "success";
+              const pending = t.status === "pending";
+              const tone = ok ? "bg-leaf/15 text-leaf" : pending ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive";
+              const label = ok ? "Top-up successful" : pending ? "Awaiting payment verification" : "Top-up failed";
               return (
                 <div
                   key={t.id}
                   className={`flex items-center gap-3 p-4 ${i < topups.length - 1 ? "border-b border-border" : ""}`}
                 >
-                  <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${ok ? "bg-leaf/15 text-leaf" : "bg-destructive/10 text-destructive"}`}>
-                    {ok ? <CheckCircle2 className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
+                  <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${tone}`}>
+                    {ok ? <CheckCircle2 className="h-5 w-5" /> : pending ? <Clock className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-semibold">{ok ? "Top-up successful" : "Top-up failed"}</div>
+                    <div className="truncate text-sm font-semibold">{label}</div>
                     <div className="text-xs text-muted-foreground">{formatWhen(t.at)}</div>
                   </div>
-                  <div className={`shrink-0 font-display text-base font-bold ${ok ? "text-leaf" : "text-muted-foreground line-through"}`}>
+                  <div className={`shrink-0 font-display text-base font-bold ${ok ? "text-leaf" : pending ? "" : "text-muted-foreground line-through"}`}>
                     {formatINR(t.amount)}
                   </div>
                 </div>
               );
             })}
+
           </div>
         )}
       </div>
