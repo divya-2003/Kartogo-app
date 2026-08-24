@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth, useCart } from "@/lib/store";
-import { customerEventService } from "@/lib/recommendations.client";
+import { customerEventService } from "@/lib/recommendations.tracking";
 import {
   getRecommendationsFn,
   getFrequentlyBoughtTogetherFn,

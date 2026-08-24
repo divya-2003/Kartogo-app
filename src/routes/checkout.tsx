@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Header } from "@/components/Header";
 import { useAuth, useCart, useCatalog, useOrders, useLocation, useWallet, buildLocationQuery, type SavedLocation } from "@/lib/store";
 import { ingestOrderFn } from "@/lib/recommendations.functions";
-import { customerEventService } from "@/lib/recommendations.client";
+import { customerEventService } from "@/lib/recommendations.tracking";
 import { formatINR } from "@/lib/data";
 import { toast } from "sonner";
 import { Banknote, Smartphone, Wallet, MapPin, Plus, Check, Trash2, X, Tag, Pencil, Flame } from "lucide-react";

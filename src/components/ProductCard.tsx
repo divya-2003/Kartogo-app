@@ -7,7 +7,7 @@ import { formatINR } from "@/lib/data";
 import { useCart, useAuth, useWishlist } from "@/lib/store";
 
 import { createStockAlertFn } from "@/lib/stock-alerts.functions";
-import { customerEventService } from "@/lib/recommendations.client";
+import { customerEventService } from "@/lib/recommendations.tracking";
 
 export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolean }) {
   const { items, add, setQty } = useCart();
