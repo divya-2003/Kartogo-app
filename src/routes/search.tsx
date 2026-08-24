@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { ChevronLeft, Home, LayoutGrid, TrendingUp, Printer, Search, Flame, X, Clock } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
 import { useCatalog } from "@/lib/store";
-import { customerEventService } from "@/lib/recommendations.client";
+import { customerEventService } from "@/lib/recommendations.tracking";
 import { z } from "zod";
 
 const SearchSchema = z.object({ q: z.string().optional().default("") });
