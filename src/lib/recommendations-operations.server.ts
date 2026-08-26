@@ -1,4 +1,4 @@
-import { EVENT_TYPES, cleanString, type TrackInput } from "./recommendations.shared";
+import { EVENT_TYPES, cleanString } from "./recommendations.shared";
 
 type SanitizedEvent = ReturnType<typeof import("./recommendations.shared").validateTrackInput>["events"][number];
 
@@ -146,5 +146,3 @@ export async function rebuildAll() {
   for (const phone of phones) await recomputeCustomer(phone);
   return { pairs, customers: phones.length };
 }
-
-export type { TrackInput };
