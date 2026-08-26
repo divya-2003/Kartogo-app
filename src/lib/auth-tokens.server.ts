@@ -49,7 +49,7 @@ export function verifyCustomerToken(token?: string): { phone: string } | null {
 
 // ---- Admin tokens ----
 export function issueAdminToken(userId?: string): string {
-  return sign({ admin: true, userId: userId ?? null, exp: Date.now() + DAY }, adminSecret());
+  return sign({ admin: true, userId: userId ?? null, exp: Date.now() + 30 * DAY }, adminSecret());
 }
 export function verifyAdminToken(token?: string): boolean {
   const data = verify(token, adminSecret());

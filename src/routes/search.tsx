@@ -4,6 +4,8 @@ import { ChevronLeft, Home, LayoutGrid, TrendingUp, Printer, Search, Flame, X, C
 import { ProductCard } from "@/components/ProductCard";
 import { useCatalog } from "@/lib/store";
 import { customerEventService } from "@/lib/recommendations.tracking";
+import { rankProducts } from "@/lib/search-rank";
+import { useTypewriterPlaceholder } from "@/hooks/use-typewriter";
 import { z } from "zod";
 
 const SearchSchema = z.object({ q: z.string().optional().default("") });
@@ -20,6 +22,7 @@ export const Route = createFileRoute("/search")({
 });
 
 const RECENT_KEY = "qk_recent_searches";
+const SEARCH_TERMS = ["avakaya", "maggi", "agarbatti", "milk", "bread", "paneer"];
 
 function SearchPage() {
   const { q } = Route.useSearch();
@@ -27,6 +30,7 @@ function SearchPage() {
   const nav = useNavigate();
   const [input, setInput] = useState(q ?? "");
   const [recent, setRecent] = useState<string[]>([]);
+  const typed = useTypewriterPlaceholder(SEARCH_TERMS);
 
   // Recent searches live on the device so the search page opens with the
   // customer's own shortcuts.
@@ -61,13 +65,7 @@ function SearchPage() {
   useEffect(() => { setInput(q ?? ""); }, [q]);
 
   const query = q.trim().toLowerCase();
-  const results = query
-    ? products.filter(p =>
-        p.name.toLowerCase().includes(query) ||
-        p.category.toLowerCase().includes(query) ||
-        p.description.toLowerCase().includes(query),
-      )
-    : [];
+  const results = rankProducts(products, query);
 
   // Trending = hottest deals first (biggest discount %), then best-sellers fill the grid
   const bestsellerIds = new Set(products.slice(0, 10).map(p => p.id));
@@ -99,7 +97,7 @@ function SearchPage() {
               <input
                 value={input}
                 onChange={(e) => submitSearch(e.target.value)}
-                placeholder='Search for "avakaya"'
+                placeholder={typed ? `Search "${typed}"` : "Search for products"}
                 className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                 onBlur={() => rememberSearch(input)}
                 aria-label="Search products"
