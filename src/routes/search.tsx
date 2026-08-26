@@ -129,7 +129,7 @@ function SearchPage() {
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5">
-                {results.map(p => <ProductCard key={p.id} p={p} />)}
+                {results.map(p => <ProductCard key={p.id} p={p} onProductOpen={(productId) => customerEventService.trackSearch(q, productId)} />)}
               </div>
             )}
           </>
