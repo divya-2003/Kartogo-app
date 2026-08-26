@@ -42,7 +42,7 @@ export function RecommendationRow({
       <div className={`mt-3 grid gap-3 ${compact ? "grid-cols-2 md:grid-cols-4" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-5"}`}>
         {resolved.map(({ rec, product }) => (
           <div key={`${rec.type}-${rec.productId}`} onClickCapture={() => onClick(rec)}>
-            <ProductCard p={product} />
+            <ProductCard p={product} recommendationType={rec.type} />
             <p className="mt-1 px-1 text-[11px] font-semibold text-muted-foreground">{rec.reason}</p>
           </div>
         ))}

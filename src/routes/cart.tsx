@@ -50,12 +50,12 @@ function CartPage() {
                       </div>
                       <div className="flex items-center justify-between gap-2 sm:justify-end sm:gap-3">
                         <div className="flex shrink-0 items-center gap-1 rounded-lg border border-border">
-                          <button aria-label={`Decrease quantity of ${p.name}`} onClick={() => setQty(p.id, i.qty - 1)} className="grid h-8 w-8 place-items-center hover:bg-secondary"><Minus className="h-3 w-3" /></button>
+                          <button aria-label={`Decrease quantity of ${p.name}`} onClick={() => { setQty(p.id, i.qty - 1); if (i.qty === 1) track.trackRemoveFromCart(p.id); }} className="grid h-8 w-8 place-items-center hover:bg-secondary"><Minus className="h-3 w-3" /></button>
                           <span className="min-w-6 text-center text-sm font-bold">{i.qty}</span>
                           <button aria-label={`Increase quantity of ${p.name}`} onClick={() => setQty(p.id, i.qty + 1)} className="grid h-8 w-8 place-items-center hover:bg-secondary"><Plus className="h-3 w-3" /></button>
                         </div>
                         <div className="shrink-0 whitespace-nowrap text-right font-bold sm:w-20">{formatINR(p.price * i.qty)}</div>
-                        <button onClick={() => remove(p.id)} className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+                        <button onClick={() => { remove(p.id); track.trackRemoveFromCart(p.id); }} aria-label={`Remove ${p.name} from cart`} className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
                       </div>
                     </div>
                   </div>

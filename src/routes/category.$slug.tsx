@@ -3,6 +3,8 @@ import { Header } from "@/components/Header";
 import { ProductCard } from "@/components/ProductCard";
 import { CATEGORIES } from "@/lib/data";
 import { useCatalog } from "@/lib/store";
+import { useEffect } from "react";
+import { useCustomerTracking } from "@/hooks/use-recommendations";
 
 export const Route = createFileRoute("/category/$slug")({
   loader: ({ params }) => {
@@ -24,7 +26,9 @@ export const Route = createFileRoute("/category/$slug")({
 function CategoryPage() {
   const { cat } = Route.useLoaderData();
   const { products } = useCatalog();
+  const track = useCustomerTracking();
   const list = products.filter(p => p.category === cat.slug);
+  useEffect(() => { track.trackCategoryViewed(cat.slug); }, [cat.slug, track]);
   return (
     <div className="min-h-screen bg-background">
       <Header />

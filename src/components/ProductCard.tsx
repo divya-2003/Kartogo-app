@@ -9,7 +9,12 @@ import { useCart, useAuth, useWishlist } from "@/lib/store";
 import { createStockAlertFn } from "@/lib/stock-alerts.functions";
 import { customerEventService } from "@/lib/recommendations.tracking";
 
-export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolean }) {
+export function ProductCard({ p, bestseller, recommendationType, onProductOpen }: {
+  p: Product;
+  bestseller?: boolean;
+  recommendationType?: string;
+  onProductOpen?: (productId: string) => void;
+}) {
   const { items, add, setQty } = useCart();
   const { user } = useAuth();
   const { has, toggle } = useWishlist();
@@ -32,6 +37,7 @@ export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolea
   const handleAdd = () => {
     add(p.id);
     customerEventService.trackAddToCart(p.id);
+    if (recommendationType) customerEventService.trackRecommendationAddedToCart(p.id, recommendationType);
     if (!user) {
       toast.info("Please login to add items to your cart");
       nav({ to: "/login", search: { redirect: "/" } });
@@ -61,7 +67,7 @@ export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolea
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:shadow-pop">
-      <Link to="/product/$id" params={{ id: p.id }} className="relative grid aspect-square place-items-center overflow-hidden bg-cream bg-grain">
+      <Link onClick={() => onProductOpen?.(p.id)} to="/product/$id" params={{ id: p.id }} className="relative grid aspect-square place-items-center overflow-hidden bg-cream bg-grain">
         {p.image ? (
           <img src={p.image} alt={p.name} loading="lazy" width={768} height={768} className="h-full w-full object-cover transition group-hover:scale-105" />
         ) : (
@@ -92,7 +98,7 @@ export function ProductCard({ p, bestseller }: { p: Product; bestseller?: boolea
         </button>
       </Link>
       <div className="flex flex-1 flex-col gap-1 p-3">
-        <Link to="/product/$id" params={{ id: p.id }} className="line-clamp-2 text-sm font-semibold leading-snug hover:text-primary">
+        <Link onClick={() => onProductOpen?.(p.id)} to="/product/$id" params={{ id: p.id }} className="line-clamp-2 text-sm font-semibold leading-snug hover:text-primary">
           {p.name}
         </Link>
         <div className="text-xs text-muted-foreground">{p.unit}</div>
