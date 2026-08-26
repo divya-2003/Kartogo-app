@@ -12,14 +12,28 @@ export const Route = createFileRoute("/admin")({
     let token: string | null = null;
     try { token = JSON.parse(localStorage.getItem("qk_admin_token") || "null"); } catch { token = null; }
     if (!token) throw redirect({ to: "/login" });
+
+    // Verify at most once every 10 minutes and keep the result in memory, so
+    // navigating inside the admin area never waits on a network round-trip.
+    const now = Date.now();
+    if (adminSessionCache.token === token && now - adminSessionCache.checkedAt < 10 * 60_000) return;
+
     try {
       const { valid } = await verifyAdminTokenFn({ data: { token } });
-      if (!valid) throw redirect({ to: "/login" });
+      // Only a definitive "invalid" logs the admin out. A network/server hiccup
+      // must never bounce them to the login screen mid-work.
+      if (!valid) {
+        adminSessionCache.token = null;
+        throw redirect({ to: "/login" });
+      }
+      adminSessionCache.token = token;
+      adminSessionCache.checkedAt = now;
     } catch (e) {
       if (isRedirect(e)) throw e;
-      throw redirect({ to: "/login" });
+      // keep the session; retry on the next navigation
     }
   },
+
   component: AdminLayout,
   head: () => ({ meta: [{ title: "Admin — Kartogo" }] }),
 });

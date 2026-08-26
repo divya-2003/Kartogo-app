@@ -3,6 +3,8 @@ import { createPortal } from "react-dom";
 import { useNavigate, Link } from "@tanstack/react-router";
 import { Search, X, ArrowRight } from "lucide-react";
 import { useCatalog } from "@/lib/store";
+import { rankProducts } from "@/lib/search-rank";
+import { useTypewriterPlaceholder } from "@/hooks/use-typewriter";
 
 const SUGGESTIONS = ["avakaya", "maggi", "agarbatti", "batter", "coffee", "tea"];
 
@@ -10,6 +12,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
   const { products } = useCatalog();
   const nav = useNavigate();
   const [q, setQ] = useState("");
+  const typed = useTypewriterPlaceholder(SUGGESTIONS);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -34,11 +37,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
   const query = q.trim().toLowerCase();
   const results = useMemo(() => {
     if (!query) return [];
-    return products.filter(p =>
-      p.name.toLowerCase().includes(query) ||
-      p.category.toLowerCase().includes(query) ||
-      p.description.toLowerCase().includes(query)
-    ).slice(0, 12);
+    return rankProducts(products, query).slice(0, 12);
   }, [products, query]);
 
   const submit = (term?: string) => {
@@ -64,7 +63,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
               ref={inputRef}
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search for products, categories…"
+              placeholder={typed ? `Search "${typed}"` : "Search for products, categories…"}
               className="w-full bg-transparent text-base outline-none placeholder:text-muted-foreground"
             />
             {q && (
