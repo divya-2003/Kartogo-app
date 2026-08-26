@@ -3,7 +3,7 @@
 // them to the server every couple of seconds.
 
 import { trackCustomerEventsFn } from "./recommendations.functions";
-import type { CustomerEventType } from "./recommendations.functions";
+import type { CustomerEventType } from "./recommendations.shared";
 
 type QueuedEvent = {
   eventType: CustomerEventType;
@@ -16,6 +16,7 @@ type QueuedEvent = {
 
 const SESSION_KEY = "qk_rec_session";
 const TOKEN_KEY = "qk_customer_token";
+const RECOMMENDATION_CART_KEY = "qk_rec_cart_products";
 
 function readStore(key: string): string | null {
   if (typeof window === "undefined") return null;
@@ -40,6 +41,30 @@ export function getSessionId(): string {
 
 function getToken(): string {
   return readStore(TOKEN_KEY) ?? "";
+}
+
+function rememberRecommendationCartProduct(productId: string) {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = window.localStorage.getItem(RECOMMENDATION_CART_KEY);
+    const existing = raw ? JSON.parse(raw) as unknown : [];
+    const ids = Array.isArray(existing) ? existing.filter((id): id is string => typeof id === "string") : [];
+    window.localStorage.setItem(RECOMMENDATION_CART_KEY, JSON.stringify([...new Set([...ids, productId])].slice(-50)));
+  } catch { /* attribution must not affect shopping */ }
+}
+
+export function getRecommendationCartProductIds(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(RECOMMENDATION_CART_KEY);
+    const parsed = raw ? JSON.parse(raw) as unknown : [];
+    return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string").slice(-50) : [];
+  } catch { return []; }
+}
+
+export function clearRecommendationCartProductIds() {
+  if (typeof window === "undefined") return;
+  try { window.localStorage.removeItem(RECOMMENDATION_CART_KEY); } catch { /* noop */ }
 }
 
 let queue: QueuedEvent[] = [];
@@ -98,7 +123,10 @@ export const customerEventService = {
   trackRecommendationClicked: (productId: string, type: string) =>
     trackEvent({ eventType: "RECOMMENDATION_CLICKED", productId, metadata: { type } }, { dedupeMs: 1000 }),
   trackRecommendationAddedToCart: (productId: string, type: string) =>
-    trackEvent({ eventType: "RECOMMENDATION_ADDED_TO_CART", productId, metadata: { type } }, { dedupeMs: 1000 }),
+    (rememberRecommendationCartProduct(productId),
+    trackEvent({ eventType: "RECOMMENDATION_ADDED_TO_CART", productId, metadata: { type } }, { dedupeMs: 1000 })),
+  trackRecommendationPurchased: (productId: string, orderId: string) =>
+    trackEvent({ eventType: "RECOMMENDATION_PURCHASED", productId, orderId }, { dedupeMs: 600_000 }),
 };
 
 export type CustomerEventService = typeof customerEventService;

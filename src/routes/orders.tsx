@@ -37,6 +37,7 @@ import { listMySubstitutionsFn, respondSubstitutionFn, type OrderSubstitution } 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { customerEventService } from "@/lib/recommendations.tracking";
 
 export const Route = createFileRoute("/orders")({
   component: OrdersPage,
@@ -120,6 +121,7 @@ function OrdersPage() {
       // and reverses any Kartogo Cash payment back into the wallet itself. The
       // client only refreshes its view of the authoritative balance.
       const cancelled = await cancel(o.id, reason);
+      customerEventService.trackOrderCancelled(o.id);
       if (o.paymentMethod === "wallet" && o.total > 0 && cancelled.refunded) {
         void refreshWallet();
         toast.success(`Order cancelled · ${formatINR(o.total)} refunded to Kartogo Cash`);

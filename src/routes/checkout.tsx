@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Header } from "@/components/Header";
 import { useAuth, useCart, useCatalog, useOrders, useLocation, useWallet, buildLocationQuery, type SavedLocation } from "@/lib/store";
 import { ingestOrderFn } from "@/lib/recommendations.functions";
-import { customerEventService } from "@/lib/recommendations.tracking";
+import { clearRecommendationCartProductIds, customerEventService, getRecommendationCartProductIds } from "@/lib/recommendations.tracking";
 import { formatINR } from "@/lib/data";
 import { toast } from "sonner";
 import { Banknote, Smartphone, Wallet, MapPin, Plus, Check, Trash2, X, Tag, Pencil, Flame } from "lucide-react";
@@ -29,6 +29,8 @@ function CheckoutPage() {
   const { location, savedAddresses, deliveryAddresses, addDeliveryAddress, removeDeliveryAddress, removeSavedAddress, updateSavedAddress } = useLocation();
   const { balance: walletBalance, refresh: refreshWallet } = useWallet();
   const nav = useNavigate();
+
+  useEffect(() => { customerEventService.trackCheckoutStarted(); }, []);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -303,6 +305,7 @@ function CheckoutPage() {
       toast.error(`Not enough wallet balance. Add ${formatINR(total - walletBalance)} more.`);
       return;
     }
+    customerEventService.trackPaymentStarted();
     setPlacing(true);
     try {
       // Only raw items + address are sent. The server recomputes subtotal,
@@ -321,7 +324,10 @@ function CheckoutPage() {
       // Feed the recommendation engine: purchase events, refreshed preferences,
       // replenishment predictions and co-purchase associations. Idempotent, and
       // never allowed to block the confirmation.
-      void ingestOrderFn({ data: { token: customerToken ?? "", orderId: order.id } }).catch(() => {});
+      const recommendationProductIds = getRecommendationCartProductIds();
+      void ingestOrderFn({ data: { token: customerToken ?? "", orderId: order.id, recommendationProductIds } })
+        .then((result) => { if (result.ok) clearRecommendationCartProductIds(); })
+        .catch(() => {});
       customerEventService.trackOrderPlaced(order.id);
       if (payment === "wallet") void refreshWallet();
       toast.success(`Order ${order.id} placed!`);
