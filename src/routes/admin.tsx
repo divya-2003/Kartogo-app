@@ -6,7 +6,12 @@ import { verifyAdminTokenFn } from "@/lib/auth.functions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Sparkles, LayoutDashboard, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Menu, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound, BellRing } from "lucide-react";
 
+// Remembers the last successful admin-token verification for this tab so the
+// admin area doesn't re-hit the server on every single navigation.
+const adminSessionCache: { token: string | null; checkedAt: number } = { token: null, checkedAt: 0 };
+
 export const Route = createFileRoute("/admin")({
+
   beforeLoad: async () => {
     if (typeof window === "undefined") return;
     let token: string | null = null;
