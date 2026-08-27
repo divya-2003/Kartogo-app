@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { LogOut, ShieldCheck } from "lucide-react";
 import { StaffAccountCard } from "@/components/StaffAccountCard";
 import { useAuth } from "@/lib/store";
@@ -20,6 +20,13 @@ export const Route = createFileRoute("/admin/account")({
 
 function AdminAccount() {
   const { logout } = useAuth();
+  const navigate = useNavigate();
+  // Log out AND leave the admin area — otherwise the guarded layout stays
+  // mounted and the button looks like it did nothing.
+  const handleLogout = () => {
+    logout();
+    void navigate({ to: "/login", replace: true });
+  };
   return (
     <div className="space-y-5">
       <div>
@@ -38,7 +45,7 @@ function AdminAccount() {
       <StaffAccountCard role="admin" />
 
       <button
-        onClick={logout}
+        onClick={handleLogout}
         className="flex w-full items-center justify-center gap-2 rounded-2xl border border-destructive/40 bg-destructive/5 py-3 text-sm font-bold text-destructive hover:bg-destructive/10"
       >
         <LogOut className="h-4 w-4" /> Log out
