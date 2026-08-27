@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, Home, LayoutGrid, TrendingUp, Printer, Search, Flame, X, Clock } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
 import { useCatalog } from "@/lib/store";
@@ -31,6 +31,13 @@ function SearchPage() {
   const [input, setInput] = useState(q ?? "");
   const [recent, setRecent] = useState<string[]>([]);
   const typed = useTypewriterPlaceholder(SEARCH_TERMS);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Opening search from the home bar should land with the keyboard ready.
+  useEffect(() => {
+    const t = setTimeout(() => inputRef.current?.focus(), 60);
+    return () => clearTimeout(t);
+  }, []);
 
   // Recent searches live on the device so the search page opens with the
   // customer's own shortcuts.
@@ -95,9 +102,11 @@ function SearchPage() {
             <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 shadow-pop">
               <Search className="h-5 w-5 shrink-0 text-muted-foreground" />
               <input
+                ref={inputRef}
+                autoFocus
                 value={input}
                 onChange={(e) => submitSearch(e.target.value)}
-                placeholder={typed ? `Search "${typed}"` : "Search for products"}
+                placeholder={typed ? `Search for "${typed}"` : "Search for"}
                 className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                 onBlur={() => rememberSearch(input)}
                 aria-label="Search products"
