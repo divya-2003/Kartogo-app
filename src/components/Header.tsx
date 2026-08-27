@@ -5,48 +5,9 @@ import { useCart, useAuth } from "@/lib/store";
 import { LocationPicker } from "@/components/LocationPicker";
 import { SearchOverlay } from "@/components/SearchOverlay";
 import kartogoLogo from "@/assets/kartogo-logo.png";
+import { useTypewriterPlaceholder } from "@/hooks/use-typewriter";
 
 const SEARCH_TERMS = ["avakaya", "maggi", "agarbatti", "milk", "bread", "paneer"];
-
-function useTypewriterPlaceholder(terms: string[]) {
-  const [text, setText] = useState("");
-
-  useEffect(() => {
-    let termIndex = 0;
-    let charIndex = 0;
-    let deleting = false;
-    let timeout: ReturnType<typeof setTimeout>;
-
-    const tick = () => {
-      const current = terms[termIndex];
-      if (!deleting) {
-        charIndex++;
-        setText(current.slice(0, charIndex));
-        if (charIndex === current.length) {
-          deleting = true;
-          timeout = setTimeout(tick, 1400);
-          return;
-        }
-        timeout = setTimeout(tick, 110);
-      } else {
-        charIndex--;
-        setText(current.slice(0, charIndex));
-        if (charIndex === 0) {
-          deleting = false;
-          termIndex = (termIndex + 1) % terms.length;
-          timeout = setTimeout(tick, 300);
-          return;
-        }
-        timeout = setTimeout(tick, 50);
-      }
-    };
-
-    timeout = setTimeout(tick, 400);
-    return () => clearTimeout(timeout);
-  }, [terms]);
-
-  return text;
-}
 
 export function Header() {
   const placeholder = useTypewriterPlaceholder(SEARCH_TERMS);
@@ -113,7 +74,7 @@ export function Header() {
             <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-left shadow-pop">
               <Search className="h-4 w-4 text-muted-foreground" />
               <span className="w-full truncate text-sm text-muted-foreground">
-                {placeholder ? `Search "${placeholder}"` : "Search"}
+                {placeholder ? `Search for "${placeholder}"` : "Search for"}
               </span>
             </div>
           </Link>
@@ -187,7 +148,7 @@ export function Header() {
           <Link to="/search" search={{ q: "" }} className="block w-full">
             <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-left">
               <Search className="h-4 w-4 text-muted-foreground" />
-              <span className="w-full truncate text-sm text-muted-foreground">{placeholder ? `Search "${placeholder}"` : "Search"}</span>
+              <span className="w-full truncate text-sm text-muted-foreground">{placeholder ? `Search for "${placeholder}"` : "Search for"}</span>
             </div>
           </Link>
         </div>

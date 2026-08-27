@@ -63,7 +63,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
               ref={inputRef}
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder={typed ? `Search "${typed}"` : "Search for products, categories…"}
+              placeholder={typed ? `Search for "${typed}"` : "Search for"}
               className="w-full bg-transparent text-base outline-none placeholder:text-muted-foreground"
             />
             {q && (
