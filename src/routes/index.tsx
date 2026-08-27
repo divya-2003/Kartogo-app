@@ -11,6 +11,9 @@ import { CATEGORIES, formatINR } from "@/lib/data";
 import { useCatalog, useAuth, useLocation, useCart, useWallet } from "@/lib/store";
 import { COUPONS as PROMO_COUPONS } from "@/lib/promo";
 import promoBanner from "@/assets/promo-banner.jpg";
+import { useTypewriterPlaceholder } from "@/hooks/use-typewriter";
+
+const HOME_SEARCH_TERMS = ["avakaya", "maggi", "agarbatti", "milk", "bread", "paneer"];
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -70,6 +73,7 @@ function Index() {
   const { ready: locReady, location } = useLocation();
   const nav = useNavigate();
   const { products } = useCatalog();
+  const typedTerm = useTypewriterPlaceholder(HOME_SEARCH_TERMS);
   const { count, subtotal } = useCart();
   const { balance } = useWallet();
   const { bundle } = useRecommendationBundle(8);
