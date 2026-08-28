@@ -4,6 +4,7 @@ import { ChevronLeft, Home, LayoutGrid, TrendingUp, Printer, Search, Flame, X, C
 import { ProductCard } from "@/components/ProductCard";
 import { HighlightText } from "@/components/HighlightText";
 import { useCatalog } from "@/lib/store";
+import { CATEGORIES } from "@/lib/data";
 import { customerEventService } from "@/lib/recommendations.tracking";
 import { rankProducts, rankCategories } from "@/lib/search-rank";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter";
@@ -26,7 +27,6 @@ export const Route = createFileRoute("/search")({
 const RECENT_KEY = "qk_recent_searches";
 const SEARCH_TERMS = ["avakaya", "maggi", "agarbatti", "milk", "bread", "paneer"];
 const POPULAR = ["avakaya", "maggi", "milk", "bread", "coffee", "agarbatti"];
-const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 function SearchPage() {
   const { q } = Route.useSearch();
@@ -90,15 +90,13 @@ function SearchPage() {
   const query = q.trim().toLowerCase();
   const results = useMemo(() => rankProducts(products, query), [products, query]);
 
-  const allCategories = useMemo(
-    () => Array.from(new Set(products.map(p => p.category))).sort(),
-    [products],
-  );
+  const categoryNames = useMemo(() => CATEGORIES.map(c => c.name), []);
+  const slugOf = (name: string) => CATEGORIES.find(c => c.name === name)?.slug ?? "";
 
   // Instant suggestions use the debounced text so the dropdown feels live but cheap.
   const liveQuery = debounced.trim();
   const suggestions = useMemo(() => rankProducts(products, liveQuery).slice(0, 5), [products, liveQuery]);
-  const catSuggestions = useMemo(() => rankCategories(allCategories, liveQuery).slice(0, 3), [allCategories, liveQuery]);
+  const catSuggestions = useMemo(() => rankCategories(categoryNames, liveQuery).slice(0, 3), [categoryNames, liveQuery]);
 
   // Trending = hottest deals first (biggest discount %), then best-sellers fill the grid
   const bestsellerIds = new Set(products.slice(0, 10).map(p => p.id));
@@ -158,7 +156,7 @@ function SearchPage() {
                   <li key={`c-${c}`}>
                     <Link
                       to="/category/$slug"
-                      params={{ slug: slugify(c) }}
+                      params={{ slug: slugOf(c) }}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => { rememberSearch(liveQuery); setDropdownOpen(false); }}
                       className="flex items-center gap-3 px-3 py-2.5 hover:bg-secondary"
