@@ -5,15 +5,18 @@ import { toast } from "sonner";
 import type { Product } from "@/lib/data";
 import { formatINR } from "@/lib/data";
 import { useCart, useAuth, useWishlist } from "@/lib/store";
+import { HighlightText } from "@/components/HighlightText";
 
 import { createStockAlertFn } from "@/lib/stock-alerts.functions";
 import { customerEventService } from "@/lib/recommendations.tracking";
 
-export function ProductCard({ p, bestseller, recommendationType, onProductOpen }: {
+export function ProductCard({ p, bestseller, recommendationType, onProductOpen, highlight }: {
   p: Product;
   bestseller?: boolean;
   recommendationType?: string;
   onProductOpen?: (productId: string) => void;
+  /** Search query whose matching characters should be emphasised in the title. */
+  highlight?: string;
 }) {
   const { items, add, setQty } = useCart();
   const { user } = useAuth();
@@ -99,7 +102,7 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen }
       </Link>
       <div className="flex flex-1 flex-col gap-1 p-3">
         <Link onClick={() => onProductOpen?.(p.id)} to="/product/$id" params={{ id: p.id }} className="line-clamp-2 text-sm font-semibold leading-snug hover:text-primary">
-          {p.name}
+          {highlight ? <HighlightText text={p.name} query={highlight} /> : p.name}
         </Link>
         <div className="text-xs text-muted-foreground">{p.unit}</div>
         <div className="mt-1 flex items-end justify-between gap-2">
