@@ -93,10 +93,10 @@ function SearchPage() {
   const categoryNames = useMemo(() => CATEGORIES.map(c => c.name), []);
   const slugOf = (name: string) => CATEGORIES.find(c => c.name === name)?.slug ?? "";
 
-  // Instant suggestions use the debounced text so the dropdown feels live but cheap.
+  // Instant suggestions use the debounced text so the overlay feels live but cheap.
   const liveQuery = debounced.trim();
-  const suggestions = useMemo(() => rankProducts(products, liveQuery).slice(0, 5), [products, liveQuery]);
-  const catSuggestions = useMemo(() => rankCategories(categoryNames, liveQuery).slice(0, 3), [categoryNames, liveQuery]);
+  const suggestions = useMemo(() => rankProducts(products, liveQuery).slice(0, 30), [products, liveQuery]);
+  const catSuggestions = useMemo(() => rankCategories(categoryNames, liveQuery).slice(0, 5), [categoryNames, liveQuery]);
 
   // Trending = hottest deals first (biggest discount %), then best-sellers fill the grid
   const bestsellerIds = new Set(products.slice(0, 10).map(p => p.id));
