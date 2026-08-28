@@ -4,6 +4,8 @@ import { useNavigate, Link } from "@tanstack/react-router";
 import { Search, X, ArrowRight } from "lucide-react";
 import { useCatalog } from "@/lib/store";
 import { rankProducts } from "@/lib/search-rank";
+import { HighlightText } from "@/components/HighlightText";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter";
 
 const SUGGESTIONS = ["avakaya", "maggi", "agarbatti", "batter", "coffee", "tea"];
@@ -34,7 +36,8 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  const query = q.trim().toLowerCase();
+  const debounced = useDebouncedValue(q, 250);
+  const query = debounced.trim().toLowerCase();
   const results = useMemo(() => {
     if (!query) return [];
     return rankProducts(products, query).slice(0, 12);
@@ -100,7 +103,13 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
           </div>
         ) : results.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">
-            Nothing matched “{q}”. Try a different word.
+            <div className="font-display text-lg font-extrabold text-foreground">No exact matches found</div>
+            <div className="mt-1">We couldn’t find “{q}”. Try one of these instead.</div>
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              {SUGGESTIONS.map(term => (
+                <button key={term} onClick={() => submit(term)} className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-secondary">{term}</button>
+              ))}
+            </div>
           </div>
         ) : (
           <ul className="space-y-2">
@@ -116,7 +125,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
                     {p.image ? <img src={p.image} alt={p.name} className="h-full w-full object-cover" /> : p.emoji}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-semibold">{p.name}</div>
+                    <div className="truncate text-sm font-semibold"><HighlightText text={p.name} query={query} /></div>
                     <div className="truncate text-xs text-muted-foreground">{p.unit} · ₹{p.price}</div>
                   </div>
                   <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
