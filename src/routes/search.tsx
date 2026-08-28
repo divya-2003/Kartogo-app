@@ -1,11 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, Home, LayoutGrid, TrendingUp, Printer, Search, Flame, X, Clock } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronLeft, Home, LayoutGrid, TrendingUp, Printer, Search, Flame, X, Clock, ArrowRight, LayoutList } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
+import { HighlightText } from "@/components/HighlightText";
 import { useCatalog } from "@/lib/store";
+import { CATEGORIES } from "@/lib/data";
 import { customerEventService } from "@/lib/recommendations.tracking";
-import { rankProducts } from "@/lib/search-rank";
+import { rankProducts, rankCategories } from "@/lib/search-rank";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { z } from "zod";
 
 const SearchSchema = z.object({ q: z.string().optional().default("") });
@@ -23,6 +26,7 @@ export const Route = createFileRoute("/search")({
 
 const RECENT_KEY = "qk_recent_searches";
 const SEARCH_TERMS = ["avakaya", "maggi", "agarbatti", "milk", "bread", "paneer"];
+const POPULAR = ["avakaya", "maggi", "milk", "bread", "coffee", "agarbatti"];
 
 function SearchPage() {
   const { q } = Route.useSearch();
@@ -30,8 +34,13 @@ function SearchPage() {
   const nav = useNavigate();
   const [input, setInput] = useState(q ?? "");
   const [recent, setRecent] = useState<string[]>([]);
+  const [focused, setFocused] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const typed = useTypewriterPlaceholder(SEARCH_TERMS);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Debounce so heavy ranking doesn't run on every keystroke.
+  const debounced = useDebouncedValue(input, 250);
 
   // Opening search from the home bar should land with the keyboard ready.
   useEffect(() => {
@@ -71,8 +80,23 @@ function SearchPage() {
   // keep the input box in sync when the URL query changes (e.g. tapping Trending)
   useEffect(() => { setInput(q ?? ""); }, [q]);
 
+  // Push the debounced value into the URL — this is what drives the results grid.
+  useEffect(() => {
+    const value = debounced.trim();
+    if (value === (q ?? "").trim()) return;
+    void nav({ to: "/search", search: { q: value }, replace: true });
+  }, [debounced]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const query = q.trim().toLowerCase();
-  const results = rankProducts(products, query);
+  const results = useMemo(() => rankProducts(products, query), [products, query]);
+
+  const categoryNames = useMemo(() => CATEGORIES.map(c => c.name), []);
+  const slugOf = (name: string) => CATEGORIES.find(c => c.name === name)?.slug ?? "";
+
+  // Instant suggestions use the debounced text so the dropdown feels live but cheap.
+  const liveQuery = debounced.trim();
+  const suggestions = useMemo(() => rankProducts(products, liveQuery).slice(0, 5), [products, liveQuery]);
+  const catSuggestions = useMemo(() => rankCategories(categoryNames, liveQuery).slice(0, 3), [categoryNames, liveQuery]);
 
   // Trending = hottest deals first (biggest discount %), then best-sellers fill the grid
   const bestsellerIds = new Set(products.slice(0, 10).map(p => p.id));
@@ -84,8 +108,12 @@ function SearchPage() {
 
   const submitSearch = (value: string) => {
     setInput(value);
-    nav({ to: "/search", search: { q: value }, replace: true });
+    setDropdownOpen(false);
+    void nav({ to: "/search", search: { q: value }, replace: true });
   };
+
+  const showDropdown = dropdownOpen && liveQuery.length > 0 && (suggestions.length > 0 || catSuggestions.length > 0);
+  const showPills = focused && input.trim().length === 0;
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -97,7 +125,7 @@ function SearchPage() {
           </Link>
           <h1 className="font-display text-xl font-bold">Trending</h1>
         </div>
-        <div className="mx-auto max-w-2xl px-4 pb-3 lg:max-w-7xl lg:px-8">
+        <div className="relative mx-auto max-w-2xl px-4 pb-3 lg:max-w-7xl lg:px-8">
           <form onSubmit={(e) => { e.preventDefault(); submitSearch(input); rememberSearch(input); }}>
             <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 shadow-pop">
               <Search className="h-5 w-5 shrink-0 text-muted-foreground" />
@@ -105,23 +133,103 @@ function SearchPage() {
                 ref={inputRef}
                 autoFocus
                 value={input}
-                onChange={(e) => submitSearch(e.target.value)}
+                onChange={(e) => { setInput(e.target.value); setDropdownOpen(true); }}
+                onFocus={() => { setFocused(true); setDropdownOpen(true); }}
                 placeholder={typed ? `Search for "${typed}"` : "Search for"}
                 className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-                onBlur={() => rememberSearch(input)}
+                onBlur={() => { rememberSearch(input); setTimeout(() => { setFocused(false); setDropdownOpen(false); }, 150); }}
                 aria-label="Search products"
               />
               {input && (
-                <button type="button" onClick={() => submitSearch("")} aria-label="Clear search" className="shrink-0 text-muted-foreground hover:text-foreground">
+                <button type="button" onClick={() => { setInput(""); submitSearch(""); }} aria-label="Clear search" className="shrink-0 text-muted-foreground hover:text-foreground">
                   <X className="h-4 w-4" />
                 </button>
               )}
             </div>
           </form>
+
+          {/* ---------- Instant auto-suggest dropdown ---------- */}
+          {showDropdown && (
+            <div className="absolute inset-x-4 top-full z-50 -mt-1 overflow-hidden rounded-2xl border border-border bg-card shadow-pop lg:inset-x-8">
+              <ul className="max-h-[60vh] divide-y divide-border overflow-y-auto">
+                {catSuggestions.map(c => (
+                  <li key={`c-${c}`}>
+                    <Link
+                      to="/category/$slug"
+                      params={{ slug: slugOf(c) }}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => { rememberSearch(liveQuery); setDropdownOpen(false); }}
+                      className="flex items-center gap-3 px-3 py-2.5 hover:bg-secondary"
+                    >
+                      <LayoutList className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <span className="min-w-0 flex-1 truncate text-sm">
+                        <HighlightText text={c} query={liveQuery} /> <span className="text-xs text-muted-foreground">in categories</span>
+                      </span>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    </Link>
+                  </li>
+                ))}
+                {suggestions.map(p => (
+                  <li key={p.id}>
+                    <Link
+                      to="/product/$id"
+                      params={{ id: p.id }}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => { rememberSearch(liveQuery); customerEventService.trackSearch(liveQuery, p.id); setDropdownOpen(false); }}
+                      className="flex items-center gap-3 px-3 py-2 hover:bg-secondary"
+                    >
+                      <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-lg bg-secondary text-lg">
+                        {p.image ? <img src={p.image} alt={p.name} className="h-full w-full object-cover" /> : p.emoji}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-semibold">
+                          <HighlightText text={p.name} query={liveQuery} />
+                        </div>
+                        <div className="truncate text-xs text-muted-foreground">{p.unit} · ₹{p.price}</div>
+                      </div>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
 
       <div className="mx-auto max-w-2xl px-4 py-5 lg:max-w-7xl lg:px-8">
+        {/* Quick-select pills whenever the box is focused and empty */}
+        {showPills && (
+          <section className="mb-6 space-y-4">
+            {recent.length > 0 && (
+              <div>
+                <h2 className="flex items-center gap-2 font-display text-sm font-extrabold uppercase tracking-wide text-muted-foreground">
+                  <Clock className="h-4 w-4" /> Recent searches
+                </h2>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {recent.map(term => (
+                    <button key={term} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => submitSearch(term)} className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold hover:bg-secondary">
+                      {term}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div>
+              <h2 className="flex items-center gap-2 font-display text-sm font-extrabold uppercase tracking-wide text-muted-foreground">
+                <Flame className="h-4 w-4" /> Popular searches
+              </h2>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {POPULAR.map(term => (
+                  <button key={term} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => submitSearch(term)} className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold hover:bg-secondary">
+                    {term}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
         {query ? (
           <>
             <h2 className="font-display text-xl font-extrabold">
@@ -131,18 +239,37 @@ function SearchPage() {
               {results.length} item{results.length === 1 ? "" : "s"} found
             </p>
             {results.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">
-                Nothing matched. Try a different word.
-              </div>
+              <>
+                <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
+                  <p className="font-display text-lg font-extrabold">No exact matches found</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    We couldn't find “{q}”. Here's what everyone else is buying right now.
+                  </p>
+                  <div className="mt-4 flex flex-wrap justify-center gap-2">
+                    {POPULAR.map(term => (
+                      <button key={term} type="button" onClick={() => submitSearch(term)} className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-secondary">
+                        {term}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-6 flex items-center gap-2">
+                  <Flame className="h-5 w-5 fill-saffron text-saffron" />
+                  <h3 className="font-display text-lg font-extrabold">Trending now</h3>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5">
+                  {trending.map(p => <ProductCard key={p.id} p={p} bestseller={bestsellerIds.has(p.id)} />)}
+                </div>
+              </>
             ) : (
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5">
-                {results.map(p => <ProductCard key={p.id} p={p} onProductOpen={(productId) => customerEventService.trackSearch(q, productId)} />)}
+                {results.map(p => <ProductCard key={p.id} p={p} highlight={q} onProductOpen={(productId) => customerEventService.trackSearch(q, productId)} />)}
               </div>
             )}
           </>
         ) : (
           <>
-            {recent.length > 0 && (
+            {!showPills && recent.length > 0 && (
               <section className="mb-6">
                 <div className="flex items-center justify-between gap-2">
                   <h2 className="flex items-center gap-2 font-display text-sm font-extrabold uppercase tracking-wide text-muted-foreground">
