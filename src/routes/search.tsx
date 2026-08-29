@@ -171,10 +171,13 @@ function SearchPage() {
             </div>
           </form>
 
-          {/* ---------- Instant auto-suggest dropdown ---------- */}
+          {/* ---------- Full-screen live results overlay ---------- */}
           {showDropdown && (
-            <div className="absolute inset-x-4 top-full z-50 -mt-1 overflow-hidden rounded-2xl border border-border bg-card shadow-pop lg:inset-x-8">
-              <ul className="max-h-[60vh] divide-y divide-border overflow-y-auto">
+            <div
+              className="fixed inset-x-0 bottom-0 z-50 overflow-y-auto overscroll-contain bg-background"
+              style={{ top: overlayTop }}
+            >
+              <ul className="mx-auto max-w-2xl divide-y divide-border px-2 pb-24 lg:max-w-7xl lg:px-6">
                 {catSuggestions.map(c => (
                   <li key={`c-${c}`}>
                     <Link
