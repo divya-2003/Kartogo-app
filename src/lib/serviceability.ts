@@ -42,6 +42,17 @@ export const SERVICEABLE_AREAS: ServiceableArea[] = [
   { name: "Throvagunta", keyword: "throvagunta", pincode: "523272", etaMinutes: 18 },
 ];
 
+// Areas that qualify for the fastest "Quick" service tier. Everything else we
+// serve falls back to "Standard".
+export const QUICK_AREA_KEYWORDS = SERVICEABLE_AREAS.filter(a => a.etaMinutes <= 13).map(a => a.keyword);
+
+/** True when the customer's saved location sits inside a Quick-service area. */
+export function isQuickArea(input?: string | null): boolean {
+  if (!input) return false;
+  const lower = input.toLowerCase();
+  return QUICK_AREA_KEYWORDS.some(k => lower.includes(k));
+}
+
 // Pincodes our dark store can reach.
 export const SERVICEABLE_PINCODES = Array.from(
   new Set(SERVICEABLE_AREAS.map(a => a.pincode)),
