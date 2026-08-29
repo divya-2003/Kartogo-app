@@ -54,6 +54,11 @@ export function AutoLocationGate() {
           });
         } else {
           setBaselineQuery(location?.query ?? "");
+          setLocation({
+            query: res.address || "Current location",
+            area: res.address || "Current location",
+            serviceable: false,
+          });
           setDenied({
             address: res.address || "your current location",
             pincode: res.pincode ?? null,
@@ -115,71 +120,4 @@ export function AutoLocationGate() {
   // open — customers browse freely and reach the request page from the Quick
   // service option instead. Detection above still runs silently.
   return null;
-
-
-  return (
-    <div className="fixed inset-0 z-[60] flex flex-col bg-background">
-      {/* Header */}
-      <div className="bg-gradient-to-b from-[oklch(0.9_0.07_70)] to-background px-5 pb-6 pt-6">
-        <div className="flex items-start gap-3">
-          <div className="min-w-0 flex-1">
-            <h2 className="font-display text-3xl font-extrabold tracking-tight">Unserviceable area</h2>
-            <p className="mt-1 flex items-center gap-1.5 truncate text-sm font-semibold text-muted-foreground">
-              <MapPin className="h-4 w-4 shrink-0 text-primary" />
-              <span className="truncate">{denied.address}</span>
-            </p>
-          </div>
-          <Link
-            to="/menu"
-            aria-label="Account details"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-card shadow-pop transition hover:bg-secondary"
-          >
-            <User2 className="h-4 w-4 text-primary" />
-          </Link>
-        </div>
-      </div>
-
-
-      {/* Coming soon illustration */}
-      <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-        <div className="font-display text-2xl font-extrabold leading-tight text-primary/80 sm:text-3xl">
-          COMING SOON
-          <br />
-          TO YOUR
-          <br />
-          NEIGHBOURHOOD
-        </div>
-        <div className="mt-8 grid h-32 w-32 place-items-center rounded-full bg-primary/10">
-          <Bike className="h-16 w-16 text-primary" />
-        </div>
-        <p className="mt-6 max-w-sm text-sm text-muted-foreground">
-          {denied.reason} We're expanding fast — tell us you're here and we'll ping you the moment Kartogo goes live in your area.
-        </p>
-        {requested && (
-          <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-leaf/10 px-4 py-2 text-sm font-bold text-leaf">
-            <CheckCircle2 className="h-4 w-4" /> Location requested
-          </div>
-        )}
-      </div>
-
-      {/* Action — one primary button at a time: request first, then change location */}
-      <div className="px-5 pb-8 pt-2">
-        {!requested ? (
-          <button
-            type="button"
-            onClick={() => void sendRequest()}
-            disabled={requesting}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 font-display text-base font-extrabold text-primary-foreground shadow-pop transition hover:bg-primary/90 disabled:opacity-60"
-          >
-            {requesting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-            Request Kartogo in your area
-          </button>
-        ) : (
-          <LocationPicker variant="button" buttonLabel="Change location" />
-        )}
-      </div>
-    </div>
-  );
 }
-
-
