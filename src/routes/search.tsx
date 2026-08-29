@@ -141,7 +141,7 @@ function SearchPage() {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* ---------- Sticky top bar + search ---------- */}
-      <div className="sticky top-0 z-40 border-b border-border bg-background">
+      <div ref={headerRef} className="sticky top-0 z-40 border-b border-border bg-background">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3 lg:max-w-7xl lg:px-8">
           <Link to="/" aria-label="Back" className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border hover:bg-secondary">
             <ChevronLeft className="h-5 w-5" />
