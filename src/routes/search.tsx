@@ -112,13 +112,36 @@ function SearchPage() {
     void nav({ to: "/search", search: { q: value }, replace: true });
   };
 
+  // While typing, results take over the full screen (own scrollbar) so the
+  // page behind is hidden; with an empty box the normal page shows through.
   const showDropdown = dropdownOpen && liveQuery.length > 0 && (suggestions.length > 0 || catSuggestions.length > 0);
   const showPills = focused && input.trim().length === 0;
+
+  // Measure the sticky header so the overlay starts exactly below it.
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [overlayTop, setOverlayTop] = useState(120);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const update = () => setOverlayTop(el.getBoundingClientRect().bottom + window.scrollY);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener("resize", update);
+    return () => { ro.disconnect(); window.removeEventListener("resize", update); };
+  }, []);
+
+  // Lock body scroll while the full-screen results overlay is open.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.style.overflow = showDropdown ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [showDropdown]);
 
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* ---------- Sticky top bar + search ---------- */}
-      <div className="sticky top-0 z-40 border-b border-border bg-background">
+      <div ref={headerRef} className="sticky top-0 z-40 border-b border-border bg-background">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3 lg:max-w-7xl lg:px-8">
           <Link to="/" aria-label="Back" className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border hover:bg-secondary">
             <ChevronLeft className="h-5 w-5" />
@@ -148,10 +171,13 @@ function SearchPage() {
             </div>
           </form>
 
-          {/* ---------- Instant auto-suggest dropdown ---------- */}
+          {/* ---------- Full-screen live results overlay ---------- */}
           {showDropdown && (
-            <div className="absolute inset-x-4 top-full z-50 -mt-1 overflow-hidden rounded-2xl border border-border bg-card shadow-pop lg:inset-x-8">
-              <ul className="max-h-[60vh] divide-y divide-border overflow-y-auto">
+            <div
+              className="fixed inset-x-0 bottom-0 z-50 overflow-y-auto overscroll-contain bg-background"
+              style={{ top: overlayTop }}
+            >
+              <ul className="mx-auto max-w-2xl divide-y divide-border px-2 pb-24 lg:max-w-7xl lg:px-6">
                 {catSuggestions.map(c => (
                   <li key={`c-${c}`}>
                     <Link
