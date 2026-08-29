@@ -111,9 +111,10 @@ export function AutoLocationGate() {
     }
   }, [denied, user?.phone]);
 
-  if (!denied) return null;
-  // Customer picked a different, serviceable address from the location sheet.
-  if (location?.serviceable && location.query !== baselineQuery) return null;
+  // The blocking "request Kartogo" screen no longer takes over the app on
+  // open — customers browse freely and reach the request page from the Quick
+  // service option instead. Detection above still runs silently.
+  return null;
 
 
   return (
