@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Zap, Search, Wallet, User2, Home, LayoutGrid, ShoppingBag, TrendingUp, Ticket, CheckCircle2, Printer } from "lucide-react";
-import { deliveryWindow } from "@/lib/serviceability";
+import { Zap, PackageCheck, Search, Wallet, User2, Home, LayoutGrid, ShoppingBag, TrendingUp, Ticket, CheckCircle2, Printer } from "lucide-react";
+import { deliveryWindow, isQuickArea } from "@/lib/serviceability";
 import { LocationPicker } from "@/components/LocationPicker";
 import { AutoLocationGate } from "@/components/AutoLocationGate";
 import { ProductCard } from "@/components/ProductCard";
@@ -81,6 +81,12 @@ function Index() {
   // Delivery partners / admins who reopen the app land on this default URL — send
   // them to their own portal instead of the customer home page.
   const [roleTarget] = useState(roleRedirectTarget);
+
+  // Service tier depends on where the customer is: Quick only in designated
+  // quick-service areas, Standard everywhere else we serve.
+  const quickAvailable = !!location?.serviceable && isQuickArea(location.query || location.area);
+  const [service, setService] = useState<"quick" | "standard">("standard");
+  useEffect(() => { setService(quickAvailable ? "quick" : "standard"); }, [quickAvailable]);
 
   useEffect(() => {
     if (roleTarget) nav({ to: roleTarget, replace: true });
