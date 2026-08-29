@@ -112,8 +112,31 @@ function SearchPage() {
     void nav({ to: "/search", search: { q: value }, replace: true });
   };
 
+  // While typing, results take over the full screen (own scrollbar) so the
+  // page behind is hidden; with an empty box the normal page shows through.
   const showDropdown = dropdownOpen && liveQuery.length > 0 && (suggestions.length > 0 || catSuggestions.length > 0);
   const showPills = focused && input.trim().length === 0;
+
+  // Measure the sticky header so the overlay starts exactly below it.
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [overlayTop, setOverlayTop] = useState(120);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const update = () => setOverlayTop(el.getBoundingClientRect().bottom + window.scrollY);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener("resize", update);
+    return () => { ro.disconnect(); window.removeEventListener("resize", update); };
+  }, []);
+
+  // Lock body scroll while the full-screen results overlay is open.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.style.overflow = showDropdown ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [showDropdown]);
 
   return (
     <div className="min-h-screen bg-background pb-24">
