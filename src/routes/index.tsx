@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Zap, Search, Wallet, User2, Home, LayoutGrid, ShoppingBag, TrendingUp, Ticket, CheckCircle2, Printer } from "lucide-react";
-import { deliveryWindow } from "@/lib/serviceability";
+import { Zap, PackageCheck, Search, Wallet, User2, Home, LayoutGrid, ShoppingBag, TrendingUp, Ticket, CheckCircle2, Printer } from "lucide-react";
+import { deliveryWindow, isQuickArea } from "@/lib/serviceability";
 import { LocationPicker } from "@/components/LocationPicker";
 import { AutoLocationGate } from "@/components/AutoLocationGate";
 import { ProductCard } from "@/components/ProductCard";
@@ -53,12 +53,6 @@ function roleRedirectTarget(): "/delivery" | "/admin" | "/supplier" | "/delivery
 
 
 
-const STORE_TABS = [
-  { label: "Kartogo", tag: null, slug: null },
-  { label: "Fresh", tag: null, slug: "tiffin-batter" },
-  { label: "Pantry", tag: null, slug: "spice-powders" },
-  { label: "Pooja", tag: "From ₹35", slug: "pooja" },
-];
 
 // Derived from the single shared coupon table so the storefront never shows an
 // offer the checkout engine would reject.
@@ -87,6 +81,12 @@ function Index() {
   // Delivery partners / admins who reopen the app land on this default URL — send
   // them to their own portal instead of the customer home page.
   const [roleTarget] = useState(roleRedirectTarget);
+
+  // Service tier depends on where the customer is: Quick only in designated
+  // quick-service areas, Standard everywhere else we serve.
+  const quickAvailable = !!location?.serviceable && isQuickArea(location.query || location.area);
+  const [service, setService] = useState<"quick" | "standard">("standard");
+  useEffect(() => { setService(quickAvailable ? "quick" : "standard"); }, [quickAvailable]);
 
   useEffect(() => {
     if (roleTarget) nav({ to: roleTarget, replace: true });
@@ -151,21 +151,41 @@ function Index() {
           </div>
 
 
-          {/* store tabs */}
-          <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {STORE_TABS.map((t, i) => (
-              <Link
-                key={t.label}
-                to={t.slug ? "/category/$slug" : "/"}
-                params={t.slug ? { slug: t.slug } : undefined}
-                className={`flex shrink-0 flex-col items-center justify-center rounded-2xl border px-4 py-2 text-center transition ${
-                  i === 0 ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"
-                }`}
-              >
-                <span className="font-display text-sm font-extrabold leading-tight">{t.label}</span>
-                {t.tag && <span className="rounded-full bg-saffron px-1.5 text-[10px] font-bold text-saffron-foreground">{t.tag}</span>}
-              </Link>
-            ))}
+          {/* service options — Quick vs Standard, based on the saved location */}
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (quickAvailable) setService("quick");
+                else nav({ to: "/request-service", search: { area: location?.area ?? location?.query ?? undefined } });
+              }}
+              className={`flex min-w-0 items-center gap-2 rounded-2xl border px-3 py-2.5 text-left transition ${
+                service === "quick" && quickAvailable ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"
+              }`}
+            >
+              <Zap className={`h-4 w-4 shrink-0 ${service === "quick" && quickAvailable ? "" : "text-saffron"}`} />
+              <span className="min-w-0">
+                <span className="block font-display text-sm font-extrabold leading-tight">Quick</span>
+                <span className={`block truncate text-[11px] font-semibold ${service === "quick" && quickAvailable ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+                  {quickAvailable ? deliveryWindow(location?.etaMinutes) : "Not in your area"}
+                </span>
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setService("standard")}
+              className={`flex min-w-0 items-center gap-2 rounded-2xl border px-3 py-2.5 text-left transition ${
+                service === "standard" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"
+              }`}
+            >
+              <PackageCheck className="h-4 w-4 shrink-0" />
+              <span className="min-w-0">
+                <span className="block font-display text-sm font-extrabold leading-tight">Standard</span>
+                <span className={`block truncate text-[11px] font-semibold ${service === "standard" ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+                  Same day, all areas
+                </span>
+              </span>
+            </button>
           </div>
 
           {/* search — opens the full Trending / search page */}

@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 import { useCart, useCatalog, useAuth, useWishlist } from "@/lib/store";
 import { formatINR, PRODUCTS } from "@/lib/data";
 import { getProductRatingsFn } from "@/lib/reviews.functions";
-import { Plus, Minus, ShoppingBag, Heart, Star } from "lucide-react";
+import { ShoppingBag, Heart, Star } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import { RecommendationRow } from "@/components/RecommendationRow";
 import { useFrequentlyBoughtTogether, useCustomerTracking } from "@/hooks/use-recommendations";
@@ -79,7 +79,7 @@ function ProductPage() {
   const { rating: ratingSummary } = Route.useLoaderData();
   const { products } = useCatalog();
   const p = products.find(x => x.id === id);
-  const { add, items, setQty } = useCart();
+  const { add, items } = useCart();
   const { user } = useAuth();
   const { has, toggle } = useWishlist();
   const nav = useNavigate();
@@ -146,12 +146,17 @@ function ProductPage() {
                 <div className="text-sm font-semibold text-destructive">Out of stock</div>
               </div>
             )}
-            <div className="mt-6 flex items-center gap-3">
+            <div className="mt-6 flex flex-wrap items-start gap-3">
               {inCart ? (
-                <div className="flex items-center gap-2 rounded-xl border border-primary p-1">
-                  <button aria-label="Decrease quantity" onClick={() => setQty(p.id, inCart.qty - 1)} className="grid h-9 w-9 place-items-center rounded-lg text-primary hover:bg-primary/10"><Minus className="h-4 w-4" /></button>
-                  <span className="min-w-8 text-center font-bold">{inCart.qty}</span>
-                  <button aria-label="Increase quantity" disabled={!!p.maxPerOrder && inCart.qty >= p.maxPerOrder} onClick={() => setQty(p.id, inCart.qty + 1)} className="grid h-9 w-9 place-items-center rounded-lg text-primary hover:bg-primary/10 disabled:opacity-40"><Plus className="h-4 w-4" /></button>
+                /* Once in the cart the primary action becomes "Go to cart",
+                   with the quantity shown just below it. */
+                <div className="flex min-w-0 flex-col items-start gap-1">
+                  <Link to="/cart" className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-bold text-primary-foreground hover:bg-primary/90">
+                    <ShoppingBag className="h-4 w-4" /> Go to cart
+                  </Link>
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    {inCart.qty} item{inCart.qty > 1 ? "s" : ""} in cart
+                  </span>
                 </div>
               ) : (
                 <button disabled={p.stock <= 0} onClick={handleAdd} className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground">
