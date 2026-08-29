@@ -53,12 +53,6 @@ function roleRedirectTarget(): "/delivery" | "/admin" | "/supplier" | "/delivery
 
 
 
-const STORE_TABS = [
-  { label: "Kartogo", tag: null, slug: null },
-  { label: "Fresh", tag: null, slug: "tiffin-batter" },
-  { label: "Pantry", tag: null, slug: "spice-powders" },
-  { label: "Pooja", tag: "From ₹35", slug: "pooja" },
-];
 
 // Derived from the single shared coupon table so the storefront never shows an
 // offer the checkout engine would reject.
