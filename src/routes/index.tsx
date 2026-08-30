@@ -273,16 +273,13 @@ function Index() {
         </div>
 
         {/* ---------- Personalised recommendations (real behaviour, never mock) ---------- */}
+        {/* One consolidated reorder rail instead of two overlapping ones */}
         <RecommendationRow
-          title="You may need again"
-          subtitle="Based on how often you reorder these."
-          items={bundle.replenishment}
+          title="Reorder"
+          subtitle="Your regulars and past favourites, ready to add again."
+          items={reorderItems}
         />
-        <RecommendationRow
-          title="Buy again"
-          subtitle="Straight from your past orders."
-          items={bundle.buyAgain}
-        />
+
         <RecommendationRow
           title="Recommended for you"
           subtitle="Picked from what you browse and buy."
