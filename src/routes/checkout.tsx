@@ -198,6 +198,18 @@ function CheckoutPage() {
 
   const applyPromo = () => { void tryPromo(promoInput); };
 
+  // A coupon tapped on the home page is remembered and pre-filled here.
+  useEffect(() => {
+    let saved: string | null = null;
+    try { saved = localStorage.getItem("qk_promo_code"); } catch { /* ignore */ }
+    if (saved) {
+      setPromoInput(saved);
+      try { localStorage.removeItem("qk_promo_code"); } catch { /* ignore */ }
+    }
+  }, []);
+
+
+
 
   const removePromo = () => {
     setAppliedCode(null);

@@ -10,7 +10,7 @@ import { useRecommendationBundle, useCustomerTracking } from "@/hooks/use-recomm
 import { CATEGORIES, formatINR } from "@/lib/data";
 import { useCatalog, useAuth, useLocation, useCart, useWallet } from "@/lib/store";
 import { COUPONS as PROMO_COUPONS } from "@/lib/promo";
-import promoBanner from "@/assets/promo-banner.jpg";
+import { toast } from "sonner";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter";
 
 const HOME_SEARCH_TERMS = ["avakaya", "maggi", "agarbatti", "milk", "bread", "paneer"];
@@ -107,20 +107,34 @@ function Index() {
   const local = products.filter(p => ["pickles", "local-snacks", "tiffin-batter", "spice-powders"].includes(p.category)).slice(0, 8);
   const dealProduct = products.find(p => p.mrp && p.mrp > p.price) ?? products[0];
 
+  // "Reorder" merges replenishment + buy-again into one rail (no duplicates).
+  const seenReorder = new Set<string>();
+  const reorderItems = [...bundle.replenishment, ...bundle.buyAgain].filter(r => {
+    if (seenReorder.has(r.productId)) return false;
+    seenReorder.add(r.productId);
+    return true;
+  });
+
+  const applyCoupon = (code: string) => {
+    try { localStorage.setItem("qk_promo_code", code); } catch { /* ignore */ }
+    toast.success(`${code} saved — it'll be ready at checkout`);
+  };
+
   // Category "Deal Zone" tiles, modelled on the reference grid.
   const tiles = [
-    { slug: "snacks", title: "Snacks & More", note: "Starting @ ₹14", emoji: "🍿" },
-    { slug: "instant-food", title: "Instant Food", note: "Starting @ ₹14", emoji: "🍜" },
-    { slug: "pickles", title: "Pickles & More", note: "Starting @ ₹150", emoji: "🥒" },
-    { slug: "pooja", title: "Pooja Items", note: "Starting @ ₹35", emoji: "🪔" },
+    { slug: "snacks", title: "Snacks & More", note: "Starting @ ₹14", emoji: "🍿", tint: "bg-saffron/15" },
+    { slug: "instant-food", title: "Instant Food", note: "Starting @ ₹14", emoji: "🍜", tint: "bg-primary/10" },
+    { slug: "pickles", title: "Pickles & More", note: "Starting @ ₹150", emoji: "🥒", tint: "bg-leaf/15" },
+    { slug: "pooja", title: "Pooja Items", note: "Starting @ ₹35", emoji: "🪔", tint: "bg-saffron/25" },
   ];
 
   return (
     <div className="min-h-screen bg-background pb-24">
       <AutoLocationGate />
       <h1 className="sr-only">Kartogo — Ongole's 15-minute neighbourhood store</h1>
-      {/* ---------- Warm top ---------- */}
-      <div className="bg-gradient-to-b from-[oklch(0.9_0.07_70)] to-background">
+      {/* ---------- Warm top (sticky) ---------- */}
+      <div className="sticky top-0 z-30 bg-gradient-to-b from-[oklch(0.9_0.07_70)] to-background shadow-sm">
+
         <div className="mx-auto max-w-2xl px-4 pt-4 lg:max-w-7xl lg:px-8">
           {/* row: delivery time + wallet + profile */}
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
@@ -201,26 +215,21 @@ function Index() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-2xl px-4 pb-40 lg:max-w-7xl lg:px-8">
-        {/* ---------- Category icon row ---------- */}
-        <div className="flex gap-4 overflow-x-auto py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {CATEGORIES.map(c => (
-            <Link key={c.slug} to="/category/$slug" params={{ slug: c.slug }} className="flex w-16 shrink-0 flex-col items-center gap-1">
-              <div className={`grid h-14 w-14 place-items-center rounded-2xl ${c.tint} text-2xl`}>{c.emoji}</div>
-              <div className="text-center text-[11px] font-semibold leading-tight">{c.name}</div>
-            </Link>
-          ))}
+      <div className="mx-auto max-w-2xl px-4 pb-56 lg:max-w-7xl lg:px-8">
+        {/* ---------- Category icon row (single scrollable strip, faded ends) ---------- */}
+        <div className="relative">
+          <div className="flex gap-4 overflow-x-auto py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {CATEGORIES.map(c => (
+              <Link key={c.slug} to="/category/$slug" params={{ slug: c.slug }} className="flex w-16 shrink-0 flex-col items-center gap-1">
+                <div className={`grid h-14 w-14 place-items-center rounded-2xl ${c.tint} text-2xl`}>{c.emoji}</div>
+                <div className="truncate text-center text-[11px] font-semibold leading-tight">{c.name}</div>
+              </Link>
+            ))}
+          </div>
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-background to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-background to-transparent" />
         </div>
 
-        {/* ---------- Hero promo banner ---------- */}
-        <Link to="/category/$slug" params={{ slug: "pickles" }} className="relative mt-2 block overflow-hidden rounded-3xl">
-          <img src={promoBanner} alt="Up to 50% off groceries" width={1280} height={640} className="h-44 w-full object-cover md:h-56" />
-          <div className="absolute inset-0 flex flex-col justify-center px-6">
-            <span className="font-display text-sm font-bold uppercase tracking-wide text-foreground/70">Up to</span>
-            <span className="font-display text-5xl font-extrabold leading-none text-primary md:text-6xl">50% <span className="text-foreground">OFF</span></span>
-            <span className="mt-1 text-xs font-semibold text-foreground/70">On pickles, podis & snacks</span>
-          </div>
-        </Link>
 
         {/* ---------- Deal tiles grid ---------- */}
         <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -245,15 +254,16 @@ function Index() {
               key={t.slug}
               to="/category/$slug"
               params={{ slug: t.slug }}
-              className="relative flex flex-col justify-between overflow-hidden rounded-3xl border border-border bg-card p-3 shadow-pop"
+              className={`relative flex flex-col justify-between overflow-hidden rounded-3xl border border-border p-3 shadow-pop ${t.tint}`}
             >
               <div className="font-display text-sm font-extrabold leading-tight">{t.title}</div>
               <div className="mt-1 flex items-end justify-between">
-                <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-bold text-secondary-foreground">{t.note}</span>
+                <span className="rounded-full bg-card/80 px-2 py-0.5 text-[11px] font-bold text-foreground">{t.note}</span>
                 <span className="text-3xl">{t.emoji}</span>
               </div>
             </Link>
           ))}
+
         </div>
 
         {/* ---------- Coupons & offers ---------- */}
@@ -261,28 +271,33 @@ function Index() {
           <h2 className="font-display text-xl font-extrabold">Coupons & offers</h2>
           <div className="mt-3 flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {COUPONS.map(c => (
-              <div key={c.code} className="flex w-36 shrink-0 flex-col items-center gap-1 rounded-2xl border border-leaf/30 bg-leaf/10 p-3 text-center">
+              <div key={c.code} className="flex w-40 shrink-0 flex-col items-center gap-1 rounded-2xl border border-leaf/30 bg-leaf/10 p-3 text-center">
                 <Ticket className="h-5 w-5 text-leaf" />
                 <div className="text-[11px] font-bold uppercase text-muted-foreground">Flat</div>
                 <div className="font-display text-lg font-extrabold text-foreground">{c.flat}</div>
                 <div className="rounded-full bg-card px-2 py-0.5 text-[11px] font-semibold">{c.above}</div>
                 <div className="text-[11px] font-bold tracking-wide text-primary">Code: {c.code}</div>
+                <button
+                  type="button"
+                  onClick={() => applyCoupon(c.code)}
+                  className="mt-1 w-full rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:bg-primary/90"
+                >
+                  Apply
+                </button>
               </div>
             ))}
           </div>
         </div>
 
+
         {/* ---------- Personalised recommendations (real behaviour, never mock) ---------- */}
+        {/* One consolidated reorder rail instead of two overlapping ones */}
         <RecommendationRow
-          title="You may need again"
-          subtitle="Based on how often you reorder these."
-          items={bundle.replenishment}
+          title="Reorder"
+          subtitle="Your regulars and past favourites, ready to add again."
+          items={reorderItems}
         />
-        <RecommendationRow
-          title="Buy again"
-          subtitle="Straight from your past orders."
-          items={bundle.buyAgain}
-        />
+
         <RecommendationRow
           title="Recommended for you"
           subtitle="Picked from what you browse and buy."
