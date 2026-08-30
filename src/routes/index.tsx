@@ -261,16 +261,24 @@ function Index() {
           <h2 className="font-display text-xl font-extrabold">Coupons & offers</h2>
           <div className="mt-3 flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {COUPONS.map(c => (
-              <div key={c.code} className="flex w-36 shrink-0 flex-col items-center gap-1 rounded-2xl border border-leaf/30 bg-leaf/10 p-3 text-center">
+              <div key={c.code} className="flex w-40 shrink-0 flex-col items-center gap-1 rounded-2xl border border-leaf/30 bg-leaf/10 p-3 text-center">
                 <Ticket className="h-5 w-5 text-leaf" />
                 <div className="text-[11px] font-bold uppercase text-muted-foreground">Flat</div>
                 <div className="font-display text-lg font-extrabold text-foreground">{c.flat}</div>
                 <div className="rounded-full bg-card px-2 py-0.5 text-[11px] font-semibold">{c.above}</div>
                 <div className="text-[11px] font-bold tracking-wide text-primary">Code: {c.code}</div>
+                <button
+                  type="button"
+                  onClick={() => applyCoupon(c.code)}
+                  className="mt-1 w-full rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:bg-primary/90"
+                >
+                  Apply
+                </button>
               </div>
             ))}
           </div>
         </div>
+
 
         {/* ---------- Personalised recommendations (real behaviour, never mock) ---------- */}
         {/* One consolidated reorder rail instead of two overlapping ones */}
