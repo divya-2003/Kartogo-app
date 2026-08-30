@@ -107,20 +107,34 @@ function Index() {
   const local = products.filter(p => ["pickles", "local-snacks", "tiffin-batter", "spice-powders"].includes(p.category)).slice(0, 8);
   const dealProduct = products.find(p => p.mrp && p.mrp > p.price) ?? products[0];
 
+  // "Reorder" merges replenishment + buy-again into one rail (no duplicates).
+  const seenReorder = new Set<string>();
+  const reorderItems = [...bundle.replenishment, ...bundle.buyAgain].filter(r => {
+    if (seenReorder.has(r.productId)) return false;
+    seenReorder.add(r.productId);
+    return true;
+  });
+
+  const applyCoupon = (code: string) => {
+    try { localStorage.setItem("qk_promo_code", code); } catch { /* ignore */ }
+    toast.success(`${code} saved — it'll be ready at checkout`);
+  };
+
   // Category "Deal Zone" tiles, modelled on the reference grid.
   const tiles = [
-    { slug: "snacks", title: "Snacks & More", note: "Starting @ ₹14", emoji: "🍿" },
-    { slug: "instant-food", title: "Instant Food", note: "Starting @ ₹14", emoji: "🍜" },
-    { slug: "pickles", title: "Pickles & More", note: "Starting @ ₹150", emoji: "🥒" },
-    { slug: "pooja", title: "Pooja Items", note: "Starting @ ₹35", emoji: "🪔" },
+    { slug: "snacks", title: "Snacks & More", note: "Starting @ ₹14", emoji: "🍿", tint: "bg-saffron/15" },
+    { slug: "instant-food", title: "Instant Food", note: "Starting @ ₹14", emoji: "🍜", tint: "bg-primary/10" },
+    { slug: "pickles", title: "Pickles & More", note: "Starting @ ₹150", emoji: "🥒", tint: "bg-leaf/15" },
+    { slug: "pooja", title: "Pooja Items", note: "Starting @ ₹35", emoji: "🪔", tint: "bg-saffron/25" },
   ];
 
   return (
     <div className="min-h-screen bg-background pb-24">
       <AutoLocationGate />
       <h1 className="sr-only">Kartogo — Ongole's 15-minute neighbourhood store</h1>
-      {/* ---------- Warm top ---------- */}
-      <div className="bg-gradient-to-b from-[oklch(0.9_0.07_70)] to-background">
+      {/* ---------- Warm top (sticky) ---------- */}
+      <div className="sticky top-0 z-30 bg-gradient-to-b from-[oklch(0.9_0.07_70)] to-background shadow-sm">
+
         <div className="mx-auto max-w-2xl px-4 pt-4 lg:max-w-7xl lg:px-8">
           {/* row: delivery time + wallet + profile */}
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
