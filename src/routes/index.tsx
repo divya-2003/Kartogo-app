@@ -245,15 +245,16 @@ function Index() {
               key={t.slug}
               to="/category/$slug"
               params={{ slug: t.slug }}
-              className="relative flex flex-col justify-between overflow-hidden rounded-3xl border border-border bg-card p-3 shadow-pop"
+              className={`relative flex flex-col justify-between overflow-hidden rounded-3xl border border-border p-3 shadow-pop ${t.tint}`}
             >
               <div className="font-display text-sm font-extrabold leading-tight">{t.title}</div>
               <div className="mt-1 flex items-end justify-between">
-                <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-bold text-secondary-foreground">{t.note}</span>
+                <span className="rounded-full bg-card/80 px-2 py-0.5 text-[11px] font-bold text-foreground">{t.note}</span>
                 <span className="text-3xl">{t.emoji}</span>
               </div>
             </Link>
           ))}
+
         </div>
 
         {/* ---------- Coupons & offers ---------- */}
