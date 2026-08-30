@@ -238,10 +238,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAdminAudit(read<AdminAuditEntry[]>("qk_admin_audit", []));
     setReady(true);
   }, []);
-  useEffect(() => { write("qk_user", user); }, [user]);
-  useEffect(() => { write("qk_customer_token", customerToken); }, [customerToken]);
-  useEffect(() => { write("qk_admin_token", adminToken); }, [adminToken]);
-  useEffect(() => { write("qk_admin_audit", adminAudit); }, [adminAudit]);
+  // Guard every write on `ready`: on mount the initial null state must never be
+  // flushed to storage before the restore effect above has run, otherwise a
+  // quick app close mid-startup would wipe the saved session and force a fresh
+  // login next open.
+  useEffect(() => { if (ready) write("qk_user", user); }, [ready, user]);
+  useEffect(() => { if (ready) write("qk_customer_token", customerToken); }, [ready, customerToken]);
+  useEffect(() => { if (ready) write("qk_admin_token", adminToken); }, [ready, adminToken]);
+  useEffect(() => { if (ready) write("qk_admin_audit", adminAudit); }, [ready, adminAudit]);
 
   // Pull the server-stored profile (name / email / address) whenever a customer
   // session is present — this is what makes the details a user entered on one
