@@ -76,7 +76,9 @@ function LoginPage() {
           localStorage.setItem("qk_delivery_driver", JSON.stringify(delivery.driver));
         } catch { /* noop */ }
         toast.success(`Welcome, ${delivery.driver.name}!`);
-        nav({ to: "/delivery" });
+        // replace: login screens must never sit in history — Back from the
+        // portal/home should leave the app, not bounce back to the login page.
+        nav({ to: "/delivery", replace: true });
         return;
       }
       // Registered partner whose portal access is paused by the admin.
@@ -85,7 +87,7 @@ function LoginPage() {
         // Park a short-lived pending token so the waiting screen can promote
         // itself to a full delivery session the second the admin approves.
         try { localStorage.setItem("qk_delivery_pending_token", deliveryPending.pendingToken); } catch { /* noop */ }
-        nav({ to: "/delivery-request", search: { phone: deliveryPending.phone } });
+        nav({ to: "/delivery-request", search: { phone: deliveryPending.phone }, replace: true });
         return;
       }
       // Suppliers are routed straight to their scoped inventory + orders portal.
@@ -96,7 +98,7 @@ function LoginPage() {
           localStorage.setItem("qk_supplier", JSON.stringify(supplier.supplier));
         } catch { /* noop */ }
         toast.success(`Welcome, ${supplier.supplier.name}!`);
-        nav({ to: "/supplier" });
+        nav({ to: "/supplier", replace: true });
         return;
       }
       if (isAdminPhone) {
@@ -116,7 +118,8 @@ function LoginPage() {
         "qk_supplier",
       ]);
       toast.success("Welcome to Kartogo!");
-      nav({ to: redirect ?? "/" });
+      // replace: Back from the home page closes the app instead of reopening login.
+      nav({ to: redirect ?? "/", replace: true });
     } catch (err) {
       toast.error((err as Error).message);
     } finally { setLoading(false); }
@@ -129,7 +132,7 @@ function LoginPage() {
     try {
       await adminLogin(passcode, e164 ?? phone);
       toast.success("Welcome back, admin!");
-      nav({ to: "/admin" });
+      nav({ to: "/admin", replace: true });
     } catch (err) {
       toast.error((err as Error).message);
     } finally { setLoading(false); }
