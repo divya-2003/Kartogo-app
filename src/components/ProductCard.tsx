@@ -119,17 +119,20 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
               <BellRing className="h-3 w-3" /> {notified ? "NOTIFYING" : notifying ? "…" : "NOTIFY ME"}
             </button>
           ) : inCart ? (
-            /* Quantity stepper sits to the RIGHT of the price, not below it */
-            <div className="flex shrink-0 items-center gap-1 rounded-xl border border-primary p-0.5">
-              <button onClick={() => setQty(p.id, inCart.qty - 1)} aria-label="Decrease quantity" className="grid h-7 w-7 place-items-center rounded-lg text-primary hover:bg-primary/10">−</button>
-              <span className="min-w-5 text-center text-sm font-bold">{inCart.qty}</span>
-              <button
-                onClick={() => setQty(p.id, inCart.qty + 1)}
-                disabled={!!p.maxPerOrder && inCart.qty >= p.maxPerOrder}
-                aria-label="Increase quantity"
-                className="grid h-7 w-7 place-items-center rounded-lg text-primary hover:bg-primary/10 disabled:opacity-40"
-              >+</button>
+            /* Once added, the card offers a direct route to the cart with the
+               quantity shown underneath — no cramped stepper. */
+            <div className="flex min-w-0 shrink flex-col items-end gap-0.5">
+              <Link
+                to="/cart"
+                className="inline-flex max-w-full items-center gap-1 truncate rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+              >
+                <ShoppingCart className="h-3 w-3 shrink-0" /> Go to cart
+              </Link>
+              <span className="text-[11px] font-semibold text-muted-foreground">
+                {inCart.qty} in cart
+              </span>
             </div>
+
           ) : (
             <button
               onClick={handleAdd}
