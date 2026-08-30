@@ -18,7 +18,7 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
   /** Search query whose matching characters should be emphasised in the title. */
   highlight?: string;
 }) {
-  const { items, add, setQty } = useCart();
+  const { items, add } = useCart();
   const { user } = useAuth();
   const { has, toggle } = useWishlist();
   const nav = useNavigate();
