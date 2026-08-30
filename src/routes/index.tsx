@@ -201,26 +201,21 @@ function Index() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-2xl px-4 pb-40 lg:max-w-7xl lg:px-8">
-        {/* ---------- Category icon row ---------- */}
-        <div className="flex gap-4 overflow-x-auto py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {CATEGORIES.map(c => (
-            <Link key={c.slug} to="/category/$slug" params={{ slug: c.slug }} className="flex w-16 shrink-0 flex-col items-center gap-1">
-              <div className={`grid h-14 w-14 place-items-center rounded-2xl ${c.tint} text-2xl`}>{c.emoji}</div>
-              <div className="text-center text-[11px] font-semibold leading-tight">{c.name}</div>
-            </Link>
-          ))}
+      <div className="mx-auto max-w-2xl px-4 pb-56 lg:max-w-7xl lg:px-8">
+        {/* ---------- Category icon row (single scrollable strip, faded ends) ---------- */}
+        <div className="relative">
+          <div className="flex gap-4 overflow-x-auto py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {CATEGORIES.map(c => (
+              <Link key={c.slug} to="/category/$slug" params={{ slug: c.slug }} className="flex w-16 shrink-0 flex-col items-center gap-1">
+                <div className={`grid h-14 w-14 place-items-center rounded-2xl ${c.tint} text-2xl`}>{c.emoji}</div>
+                <div className="truncate text-center text-[11px] font-semibold leading-tight">{c.name}</div>
+              </Link>
+            ))}
+          </div>
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-background to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-background to-transparent" />
         </div>
 
-        {/* ---------- Hero promo banner ---------- */}
-        <Link to="/category/$slug" params={{ slug: "pickles" }} className="relative mt-2 block overflow-hidden rounded-3xl">
-          <img src={promoBanner} alt="Up to 50% off groceries" width={1280} height={640} className="h-44 w-full object-cover md:h-56" />
-          <div className="absolute inset-0 flex flex-col justify-center px-6">
-            <span className="font-display text-sm font-bold uppercase tracking-wide text-foreground/70">Up to</span>
-            <span className="font-display text-5xl font-extrabold leading-none text-primary md:text-6xl">50% <span className="text-foreground">OFF</span></span>
-            <span className="mt-1 text-xs font-semibold text-foreground/70">On pickles, podis & snacks</span>
-          </div>
-        </Link>
 
         {/* ---------- Deal tiles grid ---------- */}
         <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
