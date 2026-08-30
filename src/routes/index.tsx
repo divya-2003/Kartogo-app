@@ -10,7 +10,7 @@ import { useRecommendationBundle, useCustomerTracking } from "@/hooks/use-recomm
 import { CATEGORIES, formatINR } from "@/lib/data";
 import { useCatalog, useAuth, useLocation, useCart, useWallet } from "@/lib/store";
 import { COUPONS as PROMO_COUPONS } from "@/lib/promo";
-import promoBanner from "@/assets/promo-banner.jpg";
+import { toast } from "sonner";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter";
 
 const HOME_SEARCH_TERMS = ["avakaya", "maggi", "agarbatti", "milk", "bread", "paneer"];
