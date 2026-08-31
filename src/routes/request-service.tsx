@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { Loader2, CheckCircle2, MapPin, Bike, Send, User2, PackageCheck } from "lucide-react";
 import { createUnserviceableRequestFn } from "@/lib/unserviceable.functions";
@@ -36,16 +36,14 @@ function RequestServicePage() {
 
   const areaLabel = area?.trim() || location?.query || location?.area || "your current location";
 
-  useEffect(() => {
-    if (sent.current) return;
-    sent.current = true;
-
+  const submit = useCallback(() => {
+    setState("sending");
     const send = async (coords: { lat: number; lng: number } | null) => {
       try {
         await createUnserviceableRequestFn({ data: {
           phone: user?.phone ?? null,
           pincode: pincode ?? null,
-          areaText: area?.trim() || null,
+          areaText: area?.trim() || location?.query || null,
           lat: coords?.lat ?? null,
           lng: coords?.lng ?? null,
           note: null,
@@ -55,7 +53,6 @@ function RequestServicePage() {
         setState("error");
       }
     };
-
     if (typeof navigator !== "undefined" && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => void send({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
@@ -65,7 +62,13 @@ function RequestServicePage() {
     } else {
       void send(null);
     }
-  }, [pincode, area, user?.phone]);
+  }, [pincode, area, user?.phone, location?.query]);
+
+  useEffect(() => {
+    if (sent.current) return;
+    sent.current = true;
+    submit();
+  }, [submit]);
 
   const goStandard = () => {
     try { localStorage.setItem("qk_service_tier", "standard"); } catch { /* ignore */ }
@@ -118,7 +121,7 @@ function RequestServicePage() {
             )}
             {state === "error" && (
               <button
-                onClick={() => { sent.current = false; setState("sending"); location_reload(); }}
+                onClick={submit}
                 className="inline-flex items-center gap-2 text-destructive underline"
               >
                 Couldn't send — try again
@@ -130,7 +133,7 @@ function RequestServicePage() {
         <div className="mt-8 space-y-3 pb-10">
           <button
             type="button"
-            onClick={() => { sent.current = false; setState("sending"); location_reload(); }}
+            onClick={submit}
             className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90"
           >
             <Send className="h-5 w-5" /> Request Kartogo in your area
@@ -150,8 +153,4 @@ function RequestServicePage() {
       </div>
     </div>
   );
-}
-
-function location_reload() {
-  if (typeof window !== "undefined") window.location.reload();
 }
