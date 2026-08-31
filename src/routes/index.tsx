@@ -163,6 +163,12 @@ function Index() {
       <div className="sticky top-0 z-30 bg-gradient-to-b from-[oklch(0.9_0.07_70)] to-background shadow-sm">
 
         <div className="mx-auto max-w-2xl px-4 pt-4 lg:max-w-7xl lg:px-8">
+          {/* collapsing block — folds away as the customer scrolls down */}
+          <div
+            className={`overflow-hidden transition-all duration-300 ${
+              collapsed ? "max-h-0 -translate-y-1 opacity-0" : "max-h-64 translate-y-0 opacity-100"
+            }`}
+          >
           {/* row: delivery time + wallet + profile */}
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
             <div className="min-w-0">
@@ -227,6 +233,7 @@ function Index() {
                 </span>
               </span>
             </button>
+          </div>
           </div>
 
           {/* search — opens the full Trending / search page */}
