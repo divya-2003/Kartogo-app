@@ -1027,7 +1027,7 @@ type LocationCtx = {
 const LocationContext = createContext<LocationCtx | null>(null);
 
 export function LocationProvider({ children }: { children: ReactNode }) {
-  const { customerToken } = useAuth();
+  const { customerToken, user } = useAuth();
   const [location, setLoc] = useState<SavedLocation | null>(null);
   const [savedAddresses, setSaved] = useState<SavedLocation[]>([]);
   const [deliveryAddresses, setDelivery] = useState<DeliveryAddress[]>([]);
