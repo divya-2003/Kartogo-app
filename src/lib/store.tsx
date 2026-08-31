@@ -368,6 +368,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // device starts from their own server-synced addresses, not these.
           localStorage.removeItem("qk_addresses");
           localStorage.removeItem("qk_delivery_addresses");
+          localStorage.removeItem("qk_addresses_owner");
         } catch { /* noop */ }
       }
     },
@@ -1027,7 +1028,7 @@ type LocationCtx = {
 const LocationContext = createContext<LocationCtx | null>(null);
 
 export function LocationProvider({ children }: { children: ReactNode }) {
-  const { customerToken } = useAuth();
+  const { customerToken, user } = useAuth();
   const [location, setLoc] = useState<SavedLocation | null>(null);
   const [savedAddresses, setSaved] = useState<SavedLocation[]>([]);
   const [deliveryAddresses, setDelivery] = useState<DeliveryAddress[]>([]);
@@ -1056,8 +1057,18 @@ export function LocationProvider({ children }: { children: ReactNode }) {
         const serverSaved = (res.profile?.savedAddresses ?? []) as unknown as SavedLocation[];
         const serverDelivery = (res.profile?.deliveryAddresses ?? []) as unknown as DeliveryAddress[];
 
-        const localSaved = read<SavedLocation[]>("qk_addresses", []);
-        const localDelivery = read<DeliveryAddress[]>("qk_delivery_addresses", []);
+        // Addresses cached on this device belong to whoever was signed in when
+        // they were saved. A different phone (or a guest session before login)
+        // must NOT inherit them — every customer starts from their own list.
+        const owner = read<string | null>("qk_addresses_owner", null);
+        const sameOwner = !!user?.phone && owner === user.phone;
+        if (!sameOwner) {
+          write("qk_addresses", []);
+          write("qk_delivery_addresses", []);
+          if (user?.phone) write("qk_addresses_owner", user.phone);
+        }
+        const localSaved = sameOwner ? read<SavedLocation[]>("qk_addresses", []) : [];
+        const localDelivery = sameOwner ? read<DeliveryAddress[]>("qk_delivery_addresses", []) : [];
 
         // Union saved locations by their display query (server wins on ties so
         // cross-device edits are respected), capped at 8.
@@ -1078,6 +1089,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
         setDelivery(nextDelivery);
         write("qk_addresses", nextSaved);
         write("qk_delivery_addresses", nextDelivery);
+        if (user?.phone) write("qk_addresses_owner", user.phone);
         syncedRef.current = true;
         // Push the merged set back up so the server has the union too.
         void saveCustomerAddressesFn({
@@ -1086,7 +1098,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       } catch { /* offline — keep local copy */ }
     })();
     return () => { cancelled = true; };
-  }, [customerToken]);
+  }, [customerToken, user?.phone]);
 
   // Persist any later address changes to the server (once the initial sync is done).
   useEffect(() => {

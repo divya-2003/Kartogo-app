@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod";
-import { ArrowLeft, Loader2, CheckCircle2, MapPin } from "lucide-react";
+import { Loader2, CheckCircle2, MapPin, Bike, Send, User2, PackageCheck } from "lucide-react";
 import { createUnserviceableRequestFn } from "@/lib/unserviceable.functions";
-import { useAuth } from "@/lib/store";
+import { LocationPicker } from "@/components/LocationPicker";
+import { useAuth, useLocation } from "@/lib/store";
 
 const searchSchema = z.object({
   pincode: z.string().optional(),
@@ -23,26 +24,26 @@ export const Route = createFileRoute("/request-service")({
   }),
 });
 
-// No questions asked: the moment the customer lands here from the "Request
-// Kartogo" button we capture their location (best effort) and file the request
-// with the admin automatically.
+// Full-screen "coming soon" panel shown when Quick service isn't available for
+// the customer's location. Requests are filed automatically on arrival.
 function RequestServicePage() {
   const { pincode, area } = useSearch({ from: "/request-service" });
   const nav = useNavigate();
   const { user } = useAuth();
+  const { location } = useLocation();
   const [state, setState] = useState<"sending" | "done" | "error">("sending");
   const sent = useRef(false);
 
-  useEffect(() => {
-    if (sent.current) return;
-    sent.current = true;
+  const areaLabel = area?.trim() || location?.query || location?.area || "your current location";
 
+  const submit = useCallback(() => {
+    setState("sending");
     const send = async (coords: { lat: number; lng: number } | null) => {
       try {
         await createUnserviceableRequestFn({ data: {
           phone: user?.phone ?? null,
           pincode: pincode ?? null,
-          areaText: area?.trim() || null,
+          areaText: area?.trim() || location?.query || null,
           lat: coords?.lat ?? null,
           lng: coords?.lng ?? null,
           note: null,
@@ -52,7 +53,6 @@ function RequestServicePage() {
         setState("error");
       }
     };
-
     if (typeof navigator !== "undefined" && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => void send({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
@@ -62,56 +62,92 @@ function RequestServicePage() {
     } else {
       void send(null);
     }
-  }, [pincode, area, user?.phone]);
+  }, [pincode, area, user?.phone, location?.query]);
+
+  useEffect(() => {
+    if (sent.current) return;
+    sent.current = true;
+    submit();
+  }, [submit]);
+
+  const goStandard = () => {
+    try { localStorage.setItem("qk_service_tier", "standard"); } catch { /* ignore */ }
+    nav({ to: "/", replace: true });
+  };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-[oklch(0.9_0.07_70)] to-background">
       <div className="mx-auto max-w-lg px-4 py-6">
-        <button onClick={() => nav({ to: "/" })} className="inline-flex items-center gap-1 text-sm font-semibold text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> Back
-        </button>
-
-        <div className="mt-6 rounded-2xl border border-destructive/30 bg-destructive/10 p-4">
-          <div className="font-display text-lg font-bold text-destructive">
-            We're not serviceable at {pincode ? `pincode ${pincode}` : "your area"} yet.
+        {/* header — title left, account details top right */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="font-display text-3xl font-extrabold leading-tight tracking-tight">Unserviceable area</h1>
+            <div className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
+              <MapPin className="h-4 w-4 shrink-0 text-primary" />
+              <span className="min-w-0 truncate">{areaLabel}</span>
+            </div>
           </div>
-          <p className="mt-1 text-sm text-destructive/90">
-            We currently deliver only in and around Ongole — but we're expanding fast.
-          </p>
+          <Link
+            to="/account"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold shadow-pop"
+          >
+            <User2 className="h-4 w-4 text-primary" /> Account
+          </Link>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-border bg-card p-6 text-center shadow-pop">
-          {state === "sending" && (
-            <>
-              <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
-              <div className="mt-2 font-display text-xl font-bold">Sending your request…</div>
-              <p className="mt-1 text-sm text-muted-foreground">Attaching your location for our expansion map.</p>
-            </>
-          )}
-          {state === "done" && (
-            <>
-              <CheckCircle2 className="mx-auto h-10 w-10 text-leaf" />
-              <div className="mt-2 font-display text-xl font-bold">Thanks! Request received.</div>
-              <p className="mt-1 text-sm text-muted-foreground">
-                We'll let you know as soon as Kartogo goes live in your area.
-              </p>
-            </>
-          )}
-          {state === "error" && (
-            <>
-              <MapPin className="mx-auto h-10 w-10 text-destructive" />
-              <div className="mt-2 font-display text-xl font-bold">Couldn't send your request</div>
-              <p className="mt-1 text-sm text-muted-foreground">Please check your connection and try again.</p>
+        <div className="mt-10 text-center">
+          <div className="font-display text-3xl font-extrabold uppercase leading-tight tracking-tight text-primary">
+            Coming soon<br />to your<br />neighbourhood
+          </div>
+          <div className="mx-auto mt-8 grid h-40 w-40 place-items-center rounded-full bg-primary/10">
+            <Bike className="h-20 w-20 text-primary" />
+          </div>
+
+          <p className="mx-auto mt-8 max-w-sm text-sm text-muted-foreground">
+            We're not serviceable at {pincode ? `pincode ${pincode}` : "your area"} yet. We currently deliver only in Ongole.
+            We're expanding fast — tell us you're here and we'll ping you the moment Kartogo goes live in your area.
+          </p>
+
+          <div className="mt-6 min-h-[24px] text-sm font-semibold">
+            {state === "sending" && (
+              <span className="inline-flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" /> Sending your request…
+              </span>
+            )}
+            {state === "done" && (
+              <span className="inline-flex items-center gap-2 text-leaf">
+                <CheckCircle2 className="h-4 w-4" /> Request received
+              </span>
+            )}
+            {state === "error" && (
               <button
-                onClick={() => { sent.current = false; setState("sending"); location.reload(); }}
-                className="mt-4 rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-secondary"
+                onClick={submit}
+                className="inline-flex items-center gap-2 text-destructive underline"
               >
-                Try again
+                Couldn't send — try again
               </button>
-            </>
-          )}
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            <Link to="/" className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90">Back to home</Link>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-8 space-y-3 pb-10">
+          <button
+            type="button"
+            onClick={submit}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90"
+          >
+            <Send className="h-5 w-5" /> Request Kartogo in your area
+          </button>
+
+          <div className="grid grid-cols-2 gap-3">
+            <LocationPicker variant="button" buttonLabel="Change location" />
+            <button
+              type="button"
+              onClick={goStandard}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3.5 font-display text-sm font-extrabold"
+            >
+              <PackageCheck className="h-4 w-4 text-primary" /> Go to standard
+            </button>
           </div>
         </div>
       </div>
