@@ -368,6 +368,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // device starts from their own server-synced addresses, not these.
           localStorage.removeItem("qk_addresses");
           localStorage.removeItem("qk_delivery_addresses");
+          localStorage.removeItem("qk_addresses_owner");
         } catch { /* noop */ }
       }
     },
