@@ -86,7 +86,34 @@ function Index() {
   // quick-service areas, Standard everywhere else we serve.
   const quickAvailable = !!location?.serviceable && isQuickArea(location.query || location.area);
   const [service, setService] = useState<"quick" | "standard">("standard");
-  useEffect(() => { setService(quickAvailable ? "quick" : "standard"); }, [quickAvailable]);
+  useEffect(() => {
+    // A customer sent here from the unserviceable screen explicitly asked for
+    // Standard — honour that over the auto-detected tier.
+    let forced: string | null = null;
+    try { forced = localStorage.getItem("qk_service_tier"); } catch { /* ignore */ }
+    if (forced === "standard") {
+      setService("standard");
+      try { localStorage.removeItem("qk_service_tier"); } catch { /* ignore */ }
+      return;
+    }
+    setService(quickAvailable ? "quick" : "standard");
+  }, [quickAvailable]);
+
+  // Collapsing header: scrolling down folds the status/tier rows away and keeps
+  // only the search bar pinned; scrolling back to the top restores everything.
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y <= 8) setCollapsed(false);
+      else if (y > last + 4) setCollapsed(true);
+      else if (y < last - 12) setCollapsed(false);
+      last = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     if (roleTarget) nav({ to: roleTarget, replace: true });
