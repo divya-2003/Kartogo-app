@@ -1056,8 +1056,18 @@ export function LocationProvider({ children }: { children: ReactNode }) {
         const serverSaved = (res.profile?.savedAddresses ?? []) as unknown as SavedLocation[];
         const serverDelivery = (res.profile?.deliveryAddresses ?? []) as unknown as DeliveryAddress[];
 
-        const localSaved = read<SavedLocation[]>("qk_addresses", []);
-        const localDelivery = read<DeliveryAddress[]>("qk_delivery_addresses", []);
+        // Addresses cached on this device belong to whoever was signed in when
+        // they were saved. A different phone (or a guest session before login)
+        // must NOT inherit them — every customer starts from their own list.
+        const owner = read<string | null>("qk_addresses_owner", null);
+        const sameOwner = !!user?.phone && owner === user.phone;
+        if (!sameOwner) {
+          write("qk_addresses", []);
+          write("qk_delivery_addresses", []);
+          if (user?.phone) write("qk_addresses_owner", user.phone);
+        }
+        const localSaved = sameOwner ? read<SavedLocation[]>("qk_addresses", []) : [];
+        const localDelivery = sameOwner ? read<DeliveryAddress[]>("qk_delivery_addresses", []) : [];
 
         // Union saved locations by their display query (server wins on ties so
         // cross-device edits are respected), capped at 8.
