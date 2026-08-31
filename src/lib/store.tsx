@@ -1088,6 +1088,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
         setDelivery(nextDelivery);
         write("qk_addresses", nextSaved);
         write("qk_delivery_addresses", nextDelivery);
+        if (user?.phone) write("qk_addresses_owner", user.phone);
         syncedRef.current = true;
         // Push the merged set back up so the server has the union too.
         void saveCustomerAddressesFn({
@@ -1096,7 +1097,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       } catch { /* offline — keep local copy */ }
     })();
     return () => { cancelled = true; };
-  }, [customerToken]);
+  }, [customerToken, user?.phone]);
 
   // Persist any later address changes to the server (once the initial sync is done).
   useEffect(() => {
