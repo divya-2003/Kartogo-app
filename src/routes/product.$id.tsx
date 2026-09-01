@@ -253,6 +253,189 @@ function ProductPage() {
         {/* ---------- Frequently bought together (kept, moved below details) ---------- */}
         {addAll.length > 0 && (
           <div className="mt-3 rounded-2xl bg-card p-4 shadow-pop">
+...
+            <RecommendationRow title="" items={together} limit={4} compact />
+          </div>
+        )}
+      </div>
+
+      {/* ---------- Desktop (laptop) layout: two-column ---------- */}
+      <div className="mx-auto hidden max-w-6xl gap-6 px-6 pt-6 lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+        {/* Left: image panel */}
+        <div className="relative self-start overflow-hidden rounded-3xl bg-card shadow-pop">
+          <div className="grid aspect-square w-full place-items-center p-6">
+            {p.image ? (
+              <img src={p.image} alt={p.name} width={768} height={768} className="h-full w-full object-contain" />
+            ) : (
+              <div className="text-[12rem]">{p.emoji}</div>
+            )}
+          </div>
+          <button
+            onClick={() => window.history.back()}
+            aria-label="Go back"
+            className="absolute left-4 top-4 grid h-10 w-10 place-items-center rounded-full border border-border bg-card shadow-pop"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <div className="absolute right-4 top-4 flex items-center gap-2">
+            <Link
+              to="/search"
+              search={{ q: "" }}
+              aria-label="Search products"
+              className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card shadow-pop"
+            >
+              <Search className="h-5 w-5" />
+            </Link>
+            <button
+              onClick={() => {
+                const url = typeof window !== "undefined" ? window.location.href : "";
+                if (typeof navigator !== "undefined" && navigator.share) {
+                  void navigator.share({ title: p.name, url }).catch(() => {});
+                } else {
+                  void navigator.clipboard?.writeText(url);
+                  toast.success("Link copied");
+                }
+              }}
+              aria-label="Share product"
+              className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card shadow-pop"
+            >
+              <Share2 className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Right: details */}
+        <div className="min-w-0 self-start rounded-3xl bg-card p-6 shadow-pop">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            {ratingSummary.count > 0 ? (
+              <span className="inline-flex items-center gap-1 rounded-lg bg-leaf/10 px-2 py-0.5 font-bold text-leaf">
+                <Star className="h-3.5 w-3.5 fill-leaf text-leaf" />
+                {ratingSummary.average.toFixed(1)}
+                <span className="font-semibold text-muted-foreground">({ratingSummary.count})</span>
+              </span>
+            ) : (
+              <span className="rounded-lg bg-secondary px-2 py-0.5 text-xs font-semibold text-muted-foreground">New</span>
+            )}
+            <span className="text-muted-foreground">|</span>
+            <span className="font-semibold text-muted-foreground">15 mins</span>
+          </div>
+
+          <h1 className="mt-2 font-display text-3xl font-extrabold leading-snug">{p.name}</h1>
+          <div className="mt-1 text-sm text-muted-foreground">Net quantity: {p.unit}</div>
+
+          <div className="mt-4 inline-flex items-center rounded-xl bg-leaf px-4 py-2 font-display text-2xl font-extrabold text-primary-foreground">
+            {formatINR(p.price)}
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+            {p.mrp && p.mrp > p.price && (
+              <>
+                <span className="text-muted-foreground">MRP <span className="line-through">{formatINR(p.mrp)}</span></span>
+                <span className="text-muted-foreground">(incl. of all taxes)</span>
+                <span className="font-bold text-leaf">{formatINR(off)} OFF</span>
+              </>
+            )}
+          </div>
+
+          {/* Actions row: side by side */}
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            {inCart ? (
+              <div className="flex items-center justify-between gap-2 rounded-xl bg-primary px-2 py-1 text-primary-foreground">
+                <button
+                  aria-label="Decrease quantity"
+                  onClick={() => setQty(p.id, inCart.qty - 1)}
+                  className="grid h-11 w-12 place-items-center rounded-lg hover:bg-primary/80"
+                >
+                  <Minus className="h-5 w-5" />
+                </button>
+                <span className="min-w-8 text-center font-display text-lg font-extrabold">{inCart.qty}</span>
+                <button
+                  aria-label="Increase quantity"
+                  disabled={!!p.maxPerOrder && inCart.qty >= p.maxPerOrder}
+                  onClick={() => setQty(p.id, inCart.qty + 1)}
+                  className="grid h-11 w-12 place-items-center rounded-lg hover:bg-primary/80 disabled:opacity-50"
+                >
+                  <Plus className="h-5 w-5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                disabled={p.stock <= 0}
+                onClick={handleAdd}
+                className="rounded-xl bg-primary px-8 py-3 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
+              >
+                {p.stock <= 0 ? "Out of stock" : "Add to Cart"}
+              </button>
+            )}
+            <Link
+              to="/cart"
+              className="relative inline-flex items-center gap-2 rounded-xl border border-border px-5 py-3 font-bold"
+            >
+              <ShoppingCart className="h-5 w-5" /> View cart
+              {count > 0 && (
+                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[11px] font-bold text-primary-foreground">
+                  {count}
+                </span>
+              )}
+            </Link>
+            <button
+              onClick={() => { toggle(p.id); toast.success(wished ? "Removed from wishlist" : "Added to wishlist"); }}
+              aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
+              aria-pressed={wished}
+              className="grid h-12 w-12 place-items-center rounded-xl border border-border bg-card shadow-pop"
+            >
+              <Heart className={`h-5 w-5 ${wished ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+            </button>
+            <Link
+              to="/category/$slug"
+              params={{ slug: p.category }}
+              aria-label={`More in ${p.category}`}
+              className="grid h-12 w-12 place-items-center rounded-xl border border-border bg-card shadow-pop"
+            >
+              <Package className="h-5 w-5 text-muted-foreground" />
+            </Link>
+          </div>
+
+          <Link
+            to="/category/$slug"
+            params={{ slug: p.category }}
+            className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-3"
+          >
+            <span className="flex min-w-0 items-center gap-2">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-secondary text-lg">{p.emoji}</span>
+              <span className="min-w-0 truncate font-bold">View all {p.category.replace(/-/g, " ")} products</span>
+            </span>
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </Link>
+
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="flex flex-col items-center gap-1 rounded-2xl bg-secondary/60 p-4 text-center">
+              <PackageCheck className="h-7 w-7 text-primary" />
+              <div className="text-xs font-semibold text-muted-foreground">Easy returns &amp; refunds</div>
+            </div>
+            <div className="flex flex-col items-center gap-1 rounded-2xl bg-secondary/60 p-4 text-center">
+              <Timer className="h-7 w-7 text-primary" />
+              <div className="text-xs font-semibold text-muted-foreground">Superfast delivery</div>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <h2 className="font-display text-lg font-extrabold">Product details</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{p.description}</p>
+            {!!p.maxPerOrder && (
+              <div className="mt-2 text-sm font-semibold text-muted-foreground">Max {p.maxPerOrder} per order</div>
+            )}
+            {p.stock <= 0 && <div className="mt-2 text-sm font-bold text-destructive">Out of stock</div>}
+            <nav className="mt-3 text-xs text-muted-foreground">
+              <Link to="/" className="hover:text-primary">Home</Link> /{" "}
+              <Link to="/category/$slug" params={{ slug: p.category }} className="hover:text-primary">{p.category}</Link> /{" "}
+              <span className="text-foreground">{p.name}</span>
+            </nav>
+          </div>
+        </div>
+
+        {/* FBT full width on desktop */}
+        {addAll.length > 0 && (
+          <div className="col-span-2 rounded-2xl bg-card p-5 shadow-pop">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="min-w-0">
                 <h2 className="font-display text-lg font-extrabold">Frequently bought together</h2>
@@ -273,8 +456,8 @@ function ProductPage() {
         )}
       </div>
 
-      {/* ---------- Sticky bottom action bar ---------- */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      {/* ---------- Sticky bottom action bar (mobile & tablet only) ---------- */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
         <div className="mx-auto flex max-w-3xl items-center gap-3">
           <Link
             to="/cart"
