@@ -1,10 +1,9 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Header } from "@/components/Header";
 import { useCart, useCatalog, useAuth, useWishlist } from "@/lib/store";
 import { formatINR, PRODUCTS } from "@/lib/data";
 import { getProductRatingsFn } from "@/lib/reviews.functions";
-import { ShoppingBag, Heart, Star } from "lucide-react";
+import { Heart, Star, ChevronLeft, ChevronRight, Search, Share2, Package, PackageCheck, Info, Timer, ShoppingCart, Minus, Plus } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import { RecommendationRow } from "@/components/RecommendationRow";
 import { useFrequentlyBoughtTogether, useCustomerTracking } from "@/hooks/use-recommendations";
@@ -79,7 +78,7 @@ function ProductPage() {
   const { rating: ratingSummary } = Route.useLoaderData();
   const { products } = useCatalog();
   const p = products.find(x => x.id === id);
-  const { add, items } = useCart();
+  const { add, items, setQty, count } = useCart();
   const { user } = useAuth();
   const { has, toggle } = useWishlist();
   const nav = useNavigate();
@@ -103,84 +102,159 @@ function ProductPage() {
     }
   };
 
+  const off = p.mrp && p.mrp > p.price ? p.mrp - p.price : 0;
+
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="mx-auto max-w-5xl px-4 py-8 md:px-6">
-        <nav className="mb-4 text-sm text-muted-foreground">
-          <Link to="/" className="hover:text-primary">Home</Link> /{" "}
-          <Link to="/category/$slug" params={{ slug: p.category }} className="hover:text-primary">{p.category}</Link> /{" "}
-          <span className="text-foreground">{p.name}</span>
-        </nav>
-        <div className="grid gap-8 md:grid-cols-2">
-          <div className="grid aspect-square place-items-center overflow-hidden rounded-3xl border border-border bg-cream bg-grain">
-            {p.image ? (
-              <img src={p.image} alt={p.name} width={768} height={768} className="h-full w-full object-cover" />
+    <div className="min-h-screen bg-secondary/40 pb-28">
+      {/* ---------- Hero image with floating controls (mobile-first) ---------- */}
+      <div className="relative bg-card">
+        <div className="mx-auto grid aspect-square w-full max-w-xl place-items-center overflow-hidden md:aspect-[4/3]">
+          {p.image ? (
+            <img src={p.image} alt={p.name} width={768} height={768} className="h-full w-full object-contain" />
+          ) : (
+            <div className="text-[10rem]">{p.emoji}</div>
+          )}
+        </div>
+
+        <button
+          onClick={() => window.history.back()}
+          aria-label="Go back"
+          className="absolute left-3 top-3 grid h-10 w-10 place-items-center rounded-full border border-border bg-card shadow-pop"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <div className="absolute right-3 top-3 flex items-center gap-2">
+          <Link
+            to="/search"
+            search={{ q: "" }}
+            aria-label="Search products"
+            className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card shadow-pop"
+          >
+            <Search className="h-5 w-5" />
+          </Link>
+          <button
+            onClick={() => {
+              const url = typeof window !== "undefined" ? window.location.href : "";
+              if (typeof navigator !== "undefined" && navigator.share) {
+                void navigator.share({ title: p.name, url }).catch(() => {});
+              } else {
+                void navigator.clipboard?.writeText(url);
+                toast.success("Link copied");
+              }
+            }}
+            aria-label="Share product"
+            className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card shadow-pop"
+          >
+            <Share2 className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="absolute bottom-16 right-3 flex flex-col gap-3">
+          <button
+            onClick={() => { toggle(p.id); toast.success(wished ? "Removed from wishlist" : "Added to wishlist"); }}
+            aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
+            aria-pressed={wished}
+            className="grid h-11 w-11 place-items-center rounded-full border border-border bg-card shadow-pop"
+          >
+            <Heart className={`h-5 w-5 ${wished ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+          </button>
+          <Link
+            to="/category/$slug"
+            params={{ slug: p.category }}
+            aria-label={`More in ${p.category}`}
+            className="grid h-11 w-11 place-items-center rounded-full border border-border bg-card shadow-pop"
+          >
+            <Package className="h-5 w-5 text-muted-foreground" />
+          </Link>
+        </div>
+        <a
+          href="#product-details"
+          aria-label="Product information"
+          className="absolute bottom-16 left-3 grid h-11 w-11 place-items-center rounded-full border border-border bg-card shadow-pop"
+        >
+          <Info className="h-5 w-5 text-muted-foreground" />
+        </a>
+      </div>
+
+      <div className="mx-auto max-w-3xl px-3 pt-3">
+        {/* ---------- Details card ---------- */}
+        <div className="rounded-2xl bg-card p-4 shadow-pop">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            {ratingSummary.count > 0 ? (
+              <span className="inline-flex items-center gap-1 rounded-lg bg-leaf/10 px-2 py-0.5 font-bold text-leaf">
+                <Star className="h-3.5 w-3.5 fill-leaf text-leaf" />
+                {ratingSummary.average.toFixed(1)}
+                <span className="font-semibold text-muted-foreground">({ratingSummary.count})</span>
+              </span>
             ) : (
-              <div className="text-[12rem]">{p.emoji}</div>
+              <span className="rounded-lg bg-secondary px-2 py-0.5 text-xs font-semibold text-muted-foreground">New</span>
+            )}
+            <span className="text-muted-foreground">|</span>
+            <span className="font-semibold text-muted-foreground">15 mins</span>
+          </div>
+
+          <h1 className="mt-2 font-display text-xl font-extrabold leading-snug md:text-2xl">{p.name}</h1>
+          <div className="mt-1 text-sm text-muted-foreground">Net quantity: {p.unit}</div>
+
+          <div className="mt-3 inline-flex items-center rounded-xl bg-leaf px-3 py-1.5 font-display text-xl font-extrabold text-primary-foreground">
+            {formatINR(p.price)}
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+            {p.mrp && p.mrp > p.price && (
+              <>
+                <span className="text-muted-foreground">MRP <span className="line-through">{formatINR(p.mrp)}</span></span>
+                <span className="text-muted-foreground">(incl. of all taxes)</span>
+                <span className="font-bold text-leaf">{formatINR(off)} OFF</span>
+              </>
             )}
           </div>
-          <div className="flex flex-col">
-            <h1 className="font-display text-3xl font-bold leading-tight md:text-4xl">{p.name}</h1>
-            <div className="mt-1 text-sm text-muted-foreground">{p.unit}</div>
-            {ratingSummary.count > 0 && (
-              <div className="mt-2 flex items-center gap-2">
-                <Stars value={Math.round(ratingSummary.average)} />
-                <span className="text-sm font-bold">{ratingSummary.average.toFixed(1)}</span>
-                <span className="text-sm text-muted-foreground">
-                  ({ratingSummary.count} rating{ratingSummary.count > 1 ? "s" : ""})
-                </span>
-              </div>
-            )}
-            <div className="mt-4 flex items-end gap-3">
-              <div className="font-display text-3xl font-bold">{formatINR(p.price)}</div>
-              {p.mrp && p.mrp > p.price && <div className="text-muted-foreground line-through">{formatINR(p.mrp)}</div>}
-              {p.mrp && p.mrp > p.price && <div className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">{Math.round((1 - p.price / p.mrp) * 100)}% OFF</div>}
-            </div>
-            <p className="mt-4 text-muted-foreground">{p.description}</p>
-            {!!p.maxPerOrder && (
-              <div className="mt-2 text-sm font-semibold text-muted-foreground">Max {p.maxPerOrder} per order</div>
-            )}
-            {p.stock <= 0 && (
-              <div className="mt-6">
-                <div className="text-sm font-semibold text-destructive">Out of stock</div>
-              </div>
-            )}
-            <div className="mt-6 flex flex-wrap items-start gap-3">
-              {inCart ? (
-                /* Once in the cart the primary action becomes "Go to cart",
-                   with the quantity shown just below it. */
-                <div className="flex min-w-0 flex-col items-start gap-1">
-                  <Link to="/cart" className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-bold text-primary-foreground hover:bg-primary/90">
-                    <ShoppingBag className="h-4 w-4" /> Go to cart
-                  </Link>
-                  <span className="text-xs font-semibold text-muted-foreground">
-                    {inCart.qty} item{inCart.qty > 1 ? "s" : ""} in cart
-                  </span>
-                </div>
-              ) : (
-                <button disabled={p.stock <= 0} onClick={handleAdd} className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground">
-                  <ShoppingBag className="h-4 w-4" /> Add to cart
-                </button>
-              )}
-              <button
-                onClick={() => { toggle(p.id); toast.success(wished ? "Removed from wishlist" : "Added to wishlist"); }}
-                aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
-                aria-pressed={wished}
-                className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-border hover:bg-secondary"
-              >
-                <Heart className={`h-5 w-5 ${wished ? "fill-primary text-primary" : "text-muted-foreground"}`} />
-              </button>
-            </div>
 
+          <Link
+            to="/category/$slug"
+            params={{ slug: p.category }}
+            className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-3"
+          >
+            <span className="flex min-w-0 items-center gap-2">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-secondary text-lg">{p.emoji}</span>
+              <span className="min-w-0 truncate font-bold">View all {p.category.replace(/-/g, " ")} products</span>
+            </span>
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </Link>
+        </div>
+
+        {/* ---------- Highlights ---------- */}
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <div className="flex flex-col items-center gap-1 rounded-2xl bg-card p-4 text-center shadow-pop">
+            <PackageCheck className="h-7 w-7 text-primary" />
+            <div className="text-xs font-semibold text-muted-foreground">Easy returns &amp; refunds</div>
+          </div>
+          <div className="flex flex-col items-center gap-1 rounded-2xl bg-card p-4 text-center shadow-pop">
+            <Timer className="h-7 w-7 text-primary" />
+            <div className="text-xs font-semibold text-muted-foreground">Superfast delivery</div>
           </div>
         </div>
 
+        {/* ---------- Details ---------- */}
+        <div id="product-details" className="mt-3 rounded-2xl bg-card p-4 shadow-pop">
+          <h2 className="font-display text-lg font-extrabold">Product details</h2>
+          <p className="mt-2 text-sm text-muted-foreground">{p.description}</p>
+          {!!p.maxPerOrder && (
+            <div className="mt-2 text-sm font-semibold text-muted-foreground">Max {p.maxPerOrder} per order</div>
+          )}
+          {p.stock <= 0 && <div className="mt-2 text-sm font-bold text-destructive">Out of stock</div>}
+          <nav className="mt-3 text-xs text-muted-foreground">
+            <Link to="/" className="hover:text-primary">Home</Link> /{" "}
+            <Link to="/category/$slug" params={{ slug: p.category }} className="hover:text-primary">{p.category}</Link> /{" "}
+            <span className="text-foreground">{p.name}</span>
+          </nav>
+        </div>
+
+        {/* ---------- Frequently bought together (kept, moved below details) ---------- */}
         {addAll.length > 0 && (
-          <div className="mt-8">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="font-display text-xl font-extrabold">Frequently bought together</h2>
+          <div className="mt-3 rounded-2xl bg-card p-4 shadow-pop">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="font-display text-lg font-extrabold">Frequently bought together</h2>
                 <p className="text-sm text-muted-foreground">Only items currently in stock are shown.</p>
               </div>
               <button
@@ -196,6 +270,53 @@ function ProductPage() {
             <RecommendationRow title="" items={together} limit={4} compact />
           </div>
         )}
+      </div>
+
+      {/* ---------- Sticky bottom action bar ---------- */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="mx-auto flex max-w-3xl items-center gap-3">
+          <Link
+            to="/cart"
+            aria-label="View cart"
+            className="relative flex shrink-0 items-center gap-2 rounded-xl border border-border px-4 py-3 font-bold"
+          >
+            <ShoppingCart className="h-5 w-5" />
+            <span className="hidden sm:inline">View cart</span>
+            {count > 0 && (
+              <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[11px] font-bold text-primary-foreground">
+                {count}
+              </span>
+            )}
+          </Link>
+          {inCart ? (
+            <div className="flex flex-1 items-center justify-between rounded-xl bg-primary px-2 py-1 text-primary-foreground">
+              <button
+                aria-label="Decrease quantity"
+                onClick={() => setQty(p.id, inCart.qty - 1)}
+                className="grid h-11 w-12 place-items-center rounded-lg hover:bg-primary/80"
+              >
+                <Minus className="h-5 w-5" />
+              </button>
+              <span className="font-display text-lg font-extrabold">{inCart.qty}</span>
+              <button
+                aria-label="Increase quantity"
+                disabled={!!p.maxPerOrder && inCart.qty >= p.maxPerOrder}
+                onClick={() => setQty(p.id, inCart.qty + 1)}
+                className="grid h-11 w-12 place-items-center rounded-lg hover:bg-primary/80 disabled:opacity-50"
+              >
+                <Plus className="h-5 w-5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              disabled={p.stock <= 0}
+              onClick={handleAdd}
+              className="flex-1 rounded-xl bg-primary py-3.5 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
+            >
+              {p.stock <= 0 ? "Out of stock" : "Add to Cart"}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

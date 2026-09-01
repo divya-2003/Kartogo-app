@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Plus, Heart, BellRing, ShoppingCart } from "lucide-react";
+import { Plus, Minus, Heart, BellRing } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Product } from "@/lib/data";
@@ -18,7 +18,7 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
   /** Search query whose matching characters should be emphasised in the title. */
   highlight?: string;
 }) {
-  const { items, add } = useCart();
+  const { items, add, setQty } = useCart();
   const { user } = useAuth();
   const { has, toggle } = useWishlist();
   const nav = useNavigate();
@@ -119,20 +119,25 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
               <BellRing className="h-3 w-3" /> {notified ? "NOTIFYING" : notifying ? "…" : "NOTIFY ME"}
             </button>
           ) : inCart ? (
-            /* Once added, the card offers a direct route to the cart with the
-               quantity shown underneath — no cramped stepper. */
-            <div className="flex min-w-0 shrink flex-col items-end gap-0.5">
-              <Link
-                to="/cart"
-                className="inline-flex max-w-full items-center gap-1 truncate rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+            /* Compact quantity stepper: − count + */
+            <div className="inline-flex shrink-0 items-center overflow-hidden rounded-lg bg-primary text-primary-foreground">
+              <button
+                aria-label={`Decrease quantity of ${p.name}`}
+                onClick={() => setQty(p.id, inCart.qty - 1)}
+                className="grid h-8 w-8 place-items-center transition hover:bg-primary/80"
               >
-                <ShoppingCart className="h-3 w-3 shrink-0" /> Go to cart
-              </Link>
-              <span className="text-[11px] font-semibold text-muted-foreground">
-                {inCart.qty} in cart
-              </span>
+                <Minus className="h-3 w-3" />
+              </button>
+              <span className="min-w-6 text-center text-xs font-bold">{inCart.qty}</span>
+              <button
+                aria-label={`Increase quantity of ${p.name}`}
+                disabled={!!p.maxPerOrder && inCart.qty >= p.maxPerOrder}
+                onClick={() => setQty(p.id, inCart.qty + 1)}
+                className="grid h-8 w-8 place-items-center transition hover:bg-primary/80 disabled:opacity-50"
+              >
+                <Plus className="h-3 w-3" />
+              </button>
             </div>
-
           ) : (
             <button
               onClick={handleAdd}
