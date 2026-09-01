@@ -105,9 +105,9 @@ function ProductPage() {
   const off = p.mrp && p.mrp > p.price ? p.mrp - p.price : 0;
 
   return (
-    <div className="min-h-screen bg-secondary/40 pb-28">
-      {/* ---------- Hero image with floating controls (mobile-first) ---------- */}
-      <div className="relative bg-card">
+    <div className="min-h-screen bg-secondary/40 pb-28 lg:pb-10">
+      {/* ---------- Hero image with floating controls (mobile & tablet only) ---------- */}
+      <div className="relative bg-card lg:hidden">
         <div className="mx-auto grid aspect-square w-full max-w-xl place-items-center overflow-hidden md:aspect-[4/3]">
           {p.image ? (
             <img src={p.image} alt={p.name} width={768} height={768} className="h-full w-full object-contain" />
