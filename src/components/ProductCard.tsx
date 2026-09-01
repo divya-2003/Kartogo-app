@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Plus, Heart, BellRing, ShoppingCart } from "lucide-react";
+import { Plus, Minus, Heart, BellRing } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Product } from "@/lib/data";
@@ -18,7 +18,7 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
   /** Search query whose matching characters should be emphasised in the title. */
   highlight?: string;
 }) {
-  const { items, add } = useCart();
+  const { items, add, setQty } = useCart();
   const { user } = useAuth();
   const { has, toggle } = useWishlist();
   const nav = useNavigate();
