@@ -176,7 +176,8 @@ function ProductPage() {
         </a>
       </div>
 
-      <div className="mx-auto max-w-3xl px-3 pt-3">
+      {/* ---------- Mobile & tablet content column ---------- */}
+      <div className="mx-auto max-w-3xl px-3 pt-3 lg:hidden">
         {/* ---------- Details card ---------- */}
         <div className="rounded-2xl bg-card p-4 shadow-pop">
           <div className="flex flex-wrap items-center gap-2 text-sm">
