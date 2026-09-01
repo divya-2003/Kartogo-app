@@ -99,20 +99,22 @@ function Index() {
     setService(quickAvailable ? "quick" : "standard");
   }, [quickAvailable]);
 
-  // Collapsing header: scrolling down folds the status/tier rows away and keeps
-  // only the search bar pinned; scrolling back to the top restores everything.
+  // Collapsing header: once the page is scrolled at all, only the search bar
+  // stays pinned. The full bar returns *only* at the very top of the page —
+  // direction-based toggling caused flicker, so it is intentionally avoided.
   const [collapsed, setCollapsed] = useState(false);
   useEffect(() => {
-    let last = window.scrollY;
-    const onScroll = () => {
+    let frame = 0;
+    const apply = () => {
+      frame = 0;
       const y = window.scrollY;
-      if (y <= 8) setCollapsed(false);
-      else if (y > last + 4) setCollapsed(true);
-      else if (y < last - 12) setCollapsed(false);
-      last = y;
+      // Hysteresis: collapse past 72px, expand only back at the very top.
+      setCollapsed(prev => (prev ? y > 4 : y > 72));
     };
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(apply); };
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    apply();
+    return () => { window.removeEventListener("scroll", onScroll); if (frame) cancelAnimationFrame(frame); };
   }, []);
 
   useEffect(() => {
