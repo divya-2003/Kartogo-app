@@ -1,10 +1,9 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Header } from "@/components/Header";
 import { useCart, useCatalog, useAuth, useWishlist } from "@/lib/store";
 import { formatINR, PRODUCTS } from "@/lib/data";
 import { getProductRatingsFn } from "@/lib/reviews.functions";
-import { ShoppingBag, Heart, Star } from "lucide-react";
+import { Heart, Star, ChevronLeft, ChevronRight, Search, Share2, Package, PackageCheck, Info, Timer, ShoppingCart, Minus, Plus } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import { RecommendationRow } from "@/components/RecommendationRow";
 import { useFrequentlyBoughtTogether, useCustomerTracking } from "@/hooks/use-recommendations";
@@ -79,7 +78,7 @@ function ProductPage() {
   const { rating: ratingSummary } = Route.useLoaderData();
   const { products } = useCatalog();
   const p = products.find(x => x.id === id);
-  const { add, items } = useCart();
+  const { add, items, setQty, count } = useCart();
   const { user } = useAuth();
   const { has, toggle } = useWishlist();
   const nav = useNavigate();
