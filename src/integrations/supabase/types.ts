@@ -1314,6 +1314,36 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          delivery_updates: boolean
+          important_updates: boolean
+          order_updates: boolean
+          promotional_offers: boolean
+          updated_at: string
+          user_phone: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_updates?: boolean
+          important_updates?: boolean
+          order_updates?: boolean
+          promotional_offers?: boolean
+          updated_at?: string
+          user_phone: string
+        }
+        Update: {
+          created_at?: string
+          delivery_updates?: boolean
+          important_updates?: boolean
+          order_updates?: boolean
+          promotional_offers?: boolean
+          updated_at?: string
+          user_phone?: string
+        }
+        Relationships: []
+      }
       notification_recipients: {
         Row: {
           active: boolean
@@ -1347,6 +1377,54 @@ export type Database = {
           kinds?: string[]
           label?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string
+          delivered_at: string | null
+          error_message: string | null
+          fcm_token: string | null
+          id: string
+          notification_type: string
+          order_id: string | null
+          read_at: string | null
+          sent_at: string | null
+          status: string
+          title: string
+          user_phone: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          fcm_token?: string | null
+          id?: string
+          notification_type: string
+          order_id?: string | null
+          read_at?: string | null
+          sent_at?: string | null
+          status?: string
+          title: string
+          user_phone: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          fcm_token?: string | null
+          id?: string
+          notification_type?: string
+          order_id?: string | null
+          read_at?: string | null
+          sent_at?: string | null
+          status?: string
+          title?: string
+          user_phone?: string
         }
         Relationships: []
       }
@@ -2323,6 +2401,39 @@ export type Database = {
           pincode?: string | null
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_notification_tokens: {
+        Row: {
+          created_at: string
+          device_name: string
+          fcm_token: string
+          id: string
+          notification_enabled: boolean
+          platform: string
+          updated_at: string
+          user_phone: string
+        }
+        Insert: {
+          created_at?: string
+          device_name?: string
+          fcm_token: string
+          id?: string
+          notification_enabled?: boolean
+          platform?: string
+          updated_at?: string
+          user_phone: string
+        }
+        Update: {
+          created_at?: string
+          device_name?: string
+          fcm_token?: string
+          id?: string
+          notification_enabled?: boolean
+          platform?: string
+          updated_at?: string
+          user_phone?: string
         }
         Relationships: []
       }
