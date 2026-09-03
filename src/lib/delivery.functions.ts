@@ -144,6 +144,14 @@ export const deliverySetStatusFn = createServerFn({ method: "POST" })
     const { syncInventoryForStatus } = await import("./inventory.server");
     await syncInventoryForStatus(data.id, data.status, `driver:${session.driverId}`);
 
+    // Push: picked up / delivered / cancelled updates to the customer
+    try {
+      const { pushOrderStatus } = await import("./push.server");
+      await pushOrderStatus(data.id, data.status);
+    } catch (e) {
+      console.error("delivery status push failed", e);
+    }
+
     // Phase 7 — mirror the order lifecycle onto the rider's live status so the
     // control tower and customer tracking stay accurate.
     try {
@@ -231,6 +239,15 @@ export const claimOrderFn = createServerFn({ method: "POST" })
       await logEvent(data.id, "driver_accepted", { selfClaimed: true }, session.driverId, "driver");
     } catch (e) {
       console.error("logistics claim sync failed", e);
+    }
+
+    try {
+      const { sendPushToCustomer } = await import("./push.server");
+      await sendPushToCustomer({
+        phone: String(row.customer_phone), type: "DRIVER_ASSIGNED", orderId: data.id,
+      });
+    } catch (e) {
+      console.error("driver assigned push failed", e);
     }
 
     return maskOrderForDriver(row);
