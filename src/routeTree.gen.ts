@@ -19,6 +19,7 @@ import { Route as DeliveryRouteImport } from './routes/delivery'
 import { Route as DeliveryRequestRouteImport } from './routes/delivery-request'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MenuRouteImport } from './routes/menu'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as PrintRouteImport } from './routes/print'
 import { Route as RefundReturnsRouteImport } from './routes/refund-returns'
@@ -119,6 +120,11 @@ const LoginRoute = LoginRouteImport.update({
 const MenuRoute = MenuRouteImport.update({
   id: '/menu',
   path: '/menu',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrdersRoute = OrdersRouteImport.update({
@@ -390,6 +396,7 @@ export interface FileRoutesByFullPath {
   '/delivery-request': typeof DeliveryRequestRoute
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
+  '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
   '/print': typeof PrintRoute
   '/refund-returns': typeof RefundReturnsRoute
@@ -452,6 +459,7 @@ export interface FileRoutesByTo {
   '/delivery-request': typeof DeliveryRequestRoute
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
+  '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
   '/print': typeof PrintRoute
   '/refund-returns': typeof RefundReturnsRoute
@@ -515,6 +523,7 @@ export interface FileRoutesById {
   '/delivery-request': typeof DeliveryRequestRoute
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
+  '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
   '/print': typeof PrintRoute
   '/refund-returns': typeof RefundReturnsRoute
@@ -580,6 +589,7 @@ export interface FileRouteTypes {
     | '/delivery-request'
     | '/login'
     | '/menu'
+    | '/notifications'
     | '/orders'
     | '/print'
     | '/refund-returns'
@@ -642,6 +652,7 @@ export interface FileRouteTypes {
     | '/delivery-request'
     | '/login'
     | '/menu'
+    | '/notifications'
     | '/orders'
     | '/print'
     | '/refund-returns'
@@ -704,6 +715,7 @@ export interface FileRouteTypes {
     | '/delivery-request'
     | '/login'
     | '/menu'
+    | '/notifications'
     | '/orders'
     | '/print'
     | '/refund-returns'
@@ -768,6 +780,7 @@ export interface RootRouteChildren {
   DeliveryRequestRoute: typeof DeliveryRequestRoute
   LoginRoute: typeof LoginRoute
   MenuRoute: typeof MenuRoute
+  NotificationsRoute: typeof NotificationsRoute
   OrdersRoute: typeof OrdersRoute
   PrintRoute: typeof PrintRoute
   RefundReturnsRoute: typeof RefundReturnsRoute
@@ -859,6 +872,13 @@ declare module '@tanstack/react-router' {
       path: '/menu'
       fullPath: '/menu'
       preLoaderRoute: typeof MenuRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/orders': {
@@ -1314,6 +1334,7 @@ const rootRouteChildren: RootRouteChildren = {
   DeliveryRequestRoute: DeliveryRequestRoute,
   LoginRoute: LoginRoute,
   MenuRoute: MenuRoute,
+  NotificationsRoute: NotificationsRoute,
   OrdersRoute: OrdersRoute,
   PrintRoute: PrintRoute,
   RefundReturnsRoute: RefundReturnsRoute,
