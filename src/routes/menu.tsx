@@ -227,6 +227,7 @@ function MenuPage() {
             )}
           </div>
 
+          <Row to="/notifications" icon={<Bell className="h-5 w-5" />} label="Notifications" sub="Order, delivery & offer alerts" />
           <Row to="/refunds" icon={<IndianRupee className="h-5 w-5" />} label="Your Refunds" />
           <Row to="/wishlist" icon={<Heart className="h-5 w-5" />} label="Your Wishlist" />
           <Row onClick={() => soon("E-Gift Cards")} icon={<CreditCard className="h-5 w-5" />} label="E-Gift Cards" />

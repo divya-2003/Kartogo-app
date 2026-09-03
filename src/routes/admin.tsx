@@ -51,6 +51,7 @@ const NAV = [
   { to: "/admin/ai", label: "AI assistant", icon: Sparkles },
   { to: "/admin/ai-alerts", label: "AI inventory alerts", icon: BellRing },
   { to: "/admin/alerts", label: "Alert settings", icon: BellRing },
+  { to: "/admin/notifications", label: "Push notifications", icon: BellRing },
 
   { to: "/admin/orders", label: "Orders", icon: ClipboardList },
   { to: "/admin/cancellations", label: "Cancellations", icon: PackageX },
