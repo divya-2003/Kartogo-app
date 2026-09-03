@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 import { SplashScreen } from "@/components/SplashScreen";
+import { PushBridge } from "@/components/PushBridge";
 import { CartProvider, AuthProvider, CatalogProvider, OrdersProvider, LocationProvider, WalletProvider, WishlistProvider, DriversProvider } from "@/lib/store";
 
 import appCss from "../styles.css?url";
@@ -115,6 +116,7 @@ function RootComponent() {
                     <WishlistProvider>
                       <Outlet />
                       <SplashScreen />
+                      <PushBridge />
                       <Toaster position="top-center" richColors />
 
                     </WishlistProvider>

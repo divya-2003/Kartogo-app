@@ -204,6 +204,14 @@ export const placeOrderFn = createServerFn({ method: "POST" })
       const { recordRedemption } = await import("./promo.server");
       await recordRedemption(promoCode, session.phone, id, discount);
     }
+
+    // Push: order confirmed (best-effort — never blocks the order)
+    try {
+      const { sendPushToCustomer } = await import("./push.server");
+      await sendPushToCustomer({ phone: session.phone, type: "ORDER_CONFIRMED", orderId: id });
+    } catch (e) {
+      console.error("order confirmation push failed", e);
+    }
     return row;
 
 
@@ -269,6 +277,13 @@ export const setOrderStatusFn = createServerFn({ method: "POST" })
       console.error("dispatch sync failed", e);
     }
 
+    try {
+      const { pushOrderStatus } = await import("./push.server");
+      await pushOrderStatus(data.id, data.status);
+    } catch (e) {
+      console.error("status push failed", e);
+    }
+
     return row;
 
   });
@@ -295,6 +310,15 @@ export const assignOrderFn = createServerFn({ method: "POST" })
     if (error || !row) {
       console.error("Failed to assign delivery partner", error);
       throw new Error("Delivery partner could not be assigned. Please try again.");
+    }
+
+    try {
+      const { sendPushToCustomer } = await import("./push.server");
+      await sendPushToCustomer({
+        phone: String(row.customer_phone), type: "DRIVER_ASSIGNED", orderId: data.id,
+      });
+    } catch (e) {
+      console.error("driver assigned push failed", e);
     }
     return row;
   });

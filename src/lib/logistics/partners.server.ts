@@ -237,6 +237,22 @@ async function applyGeofence(
     driverId,
     "geofence",
   );
+
+  // Push: "your delivery partner is nearby" the moment the geofence trips.
+  if (next === "ARRIVED_AT_CUSTOMER") {
+    try {
+      const { data: order } = await supabaseAdmin
+        .from("app_orders").select("customer_phone").eq("id", orderId).maybeSingle();
+      if (order?.customer_phone) {
+        const { sendPushToCustomer } = await import("../push.server");
+        await sendPushToCustomer({
+          phone: String(order.customer_phone), type: "DRIVER_NEARBY", orderId,
+        });
+      }
+    } catch (e) {
+      console.error("driver nearby push failed", e);
+    }
+  }
   return next;
 }
 
