@@ -35,8 +35,49 @@ export async function commitForOrder(orderId: string, actor = "system") {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.rpc("commit_inventory", { p_order_id: orderId, p_actor: actor });
     if (error) console.error("Inventory commit failed", error);
+    await deductCatalogStock(orderId);
   } catch (e) {
     console.error("Inventory commit failed", e);
+  }
+}
+
+/**
+ * The admin catalogue and the supplier pages read `catalog_items.stock`, which
+ * is separate from the warehouse ledger. Once an order is delivered the sold
+ * units must disappear from that shelf count too.
+ */
+async function deductCatalogStock(orderId: string) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: order } = await supabaseAdmin
+      .from("app_orders")
+      .select("items")
+      .eq("id", orderId)
+      .maybeSingle();
+    const items = (order?.items ?? []) as { productId?: string; qty?: number }[];
+    const wanted = new Map<string, number>();
+    for (const i of items) {
+      const id = String(i?.productId ?? "");
+      const qty = Math.floor(Number(i?.qty ?? 0));
+      if (!id || qty <= 0) continue;
+      wanted.set(id, (wanted.get(id) ?? 0) + qty);
+    }
+    if (wanted.size === 0) return;
+
+    const { data: rows } = await supabaseAdmin
+      .from("catalog_items")
+      .select("id, stock")
+      .in("id", [...wanted.keys()]);
+    for (const row of (rows ?? []) as { id: string; stock: number | null }[]) {
+      const next = Math.max(0, Number(row.stock ?? 0) - (wanted.get(row.id) ?? 0));
+      if (next === Number(row.stock ?? 0)) continue;
+      await supabaseAdmin
+        .from("catalog_items")
+        .update({ stock: next, updated_at: new Date().toISOString() })
+        .eq("id", row.id);
+    }
+  } catch (e) {
+    console.error("Catalog stock deduction failed", e);
   }
 }
 
