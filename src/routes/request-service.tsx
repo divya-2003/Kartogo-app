@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { z } from "zod";
 import { Loader2, CheckCircle2, MapPin, Bike, Send, User2, PackageCheck } from "lucide-react";
 import { createUnserviceableRequestFn } from "@/lib/unserviceable.functions";
@@ -31,8 +31,7 @@ function RequestServicePage() {
   const nav = useNavigate();
   const { user } = useAuth();
   const { location } = useLocation();
-  const [state, setState] = useState<"sending" | "done" | "error">("sending");
-  const sent = useRef(false);
+  const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
 
   const areaLabel = area?.trim() || location?.query || location?.area || "your current location";
 
@@ -63,12 +62,6 @@ function RequestServicePage() {
       void send(null);
     }
   }, [pincode, area, user?.phone, location?.query]);
-
-  useEffect(() => {
-    if (sent.current) return;
-    sent.current = true;
-    submit();
-  }, [submit]);
 
   const goStandard = () => {
     try { localStorage.setItem("qk_service_tier", "standard"); } catch { /* ignore */ }
@@ -134,9 +127,10 @@ function RequestServicePage() {
           <button
             type="button"
             onClick={submit}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90"
+            disabled={state === "sending" || state === "done"}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 disabled:opacity-60 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90"
           >
-            <Send className="h-5 w-5" /> Request Kartogo in your area
+            <Send className="h-5 w-5" /> Request Kartogo quick in your area
           </button>
 
           <div className="grid grid-cols-2 gap-3">
