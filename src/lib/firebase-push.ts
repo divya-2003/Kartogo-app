@@ -85,11 +85,20 @@ export async function currentToken(): Promise<string | null> {
   }
 }
 
-/** Foreground message listener. Returns an unsubscribe function. */
-export function onForegroundMessage(
+/**
+ * Foreground message listener. Initialises Messaging on demand (the bridge can
+ * mount before the customer has enabled push). Returns an unsubscribe function.
+ */
+export async function onForegroundMessage(
   handler: (msg: { title: string; body: string; path: string; id: string }) => void,
-): () => void {
-  if (!messagingRef) return () => {};
+): Promise<() => void> {
+  if (!configured()) return () => {};
+  if (typeof window === "undefined" || !("Notification" in window)) return () => {};
+  if (Notification.permission !== "granted") return () => {};
+  if (!(await isSupported().catch(() => false))) return () => {};
+  if (!messagingRef) {
+    try { messagingRef = getMessaging(app()); } catch { return () => {}; }
+  }
   return onMessage(messagingRef, (payload) => {
     handler({
       title: payload.notification?.title ?? "Kartogo",
