@@ -35,15 +35,20 @@ export function PushBridge() {
 
   // 2) Foreground messages -> in-app toast (the SW handles background/closed).
   useEffect(() => {
-    const unsubscribe = onForegroundMessage((msg) => {
+    let unsubscribe: (() => void) | null = null;
+    let cancelled = false;
+    void onForegroundMessage((msg) => {
       if (msg.id && lastShown.current === msg.id) return; // no duplicates
       lastShown.current = msg.id;
       toast(msg.title, {
         description: msg.body,
         action: { label: "View", onClick: () => router.navigate({ to: msg.path }) },
       });
+    }).then((fn) => {
+      if (cancelled) fn();
+      else unsubscribe = fn;
     });
-    return unsubscribe;
+    return () => { cancelled = true; unsubscribe?.(); };
   }, [router]);
 
   // 3) Notification taps coming back from the service worker.

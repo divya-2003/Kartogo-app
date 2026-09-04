@@ -21,6 +21,7 @@ import {
   LogOut,
   Check,
   Trash2,
+  Bell,
 } from "lucide-react";
 
 export const Route = createFileRoute("/menu")({
