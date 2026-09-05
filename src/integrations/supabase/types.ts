@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_access: {
+        Row: {
+          created_at: string
+          is_super_admin: boolean
+          permissions: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          is_super_admin?: boolean
+          permissions?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          is_super_admin?: boolean
+          permissions?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_access_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "staff_accounts"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       ai_forecasts: {
         Row: {
           accuracy: number | null
