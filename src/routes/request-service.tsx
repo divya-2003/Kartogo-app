@@ -81,10 +81,10 @@ function RequestServicePage() {
             </div>
           </div>
           <Link
-            to="/account"
+            to="/menu"
             className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold shadow-pop"
           >
-            <User2 className="h-4 w-4 text-primary" /> Account
+            <User2 className="h-4 w-4 text-primary" /> Profile
           </Link>
         </div>
 
