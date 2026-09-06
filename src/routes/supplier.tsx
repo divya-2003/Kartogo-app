@@ -1,6 +1,5 @@
 import { createFileRoute, Outlet, Link, useRouterState, redirect, isRedirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Header } from "@/components/Header";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { verifySupplierTokenFn } from "@/lib/supplier.functions";
 import { findSupplierById } from "@/lib/suppliers";
@@ -77,8 +76,6 @@ function SupplierLayout() {
   return (
     <SupplierContext.Provider value={info}>
       <div className="min-h-screen bg-background">
-        <Header />
-
         {/* Mobile top bar with hamburger — mirrors the admin layout */}
         <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-border bg-card/95 px-3 py-2 backdrop-blur md:hidden">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -113,7 +110,7 @@ function SupplierLayout() {
 
         <div className="mx-auto grid max-w-7xl gap-6 px-4 pb-6 pt-4 md:grid-cols-[220px_minmax(0,1fr)] md:px-6 md:py-6">
           {/* Desktop sidebar */}
-          <aside className="hidden h-fit max-h-[calc(100vh-8rem)] overflow-y-auto rounded-2xl border border-border bg-card p-3 md:sticky md:top-24 md:block">
+          <aside className="hidden h-fit max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl border border-border bg-card p-3 md:sticky md:top-4 md:block">
             <div className="mb-3 px-3 pt-1">
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Supplier</div>
               <div className="mt-0.5 truncate text-sm font-bold">{info?.name ?? "…"}</div>
