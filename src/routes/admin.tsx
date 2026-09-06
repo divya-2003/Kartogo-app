@@ -1,10 +1,11 @@
-import { createFileRoute, Outlet, Link, useRouterState, redirect, isRedirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link, useRouter, useRouterState, redirect, isRedirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useOrders } from "@/lib/store";
 import { verifyAdminAccessFn, type AdminSessionAccess } from "@/lib/admin-access.functions";
 import { permissionForAdminPath, type AdminPermission } from "@/lib/admin-access.shared";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Sparkles, LayoutDashboard, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Menu, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound, BellRing, UsersRound } from "lucide-react";
+import { Sparkles, LayoutDashboard, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Menu, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound, BellRing, UsersRound, ChevronLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 // Remembers the last successful admin-token verification for this tab so the
 // admin area doesn't re-hit the server on every single navigation.
@@ -93,6 +94,7 @@ function firstAdminPath(permissions: AdminPermission[]) {
 
 function AdminLayout() {
   const routeAccess = Route.useRouteContext() as AdminSessionAccess | undefined;
+  const router = useRouter();
   const path = useRouterState({ select: s => s.location.pathname });
   const { orders } = useOrders();
   const [cancelSeenCount, setCancelSeenCount] = useState(0);
@@ -150,6 +152,11 @@ function AdminLayout() {
     <div className="min-h-screen bg-background">
       {/* Mobile top bar with hamburger */}
       <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-border bg-card/95 px-3 py-2 backdrop-blur md:hidden">
+        {path !== "/admin" && (
+          <Button type="button" variant="outline" size="icon" aria-label="Go back" onClick={() => router.history.back()}>
+            <ChevronLeft />
+          </Button>
+        )}
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
             <button

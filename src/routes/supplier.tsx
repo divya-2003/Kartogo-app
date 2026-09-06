@@ -1,10 +1,11 @@
-import { createFileRoute, Outlet, Link, useRouterState, redirect, isRedirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link, useRouter, useRouterState, redirect, isRedirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { verifySupplierTokenFn } from "@/lib/supplier.functions";
 import { findSupplierById } from "@/lib/suppliers";
 import { SupplierContext, type SupplierInfo } from "@/lib/supplier-context";
-import { Boxes, ClipboardList, User2, BarChart3, Sparkles, Menu } from "lucide-react";
+import { Boxes, ClipboardList, User2, BarChart3, Sparkles, Menu, ChevronLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 
 export const Route = createFileRoute("/supplier")({
@@ -37,6 +38,7 @@ const NAV = [
 ] as const;
 
 function SupplierLayout() {
+  const router = useRouter();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const [info, setInfo] = useState<SupplierInfo | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -78,6 +80,11 @@ function SupplierLayout() {
       <div className="min-h-screen bg-background">
         {/* Mobile top bar with hamburger — mirrors the admin layout */}
         <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-border bg-card/95 px-3 py-2 backdrop-blur md:hidden">
+          {path !== "/supplier" && (
+            <Button type="button" variant="outline" size="icon" aria-label="Go back" onClick={() => router.history.back()}>
+              <ChevronLeft />
+            </Button>
+          )}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
               <button
