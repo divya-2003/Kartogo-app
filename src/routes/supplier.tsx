@@ -1,11 +1,11 @@
-import { createFileRoute, Outlet, Link, useRouterState, redirect, isRedirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link, useRouter, useRouterState, redirect, isRedirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Header } from "@/components/Header";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { verifySupplierTokenFn } from "@/lib/supplier.functions";
 import { findSupplierById } from "@/lib/suppliers";
 import { SupplierContext, type SupplierInfo } from "@/lib/supplier-context";
-import { Boxes, ClipboardList, User2, BarChart3, Sparkles, Menu } from "lucide-react";
+import { Boxes, ClipboardList, User2, BarChart3, Sparkles, Menu, ChevronLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 
 export const Route = createFileRoute("/supplier")({
@@ -38,6 +38,7 @@ const NAV = [
 ] as const;
 
 function SupplierLayout() {
+  const router = useRouter();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const [info, setInfo] = useState<SupplierInfo | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -77,10 +78,13 @@ function SupplierLayout() {
   return (
     <SupplierContext.Provider value={info}>
       <div className="min-h-screen bg-background">
-        <Header />
-
         {/* Mobile top bar with hamburger — mirrors the admin layout */}
         <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-border bg-card/95 px-3 py-2 backdrop-blur md:hidden">
+          {path !== "/supplier" && (
+            <Button type="button" variant="outline" size="icon" aria-label="Go back" onClick={() => router.history.back()}>
+              <ChevronLeft />
+            </Button>
+          )}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
               <button
@@ -113,7 +117,7 @@ function SupplierLayout() {
 
         <div className="mx-auto grid max-w-7xl gap-6 px-4 pb-6 pt-4 md:grid-cols-[220px_minmax(0,1fr)] md:px-6 md:py-6">
           {/* Desktop sidebar */}
-          <aside className="hidden h-fit max-h-[calc(100vh-8rem)] overflow-y-auto rounded-2xl border border-border bg-card p-3 md:sticky md:top-24 md:block">
+          <aside className="hidden h-fit max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl border border-border bg-card p-3 md:sticky md:top-4 md:block">
             <div className="mb-3 px-3 pt-1">
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Supplier</div>
               <div className="mt-0.5 truncate text-sm font-bold">{info?.name ?? "…"}</div>

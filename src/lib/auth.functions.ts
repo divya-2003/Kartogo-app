@@ -242,7 +242,16 @@ export const adminLoginFn = createServerFn({ method: "POST" })
 export const verifyAdminTokenFn = createServerFn({ method: "POST" })
   .inputValidator((data: { token?: string }) => ({ token: data?.token ? String(data.token) : "" }))
   .handler(async ({ data }) => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    return { valid: verifyAdminToken(data.token) };
+    const { readAdminToken } = await import("./auth-tokens.server");
+    const session = readAdminToken(data.token);
+    if (!session) return { valid: false };
+    if (!session.userId) return { valid: true };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: staff } = await supabaseAdmin
+      .from("staff_accounts")
+      .select("role, status")
+      .eq("user_id", session.userId)
+      .maybeSingle();
+    return { valid: staff?.role === "admin" && staff.status === "active" };
   });
 

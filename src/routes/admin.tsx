@@ -1,18 +1,19 @@
-import { createFileRoute, Outlet, Link, useRouterState, redirect, isRedirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link, useRouter, useRouterState, redirect, isRedirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Header } from "@/components/Header";
 import { useOrders } from "@/lib/store";
-import { verifyAdminTokenFn } from "@/lib/auth.functions";
+import { verifyAdminAccessFn, type AdminSessionAccess } from "@/lib/admin-access.functions";
+import { permissionForAdminPath, type AdminPermission } from "@/lib/admin-access.shared";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Sparkles, LayoutDashboard, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Menu, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound, BellRing } from "lucide-react";
+import { Sparkles, LayoutDashboard, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Menu, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound, BellRing, UsersRound, ChevronLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 // Remembers the last successful admin-token verification for this tab so the
 // admin area doesn't re-hit the server on every single navigation.
-const adminSessionCache: { token: string | null; checkedAt: number } = { token: null, checkedAt: 0 };
+const adminSessionCache: { token: string | null; checkedAt: number; access: AdminSessionAccess | null } = { token: null, checkedAt: 0, access: null };
 
 export const Route = createFileRoute("/admin")({
 
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     if (typeof window === "undefined") return;
     let token: string | null = null;
     try { token = JSON.parse(localStorage.getItem("qk_admin_token") || "null"); } catch { token = null; }
@@ -21,18 +22,26 @@ export const Route = createFileRoute("/admin")({
     // Verify at most once every 10 minutes and keep the result in memory, so
     // navigating inside the admin area never waits on a network round-trip.
     const now = Date.now();
-    if (adminSessionCache.token === token && now - adminSessionCache.checkedAt < 10 * 60_000) return;
+    if (adminSessionCache.token === token && adminSessionCache.access && now - adminSessionCache.checkedAt < 10 * 60_000) {
+      const allowed = adminSessionCache.access.isSuperAdmin || adminSessionCache.access.permissions.includes(permissionForAdminPath(location.pathname));
+      if (!allowed) throw redirect({ to: firstAdminPath(adminSessionCache.access.permissions) });
+      return adminSessionCache.access;
+    }
 
     try {
-      const { valid } = await verifyAdminTokenFn({ data: { token } });
+      const access = await verifyAdminAccessFn({ data: { token, path: location.pathname } });
       // Only a definitive "invalid" logs the admin out. A network/server hiccup
       // must never bounce them to the login screen mid-work.
-      if (!valid) {
+      if (!access.valid) {
         adminSessionCache.token = null;
+        adminSessionCache.access = null;
         throw redirect({ to: "/login" });
       }
+      if (!access.allowed) throw redirect({ to: firstAdminPath(access.permissions) });
       adminSessionCache.token = token;
       adminSessionCache.checkedAt = now;
+      adminSessionCache.access = access;
+      return access;
     } catch (e) {
       if (isRedirect(e)) throw e;
       // keep the session; retry on the next navigation
@@ -44,41 +53,48 @@ export const Route = createFileRoute("/admin")({
 });
 
 const NAV = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, permission: "dashboard" },
   
-  { to: "/admin/inventory", label: "Inventory", icon: Boxes },
-  { to: "/admin/wims", label: "Warehouse (WIMS)", icon: Boxes },
-  { to: "/admin/ai", label: "AI assistant", icon: Sparkles },
-  { to: "/admin/ai-alerts", label: "AI inventory alerts", icon: BellRing },
-  { to: "/admin/alerts", label: "Alert settings", icon: BellRing },
-  { to: "/admin/notifications", label: "Push notifications", icon: BellRing },
+  { to: "/admin/inventory", label: "Inventory", icon: Boxes, permission: "inventory" },
+  { to: "/admin/wims", label: "Warehouse (WIMS)", icon: Boxes, permission: "warehouse" },
+  { to: "/admin/ai", label: "AI assistant", icon: Sparkles, permission: "ai" },
+  { to: "/admin/ai-alerts", label: "AI inventory alerts", icon: BellRing, permission: "ai" },
+  { to: "/admin/alerts", label: "Alert settings", icon: BellRing, permission: "alerts" },
+  { to: "/admin/notifications", label: "Push notifications", icon: BellRing, permission: "notifications" },
 
-  { to: "/admin/orders", label: "Orders", icon: ClipboardList },
-  { to: "/admin/cancellations", label: "Cancellations", icon: PackageX },
-  { to: "/admin/refund-requests", label: "Refund requests", icon: BadgeIndianRupee },
-  { to: "/admin/feedback", label: "Feedback", icon: Star },
-  { to: "/admin/delivery", label: "Delivery", icon: Bike },
-  { to: "/admin/logistics", label: "Live logistics", icon: Bike },
-  { to: "/admin/print", label: "Print queue", icon: Printer },
-  { to: "/admin/partners", label: "Partner markets", icon: Store },
-  { to: "/admin/combos", label: "Combo bundles", icon: Package },
+  { to: "/admin/orders", label: "Orders", icon: ClipboardList, permission: "orders" },
+  { to: "/admin/cancellations", label: "Cancellations", icon: PackageX, permission: "orders" },
+  { to: "/admin/refund-requests", label: "Refund requests", icon: BadgeIndianRupee, permission: "refunds" },
+  { to: "/admin/feedback", label: "Feedback", icon: Star, permission: "feedback" },
+  { to: "/admin/delivery", label: "Delivery", icon: Bike, permission: "delivery" },
+  { to: "/admin/logistics", label: "Live logistics", icon: Bike, permission: "logistics" },
+  { to: "/admin/print", label: "Print queue", icon: Printer, permission: "print" },
+  { to: "/admin/partners", label: "Partner markets", icon: Store, permission: "partners" },
+  { to: "/admin/combos", label: "Combo bundles", icon: Package, permission: "combos" },
   
-  { to: "/admin/promos", label: "Promo codes", icon: BadgeIndianRupee },
+  { to: "/admin/promos", label: "Promo codes", icon: BadgeIndianRupee, permission: "promos" },
 
-  { to: "/admin/stock-alerts", label: "Restock requests", icon: Inbox },
-  { to: "/admin/surge", label: "Surge pricing", icon: Flame },
-  { to: "/admin/unserviceable", label: "Area requests", icon: Inbox },
-  { to: "/admin/sales", label: "Sales dataset", icon: SheetIcon },
-  { to: "/admin/reports-daily", label: "Daily summary", icon: CalendarDays },
-  { to: "/admin/reports-products", label: "Product analytics", icon: Package },
-  { to: "/admin/reports-vendors", label: "Vendor report", icon: BarChart3 },
-  { to: "/admin/reports-riders", label: "Rider report", icon: Bike },
-  { to: "/admin/recommendations", label: "Recommendations", icon: Sparkles },
-  { to: "/admin/account", label: "Account", icon: UserRound },
+  { to: "/admin/stock-alerts", label: "Restock requests", icon: Inbox, permission: "alerts" },
+  { to: "/admin/surge", label: "Surge pricing", icon: Flame, permission: "promos" },
+  { to: "/admin/unserviceable", label: "Area requests", icon: Inbox, permission: "requests" },
+  { to: "/admin/sales", label: "Sales dataset", icon: SheetIcon, permission: "sales" },
+  { to: "/admin/reports-daily", label: "Daily summary", icon: CalendarDays, permission: "reports" },
+  { to: "/admin/reports-products", label: "Product analytics", icon: Package, permission: "reports" },
+  { to: "/admin/reports-vendors", label: "Vendor report", icon: BarChart3, permission: "reports" },
+  { to: "/admin/reports-riders", label: "Rider report", icon: Bike, permission: "reports" },
+  { to: "/admin/recommendations", label: "Recommendations", icon: Sparkles, permission: "recommendations" },
+  { to: "/admin/sub-admins", label: "Sub-admins", icon: UsersRound, permission: "sub_admins" },
+  { to: "/admin/account", label: "Account", icon: UserRound, permission: "account" },
 ] as const;
+
+function firstAdminPath(permissions: AdminPermission[]) {
+  return NAV.find((item) => permissions.includes(item.permission))?.to ?? "/admin/account";
+}
 
 
 function AdminLayout() {
+  const routeAccess = Route.useRouteContext() as AdminSessionAccess | undefined;
+  const router = useRouter();
   const path = useRouterState({ select: s => s.location.pathname });
   const { orders } = useOrders();
   const [cancelSeenCount, setCancelSeenCount] = useState(0);
@@ -109,7 +125,7 @@ function AdminLayout() {
 
   const NavList = ({ inSheet = false }: { inSheet?: boolean }) => (
     <nav className="flex flex-col gap-1">
-      {NAV.map(n => {
+      {NAV.filter((n) => routeAccess?.isSuperAdmin || routeAccess?.permissions.includes(n.permission)).map(n => {
         const active = isActive(n.to);
         const badge = n.to === "/admin/cancellations" && unseenCancellations > 0 ? unseenCancellations : null;
         return (
@@ -134,10 +150,13 @@ function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-
       {/* Mobile top bar with hamburger */}
       <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-border bg-card/95 px-3 py-2 backdrop-blur md:hidden">
+        {path !== "/admin" && (
+          <Button type="button" variant="outline" size="icon" aria-label="Go back" onClick={() => router.history.back()}>
+            <ChevronLeft />
+          </Button>
+        )}
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
             <button
@@ -176,7 +195,7 @@ function AdminLayout() {
 
       <div className="mx-auto grid max-w-7xl gap-6 px-4 pb-6 pt-4 md:grid-cols-[220px_minmax(0,1fr)] md:px-6 md:py-6">
         {/* Desktop sidebar */}
-        <aside className="hidden h-fit max-h-[calc(100vh-8rem)] overflow-y-auto rounded-2xl border border-border bg-card p-3 md:sticky md:top-24 md:block">
+         <aside className="hidden h-fit max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl border border-border bg-card p-3 md:sticky md:top-4 md:block">
           <NavList />
         </aside>
 

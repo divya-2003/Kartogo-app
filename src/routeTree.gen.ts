@@ -57,6 +57,7 @@ import { Route as AdminReportsRidersRouteImport } from './routes/admin.reports-r
 import { Route as AdminReportsVendorsRouteImport } from './routes/admin.reports-vendors'
 import { Route as AdminSalesRouteImport } from './routes/admin.sales'
 import { Route as AdminStockAlertsRouteImport } from './routes/admin.stock-alerts'
+import { Route as AdminSubAdminsRouteImport } from './routes/admin.sub-admins'
 import { Route as AdminSurgeRouteImport } from './routes/admin.surge'
 import { Route as AdminUnserviceableRouteImport } from './routes/admin.unserviceable'
 import { Route as AdminWimsRouteImport } from './routes/admin.wims'
@@ -313,6 +314,11 @@ const AdminStockAlertsRoute = AdminStockAlertsRouteImport.update({
   path: '/stock-alerts',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSubAdminsRoute = AdminSubAdminsRouteImport.update({
+  id: '/sub-admins',
+  path: '/sub-admins',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSurgeRoute = AdminSurgeRouteImport.update({
   id: '/surge',
   path: '/surge',
@@ -439,6 +445,7 @@ export interface FileRoutesByFullPath {
   '/admin/reports-vendors': typeof AdminReportsVendorsRoute
   '/admin/sales': typeof AdminSalesRoute
   '/admin/stock-alerts': typeof AdminStockAlertsRoute
+  '/admin/sub-admins': typeof AdminSubAdminsRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
   '/admin/wims': typeof AdminWimsRoute
@@ -502,6 +509,7 @@ export interface FileRoutesByTo {
   '/admin/reports-vendors': typeof AdminReportsVendorsRoute
   '/admin/sales': typeof AdminSalesRoute
   '/admin/stock-alerts': typeof AdminStockAlertsRoute
+  '/admin/sub-admins': typeof AdminSubAdminsRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
   '/admin/wims': typeof AdminWimsRoute
@@ -568,6 +576,7 @@ export interface FileRoutesById {
   '/admin/reports-vendors': typeof AdminReportsVendorsRoute
   '/admin/sales': typeof AdminSalesRoute
   '/admin/stock-alerts': typeof AdminStockAlertsRoute
+  '/admin/sub-admins': typeof AdminSubAdminsRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
   '/admin/wims': typeof AdminWimsRoute
@@ -635,6 +644,7 @@ export interface FileRouteTypes {
     | '/admin/reports-vendors'
     | '/admin/sales'
     | '/admin/stock-alerts'
+    | '/admin/sub-admins'
     | '/admin/surge'
     | '/admin/unserviceable'
     | '/admin/wims'
@@ -698,6 +708,7 @@ export interface FileRouteTypes {
     | '/admin/reports-vendors'
     | '/admin/sales'
     | '/admin/stock-alerts'
+    | '/admin/sub-admins'
     | '/admin/surge'
     | '/admin/unserviceable'
     | '/admin/wims'
@@ -763,6 +774,7 @@ export interface FileRouteTypes {
     | '/admin/reports-vendors'
     | '/admin/sales'
     | '/admin/stock-alerts'
+    | '/admin/sub-admins'
     | '/admin/surge'
     | '/admin/unserviceable'
     | '/admin/wims'
@@ -1152,6 +1164,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminStockAlertsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/sub-admins': {
+      id: '/admin/sub-admins'
+      path: '/sub-admins'
+      fullPath: '/admin/sub-admins'
+      preLoaderRoute: typeof AdminSubAdminsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/surge': {
       id: '/admin/surge'
       path: '/surge'
@@ -1285,6 +1304,7 @@ interface AdminRouteChildren {
   AdminReportsVendorsRoute: typeof AdminReportsVendorsRoute
   AdminSalesRoute: typeof AdminSalesRoute
   AdminStockAlertsRoute: typeof AdminStockAlertsRoute
+  AdminSubAdminsRoute: typeof AdminSubAdminsRoute
   AdminSurgeRoute: typeof AdminSurgeRoute
   AdminUnserviceableRoute: typeof AdminUnserviceableRoute
   AdminWimsRoute: typeof AdminWimsRoute
@@ -1316,6 +1336,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminReportsVendorsRoute: AdminReportsVendorsRoute,
   AdminSalesRoute: AdminSalesRoute,
   AdminStockAlertsRoute: AdminStockAlertsRoute,
+  AdminSubAdminsRoute: AdminSubAdminsRoute,
   AdminSurgeRoute: AdminSurgeRoute,
   AdminUnserviceableRoute: AdminUnserviceableRoute,
   AdminWimsRoute: AdminWimsRoute,

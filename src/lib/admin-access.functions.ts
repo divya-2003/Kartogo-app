@@ -78,20 +78,28 @@ export const listSubAdminsFn = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<{ admins: SubAdmin[] }> => {
     await requireSuperAdmin(data.token);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: accessRows, error: accessError } = await supabaseAdmin
+      .from("admin_access")
+      .select("user_id, permissions")
+      .eq("is_super_admin", false);
+    if (accessError) throw new Error("Could not load sub-admins");
+    const userIds = (accessRows ?? []).map((row) => row.user_id);
+    if (userIds.length === 0) return { admins: [] };
     const { data: staff, error } = await supabaseAdmin
       .from("staff_accounts")
-      .select("user_id, full_name, mobile_number, status, created_at, admin_access!inner(is_super_admin, permissions)")
+      .select("user_id, full_name, mobile_number, status, created_at")
       .eq("role", "admin")
-      .eq("admin_access.is_super_admin", false)
+      .in("user_id", userIds)
       .order("created_at", { ascending: false });
     if (error) throw new Error("Could not load sub-admins");
+    const permissionsByUser = new Map((accessRows ?? []).map((row) => [row.user_id, row.permissions ?? []]));
     return {
       admins: (staff ?? []).map((row: any) => ({
         userId: row.user_id,
         fullName: row.full_name,
         mobileNumber: row.mobile_number,
         status: row.status === "inactive" ? "inactive" : "active",
-        permissions: (row.admin_access?.permissions ?? []) as AdminPermission[],
+        permissions: (permissionsByUser.get(row.user_id) ?? []) as AdminPermission[],
         createdAt: row.created_at,
       })),
     };
