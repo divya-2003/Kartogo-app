@@ -139,15 +139,18 @@ function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#03103b] px-4">
       {/* Brand */}
       <div className="mb-8 flex flex-col items-center gap-3">
         <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-2xl bg-[#03103b] shadow-pop">
           <img src={kartogoLogo} alt="Kartogo" className="h-full w-full scale-110 object-cover" />
         </div>
         <div className="text-center">
-          <h1 className="font-display text-3xl font-bold tracking-tight">Kartogo</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Everything you need, delivered fast</p>
+          <h1 className="font-display text-3xl font-bold tracking-tight">
+            <span className="text-white">Kart</span>
+            <span className="text-orange-500">ogo</span>
+          </h1>
+          <p className="mt-1 text-sm text-white/70">Everything You Need, Delivered Fast</p>
         </div>
       </div>
 
