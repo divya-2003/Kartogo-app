@@ -25,25 +25,18 @@ export function SplashScreen({ minDurationMs = 1800 }: { minDurationMs?: number 
   return (
     <div
       aria-hidden="true"
-      className={`fixed inset-0 z-[100] grid place-items-center bg-gradient-to-b from-[oklch(0.93_0.08_70)] to-background transition-opacity duration-500 ${
+      className={`fixed inset-0 z-[100] grid place-items-center bg-[#03103b] transition-opacity duration-500 ${
         phase === "out" ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
     >
       <div className="flex flex-col items-center px-6 text-center">
         <img src={kartogoLogo} alt="" width={96} height={96} className="h-24 w-24 animate-splash-pop rounded-3xl bg-[#03103b] object-cover shadow-pop" />
-        <div className="mt-4 animate-splash-rise font-display text-4xl font-extrabold tracking-tight text-foreground">Kartogo</div>
-        <div className="mt-1 flex animate-splash-rise items-center gap-1.5 text-sm font-semibold text-muted-foreground [animation-delay:120ms]">
-          <Zap className="h-4 w-4 fill-saffron text-saffron" /> Ongole's 15-minute neighbourhood store
+        <div className="mt-4 animate-splash-rise font-display text-4xl font-extrabold tracking-tight">
+          <span className="text-white">Kart</span>
+          <span className="text-orange-500">ogo</span>
         </div>
-
-        {/* delivery scooter zipping across the road */}
-        <div className="relative mt-8 h-10 w-64 overflow-hidden">
-          <div className="absolute bottom-1 left-0 h-0.5 w-full rounded bg-foreground/15" />
-          <Bike className="absolute bottom-1.5 h-8 w-8 animate-splash-ride text-primary" />
-        </div>
-
-        <div className="mt-4 h-1 w-40 overflow-hidden rounded-full bg-foreground/10">
-          <div className="h-full w-1/3 animate-splash-loader rounded-full bg-primary" />
+        <div className="mt-1 animate-splash-rise text-sm font-semibold text-white/80 [animation-delay:120ms]">
+          Everything You Need, Delivered Fast
         </div>
       </div>
     </div>
