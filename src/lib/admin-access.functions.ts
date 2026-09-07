@@ -109,7 +109,7 @@ const detailsSchema = z.object({
   token: tokenSchema,
   fullName: z.string().trim().min(2).max(80),
   phone: z.string().min(6).max(30),
-  permissions: z.array(permissionSchema).max(ADMIN_FEATURES.length),
+  permissions: z.array(permissionSchema).min(1, "Select at least one feature").max(ADMIN_FEATURES.length),
 });
 
 export const createSubAdminFn = createServerFn({ method: "POST" })
@@ -144,7 +144,7 @@ export const updateSubAdminFn = createServerFn({ method: "POST" })
     token: tokenSchema,
     userId: z.string().uuid(),
     status: z.enum(["active", "inactive"]),
-    permissions: z.array(permissionSchema).max(ADMIN_FEATURES.length),
+    permissions: z.array(permissionSchema).min(1, "Select at least one feature").max(ADMIN_FEATURES.length),
   }).parse(input))
   .handler(async ({ data }) => {
     await requireSuperAdmin(data.token);
