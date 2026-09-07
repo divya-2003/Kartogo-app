@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Zap, Bike } from "lucide-react";
 import kartogoLogo from "@/assets/kartogo-logo.png";
 
 /**

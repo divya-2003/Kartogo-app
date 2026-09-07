@@ -225,7 +225,7 @@ function LoginPage() {
             </form>
           )}
         </div>
-        <p className="mt-4 text-center text-xs text-muted-foreground">
+        <p className="mt-4 text-center text-xs text-white/60">
           By continuing, you agree to Kartogo's terms.
         </p>
       </div>
