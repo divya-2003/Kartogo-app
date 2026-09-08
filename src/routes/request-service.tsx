@@ -148,27 +148,27 @@ function RequestServicePage() {
           </div>
         </div>
 
-        <div className="mt-8 space-y-3 pb-10">
-          <button
-            type="button"
-            onClick={submit}
-            disabled={state === "sending" || state === "done"}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 disabled:opacity-60 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90"
-          >
-            <Send className="h-5 w-5" /> Request Kartogo quick in your area
-          </button>
-
-          <div className="grid grid-cols-2 gap-3">
-            <LocationPicker variant="button" buttonLabel="Change location" />
+        <div className="mt-8 pb-10">
+          {state === "done" ? (
             <button
               type="button"
               onClick={goStandard}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3.5 font-display text-sm font-extrabold"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90"
             >
-              <PackageCheck className="h-4 w-4 text-primary" /> Go to standard
+              <PackageCheck className="h-5 w-5" /> Go to standard
             </button>
-          </div>
+          ) : (
+            <button
+              type="button"
+              onClick={submit}
+              disabled={state === "sending"}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 disabled:opacity-60 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90"
+            >
+              <Send className="h-5 w-5" /> Request Kartogo quick in your area
+            </button>
+          )}
         </div>
+
       </div>
     </div>
   );
