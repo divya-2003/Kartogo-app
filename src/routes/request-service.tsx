@@ -34,6 +34,22 @@ function RequestServicePage() {
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
 
   const areaLabel = area?.trim() || location?.query || location?.area || "your current location";
+  const requestKey = `qk_area_requested:${(pincode || areaLabel).trim().toLowerCase()}`;
+
+  // One request per location — remember what this device already asked for.
+  useEffect(() => {
+    try { if (localStorage.getItem(requestKey)) setState("done"); else setState("idle"); }
+    catch { /* ignore */ }
+  }, [requestKey]);
+
+  // Picking a serviceable location from here takes the customer straight to
+  // the quick page; an unserviceable pick keeps them on this screen.
+  useEffect(() => {
+    if (location?.serviceable) {
+      try { localStorage.setItem("qk_service_tier", "quick"); } catch { /* ignore */ }
+      nav({ to: "/", replace: true });
+    }
+  }, [location?.serviceable, location?.query, nav]);
 
   const submit = useCallback(() => {
     setState("sending");
@@ -47,6 +63,7 @@ function RequestServicePage() {
           lng: coords?.lng ?? null,
           note: null,
         } });
+        try { localStorage.setItem(requestKey, new Date().toISOString()); } catch { /* ignore */ }
         setState("done");
       } catch {
         setState("error");
@@ -61,12 +78,13 @@ function RequestServicePage() {
     } else {
       void send(null);
     }
-  }, [pincode, area, user?.phone, location?.query]);
+  }, [pincode, area, user?.phone, location?.query, requestKey]);
 
   const goStandard = () => {
     try { localStorage.setItem("qk_service_tier", "standard"); } catch { /* ignore */ }
     nav({ to: "/", replace: true });
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[oklch(0.9_0.07_70)] to-background">
