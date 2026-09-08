@@ -143,3 +143,33 @@ export const setMarketOperationsFn = createServerFn({ method: "POST" })
     if (error || !row) throw new Error("Could not update store operations");
     return rowToMarket(row as Row);
   });
+
+// ---------------- Customer-facing ----------------
+// A trimmed, public view of the active partner supermarkets so shoppers can
+// browse stores. No admin token required; only active stores are exposed.
+export type PublicMarket = {
+  id: string;
+  name: string;
+  address: string;
+  acceptingOrders: boolean;
+  prepMinutes: number;
+  notes: string | null;
+};
+
+export const listPublicMarketsFn = createServerFn({ method: "GET" }).handler(async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: rows, error } = await supabaseAdmin
+    .from("partner_markets")
+    .select("id, name, address, accepting_orders, prep_minutes, notes")
+    .eq("is_active", true)
+    .order("name");
+  if (error) throw new Error("Could not load stores");
+  return (rows ?? []).map((r) => ({
+    id: r.id as string,
+    name: r.name as string,
+    address: r.address as string,
+    acceptingOrders: (r.accepting_orders as boolean | null) ?? true,
+    prepMinutes: Number(r.prep_minutes ?? 12),
+    notes: (r.notes as string | null) ?? null,
+  })) satisfies PublicMarket[];
+});
