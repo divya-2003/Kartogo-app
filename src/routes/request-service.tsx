@@ -106,6 +106,13 @@ function RequestServicePage() {
           </Link>
         </div>
 
+        {/* Change the delivery location right here — a serviceable pick jumps
+            straight to the quick page, an unserviceable one stays on this page. */}
+        <div className="mt-3">
+          <LocationPicker variant="button" buttonLabel="Change location" />
+        </div>
+
+
         <div className="mt-10 text-center">
           <div className="font-display text-3xl font-extrabold uppercase leading-tight tracking-tight text-primary">
             Coming soon<br />to your<br />neighbourhood
