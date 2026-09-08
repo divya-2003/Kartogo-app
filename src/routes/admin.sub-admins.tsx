@@ -132,6 +132,37 @@ function SubAdminsPage() {
   );
 }
 
+function AdminRow({ admin, onSave }: { admin: SubAdmin; onSave: (admin: SubAdmin, patch: Partial<Pick<SubAdmin, "status" | "permissions">>) => Promise<void> }) {
+  const [editing, setEditing] = useState(false);
+  return (
+    <article className="rounded-lg border border-border bg-card p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="truncate font-bold">{admin.fullName}</h3>
+          <p className="text-sm text-muted-foreground">
+            +{admin.mobileNumber} · {admin.permissions.length} feature{admin.permissions.length === 1 ? "" : "s"} · {admin.status === "active" ? "Active" : "Inactive"}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
+          <Switch checked={admin.status === "active"} onCheckedChange={(checked) => void onSave(admin, { status: checked ? "active" : "inactive" })} />
+          <Button type="button" variant="outline" size="sm" onClick={() => setEditing((v) => !v)}>
+            {editing ? "Close" : "Edit"}
+          </Button>
+        </div>
+      </div>
+      {editing && (
+        <div className="mt-4 border-t border-border pt-4">
+          <FeaturePicker
+            selected={admin.permissions}
+            onToggle={(key) => void onSave(admin, { permissions: admin.permissions.includes(key) ? admin.permissions.filter((item) => item !== key) : [...admin.permissions, key] })}
+          />
+        </div>
+      )}
+    </article>
+  );
+}
+
+
 function FeaturePicker({ selected, onToggle }: { selected: AdminPermission[]; onToggle: (key: AdminPermission) => void }) {
   return (
     <fieldset>
