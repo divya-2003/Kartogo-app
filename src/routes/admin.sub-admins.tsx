@@ -120,20 +120,13 @@ function SubAdminsPage() {
         {loading ? <p className="text-sm text-muted-foreground">Loading sub-admins…</p> : admins.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">No sub-admins added yet.</div>
         ) : admins.map((admin) => (
-          <article key={admin.userId} className="space-y-4 rounded-lg border border-border bg-card p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h3 className="truncate font-bold">{admin.fullName}</h3>
-                <p className="text-sm text-muted-foreground">+{admin.mobileNumber}</p>
-              </div>
-              <label className="flex shrink-0 items-center gap-2 text-sm font-semibold">
-                Active
-                <Switch checked={admin.status === "active"} onCheckedChange={(checked) => void saveAdmin(admin, { status: checked ? "active" : "inactive" })} />
-              </label>
-            </div>
-            <FeaturePicker selected={admin.permissions} onToggle={(key) => void saveAdmin(admin, { permissions: admin.permissions.includes(key) ? admin.permissions.filter((item) => item !== key) : [...admin.permissions, key] })} />
-          </article>
+          <AdminRow
+            key={admin.userId}
+            admin={admin}
+            onSave={saveAdmin}
+          />
         ))}
+
       </section>
     </div>
   );
