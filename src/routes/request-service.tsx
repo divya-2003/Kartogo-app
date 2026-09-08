@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { z } from "zod";
 import { Loader2, CheckCircle2, MapPin, Bike, Send, User2, PackageCheck } from "lucide-react";
 import { createUnserviceableRequestFn } from "@/lib/unserviceable.functions";
@@ -34,6 +34,22 @@ function RequestServicePage() {
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
 
   const areaLabel = area?.trim() || location?.query || location?.area || "your current location";
+  const requestKey = `qk_area_requested:${(pincode || areaLabel).trim().toLowerCase()}`;
+
+  // One request per location — remember what this device already asked for.
+  useEffect(() => {
+    try { if (localStorage.getItem(requestKey)) setState("done"); else setState("idle"); }
+    catch { /* ignore */ }
+  }, [requestKey]);
+
+  // Picking a serviceable location from here takes the customer straight to
+  // the quick page; an unserviceable pick keeps them on this screen.
+  useEffect(() => {
+    if (location?.serviceable) {
+      try { localStorage.setItem("qk_service_tier", "quick"); } catch { /* ignore */ }
+      nav({ to: "/", replace: true });
+    }
+  }, [location?.serviceable, location?.query, nav]);
 
   const submit = useCallback(() => {
     setState("sending");
@@ -47,6 +63,7 @@ function RequestServicePage() {
           lng: coords?.lng ?? null,
           note: null,
         } });
+        try { localStorage.setItem(requestKey, new Date().toISOString()); } catch { /* ignore */ }
         setState("done");
       } catch {
         setState("error");
@@ -61,12 +78,13 @@ function RequestServicePage() {
     } else {
       void send(null);
     }
-  }, [pincode, area, user?.phone, location?.query]);
+  }, [pincode, area, user?.phone, location?.query, requestKey]);
 
   const goStandard = () => {
     try { localStorage.setItem("qk_service_tier", "standard"); } catch { /* ignore */ }
     nav({ to: "/", replace: true });
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[oklch(0.9_0.07_70)] to-background">
@@ -87,6 +105,13 @@ function RequestServicePage() {
             <User2 className="h-4 w-4 text-primary" /> Profile
           </Link>
         </div>
+
+        {/* Change the delivery location right here — a serviceable pick jumps
+            straight to the quick page, an unserviceable one stays on this page. */}
+        <div className="mt-3">
+          <LocationPicker variant="button" buttonLabel="Change location" />
+        </div>
+
 
         <div className="mt-10 text-center">
           <div className="font-display text-3xl font-extrabold uppercase leading-tight tracking-tight text-primary">
@@ -123,27 +148,27 @@ function RequestServicePage() {
           </div>
         </div>
 
-        <div className="mt-8 space-y-3 pb-10">
-          <button
-            type="button"
-            onClick={submit}
-            disabled={state === "sending" || state === "done"}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 disabled:opacity-60 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90"
-          >
-            <Send className="h-5 w-5" /> Request Kartogo quick in your area
-          </button>
-
-          <div className="grid grid-cols-2 gap-3">
-            <LocationPicker variant="button" buttonLabel="Change location" />
+        <div className="mt-8 pb-10">
+          {state === "done" ? (
             <button
               type="button"
               onClick={goStandard}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3.5 font-display text-sm font-extrabold"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90"
             >
-              <PackageCheck className="h-4 w-4 text-primary" /> Go to standard
+              <PackageCheck className="h-5 w-5" /> Go to standard
             </button>
-          </div>
+          ) : (
+            <button
+              type="button"
+              onClick={submit}
+              disabled={state === "sending"}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 disabled:opacity-60 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90"
+            >
+              <Send className="h-5 w-5" /> Request Kartogo quick in your area
+            </button>
+          )}
         </div>
+
       </div>
     </div>
   );
