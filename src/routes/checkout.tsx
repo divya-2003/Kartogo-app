@@ -350,7 +350,9 @@ function CheckoutPage() {
       // balance — the client never charges the wallet itself.
       const order = await place({
         customerName: selected.name,
-        address: selected.address,
+        address: !isQuickOrder && selectedSlot
+          ? `${selected.address} | Delivery slot: ${selectedSlot.day} ${selectedSlot.window}`
+          : selected.address,
         items: items.map(i => ({ productId: i.productId, qty: i.qty })),
         promoCode: appliedCode ?? undefined,
         paymentMethod: payment,
