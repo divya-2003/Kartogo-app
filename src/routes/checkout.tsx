@@ -325,6 +325,7 @@ function CheckoutPage() {
   const handlePlace = async () => {
     const selected = addressOptions.find(a => a.id === selectedId);
     if (!selected) { toast.error("Please select a delivery address"); return; }
+    if (!isQuickOrder && slotOptions.length > 0 && !selectedSlot) { toast.error("Please choose a delivery slot"); return; }
     // Require complete exact-address details (door no., apartment, landmark)
     // before placing. Saved-area addresses may be missing them — prompt to edit.
     if (selected.kind === "location") {
