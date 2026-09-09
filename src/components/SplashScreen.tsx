@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import kartogoLogo from "@/assets/kartogo-logo.png";
-import wordmark from "@/assets/kartogo-wordmark.png.asset.json";
+import wordmark from "@/assets/kartogo-wordmark-clear.png";
 
 
 /**
@@ -32,7 +32,7 @@ export function SplashScreen({ minDurationMs = 1800 }: { minDurationMs?: number 
     >
       <div className="flex flex-col items-center px-6 text-center">
         <img src={kartogoLogo} alt="" width={96} height={96} className="h-24 w-24 animate-splash-pop rounded-3xl bg-[#03103b] object-cover shadow-pop" />
-        <img src={wordmark.url} alt="Kartogo" className="mt-4 h-14 w-auto animate-splash-rise object-contain" />
+        <img src={wordmark} alt="Kartogo" className="mt-2 h-20 w-auto animate-splash-rise object-contain" />
 
         <div className="mt-1 animate-splash-rise text-sm font-semibold text-white/80 [animation-delay:120ms]">
           Everything You Need, Delivered Fast

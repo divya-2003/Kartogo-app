@@ -116,7 +116,7 @@ function MarketPage() {
         ) : (
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {shown.map((p) => (
-              <ProductCard key={p.id} product={p} />
+              <ProductCard key={p.id} p={p} />
             ))}
           </div>
         )}
