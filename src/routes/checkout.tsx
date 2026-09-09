@@ -129,6 +129,28 @@ function CheckoutPage() {
     }
   }, [addressOptions, selectedId]);
 
+  // Standard (non-quick) orders get a planned delivery window. Quick areas keep
+  // the express flow with no slot picker.
+  const isQuickOrder = !!location?.serviceable && isQuickArea(location.query || location.area);
+  const slotOptions = useMemo(() => {
+    // Two-hour windows through the day; today's past windows are dropped.
+    const windows = [8, 10, 12, 14, 16, 18, 20];
+    const fmt = (h: number) => `${((h + 11) % 12) + 1} ${h < 12 ? "AM" : "PM"}`;
+    const now = new Date();
+    const list: { id: string; day: string; window: string }[] = [];
+    for (const h of windows) {
+      if (h - 1 > now.getHours()) list.push({ id: `today-${h}`, day: "Today", window: `${fmt(h)} – ${fmt(h + 2)}` });
+    }
+    for (const h of windows) list.push({ id: `tom-${h}`, day: "Tomorrow", window: `${fmt(h)} – ${fmt(h + 2)}` });
+    return list.slice(0, 8);
+  }, []);
+  const [slotId, setSlotId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!isQuickOrder && !slotId && slotOptions.length > 0) setSlotId(slotOptions[0].id);
+  }, [isQuickOrder, slotId, slotOptions]);
+  const selectedSlot = slotOptions.find(s => s.id === slotId) ?? null;
+
+
 
   const baseFee = subtotal === 0 ? 0 : subtotal >= 199 ? 0 : 25;
   const [surge, setSurge] = useState<SurgeConfig | null>(null);
