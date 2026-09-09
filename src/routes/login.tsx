@@ -148,7 +148,7 @@ function LoginPage() {
           <img src={kartogoLogo} alt="Kartogo" className="h-full w-full scale-110 object-cover" />
         </div>
         <div className="text-center">
-          <img src={wordmark} alt="Kartogo" className="mx-auto h-14 w-auto object-contain" />
+          <img src={wordmark} alt="Kartogo" className="mx-auto h-24 w-auto max-w-[85vw] object-contain sm:h-28" />
 
           <p className="mt-1 text-sm text-white/70">Everything You Need, Delivered Fast</p>
         </div>
