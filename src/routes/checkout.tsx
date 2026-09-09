@@ -411,6 +411,35 @@ function CheckoutPage() {
               })()}
             </section>
 
+            {/* Standard orders: pick a delivery time slot */}
+            {!isQuickOrder && (
+              <section className="rounded-2xl border border-border bg-card p-5">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-primary" />
+                  <h2 className="font-display text-lg font-bold">Choose a delivery slot</h2>
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">Standard delivery — plan bigger orders for a time that suits you.</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {slotOptions.map(s => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setSlotId(s.id)}
+                      className={`rounded-xl border px-3 py-2 text-left text-sm font-semibold transition ${
+                        slotId === s.id ? "border-primary bg-primary/10 text-foreground" : "border-border bg-background hover:border-primary/40"
+                      }`}
+                    >
+                      <span className="block text-xs font-bold uppercase tracking-wide text-muted-foreground">{s.day}</span>
+                      {s.window}
+                    </button>
+                  ))}
+                </div>
+                {slotOptions.length === 0 && (
+                  <p className="mt-3 text-sm text-muted-foreground">No slots left today — please try again tomorrow.</p>
+                )}
+              </section>
+            )}
+
             {/* Address picker modal */}
             {showPicker && (
               <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4" onClick={() => setShowPicker(false)}>
