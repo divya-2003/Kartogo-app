@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { CountryCode } from "libphonenumber-js";
 import { ChevronDown, Phone, Search } from "lucide-react";
 import { getCountry, getCountryList, maxNationalDigits } from "@/lib/phone";
+import { cn } from "@/lib/utils";
 
 type Props = {
   country: CountryCode;
@@ -10,6 +11,7 @@ type Props = {
   onValueChange: (value: string) => void;
   autoFocus?: boolean;
   placeholder?: string;
+  className?: string;
 };
 
 /** International phone input: flag + dial code selector, then the number. */
@@ -20,6 +22,7 @@ export function PhoneNumberInput({
   onValueChange,
   autoFocus,
   placeholder = "Enter mobile number",
+  className,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -61,7 +64,7 @@ export function PhoneNumberInput({
 
   return (
     <div ref={wrapRef} className="relative">
-      <div className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-2 focus-within:ring-2 focus-within:ring-ring">
+      <div className={cn("flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-2 focus-within:ring-2 focus-within:ring-ring", className)}>
         <Phone className="h-4 w-4 shrink-0 text-muted-foreground" />
         <button
           type="button"
