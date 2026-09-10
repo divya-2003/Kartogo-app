@@ -5,8 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-display: ui-sans-serif, system-ui, sans-serif;
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -40,10 +40,6 @@
   --color-leaf-foreground: var(--leaf-foreground);
   --color-cream: var(--cream);
   --color-ink: var(--ink);
-  --color-brand-navy: var(--brand-navy);
-  --color-brand-orange: var(--brand-orange);
-  --color-brand-green: var(--brand-green);
-  --color-brand-white: var(--brand-white);
 }
 
 :root {
@@ -77,17 +73,13 @@
   --border: oklch(0.88 0.02 85);
   --input: oklch(0.9 0.02 85);
   --ring: oklch(0.46 0.09 155);
-  --brand-navy: oklch(0.18 0.08 264);
-  --brand-orange: oklch(0.7 0.19 50);
-  --brand-green: oklch(0.5 0.12 153);
-  --brand-white: oklch(0.99 0 0);
 }
 
 @layer base {
   * { border-color: var(--color-border); }
   html, body { background-color: var(--color-background); color: var(--color-foreground); }
   body { font-family: var(--font-sans); font-feature-settings: "ss01", "cv11"; }
-  h1, h2, h3, h4, .font-display { font-family: var(--font-display); letter-spacing: 0; }
+  h1, h2, h3, h4, .font-display { font-family: var(--font-display); letter-spacing: -0.02em; }
 }
 
 @layer utilities {

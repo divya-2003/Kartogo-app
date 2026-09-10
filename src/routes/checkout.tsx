@@ -6,8 +6,7 @@ import { ingestOrderFn } from "@/lib/recommendations.functions";
 import { clearRecommendationCartProductIds, customerEventService, getRecommendationCartProductIds } from "@/lib/recommendations.tracking";
 import { formatINR } from "@/lib/data";
 import { toast } from "sonner";
-import { Banknote, Smartphone, Wallet, MapPin, Plus, Check, Trash2, X, Tag, Pencil, Flame, Clock } from "lucide-react";
-import { isQuickArea } from "@/lib/serviceability";
+import { Banknote, Smartphone, Wallet, MapPin, Plus, Check, Trash2, X, Tag, Pencil, Flame } from "lucide-react";
 import { getSurgeConfigFn, SURGE_REASON_LABELS, type SurgeConfig } from "@/lib/surge.functions";
 import { computeDiscount, type PromoRule } from "@/lib/promo";
 import { listPromoRulesFn, validatePromoFn } from "@/lib/promo.functions";
@@ -128,28 +127,6 @@ function CheckoutPage() {
       setShowForm(false);
     }
   }, [addressOptions, selectedId]);
-
-  // Standard (non-quick) orders get a planned delivery window. Quick areas keep
-  // the express flow with no slot picker.
-  const isQuickOrder = !!location?.serviceable && isQuickArea(location.query || location.area);
-  const slotOptions = useMemo(() => {
-    // Two-hour windows through the day; today's past windows are dropped.
-    const windows = [8, 10, 12, 14, 16, 18, 20];
-    const fmt = (h: number) => `${((h + 11) % 12) + 1} ${h < 12 ? "AM" : "PM"}`;
-    const now = new Date();
-    const list: { id: string; day: string; window: string }[] = [];
-    for (const h of windows) {
-      if (h - 1 > now.getHours()) list.push({ id: `today-${h}`, day: "Today", window: `${fmt(h)} – ${fmt(h + 2)}` });
-    }
-    for (const h of windows) list.push({ id: `tom-${h}`, day: "Tomorrow", window: `${fmt(h)} – ${fmt(h + 2)}` });
-    return list.slice(0, 8);
-  }, []);
-  const [slotId, setSlotId] = useState<string | null>(null);
-  useEffect(() => {
-    if (!isQuickOrder && !slotId && slotOptions.length > 0) setSlotId(slotOptions[0].id);
-  }, [isQuickOrder, slotId, slotOptions]);
-  const selectedSlot = slotOptions.find(s => s.id === slotId) ?? null;
-
 
 
   const baseFee = subtotal === 0 ? 0 : subtotal >= 199 ? 0 : 25;
@@ -325,7 +302,6 @@ function CheckoutPage() {
   const handlePlace = async () => {
     const selected = addressOptions.find(a => a.id === selectedId);
     if (!selected) { toast.error("Please select a delivery address"); return; }
-    if (!isQuickOrder && slotOptions.length > 0 && !selectedSlot) { toast.error("Please choose a delivery slot"); return; }
     // Require complete exact-address details (door no., apartment, landmark)
     // before placing. Saved-area addresses may be missing them — prompt to edit.
     if (selected.kind === "location") {
@@ -351,9 +327,7 @@ function CheckoutPage() {
       // balance — the client never charges the wallet itself.
       const order = await place({
         customerName: selected.name,
-        address: !isQuickOrder && selectedSlot
-          ? `${selected.address} | Delivery slot: ${selectedSlot.day} ${selectedSlot.window}`
-          : selected.address,
+        address: selected.address,
         items: items.map(i => ({ productId: i.productId, qty: i.qty })),
         promoCode: appliedCode ?? undefined,
         paymentMethod: payment,
@@ -436,35 +410,6 @@ function CheckoutPage() {
                 );
               })()}
             </section>
-
-            {/* Standard orders: pick a delivery time slot */}
-            {!isQuickOrder && (
-              <section className="rounded-2xl border border-border bg-card p-5">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-primary" />
-                  <h2 className="font-display text-lg font-bold">Choose a delivery slot</h2>
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">Standard delivery — plan bigger orders for a time that suits you.</p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {slotOptions.map(s => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => setSlotId(s.id)}
-                      className={`rounded-xl border px-3 py-2 text-left text-sm font-semibold transition ${
-                        slotId === s.id ? "border-primary bg-primary/10 text-foreground" : "border-border bg-background hover:border-primary/40"
-                      }`}
-                    >
-                      <span className="block text-xs font-bold uppercase tracking-wide text-muted-foreground">{s.day}</span>
-                      {s.window}
-                    </button>
-                  ))}
-                </div>
-                {slotOptions.length === 0 && (
-                  <p className="mt-3 text-sm text-muted-foreground">No slots left today — please try again tomorrow.</p>
-                )}
-              </section>
-            )}
 
             {/* Address picker modal */}
             {showPicker && (

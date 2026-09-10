@@ -120,48 +120,24 @@ function SubAdminsPage() {
         {loading ? <p className="text-sm text-muted-foreground">Loading sub-admins…</p> : admins.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">No sub-admins added yet.</div>
         ) : admins.map((admin) => (
-          <AdminRow
-            key={admin.userId}
-            admin={admin}
-            onSave={saveAdmin}
-          />
+          <article key={admin.userId} className="space-y-4 rounded-lg border border-border bg-card p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="truncate font-bold">{admin.fullName}</h3>
+                <p className="text-sm text-muted-foreground">+{admin.mobileNumber}</p>
+              </div>
+              <label className="flex shrink-0 items-center gap-2 text-sm font-semibold">
+                Active
+                <Switch checked={admin.status === "active"} onCheckedChange={(checked) => void saveAdmin(admin, { status: checked ? "active" : "inactive" })} />
+              </label>
+            </div>
+            <FeaturePicker selected={admin.permissions} onToggle={(key) => void saveAdmin(admin, { permissions: admin.permissions.includes(key) ? admin.permissions.filter((item) => item !== key) : [...admin.permissions, key] })} />
+          </article>
         ))}
-
       </section>
     </div>
   );
 }
-
-function AdminRow({ admin, onSave }: { admin: SubAdmin; onSave: (admin: SubAdmin, patch: Partial<Pick<SubAdmin, "status" | "permissions">>) => Promise<void> }) {
-  const [editing, setEditing] = useState(false);
-  return (
-    <article className="rounded-lg border border-border bg-card p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="truncate font-bold">{admin.fullName}</h3>
-          <p className="text-sm text-muted-foreground">
-            +{admin.mobileNumber} · {admin.permissions.length} feature{admin.permissions.length === 1 ? "" : "s"} · {admin.status === "active" ? "Active" : "Inactive"}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-3">
-          <Switch checked={admin.status === "active"} onCheckedChange={(checked) => void onSave(admin, { status: checked ? "active" : "inactive" })} />
-          <Button type="button" variant="outline" size="sm" onClick={() => setEditing((v) => !v)}>
-            {editing ? "Close" : "Edit"}
-          </Button>
-        </div>
-      </div>
-      {editing && (
-        <div className="mt-4 border-t border-border pt-4">
-          <FeaturePicker
-            selected={admin.permissions}
-            onToggle={(key) => void onSave(admin, { permissions: admin.permissions.includes(key) ? admin.permissions.filter((item) => item !== key) : [...admin.permissions, key] })}
-          />
-        </div>
-      )}
-    </article>
-  );
-}
-
 
 function FeaturePicker({ selected, onToggle }: { selected: AdminPermission[]; onToggle: (key: AdminPermission) => void }) {
   return (

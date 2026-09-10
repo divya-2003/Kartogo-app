@@ -4,10 +4,7 @@ import { useAuth } from "@/lib/store";
 import { toast } from "sonner";
 import { KeyRound, ShieldCheck } from "lucide-react";
 import kartogoLogo from "@/assets/kartogo-logo.png";
-import wordmark from "@/assets/kartogo-wordmark-cropped.png";
-
 import { PhoneNumberInput } from "@/components/PhoneNumberInput";
-import { Button } from "@/components/ui/button";
 import { usePhoneCountryDetection } from "@/hooks/use-phone-country";
 import { toE164, validatePhoneNumber, getCountry } from "@/lib/phone";
 
@@ -16,14 +13,7 @@ export const Route = createFileRoute("/login")({
     redirect: typeof search.redirect === "string" ? search.redirect : undefined,
   }),
   component: LoginPage,
-  head: () => ({ meta: [
-    { title: "Login or Sign Up — Kartogo" },
-    { name: "description", content: "Log in or create your Kartogo account securely with your mobile number." },
-    { property: "og:title", content: "Login or Sign Up — Kartogo" },
-    { property: "og:description", content: "Access Kartogo securely with your mobile number." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary" },
-  ] }),
+  head: () => ({ meta: [{ title: "Login — Kartogo" }] }),
 });
 
 function LoginPage() {
@@ -149,36 +139,42 @@ function LoginPage() {
   };
 
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-start overflow-x-hidden bg-brand-navy px-5 py-8 sm:px-8 sm:py-10 lg:justify-center lg:py-12">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#03103b] px-4">
       {/* Brand */}
-      <div className="mb-10 flex flex-col items-center sm:mb-11">
-        <img src={kartogoLogo} alt="" className="h-22 w-22 rounded-3xl object-cover sm:h-24 sm:w-24" />
-        <img src={wordmark} alt="Kartogo" className="mt-5 w-48 max-w-[72vw] object-contain sm:w-52" />
-        <p className="mt-1.5 font-sans text-sm font-medium text-brand-white/85 sm:text-base">Everything You Need, Delivered Fast</p>
+      <div className="mb-8 flex flex-col items-center gap-3">
+        <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-2xl bg-[#03103b] shadow-pop">
+          <img src={kartogoLogo} alt="Kartogo" className="h-full w-full scale-110 object-cover" />
+        </div>
+        <div className="text-center">
+          <h1 className="font-display text-3xl font-bold tracking-tight">
+            <span className="text-white">Kart</span>
+            <span className="text-orange-500">ogo</span>
+          </h1>
+          <p className="mt-1 text-sm text-white/70">Everything You Need, Delivered Fast</p>
+        </div>
       </div>
 
-      <div className="w-full max-w-xl">
-        <section className="rounded-[2rem] border border-border bg-card px-6 py-7 shadow-pop sm:px-10 sm:py-9" aria-labelledby="login-title">
-          <h1 id="login-title" className="font-display text-2xl font-bold text-card-foreground">Login or sign up</h1>
-          <p className="mt-1 font-sans text-base text-muted-foreground">We'll send an OTP to your mobile.</p>
+      <div className="w-full max-w-md">
+        <div className="rounded-3xl border border-border bg-card p-6 shadow-pop md:p-8">
+          <h2 className="font-display text-xl font-bold">Login or sign up</h2>
+          <p className="mt-1 text-sm text-muted-foreground">We'll send an OTP to your mobile.</p>
 
           {stage === "phone" && (
-            <form onSubmit={handleSend} className="mt-7 space-y-5">
+            <form onSubmit={handleSend} className="mt-6 space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-muted-foreground">Mobile number</label>
+                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Mobile number</label>
                 <PhoneNumberInput
                   autoFocus
                   country={country}
                   onCountryChange={setCountry}
                   value={phone}
                   onValueChange={setPhone}
-                  className="min-h-14 rounded-2xl bg-cream px-4"
                 />
               </div>
-              <Button disabled={loading} size="lg" className="h-15 w-full rounded-2xl bg-brand-green font-display text-lg font-bold text-brand-white hover:bg-brand-green/90">
+              <button disabled={loading} className="w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
                 {loading ? "Sending..." : "Send OTP"}
-              </Button>
-              <p className="pt-1 text-center text-sm text-muted-foreground">An OTP will be sent to your mobile number.</p>
+              </button>
+              <p className="text-center text-xs text-muted-foreground">An OTP will be sent to your mobile number.</p>
 
             </form>
           )}
@@ -202,10 +198,10 @@ function LoginPage() {
                   />
                 </div>
               </div>
-              <Button disabled={loading} className="w-full rounded-xl">
+              <button disabled={loading} className="w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
                 {loading ? "Verifying..." : "Verify & continue"}
-              </Button>
-              <Button type="button" variant="ghost" onClick={() => { setStage("phone"); setOtp(""); }} className="w-full text-muted-foreground">Change number</Button>
+              </button>
+              <button type="button" onClick={() => { setStage("phone"); setOtp(""); }} className="w-full text-center text-sm text-muted-foreground hover:text-foreground">Change number</button>
             </form>
           )}
 
@@ -222,17 +218,17 @@ function LoginPage() {
                   />
                 </div>
               </div>
-              <Button disabled={loading} className="w-full rounded-xl">
+              <button disabled={loading} className="w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
                 {loading ? "Verifying..." : "Enter admin portal"}
-              </Button>
-              <Button type="button" variant="ghost" onClick={() => { setStage("otp"); setPasscode(""); }} className="w-full text-muted-foreground">Back</Button>
+              </button>
+              <button type="button" onClick={() => { setStage("otp"); setPasscode(""); }} className="w-full text-center text-sm text-muted-foreground hover:text-foreground">Back</button>
             </form>
           )}
-        </section>
-        <p className="mt-6 text-center text-sm text-brand-white/70">
+        </div>
+        <p className="mt-4 text-center text-xs text-white/60">
           By continuing, you agree to Kartogo's terms.
         </p>
       </div>
-    </main>
+    </div>
   );
 }

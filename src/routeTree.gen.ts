@@ -62,7 +62,6 @@ import { Route as AdminSurgeRouteImport } from './routes/admin.surge'
 import { Route as AdminUnserviceableRouteImport } from './routes/admin.unserviceable'
 import { Route as AdminWimsRouteImport } from './routes/admin.wims'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
-import { Route as MarketIdRouteImport } from './routes/market.$id'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as RateOrderOrderIdRouteImport } from './routes/rate-order.$orderId'
 import { Route as SupplierIndexRouteImport } from './routes/supplier.index'
@@ -340,11 +339,6 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
   path: '/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MarketIdRoute = MarketIdRouteImport.update({
-  id: '/market/$id',
-  path: '/market/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ProductIdRoute = ProductIdRouteImport.update({
   id: '/product/$id',
   path: '/product/$id',
@@ -456,7 +450,6 @@ export interface FileRoutesByFullPath {
   '/admin/unserviceable': typeof AdminUnserviceableRoute
   '/admin/wims': typeof AdminWimsRoute
   '/category/$slug': typeof CategorySlugRoute
-  '/market/$id': typeof MarketIdRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
   '/supplier/account': typeof SupplierAccountRoute
@@ -521,7 +514,6 @@ export interface FileRoutesByTo {
   '/admin/unserviceable': typeof AdminUnserviceableRoute
   '/admin/wims': typeof AdminWimsRoute
   '/category/$slug': typeof CategorySlugRoute
-  '/market/$id': typeof MarketIdRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
   '/supplier/account': typeof SupplierAccountRoute
@@ -589,7 +581,6 @@ export interface FileRoutesById {
   '/admin/unserviceable': typeof AdminUnserviceableRoute
   '/admin/wims': typeof AdminWimsRoute
   '/category/$slug': typeof CategorySlugRoute
-  '/market/$id': typeof MarketIdRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
   '/supplier/account': typeof SupplierAccountRoute
@@ -658,7 +649,6 @@ export interface FileRouteTypes {
     | '/admin/unserviceable'
     | '/admin/wims'
     | '/category/$slug'
-    | '/market/$id'
     | '/product/$id'
     | '/rate-order/$orderId'
     | '/supplier/account'
@@ -723,7 +713,6 @@ export interface FileRouteTypes {
     | '/admin/unserviceable'
     | '/admin/wims'
     | '/category/$slug'
-    | '/market/$id'
     | '/product/$id'
     | '/rate-order/$orderId'
     | '/supplier/account'
@@ -790,7 +779,6 @@ export interface FileRouteTypes {
     | '/admin/unserviceable'
     | '/admin/wims'
     | '/category/$slug'
-    | '/market/$id'
     | '/product/$id'
     | '/rate-order/$orderId'
     | '/supplier/account'
@@ -830,7 +818,6 @@ export interface RootRouteChildren {
   WalletRoute: typeof WalletRoute
   WishlistRoute: typeof WishlistRoute
   CategorySlugRoute: typeof CategorySlugRoute
-  MarketIdRoute: typeof MarketIdRoute
   ProductIdRoute: typeof ProductIdRoute
   RateOrderOrderIdRoute: typeof RateOrderOrderIdRoute
   TrackOrderIdRoute: typeof TrackOrderIdRoute
@@ -1212,13 +1199,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/market/$id': {
-      id: '/market/$id'
-      path: '/market/$id'
-      fullPath: '/market/$id'
-      preLoaderRoute: typeof MarketIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/product/$id': {
       id: '/product/$id'
       path: '/product/$id'
@@ -1410,7 +1390,6 @@ const rootRouteChildren: RootRouteChildren = {
   WalletRoute: WalletRoute,
   WishlistRoute: WishlistRoute,
   CategorySlugRoute: CategorySlugRoute,
-  MarketIdRoute: MarketIdRoute,
   ProductIdRoute: ProductIdRoute,
   RateOrderOrderIdRoute: RateOrderOrderIdRoute,
   TrackOrderIdRoute: TrackOrderIdRoute,
