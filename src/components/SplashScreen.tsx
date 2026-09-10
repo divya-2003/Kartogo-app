@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import kartogoLogo from "@/assets/kartogo-logo.png";
-import wordmark from "@/assets/kartogo-wordmark-clear.png";
+import wordmark from "@/assets/kartogo-wordmark-cropped.png";
 
 
 /**
@@ -26,15 +26,14 @@ export function SplashScreen({ minDurationMs = 1800 }: { minDurationMs?: number 
   return (
     <div
       aria-hidden="true"
-      className={`fixed inset-0 z-[100] grid place-items-center bg-[#03103b] transition-opacity duration-500 ${
+      className={`fixed inset-0 z-[100] grid place-items-center bg-brand-navy transition-opacity duration-500 ${
         phase === "out" ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
     >
-      <div className="flex flex-col items-center px-6 text-center">
-        <img src={kartogoLogo} alt="" width={96} height={96} className="h-24 w-24 animate-splash-pop rounded-3xl bg-[#03103b] object-cover shadow-pop" />
-        <img src={wordmark} alt="Kartogo" className="mt-3 h-28 w-auto max-w-[85vw] animate-splash-rise object-contain sm:h-32" />
-
-        <div className="mt-1 animate-splash-rise text-sm font-semibold text-white/80 [animation-delay:120ms]">
+      <div className="flex -translate-y-3 flex-col items-center px-6 text-center sm:-translate-y-5">
+        <img src={kartogoLogo} alt="" width={104} height={104} className="h-24 w-24 animate-splash-pop rounded-3xl object-cover sm:h-26 sm:w-26" />
+        <img src={wordmark} alt="Kartogo" className="mt-5 w-48 max-w-[72vw] animate-splash-rise object-contain sm:w-56" />
+        <div className="mt-1.5 animate-splash-rise font-sans text-sm font-semibold text-brand-white/80 [animation-delay:120ms] sm:text-base">
           Everything You Need, Delivered Fast
         </div>
       </div>
