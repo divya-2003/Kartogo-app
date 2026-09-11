@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import kartogoLogo from "@/assets/kartogo-logo.png";
+import kartogoWordmark from "@/assets/kartogo-wordmark.png";
 
 /**
  * Animated launch screen. Shows once per browser session while the app boots
