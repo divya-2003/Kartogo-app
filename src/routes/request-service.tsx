@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { Loader2, CheckCircle2, MapPin, Bike, Send, User2, PackageCheck } from "lucide-react";
 import { createUnserviceableRequestFn } from "@/lib/unserviceable.functions";
 import { LocationPicker } from "@/components/LocationPicker";
 import { useAuth, useLocation } from "@/lib/store";
+import { isQuickArea } from "@/lib/serviceability";
 
 const searchSchema = z.object({
   pincode: z.string().optional(),
@@ -24,8 +25,22 @@ export const Route = createFileRoute("/request-service")({
   }),
 });
 
+// One request per location: remembering the locations already registered on
+// this device stops the same neighbourhood being filed again and again.
+const REQUESTED_KEY = "qk_requested_areas";
+const normalise = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+function readRequested(): string[] {
+  try { return JSON.parse(localStorage.getItem(REQUESTED_KEY) ?? "[]") as string[]; } catch { return []; }
+}
+function rememberRequested(key: string) {
+  try {
+    const all = readRequested();
+    if (!all.includes(key)) localStorage.setItem(REQUESTED_KEY, JSON.stringify([...all, key]));
+  } catch { /* ignore */ }
+}
+
 // Full-screen "coming soon" panel shown when Quick service isn't available for
-// the customer's location. Requests are filed automatically on arrival.
+// the customer's location.
 function RequestServicePage() {
   const { pincode, area } = useSearch({ from: "/request-service" });
   const nav = useNavigate();
@@ -34,6 +49,25 @@ function RequestServicePage() {
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
 
   const areaLabel = area?.trim() || location?.query || location?.area || "your current location";
+  const locationKey = useMemo(
+    () => normalise(`${pincode ?? ""}|${area?.trim() || location?.query || location?.area || ""}`),
+    [pincode, area, location?.query, location?.area],
+  );
+
+  // Already registered this exact location earlier — show the standard route
+  // straight away instead of letting them file a duplicate request.
+  useEffect(() => {
+    if (state === "idle" && readRequested().includes(locationKey)) setState("done");
+  }, [locationKey, state]);
+
+  // The customer can change their location right here. The picker validates the
+  // new place, so the moment it turns out to be a Quick area we send them there.
+  useEffect(() => {
+    if (location?.serviceable && isQuickArea(location.query || location.area)) {
+      try { localStorage.removeItem("qk_service_tier"); } catch { /* ignore */ }
+      nav({ to: "/", replace: true });
+    }
+  }, [location?.serviceable, location?.query, location?.area, nav]);
 
   const submit = useCallback(() => {
     setState("sending");
@@ -47,6 +81,7 @@ function RequestServicePage() {
           lng: coords?.lng ?? null,
           note: null,
         } });
+        rememberRequested(locationKey);
         setState("done");
       } catch {
         setState("error");
@@ -61,7 +96,7 @@ function RequestServicePage() {
     } else {
       void send(null);
     }
-  }, [pincode, area, user?.phone, location?.query]);
+  }, [pincode, area, user?.phone, location?.query, locationKey]);
 
   const goStandard = () => {
     try { localStorage.setItem("qk_service_tier", "standard"); } catch { /* ignore */ }
@@ -88,7 +123,12 @@ function RequestServicePage() {
           </Link>
         </div>
 
-        <div className="mt-10 text-center">
+        {/* change location right from the top — validated as it is picked */}
+        <div className="mt-4">
+          <LocationPicker variant="button" buttonLabel="Change location" />
+        </div>
+
+        <div className="mt-8 text-center">
           <div className="font-display text-3xl font-extrabold uppercase leading-tight tracking-tight text-primary">
             Coming soon<br />to your<br />neighbourhood
           </div>
@@ -109,7 +149,7 @@ function RequestServicePage() {
             )}
             {state === "done" && (
               <span className="inline-flex items-center gap-2 text-leaf">
-                <CheckCircle2 className="h-4 w-4" /> Request received
+                <CheckCircle2 className="h-4 w-4" /> Request received for this location
               </span>
             )}
             {state === "error" && (
@@ -123,26 +163,25 @@ function RequestServicePage() {
           </div>
         </div>
 
-        <div className="mt-8 space-y-3 pb-10">
-          <button
-            type="button"
-            onClick={submit}
-            disabled={state === "sending" || state === "done"}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 disabled:opacity-60 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90"
-          >
-            <Send className="h-5 w-5" /> Request Kartogo quick in your area
-          </button>
-
-          <div className="grid grid-cols-2 gap-3">
-            <LocationPicker variant="button" buttonLabel="Change location" />
+        <div className="mt-8 pb-10">
+          {state === "done" ? (
             <button
               type="button"
               onClick={goStandard}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3.5 font-display text-sm font-extrabold"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90"
             >
-              <PackageCheck className="h-4 w-4 text-primary" /> Go to standard
+              <PackageCheck className="h-5 w-5" /> Go to standard delivery
             </button>
-          </div>
+          ) : (
+            <button
+              type="button"
+              onClick={submit}
+              disabled={state === "sending"}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 disabled:opacity-60 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90"
+            >
+              <Send className="h-5 w-5" /> Request Kartogo quick in your area
+            </button>
+          )}
         </div>
       </div>
     </div>

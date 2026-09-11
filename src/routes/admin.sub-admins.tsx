@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { UserPlus, UsersRound } from "lucide-react";
+import { UserPlus, UsersRound, Pencil, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -36,6 +36,8 @@ function SubAdminsPage() {
   const [permissions, setPermissions] = useState<AdminPermission[]>(["dashboard", "orders"]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  // Team cards stay minimised; only the card being edited expands.
+  const [editing, setEditing] = useState<string | null>(null);
 
   const load = async () => {
     const token = adminToken();
@@ -120,22 +122,51 @@ function SubAdminsPage() {
         {loading ? <p className="text-sm text-muted-foreground">Loading sub-admins…</p> : admins.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">No sub-admins added yet.</div>
         ) : admins.map((admin) => (
-          <article key={admin.userId} className="space-y-4 rounded-lg border border-border bg-card p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h3 className="truncate font-bold">{admin.fullName}</h3>
-                <p className="text-sm text-muted-foreground">+{admin.mobileNumber}</p>
-              </div>
-              <label className="flex shrink-0 items-center gap-2 text-sm font-semibold">
-                Active
-                <Switch checked={admin.status === "active"} onCheckedChange={(checked) => void saveAdmin(admin, { status: checked ? "active" : "inactive" })} />
-              </label>
-            </div>
-            <FeaturePicker selected={admin.permissions} onToggle={(key) => void saveAdmin(admin, { permissions: admin.permissions.includes(key) ? admin.permissions.filter((item) => item !== key) : [...admin.permissions, key] })} />
-          </article>
+          <SubAdminRow
+            key={admin.userId}
+            admin={admin}
+            expanded={editing === admin.userId}
+            onToggleExpand={() => setEditing((current) => current === admin.userId ? null : admin.userId)}
+            onSave={saveAdmin}
+          />
         ))}
       </section>
     </div>
+  );
+}
+
+function SubAdminRow({ admin, expanded, onToggleExpand, onSave }: {
+  admin: SubAdmin;
+  expanded: boolean;
+  onToggleExpand: () => void;
+  onSave: (admin: SubAdmin, patch: Partial<Pick<SubAdmin, "status" | "permissions">>) => Promise<void>;
+}) {
+  return (
+    <article className="rounded-lg border border-border bg-card p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="truncate font-bold">{admin.fullName}</h3>
+          <p className="truncate text-sm text-muted-foreground">
+            +{admin.mobileNumber} · {admin.status === "active" ? "Active" : "Inactive"} · {admin.permissions.length} feature{admin.permissions.length === 1 ? "" : "s"}
+          </p>
+        </div>
+        <Button type="button" variant="outline" size="sm" className="shrink-0 gap-1" onClick={onToggleExpand}>
+          {expanded ? <><ChevronUp className="h-4 w-4" /> Close</> : <><Pencil className="h-4 w-4" /> Edit</>}
+        </Button>
+      </div>
+      {expanded && (
+        <div className="mt-4 space-y-4 border-t border-border pt-4">
+          <label className="flex items-center gap-2 text-sm font-semibold">
+            Active
+            <Switch checked={admin.status === "active"} onCheckedChange={(checked) => void onSave(admin, { status: checked ? "active" : "inactive" })} />
+          </label>
+          <FeaturePicker
+            selected={admin.permissions}
+            onToggle={(key) => void onSave(admin, { permissions: admin.permissions.includes(key) ? admin.permissions.filter((item) => item !== key) : [...admin.permissions, key] })}
+          />
+        </div>
+      )}
+    </article>
   );
 }
 
