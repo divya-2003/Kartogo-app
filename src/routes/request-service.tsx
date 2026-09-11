@@ -50,8 +50,8 @@ function RequestServicePage() {
 
   const areaLabel = area?.trim() || location?.query || location?.area || "your current location";
   const locationKey = useMemo(
-    () => normalise(`${pincode ?? location?.pincode ?? ""}|${area?.trim() || location?.query || location?.area || ""}`),
-    [pincode, area, location?.pincode, location?.query, location?.area],
+    () => normalise(`${pincode ?? ""}|${area?.trim() || location?.query || location?.area || ""}`),
+    [pincode, area, location?.query, location?.area],
   );
 
   // Already registered this exact location earlier — show the standard route
