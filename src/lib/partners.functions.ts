@@ -143,3 +143,47 @@ export const setMarketOperationsFn = createServerFn({ method: "POST" })
     if (error || !row) throw new Error("Could not update store operations");
     return rowToMarket(row as Row);
   });
+
+// ---------------- Public storefront ----------------
+// Customers browsing the Categories/Markets page only ever see active markets
+// and a safe subset of fields (never internal notes or owner phone numbers).
+export type PublicMarket = {
+  id: string;
+  name: string;
+  address: string;
+  acceptingOrders: boolean;
+  prepMinutes: number;
+};
+
+const toPublic = (r: Row): PublicMarket => ({
+  id: r.id,
+  name: r.name,
+  address: r.address,
+  acceptingOrders: r.accepting_orders ?? true,
+  prepMinutes: Number(r.prep_minutes ?? 12),
+});
+
+export const listPublicMarketsFn = createServerFn({ method: "GET" }).handler(async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: rows, error } = await supabaseAdmin
+    .from("partner_markets")
+    .select("*")
+    .eq("is_active", true)
+    .order("name", { ascending: true });
+  if (error) throw new Error("Could not load partnered markets");
+  return (rows as Row[]).map(toPublic);
+});
+
+export const getPublicMarketFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("partner_markets")
+      .select("*")
+      .eq("id", data.id)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (!row) throw new Error("Market not found");
+    return toPublic(row as Row);
+  });
