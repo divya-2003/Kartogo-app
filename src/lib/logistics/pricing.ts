@@ -6,7 +6,7 @@
 // driver portal can preview the exact number the server will pay out.
 
 export const BASE_PAYOUT = 25; // ₹ — the guaranteed minimum per delivery
-export const PER_KM_RATE = 6; // ₹ per km beyond the free radius
+export const PER_KM_RATE = 8; // ₹ per km beyond the free radius
 export const FREE_RADIUS_KM = 3.5;
 export const MAX_PAYOUT = 220; // safety cap so a bad geocode can't drain payouts
 export const BATCH_BONUS = 12; // ₹ per extra order carried in the same run
