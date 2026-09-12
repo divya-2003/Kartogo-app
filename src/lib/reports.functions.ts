@@ -156,14 +156,14 @@ export const getSalesDatasetFn = createServerFn({ method: "POST" })
 
     const [ordersRes, driversRes, reviewsRes] = await Promise.all([
       supabaseAdmin.from("app_orders").select("id, created_at, updated_at, status, payment_method, customer_name, customer_phone, address, items, subtotal, delivery_fee, discount, surge_amount, total, delivery_boy_id, cancel_reason, refunded, refunded_at, refund_request_status").order("created_at", { ascending: false }),
-      supabaseAdmin.from("drivers").select("id, name"),
+      supabaseAdmin.from("delivery_partners").select("driver_id, name"),
       supabaseAdmin.from("product_reviews").select("order_id, rating"),
     ]);
     if (ordersRes.error) throw new Error("Could not load sales data");
 
     const orders = (ordersRes.data ?? []) as RawOrder[];
-    const drivers = (driversRes.data ?? []) as { id: string; name: string }[];
-    const driverById = new Map(drivers.map(d => [d.id, d.name] as const));
+    const drivers = (driversRes.data ?? []) as { driver_id: string; name: string }[];
+    const driverById = new Map(drivers.map(d => [d.driver_id, d.name] as const));
     // Also include static DELIVERY_BOYS from client data (they use string IDs like d1, d2).
     const staticDrivers = [
       { id: "d1", name: "Ravi Kumar" },
@@ -531,14 +531,14 @@ export const getRiderReportFn = createServerFn({ method: "POST" })
 
     const [ordersRes, driversRes, reviewsRes] = await Promise.all([
       supabaseAdmin.from("app_orders").select("id, created_at, updated_at, status, delivery_boy_id, refunded, refund_request_status, surge_amount, driver_surge_share"),
-      supabaseAdmin.from("drivers").select("id, name"),
+      supabaseAdmin.from("delivery_partners").select("driver_id, name"),
       supabaseAdmin.from("product_reviews").select("order_id, rating"),
     ]);
     if (ordersRes.error) throw new Error("Could not load rider report");
 
     const orders = (ordersRes.data ?? []) as (RawOrder & { driver_surge_share: number | string | null })[];
-    const drivers = (driversRes.data ?? []) as { id: string; name: string }[];
-    const driverById = new Map(drivers.map(d => [d.id, d.name] as const));
+    const drivers = (driversRes.data ?? []) as { driver_id: string; name: string }[];
+    const driverById = new Map(drivers.map(d => [d.driver_id, d.name] as const));
     for (const d of [
       { id: "d1", name: "Ravi Kumar" },
       { id: "d2", name: "Suresh M." },
