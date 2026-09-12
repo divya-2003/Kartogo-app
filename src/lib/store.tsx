@@ -974,7 +974,21 @@ export type SavedLocation = {
   landmark?: string;
   /** The area/city/pincode part of the address, kept separate so we can edit the exact details without touching the selected area. */
   baseQuery?: string;
+  /** Friendly profile name: Home, Work, Friends or anything the customer types. */
+  label?: string;
 };
+
+/** Ready-made address profile names, plus a free-text option. */
+export const ADDRESS_LABELS = ["Home", "Work", "Friends"] as const;
+
+/**
+ * Quick delivery only reaches areas inside the serviceable zone with a short
+ * ETA; everything else is Standard. Saved profiles carry this so checkout can
+ * show the right service the moment an address is picked.
+ */
+export function addressZone(loc: Pick<SavedLocation, "serviceable" | "etaMinutes">): "quick" | "standard" {
+  return loc.serviceable && (loc.etaMinutes ?? 99) <= 13 ? "quick" : "standard";
+}
 
 function regexEscape(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -1020,7 +1034,7 @@ type LocationCtx = {
   setLocation: (loc: SavedLocation) => void;
   removeSavedAddress: (query: string) => void;
   /** Update only the exact address details (door / apartment / landmark) of a saved area without changing its city/area. */
-  updateSavedAddress: (query: string, patch: Partial<Pick<SavedLocation, "doorNumber" | "apartment" | "landmark" | "baseQuery">>) => void;
+  updateSavedAddress: (query: string, patch: Partial<Pick<SavedLocation, "doorNumber" | "apartment" | "landmark" | "baseQuery" | "label">>) => void;
   addDeliveryAddress: (addr: Omit<DeliveryAddress, "id">) => DeliveryAddress;
   removeDeliveryAddress: (id: string) => void;
   clearLocation: () => void;
