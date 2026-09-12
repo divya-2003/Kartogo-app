@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { checkServiceability, locateByCoords } from "@/lib/serviceability.functions";
 import { createUnserviceableRequestFn } from "@/lib/unserviceable.functions";
 import { deliveryWindow } from "@/lib/serviceability";
-import { useLocation, buildLocationQuery, useAuth, type SavedLocation } from "@/lib/store";
+import { useLocation, buildLocationQuery, useAuth, ADDRESS_LABELS, addressZone, type SavedLocation } from "@/lib/store";
 
 export type LocationPickerVariant = "chip" | "button";
 
@@ -68,7 +68,7 @@ function LocationPickerClient({
   savedAddresses: SavedLocation[];
   setLocation: (loc: SavedLocation) => void;
   removeSavedAddress: (query: string) => void;
-  updateSavedAddress: (query: string, patch: Partial<Pick<SavedLocation, "doorNumber" | "apartment" | "landmark" | "baseQuery">>) => void;
+  updateSavedAddress: (query: string, patch: Partial<Pick<SavedLocation, "doorNumber" | "apartment" | "landmark" | "baseQuery" | "label">>) => void;
 }) {
   const check = useServerFn(checkServiceability);
   const locate = useServerFn(locateByCoords);
@@ -91,6 +91,9 @@ function LocationPickerClient({
   const [apartment, setApartment] = useState("");
   const [landmark, setLandmark] = useState("");
   const [editingQuery, setEditingQuery] = useState<string | null>(null);
+  // Address profile name — Home / Work / Friends, or anything the customer types.
+  const [label, setLabel] = useState<string>("Home");
+  const [customLabel, setCustomLabel] = useState(false);
 
   useEffect(() => {
     if (open) {
