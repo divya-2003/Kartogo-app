@@ -188,6 +188,10 @@ export type Database = {
           refunded_at: string | null
           return_picked_up_at: string | null
           return_stage: string | null
+          scheduled_date: string | null
+          scheduled_end: string | null
+          scheduled_slot_label: string | null
+          scheduled_start: string | null
           status: string
           subtotal: number
           surge_amount: number
@@ -219,6 +223,10 @@ export type Database = {
           refunded_at?: string | null
           return_picked_up_at?: string | null
           return_stage?: string | null
+          scheduled_date?: string | null
+          scheduled_end?: string | null
+          scheduled_slot_label?: string | null
+          scheduled_start?: string | null
           status?: string
           subtotal?: number
           surge_amount?: number
@@ -250,6 +258,10 @@ export type Database = {
           refunded_at?: string | null
           return_picked_up_at?: string | null
           return_stage?: string | null
+          scheduled_date?: string | null
+          scheduled_end?: string | null
+          scheduled_slot_label?: string | null
+          scheduled_start?: string | null
           status?: string
           subtotal?: number
           surge_amount?: number
@@ -763,6 +775,39 @@ export type Database = {
         }
         Relationships: []
       }
+      delivery_slots: {
+        Row: {
+          created_at: string
+          end_time: string
+          id: string
+          is_active: boolean
+          label: string
+          sort_order: number
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          id?: string
+          is_active?: boolean
+          label: string
+          sort_order?: number
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          sort_order?: number
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       driver_access_events: {
         Row: {
           active: boolean
@@ -916,39 +961,6 @@ export type Database = {
           id?: string
           order_id?: string | null
           to_status?: Database["public"]["Enums"]["driver_status"]
-        }
-        Relationships: []
-      }
-      drivers: {
-        Row: {
-          created_at: string
-          current_latitude: number | null
-          current_longitude: number | null
-          id: string
-          is_active: boolean
-          name: string
-          phone: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          current_latitude?: number | null
-          current_longitude?: number | null
-          id?: string
-          is_active?: boolean
-          name: string
-          phone: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          current_latitude?: number | null
-          current_longitude?: number | null
-          id?: string
-          is_active?: boolean
-          name?: string
-          phone?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -1236,45 +1248,6 @@ export type Database = {
           product_name?: string
           quantity?: number
           status?: string
-        }
-        Relationships: []
-      }
-      merchants: {
-        Row: {
-          address: string
-          balance: number
-          commission_rate: number
-          created_at: string
-          id: string
-          is_open: boolean
-          latitude: number | null
-          longitude: number | null
-          store_name: string
-          updated_at: string
-        }
-        Insert: {
-          address: string
-          balance?: number
-          commission_rate?: number
-          created_at?: string
-          id?: string
-          is_open?: boolean
-          latitude?: number | null
-          longitude?: number | null
-          store_name: string
-          updated_at?: string
-        }
-        Update: {
-          address?: string
-          balance?: number
-          commission_rate?: number
-          created_at?: string
-          id?: string
-          is_open?: boolean
-          latitude?: number | null
-          longitude?: number | null
-          store_name?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -1601,73 +1574,6 @@ export type Database = {
         }
         Relationships: []
       }
-      orders: {
-        Row: {
-          commission_amount: number
-          created_at: string
-          customer_id: string
-          delivery_fee: number
-          driver_id: string | null
-          id: string
-          merchant_id: string
-          payment_status: Database["public"]["Enums"]["payment_status"]
-          payout_amount: number
-          status: Database["public"]["Enums"]["order_status"]
-          subtotal: number
-          updated_at: string
-        }
-        Insert: {
-          commission_amount?: number
-          created_at?: string
-          customer_id: string
-          delivery_fee?: number
-          driver_id?: string | null
-          id?: string
-          merchant_id: string
-          payment_status?: Database["public"]["Enums"]["payment_status"]
-          payout_amount?: number
-          status?: Database["public"]["Enums"]["order_status"]
-          subtotal?: number
-          updated_at?: string
-        }
-        Update: {
-          commission_amount?: number
-          created_at?: string
-          customer_id?: string
-          delivery_fee?: number
-          driver_id?: string | null
-          id?: string
-          merchant_id?: string
-          payment_status?: Database["public"]["Enums"]["payment_status"]
-          payout_amount?: number
-          status?: Database["public"]["Enums"]["order_status"]
-          subtotal?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "orders_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "drivers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_merchant_id_fkey"
-            columns: ["merchant_id"]
-            isOneToOne: false
-            referencedRelation: "merchants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       otp_codes: {
         Row: {
           attempts: number
@@ -1887,42 +1793,6 @@ export type Database = {
         }
         Relationships: []
       }
-      product_recommendations: {
-        Row: {
-          created_at: string
-          expires_at: string | null
-          id: string
-          phone: string
-          product_id: string
-          reason: string
-          recommendation_type: string
-          score: number
-          source_product_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          expires_at?: string | null
-          id?: string
-          phone: string
-          product_id: string
-          reason?: string
-          recommendation_type: string
-          score?: number
-          source_product_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          expires_at?: string | null
-          id?: string
-          phone?: string
-          product_id?: string
-          reason?: string
-          recommendation_type?: string
-          score?: number
-          source_product_id?: string | null
-        }
-        Relationships: []
-      }
       product_reviews: {
         Row: {
           created_at: string
@@ -1961,53 +1831,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-      products: {
-        Row: {
-          category: Database["public"]["Enums"]["product_category"]
-          created_at: string
-          description: string | null
-          id: string
-          image_url: string | null
-          merchant_id: string
-          name: string
-          price: number
-          stock_count: number
-          updated_at: string
-        }
-        Insert: {
-          category: Database["public"]["Enums"]["product_category"]
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          merchant_id: string
-          name: string
-          price?: number
-          stock_count?: number
-          updated_at?: string
-        }
-        Update: {
-          category?: Database["public"]["Enums"]["product_category"]
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          merchant_id?: string
-          name?: string
-          price?: number
-          stock_count?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "products_merchant_id_fkey"
-            columns: ["merchant_id"]
-            isOneToOne: false
-            referencedRelation: "merchants"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       promo_codes: {
         Row: {
@@ -2591,19 +2414,6 @@ export type Database = {
         | "ARRIVED_AT_CUSTOMER"
         | "DELIVERED"
         | "BREAK"
-      order_status:
-        | "pending"
-        | "accepted"
-        | "preparing"
-        | "out_for_delivery"
-        | "delivered"
-      payment_status: "pending" | "paid" | "failed" | "refunded"
-      product_category:
-        | "OTC Health"
-        | "Electronics"
-        | "Party Supplies"
-        | "Gourmet Snacks"
-        | "Pet Care"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2750,21 +2560,6 @@ export const Constants = {
         "ARRIVED_AT_CUSTOMER",
         "DELIVERED",
         "BREAK",
-      ],
-      order_status: [
-        "pending",
-        "accepted",
-        "preparing",
-        "out_for_delivery",
-        "delivered",
-      ],
-      payment_status: ["pending", "paid", "failed", "refunded"],
-      product_category: [
-        "OTC Health",
-        "Electronics",
-        "Party Supplies",
-        "Gourmet Snacks",
-        "Pet Care",
       ],
     },
   },
