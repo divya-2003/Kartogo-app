@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/store";
 import { toast } from "sonner";
 import { KeyRound, ShieldCheck } from "lucide-react";
 import kartogoLogo from "@/assets/kartogo-logo.png";
-import kartogoWordmark from "@/assets/kartogo-wordmark.png";
+import kartogoWordmark from "@/assets/kartogo-wordmark.png.asset.json";
 import { PhoneNumberInput } from "@/components/PhoneNumberInput";
 import { usePhoneCountryDetection } from "@/hooks/use-phone-country";
 import { toE164, validatePhoneNumber, getCountry } from "@/lib/phone";
@@ -148,7 +148,7 @@ function LoginPage() {
         </div>
         <div className="text-center">
           <h1>
-            <img src={kartogoWordmark} alt="Kartogo" className="mx-auto h-10 w-auto object-contain" />
+            <img src={kartogoWordmark.url} alt="Kartogo" className="mx-auto h-10 w-auto object-contain" />
           </h1>
           <p className="mt-1 text-sm text-white/70">Everything You Need, Delivered Fast</p>
         </div>
