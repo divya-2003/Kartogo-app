@@ -125,6 +125,8 @@ function LocationPickerClient({
     setDoorNumber("");
     setApartment("");
     setLandmark("");
+    setLabel("Home");
+    setCustomLabel(false);
   };
 
   const startEditSaved = (addr: SavedLocation) => {
@@ -137,12 +139,16 @@ function LocationPickerClient({
     setDoorNumber(addr.doorNumber ?? "");
     setApartment(addr.apartment ?? "");
     setLandmark(addr.landmark ?? "");
+    const saved = addr.label ?? "Home";
+    setLabel(saved);
+    setCustomLabel(!ADDRESS_LABELS.includes(saved as (typeof ADDRESS_LABELS)[number]));
   };
 
 
   const saveDetails = (e: React.FormEvent) => {
     e.preventDefault();
     if (!pending) return;
+    const profile = label.trim() || "Home";
     // Exact details (door no., apartment, landmark) are optional here — we ask
     // for them mandatorily at checkout instead.
     if (editingQuery) {
@@ -150,6 +156,7 @@ function LocationPickerClient({
         doorNumber: doorNumber.trim(),
         apartment: apartment.trim() || undefined,
         landmark: landmark.trim() || undefined,
+        label: profile,
       });
       toast.success("Address updated");
       setOpen(false);
@@ -170,6 +177,7 @@ function LocationPickerClient({
       apartment: apartment.trim() || undefined,
       landmark: landmark.trim() || undefined,
       baseQuery: pending.query,
+      label: profile,
     });
     toast.success(`Delivering to ${pending.area} in ${deliveryWindow(pending.etaMinutes)}`);
     setOpen(false);
@@ -345,6 +353,38 @@ function LocationPickerClient({
               <form onSubmit={saveDetails} className="mt-5 space-y-3">
                 <div>
                   <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    Save this address as
+                  </label>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {ADDRESS_LABELS.map((l) => (
+                      <button
+                        key={l}
+                        type="button"
+                        onClick={() => { setLabel(l); setCustomLabel(false); }}
+                        className={`rounded-lg border px-3 py-1.5 text-sm font-semibold ${!customLabel && label === l ? "border-primary bg-primary/10 text-primary" : "border-input"}`}
+                      >
+                        {l}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => { setCustomLabel(true); setLabel(""); }}
+                      className={`rounded-lg border px-3 py-1.5 text-sm font-semibold ${customLabel ? "border-primary bg-primary/10 text-primary" : "border-input"}`}
+                    >
+                      Other
+                    </button>
+                    {customLabel && (
+                      <input
+                        value={label}
+                        onChange={(e) => setLabel(e.target.value.slice(0, 24))}
+                        placeholder="e.g. Mom's place"
+                        className="min-w-[9rem] flex-1 rounded-lg border border-input bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-muted-foreground">
                     Door / Flat number <span className="font-normal normal-case">(optional)</span>
                   </label>
                   <input
@@ -474,7 +514,17 @@ function LocationPickerClient({
                         >
                           <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-sm font-semibold">{addr.area}</span>
+                            <span className="flex flex-wrap items-center gap-1.5">
+                              {addr.label && (
+                                <span className="rounded-md bg-secondary px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide">
+                                  {addr.label}
+                                </span>
+                              )}
+                              <span className="truncate text-sm font-semibold">{addr.area}</span>
+                              <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${addressZone(addr) === "quick" ? "bg-leaf/15 text-leaf" : "bg-muted text-muted-foreground"}`}>
+                                {addressZone(addr) === "quick" ? "Quick available" : "Standard only"}
+                              </span>
+                            </span>
                             <span className="block truncate text-xs text-muted-foreground">{addr.query}</span>
                           </span>
                         </button>

@@ -10,6 +10,25 @@ import { Banknote, Smartphone, Wallet, MapPin, Plus, Check, Trash2, X, Tag, Penc
 import { getSurgeConfigFn, SURGE_REASON_LABELS, type SurgeConfig } from "@/lib/surge.functions";
 import { computeDiscount, type PromoRule } from "@/lib/promo";
 import { listPromoRulesFn, validatePromoFn } from "@/lib/promo.functions";
+import { listDeliverySlotsFn, type DeliverySlot } from "@/lib/slots.functions";
+
+// ---- Scheduled delivery helpers -------------------------------------------
+const pad = (n: number) => String(n).padStart(2, "0");
+const ymd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+/** "18:00:00" -> "6:00 PM" */
+function prettyTime(t: string): string {
+  const [h, m] = t.split(":").map(Number);
+  const hour = ((h ?? 0) % 12) || 12;
+  return `${hour}:${pad(m ?? 0)} ${(h ?? 0) < 12 ? "AM" : "PM"}`;
+}
+const slotWindow = (s: DeliverySlot) => `${prettyTime(s.start_time)} – ${prettyTime(s.end_time)}`;
+/** A slot is bookable today only while there's still time to reach its start. */
+function slotAvailableToday(s: DeliverySlot, now = new Date()): boolean {
+  const [h, m] = s.start_time.split(":").map(Number);
+  const start = new Date(now);
+  start.setHours(h ?? 0, m ?? 0, 0, 0);
+  return start.getTime() - now.getTime() > 60 * 60 * 1000; // 1-hour cut-off
+}
 
 
 
@@ -54,6 +73,21 @@ function CheckoutPage() {
   const [newDoor, setNewDoor] = useState("");
   const [newApartment, setNewApartment] = useState("");
   const [newLandmark, setNewLandmark] = useState("");
+
+  // Scheduled delivery (Standard orders only).
+  const isQuick = (location?.etaMinutes ?? 99) <= 13;
+  const [slots, setSlots] = useState<DeliverySlot[]>([]);
+  const [slotId, setSlotId] = useState<string | null>(null);
+  const [slotDate, setSlotDate] = useState<string | null>(null);
+  useEffect(() => {
+    if (isQuick) return;
+    let alive = true;
+    void listDeliverySlotsFn({ data: {} })
+      .then(rows => { if (alive) setSlots(rows); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [isQuick]);
+
 
   const userName = user?.name?.trim() || "Kartogo User";
   // The address the customer picked in "Select your location" is always the
@@ -455,6 +489,31 @@ function CheckoutPage() {
                           <button onClick={() => setEditLocationId(null)} className="flex-1 rounded-xl border border-border py-2.5 font-bold hover:bg-secondary">Cancel</button>
                           <button onClick={saveLocationEdit} className="flex-1 rounded-xl bg-primary py-2.5 font-bold text-primary-foreground hover:bg-primary/90">Save changes</button>
                         </div>
+
+                        {/* Saved addresses — pick one instead of editing this one. */}
+                        {addressOptions.length > 0 && (
+                          <div className="border-t border-border pt-3">
+                            <div className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                              Or deliver to a saved address
+                            </div>
+                            <ul className="grid gap-2">
+                              {addressOptions.map(opt => (
+                                <li key={opt.id}>
+                                  <button
+                                    onClick={() => { setSelectedId(opt.id); setEditLocationId(null); setShowPicker(false); }}
+                                    className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition ${opt.id === selectedId ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}
+                                  >
+                                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                                    <span className="min-w-0">
+                                      <span className="block text-sm font-bold">{opt.label}</span>
+                                      <span className="block text-xs text-muted-foreground">{opt.address}</span>
+                                    </span>
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ) : !showForm && (
@@ -516,7 +575,7 @@ function CheckoutPage() {
                       <div className="grid gap-3">
                         <Field label="Label">
                           <div className="flex flex-wrap gap-2">
-                            {["Home", "Work", "Other"].map(l => (
+                            {["Home", "Work", "Friends", "Other"].map(l => (
                               <button
                                 key={l}
                                 type="button"

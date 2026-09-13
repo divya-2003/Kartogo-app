@@ -12,6 +12,9 @@ type PlaceInput = {
   address: string;
   paymentMethod: PaymentMethod;
   promoCode?: string;
+  /** Standard orders may be scheduled into one of the admin-managed time slots. */
+  slotId?: string;
+  slotDate?: string;
 };
 
 // ---------------- List orders ----------------
@@ -71,6 +74,8 @@ export const placeOrderFn = createServerFn({ method: "POST" })
       address: address.slice(0, 400),
       paymentMethod: data.paymentMethod,
       promoCode: data.promoCode ? String(data.promoCode).slice(0, 24) : undefined,
+      slotId: data.slotId ? String(data.slotId).slice(0, 64) : undefined,
+      slotDate: /^\d{4}-\d{2}-\d{2}$/.test(String(data.slotDate ?? "")) ? String(data.slotDate) : undefined,
     };
   })
   .handler(async ({ data }) => {
@@ -126,6 +131,25 @@ export const placeOrderFn = createServerFn({ method: "POST" })
     const total = Math.max(0, subtotal + fee - discount);
     const id = `OK${Date.now().toString().slice(-6)}`;
 
+    // Scheduled delivery: the slot is re-read from the database so a client can
+    // never invent a window we don't actually run.
+    let slot: { label: string; start: string; end: string; date: string } | null = null;
+    if (data.slotId && data.slotDate) {
+      const { data: slotRow } = await supabaseAdmin
+        .from("delivery_slots")
+        .select("label, start_time, end_time, is_active")
+        .eq("id", data.slotId)
+        .maybeSingle();
+      if (slotRow?.is_active) {
+        slot = {
+          label: slotRow.label,
+          start: slotRow.start_time,
+          end: slotRow.end_time,
+          date: data.slotDate,
+        };
+      }
+    }
+
     // Wallet payments are charged against the AUTHORITATIVE server-side balance.
     // The deduction is validated and recorded in the database before the order is
     // saved, so a client can never get a free order by faking a balance.
@@ -180,6 +204,10 @@ export const placeOrderFn = createServerFn({ method: "POST" })
         total,
         payment_method: data.paymentMethod,
         status: "placed",
+        scheduled_slot_label: slot?.label ?? null,
+        scheduled_date: slot?.date ?? null,
+        scheduled_start: slot?.start ?? null,
+        scheduled_end: slot?.end ?? null,
       })
       .select("*")
       .single();

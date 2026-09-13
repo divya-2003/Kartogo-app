@@ -689,6 +689,11 @@ export type Order = {
   returnStage?: "requested" | "picked_up" | "refund_initiated" | "refunded" | "refund_rejected";
   returnPickedUpAt?: number;
   refundInitiatedAt?: number;
+  /** Booked delivery window for Standard orders. */
+  scheduledSlotLabel?: string;
+  scheduledDate?: string;
+  scheduledStart?: string;
+  scheduledEnd?: string;
 };
 
 type OrdersCtx = {
@@ -711,6 +716,9 @@ export type PlaceOrderInput = {
   address: string;
   paymentMethod: Order["paymentMethod"];
   promoCode?: string;
+  /** Standard deliveries may be booked into a time slot. */
+  slotId?: string;
+  slotDate?: string;
 };
 const OrdersContext = createContext<OrdersCtx | null>(null);
 
@@ -743,6 +751,10 @@ type OrderRow = {
   return_stage?: string | null;
   return_picked_up_at?: string | null;
   refund_initiated_at?: string | null;
+  scheduled_slot_label?: string | null;
+  scheduled_date?: string | null;
+  scheduled_start?: string | null;
+  scheduled_end?: string | null;
 };
 function rowToOrder(r: OrderRow): Order {
   const resolution = r.refund_request_resolution === "Replacement" ? "Replacement" : r.refund_request_resolution === "Refund" ? "Refund" : undefined;
@@ -775,6 +787,10 @@ function rowToOrder(r: OrderRow): Order {
       .find(k => k === r.return_stage),
     returnPickedUpAt: r.return_picked_up_at ? new Date(r.return_picked_up_at).getTime() : undefined,
     refundInitiatedAt: r.refund_initiated_at ? new Date(r.refund_initiated_at).getTime() : undefined,
+    scheduledSlotLabel: r.scheduled_slot_label ?? undefined,
+    scheduledDate: r.scheduled_date ?? undefined,
+    scheduledStart: r.scheduled_start ?? undefined,
+    scheduledEnd: r.scheduled_end ?? undefined,
   };
 }
 
@@ -872,6 +888,8 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
           address: o.address,
           paymentMethod: o.paymentMethod,
           promoCode: o.promoCode,
+          slotId: o.slotId,
+          slotDate: o.slotDate,
         },
       });
       const saved = rowToOrder(row as unknown as OrderRow);
