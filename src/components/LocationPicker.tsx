@@ -514,7 +514,17 @@ function LocationPickerClient({
                         >
                           <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-sm font-semibold">{addr.area}</span>
+                            <span className="flex flex-wrap items-center gap-1.5">
+                              {addr.label && (
+                                <span className="rounded-md bg-secondary px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide">
+                                  {addr.label}
+                                </span>
+                              )}
+                              <span className="truncate text-sm font-semibold">{addr.area}</span>
+                              <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${addressZone(addr) === "quick" ? "bg-leaf/15 text-leaf" : "bg-muted text-muted-foreground"}`}>
+                                {addressZone(addr) === "quick" ? "Quick available" : "Standard only"}
+                              </span>
+                            </span>
                             <span className="block truncate text-xs text-muted-foreground">{addr.query}</span>
                           </span>
                         </button>
