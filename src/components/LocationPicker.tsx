@@ -125,6 +125,8 @@ function LocationPickerClient({
     setDoorNumber("");
     setApartment("");
     setLandmark("");
+    setLabel("Home");
+    setCustomLabel(false);
   };
 
   const startEditSaved = (addr: SavedLocation) => {
@@ -137,12 +139,16 @@ function LocationPickerClient({
     setDoorNumber(addr.doorNumber ?? "");
     setApartment(addr.apartment ?? "");
     setLandmark(addr.landmark ?? "");
+    const saved = addr.label ?? "Home";
+    setLabel(saved);
+    setCustomLabel(!ADDRESS_LABELS.includes(saved as (typeof ADDRESS_LABELS)[number]));
   };
 
 
   const saveDetails = (e: React.FormEvent) => {
     e.preventDefault();
     if (!pending) return;
+    const profile = label.trim() || "Home";
     // Exact details (door no., apartment, landmark) are optional here — we ask
     // for them mandatorily at checkout instead.
     if (editingQuery) {
@@ -150,6 +156,7 @@ function LocationPickerClient({
         doorNumber: doorNumber.trim(),
         apartment: apartment.trim() || undefined,
         landmark: landmark.trim() || undefined,
+        label: profile,
       });
       toast.success("Address updated");
       setOpen(false);
@@ -170,6 +177,7 @@ function LocationPickerClient({
       apartment: apartment.trim() || undefined,
       landmark: landmark.trim() || undefined,
       baseQuery: pending.query,
+      label: profile,
     });
     toast.success(`Delivering to ${pending.area} in ${deliveryWindow(pending.etaMinutes)}`);
     setOpen(false);
