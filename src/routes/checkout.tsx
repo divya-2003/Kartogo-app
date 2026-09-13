@@ -10,6 +10,25 @@ import { Banknote, Smartphone, Wallet, MapPin, Plus, Check, Trash2, X, Tag, Penc
 import { getSurgeConfigFn, SURGE_REASON_LABELS, type SurgeConfig } from "@/lib/surge.functions";
 import { computeDiscount, type PromoRule } from "@/lib/promo";
 import { listPromoRulesFn, validatePromoFn } from "@/lib/promo.functions";
+import { listDeliverySlotsFn, type DeliverySlot } from "@/lib/slots.functions";
+
+// ---- Scheduled delivery helpers -------------------------------------------
+const pad = (n: number) => String(n).padStart(2, "0");
+const ymd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+/** "18:00:00" -> "6:00 PM" */
+function prettyTime(t: string): string {
+  const [h, m] = t.split(":").map(Number);
+  const hour = ((h ?? 0) % 12) || 12;
+  return `${hour}:${pad(m ?? 0)} ${(h ?? 0) < 12 ? "AM" : "PM"}`;
+}
+const slotWindow = (s: DeliverySlot) => `${prettyTime(s.start_time)} – ${prettyTime(s.end_time)}`;
+/** A slot is bookable today only while there's still time to reach its start. */
+function slotAvailableToday(s: DeliverySlot, now = new Date()): boolean {
+  const [h, m] = s.start_time.split(":").map(Number);
+  const start = new Date(now);
+  start.setHours(h ?? 0, m ?? 0, 0, 0);
+  return start.getTime() - now.getTime() > 60 * 60 * 1000; // 1-hour cut-off
+}
 
 
 
