@@ -783,6 +783,10 @@ function rowToOrder(r: OrderRow): Order {
       .find(k => k === r.return_stage),
     returnPickedUpAt: r.return_picked_up_at ? new Date(r.return_picked_up_at).getTime() : undefined,
     refundInitiatedAt: r.refund_initiated_at ? new Date(r.refund_initiated_at).getTime() : undefined,
+    scheduledSlotLabel: r.scheduled_slot_label ?? undefined,
+    scheduledDate: r.scheduled_date ?? undefined,
+    scheduledStart: r.scheduled_start ?? undefined,
+    scheduledEnd: r.scheduled_end ?? undefined,
   };
 }
 
