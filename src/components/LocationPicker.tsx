@@ -353,6 +353,38 @@ function LocationPickerClient({
               <form onSubmit={saveDetails} className="mt-5 space-y-3">
                 <div>
                   <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    Save this address as
+                  </label>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {ADDRESS_LABELS.map((l) => (
+                      <button
+                        key={l}
+                        type="button"
+                        onClick={() => { setLabel(l); setCustomLabel(false); }}
+                        className={`rounded-lg border px-3 py-1.5 text-sm font-semibold ${!customLabel && label === l ? "border-primary bg-primary/10 text-primary" : "border-input"}`}
+                      >
+                        {l}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => { setCustomLabel(true); setLabel(""); }}
+                      className={`rounded-lg border px-3 py-1.5 text-sm font-semibold ${customLabel ? "border-primary bg-primary/10 text-primary" : "border-input"}`}
+                    >
+                      Other
+                    </button>
+                    {customLabel && (
+                      <input
+                        value={label}
+                        onChange={(e) => setLabel(e.target.value.slice(0, 24))}
+                        placeholder="e.g. Mom's place"
+                        className="min-w-[9rem] flex-1 rounded-lg border border-input bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-muted-foreground">
                     Door / Flat number <span className="font-normal normal-case">(optional)</span>
                   </label>
                   <input
