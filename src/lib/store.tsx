@@ -689,6 +689,11 @@ export type Order = {
   returnStage?: "requested" | "picked_up" | "refund_initiated" | "refunded" | "refund_rejected";
   returnPickedUpAt?: number;
   refundInitiatedAt?: number;
+  /** Booked delivery window for Standard orders. */
+  scheduledSlotLabel?: string;
+  scheduledDate?: string;
+  scheduledStart?: string;
+  scheduledEnd?: string;
 };
 
 type OrdersCtx = {
