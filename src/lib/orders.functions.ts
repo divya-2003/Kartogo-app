@@ -74,6 +74,8 @@ export const placeOrderFn = createServerFn({ method: "POST" })
       address: address.slice(0, 400),
       paymentMethod: data.paymentMethod,
       promoCode: data.promoCode ? String(data.promoCode).slice(0, 24) : undefined,
+      slotId: data.slotId ? String(data.slotId).slice(0, 64) : undefined,
+      slotDate: /^\d{4}-\d{2}-\d{2}$/.test(String(data.slotDate ?? "")) ? String(data.slotDate) : undefined,
     };
   })
   .handler(async ({ data }) => {
