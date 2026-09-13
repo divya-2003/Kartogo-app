@@ -751,6 +751,10 @@ type OrderRow = {
   return_stage?: string | null;
   return_picked_up_at?: string | null;
   refund_initiated_at?: string | null;
+  scheduled_slot_label?: string | null;
+  scheduled_date?: string | null;
+  scheduled_start?: string | null;
+  scheduled_end?: string | null;
 };
 function rowToOrder(r: OrderRow): Order {
   const resolution = r.refund_request_resolution === "Replacement" ? "Replacement" : r.refund_request_resolution === "Refund" ? "Refund" : undefined;
