@@ -875,6 +875,8 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
           address: o.address,
           paymentMethod: o.paymentMethod,
           promoCode: o.promoCode,
+          slotId: o.slotId,
+          slotDate: o.slotDate,
         },
       });
       const saved = rowToOrder(row as unknown as OrderRow);
