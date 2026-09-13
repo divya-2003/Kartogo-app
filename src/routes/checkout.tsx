@@ -74,6 +74,21 @@ function CheckoutPage() {
   const [newApartment, setNewApartment] = useState("");
   const [newLandmark, setNewLandmark] = useState("");
 
+  // Scheduled delivery (Standard orders only).
+  const isQuick = (location?.etaMinutes ?? 99) <= 13;
+  const [slots, setSlots] = useState<DeliverySlot[]>([]);
+  const [slotId, setSlotId] = useState<string | null>(null);
+  const [slotDate, setSlotDate] = useState<string | null>(null);
+  useEffect(() => {
+    if (isQuick) return;
+    let alive = true;
+    void listDeliverySlotsFn({ data: {} })
+      .then(rows => { if (alive) setSlots(rows); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [isQuick]);
+
+
   const userName = user?.name?.trim() || "Kartogo User";
   // The address the customer picked in "Select your location" is always the
   // default delivery address here — never an older saved one.
