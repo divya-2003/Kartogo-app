@@ -12,6 +12,9 @@ type PlaceInput = {
   address: string;
   paymentMethod: PaymentMethod;
   promoCode?: string;
+  /** Standard orders may be scheduled into one of the admin-managed time slots. */
+  slotId?: string;
+  slotDate?: string;
 };
 
 // ---------------- List orders ----------------
