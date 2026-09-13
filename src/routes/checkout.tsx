@@ -455,6 +455,31 @@ function CheckoutPage() {
                           <button onClick={() => setEditLocationId(null)} className="flex-1 rounded-xl border border-border py-2.5 font-bold hover:bg-secondary">Cancel</button>
                           <button onClick={saveLocationEdit} className="flex-1 rounded-xl bg-primary py-2.5 font-bold text-primary-foreground hover:bg-primary/90">Save changes</button>
                         </div>
+
+                        {/* Saved addresses — pick one instead of editing this one. */}
+                        {addressOptions.length > 0 && (
+                          <div className="border-t border-border pt-3">
+                            <div className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                              Or deliver to a saved address
+                            </div>
+                            <ul className="grid gap-2">
+                              {addressOptions.map(opt => (
+                                <li key={opt.id}>
+                                  <button
+                                    onClick={() => { setSelectedId(opt.id); setEditLocationId(null); setShowPicker(false); }}
+                                    className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition ${opt.id === selectedId ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}
+                                  >
+                                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                                    <span className="min-w-0">
+                                      <span className="block text-sm font-bold">{opt.label}</span>
+                                      <span className="block text-xs text-muted-foreground">{opt.address}</span>
+                                    </span>
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ) : !showForm && (
