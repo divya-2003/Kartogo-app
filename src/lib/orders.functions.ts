@@ -131,6 +131,25 @@ export const placeOrderFn = createServerFn({ method: "POST" })
     const total = Math.max(0, subtotal + fee - discount);
     const id = `OK${Date.now().toString().slice(-6)}`;
 
+    // Scheduled delivery: the slot is re-read from the database so a client can
+    // never invent a window we don't actually run.
+    let slot: { label: string; start: string; end: string; date: string } | null = null;
+    if (data.slotId && data.slotDate) {
+      const { data: slotRow } = await supabaseAdmin
+        .from("delivery_slots")
+        .select("label, start_time, end_time, is_active")
+        .eq("id", data.slotId)
+        .maybeSingle();
+      if (slotRow?.is_active) {
+        slot = {
+          label: slotRow.label,
+          start: slotRow.start_time,
+          end: slotRow.end_time,
+          date: data.slotDate,
+        };
+      }
+    }
+
     // Wallet payments are charged against the AUTHORITATIVE server-side balance.
     // The deduction is validated and recorded in the database before the order is
     // saved, so a client can never get a free order by faking a balance.
