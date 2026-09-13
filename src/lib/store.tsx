@@ -711,6 +711,9 @@ export type PlaceOrderInput = {
   address: string;
   paymentMethod: Order["paymentMethod"];
   promoCode?: string;
+  /** Standard deliveries may be booked into a time slot. */
+  slotId?: string;
+  slotDate?: string;
 };
 const OrdersContext = createContext<OrdersCtx | null>(null);
 
