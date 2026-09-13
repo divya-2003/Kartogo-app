@@ -204,6 +204,10 @@ export const placeOrderFn = createServerFn({ method: "POST" })
         total,
         payment_method: data.paymentMethod,
         status: "placed",
+        scheduled_slot_label: slot?.label ?? null,
+        scheduled_date: slot?.date ?? null,
+        scheduled_start: slot?.start ?? null,
+        scheduled_end: slot?.end ?? null,
       })
       .select("*")
       .single();
