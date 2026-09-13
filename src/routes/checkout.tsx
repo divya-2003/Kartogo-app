@@ -541,7 +541,7 @@ function CheckoutPage() {
                       <div className="grid gap-3">
                         <Field label="Label">
                           <div className="flex flex-wrap gap-2">
-                            {["Home", "Work", "Other"].map(l => (
+                            {["Home", "Work", "Friends", "Other"].map(l => (
                               <button
                                 key={l}
                                 type="button"
