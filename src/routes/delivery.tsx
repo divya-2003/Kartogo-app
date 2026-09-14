@@ -44,6 +44,8 @@ type OrderRow = {
   surge_amount?: number | null;
   surge_reason?: string | null;
   driver_surge_share?: number | null;
+  scheduled_slot_label?: string | null;
+  scheduled_date?: string | null;
   refund_request_type?: string | null;
   refund_request_reason?: string | null;
   refund_request_status?: string | null;
