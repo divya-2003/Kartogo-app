@@ -84,10 +84,11 @@ export const applyReferralFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) =>
     z.object({ token: z.string(), code: z.string().max(40) }).parse(data),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data }): Promise<{ ok: true; reward: number } | { ok: false; reason: string }> => {
+    const fail = (reason: string) => ({ ok: false as const, reason });
     const { verifyCustomerToken } = await import("./auth-tokens.server");
     const session = verifyCustomerToken(data.token);
-    if (!session) throw new Error("Please sign in first");
+    if (!session) return fail("Please sign in first");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { REFERRAL_REWARD } = await import("./promo");
@@ -98,22 +99,22 @@ export const applyReferralFn = createServerFn({ method: "POST" })
       .select("id, referral_code, referred_by")
       .eq("phone", session.phone)
       .maybeSingle();
-    if (!me) throw new Error("Complete your profile first");
-    if (me.referred_by) throw new Error("You have already used a referral code");
-    if ((me.referral_code as string | null) === code) throw new Error("You cannot refer yourself");
+    if (!me) return fail("Complete your profile first");
+    if (me.referred_by) return fail("You have already used a referral code");
+    if ((me.referral_code as string | null) === code) return fail("You cannot refer yourself");
 
     const { data: friend } = await supabaseAdmin
       .from("customers")
       .select("phone")
       .eq("referral_code", code)
       .maybeSingle();
-    if (!friend) throw new Error("That referral code does not exist");
+    if (!friend) return fail("That referral code does not exist");
 
     const { count: orders } = await supabaseAdmin
       .from("app_orders")
       .select("id", { count: "exact", head: true })
       .eq("customer_phone", session.phone);
-    if ((orders ?? 0) > 0) throw new Error("Referral codes only work before your first order");
+    if ((orders ?? 0) > 0) return fail("Referral codes only work before your first order");
 
     await supabaseAdmin.from("customers").update({ referred_by: code }).eq("id", me.id);
     await supabaseAdmin.rpc("adjust_wallet", {
