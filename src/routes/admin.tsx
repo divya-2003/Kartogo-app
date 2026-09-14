@@ -67,6 +67,7 @@ const NAV = [
   { to: "/admin/refund-requests", label: "Refund requests", icon: BadgeIndianRupee, permission: "refunds" },
   { to: "/admin/feedback", label: "Feedback", icon: Star, permission: "feedback" },
   { to: "/admin/delivery", label: "Delivery", icon: Bike, permission: "delivery" },
+  { to: "/admin/slots", label: "Delivery slots", icon: Clock, permission: "delivery" },
   { to: "/admin/logistics", label: "Live logistics", icon: Bike, permission: "logistics" },
   { to: "/admin/print", label: "Print queue", icon: Printer, permission: "print" },
   { to: "/admin/partners", label: "Partner markets", icon: Store, permission: "partners" },
