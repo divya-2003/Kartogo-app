@@ -4,7 +4,7 @@ import { useOrders } from "@/lib/store";
 import { verifyAdminAccessFn, type AdminSessionAccess } from "@/lib/admin-access.functions";
 import { permissionForAdminPath, type AdminPermission } from "@/lib/admin-access.shared";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Sparkles, LayoutDashboard, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Menu, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound, BellRing, UsersRound, ChevronLeft } from "lucide-react";
+import { Sparkles, LayoutDashboard, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Menu, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound, BellRing, UsersRound, ChevronLeft, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Remembers the last successful admin-token verification for this tab so the
@@ -67,6 +67,7 @@ const NAV = [
   { to: "/admin/refund-requests", label: "Refund requests", icon: BadgeIndianRupee, permission: "refunds" },
   { to: "/admin/feedback", label: "Feedback", icon: Star, permission: "feedback" },
   { to: "/admin/delivery", label: "Delivery", icon: Bike, permission: "delivery" },
+  { to: "/admin/slots", label: "Delivery slots", icon: Clock, permission: "delivery" },
   { to: "/admin/logistics", label: "Live logistics", icon: Bike, permission: "logistics" },
   { to: "/admin/print", label: "Print queue", icon: Printer, permission: "print" },
   { to: "/admin/partners", label: "Partner markets", icon: Store, permission: "partners" },

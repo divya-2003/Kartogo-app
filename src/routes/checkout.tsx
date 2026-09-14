@@ -365,6 +365,8 @@ function CheckoutPage() {
         items: items.map(i => ({ productId: i.productId, qty: i.qty })),
         promoCode: appliedCode ?? undefined,
         paymentMethod: payment,
+        slotId: slotId ?? undefined,
+        slotDate: slotDate ?? undefined,
       });
       clear();
       // Feed the recommendation engine: purchase events, refreshed preferences,
@@ -444,6 +446,44 @@ function CheckoutPage() {
                 );
               })()}
             </section>
+
+            {/* Scheduled delivery — Standard orders can pick a time window */}
+            {!isQuick && slots.length > 0 && (
+              <section className="rounded-2xl border border-border bg-card p-5">
+                <h2 className="font-display text-lg font-bold">Delivery time</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Choose a window that suits you, or let us deliver as soon as we can.
+                </p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  <button
+                    onClick={() => { setSlotId(null); setSlotDate(null); }}
+                    className={`rounded-xl border p-3 text-left transition ${!slotId ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}
+                  >
+                    <div className="text-sm font-bold">As soon as possible</div>
+                    <div className="text-xs text-muted-foreground">Standard delivery today</div>
+                  </button>
+                  {slots.map(s => {
+                    const today = slotAvailableToday(s);
+                    const date = today ? ymd(new Date()) : ymd(new Date(Date.now() + 86400000));
+                    const chosen = slotId === s.id;
+                    return (
+                      <button
+                        key={s.id}
+                        onClick={() => { setSlotId(s.id); setSlotDate(date); }}
+                        className={`rounded-xl border p-3 text-left transition ${chosen ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}
+                      >
+                        <div className="text-sm font-bold">{s.label}</div>
+                        <div className="text-xs text-muted-foreground">{slotWindow(s)}</div>
+                        <div className="mt-0.5 text-[11px] font-semibold text-primary">
+                          {today ? "Today" : "Tomorrow"}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
 
             {/* Address picker modal */}
             {showPicker && (

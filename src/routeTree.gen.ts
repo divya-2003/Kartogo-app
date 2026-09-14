@@ -56,6 +56,7 @@ import { Route as AdminReportsProductsRouteImport } from './routes/admin.reports
 import { Route as AdminReportsRidersRouteImport } from './routes/admin.reports-riders'
 import { Route as AdminReportsVendorsRouteImport } from './routes/admin.reports-vendors'
 import { Route as AdminSalesRouteImport } from './routes/admin.sales'
+import { Route as AdminSlotsRouteImport } from './routes/admin.slots'
 import { Route as AdminStockAlertsRouteImport } from './routes/admin.stock-alerts'
 import { Route as AdminSubAdminsRouteImport } from './routes/admin.sub-admins'
 import { Route as AdminSurgeRouteImport } from './routes/admin.surge'
@@ -310,6 +311,11 @@ const AdminSalesRoute = AdminSalesRouteImport.update({
   path: '/sales',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSlotsRoute = AdminSlotsRouteImport.update({
+  id: '/slots',
+  path: '/slots',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminStockAlertsRoute = AdminStockAlertsRouteImport.update({
   id: '/stock-alerts',
   path: '/stock-alerts',
@@ -450,6 +456,7 @@ export interface FileRoutesByFullPath {
   '/admin/reports-riders': typeof AdminReportsRidersRoute
   '/admin/reports-vendors': typeof AdminReportsVendorsRoute
   '/admin/sales': typeof AdminSalesRoute
+  '/admin/slots': typeof AdminSlotsRoute
   '/admin/stock-alerts': typeof AdminStockAlertsRoute
   '/admin/sub-admins': typeof AdminSubAdminsRoute
   '/admin/surge': typeof AdminSurgeRoute
@@ -515,6 +522,7 @@ export interface FileRoutesByTo {
   '/admin/reports-riders': typeof AdminReportsRidersRoute
   '/admin/reports-vendors': typeof AdminReportsVendorsRoute
   '/admin/sales': typeof AdminSalesRoute
+  '/admin/slots': typeof AdminSlotsRoute
   '/admin/stock-alerts': typeof AdminStockAlertsRoute
   '/admin/sub-admins': typeof AdminSubAdminsRoute
   '/admin/surge': typeof AdminSurgeRoute
@@ -583,6 +591,7 @@ export interface FileRoutesById {
   '/admin/reports-riders': typeof AdminReportsRidersRoute
   '/admin/reports-vendors': typeof AdminReportsVendorsRoute
   '/admin/sales': typeof AdminSalesRoute
+  '/admin/slots': typeof AdminSlotsRoute
   '/admin/stock-alerts': typeof AdminStockAlertsRoute
   '/admin/sub-admins': typeof AdminSubAdminsRoute
   '/admin/surge': typeof AdminSurgeRoute
@@ -652,6 +661,7 @@ export interface FileRouteTypes {
     | '/admin/reports-riders'
     | '/admin/reports-vendors'
     | '/admin/sales'
+    | '/admin/slots'
     | '/admin/stock-alerts'
     | '/admin/sub-admins'
     | '/admin/surge'
@@ -717,6 +727,7 @@ export interface FileRouteTypes {
     | '/admin/reports-riders'
     | '/admin/reports-vendors'
     | '/admin/sales'
+    | '/admin/slots'
     | '/admin/stock-alerts'
     | '/admin/sub-admins'
     | '/admin/surge'
@@ -784,6 +795,7 @@ export interface FileRouteTypes {
     | '/admin/reports-riders'
     | '/admin/reports-vendors'
     | '/admin/sales'
+    | '/admin/slots'
     | '/admin/stock-alerts'
     | '/admin/sub-admins'
     | '/admin/surge'
@@ -1170,6 +1182,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSalesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/slots': {
+      id: '/admin/slots'
+      path: '/slots'
+      fullPath: '/admin/slots'
+      preLoaderRoute: typeof AdminSlotsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/stock-alerts': {
       id: '/admin/stock-alerts'
       path: '/stock-alerts'
@@ -1323,6 +1342,7 @@ interface AdminRouteChildren {
   AdminReportsRidersRoute: typeof AdminReportsRidersRoute
   AdminReportsVendorsRoute: typeof AdminReportsVendorsRoute
   AdminSalesRoute: typeof AdminSalesRoute
+  AdminSlotsRoute: typeof AdminSlotsRoute
   AdminStockAlertsRoute: typeof AdminStockAlertsRoute
   AdminSubAdminsRoute: typeof AdminSubAdminsRoute
   AdminSurgeRoute: typeof AdminSurgeRoute
@@ -1355,6 +1375,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminReportsRidersRoute: AdminReportsRidersRoute,
   AdminReportsVendorsRoute: AdminReportsVendorsRoute,
   AdminSalesRoute: AdminSalesRoute,
+  AdminSlotsRoute: AdminSlotsRoute,
   AdminStockAlertsRoute: AdminStockAlertsRoute,
   AdminSubAdminsRoute: AdminSubAdminsRoute,
   AdminSurgeRoute: AdminSurgeRoute,
