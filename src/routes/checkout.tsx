@@ -365,6 +365,8 @@ function CheckoutPage() {
         items: items.map(i => ({ productId: i.productId, qty: i.qty })),
         promoCode: appliedCode ?? undefined,
         paymentMethod: payment,
+        slotId: slotId ?? undefined,
+        slotDate: slotDate ?? undefined,
       });
       clear();
       // Feed the recommendation engine: purchase events, refreshed preferences,
