@@ -140,10 +140,10 @@ function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-[#03103b] px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#010d30] px-4">
       {/* Brand */}
       <div className="mb-8 flex flex-col items-center gap-3">
-        <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-2xl bg-[#03103b] shadow-pop">
+        <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-2xl bg-[#010d30] shadow-pop">
           <img src={kartogoLogo} alt="Kartogo" className="h-full w-full scale-110 object-cover" />
         </div>
         <div className="text-center">
