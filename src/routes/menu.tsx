@@ -56,6 +56,7 @@ function MenuPage() {
     const token = (() => { try { return JSON.parse(localStorage.getItem("qk_customer_token") || "null") ?? ""; } catch { return ""; } })();
     try {
       const res = await applyReferralFn({ data: { token, code: friendCode } });
+      if (!res.ok) { toast.error(res.reason); return; }
       toast.success(`Referral applied — ₹${res.reward} added to your Kartogo Cash`);
       setFriendCode("");
     } catch (e) {
