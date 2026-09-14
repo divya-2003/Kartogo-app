@@ -756,6 +756,12 @@ function AccountView({ driver, deliveredCount, activeCount, orders, onLogout }: 
                     <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                     <span>{o.address}</span>
                   </div>
+                  {o.scheduled_slot_label && (
+                    <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
+                      Scheduled: {o.scheduled_slot_label}
+                      {o.scheduled_date ? ` · ${o.scheduled_date}` : ""}
+                    </div>
+                  )}
                   <div className="mt-3 flex items-center gap-2">
                     <a
                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o.address)}`}
