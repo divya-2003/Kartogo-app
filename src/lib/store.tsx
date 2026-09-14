@@ -1159,6 +1159,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
         doorNumber: (loc.doorNumber?.trim() || prior?.doorNumber) || undefined,
         apartment: (loc.apartment?.trim() || prior?.apartment) || undefined,
         landmark: (loc.landmark?.trim() || prior?.landmark) || undefined,
+        label: (loc.label?.trim() || prior?.label) || undefined,
       };
       const stored: SavedLocation = {
         ...merged,
