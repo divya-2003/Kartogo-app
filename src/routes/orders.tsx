@@ -780,6 +780,12 @@ function OrdersPage() {
                       <div className="mt-3 text-xs text-muted-foreground">
                         Deliver to: {o.address}
                       </div>
+                      {o.scheduledSlotLabel && (
+                        <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
+                          Arriving {o.scheduledSlotLabel}
+                          {o.scheduledDate ? ` · ${o.scheduledDate}` : ""}
+                        </div>
+                      )}
 
                       <button
                         onClick={() => downloadInvoice(o)}
