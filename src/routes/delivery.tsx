@@ -347,6 +347,12 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
                     <div className="flex items-start gap-1.5 text-muted-foreground">
                       <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" /> <span>{o.address}</span>
                     </div>
+                    {o.scheduled_slot_label && (
+                      <div className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
+                        Scheduled: {o.scheduled_slot_label}
+                        {o.scheduled_date ? ` · ${o.scheduled_date}` : ""}
+                      </div>
+                    )}
                   </div>
 
 
