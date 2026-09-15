@@ -44,6 +44,6 @@ export function permissionForAdminPath(path: string): AdminPermission {
   if (path.startsWith("/admin/sales")) return "sales";
   if (path.startsWith("/admin/reports-")) return "reports";
   if (path.startsWith("/admin/recommendations")) return "recommendations";
-  if (path.startsWith("/admin/sub-admins")) return "sub_admins";
+  if (path.startsWith("/admin/sub-admins") || path.startsWith("/admin/portals")) return "sub_admins";
   return "account";
 }
