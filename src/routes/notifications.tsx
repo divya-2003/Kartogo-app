@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Bell, BellRing, Send } from "lucide-react";
+import { ArrowLeft, Bell, BellRing, ExternalLink, RefreshCw, Send } from "lucide-react";
 import { useAuth } from "@/lib/store";
 import { deviceName, enablePush, platform, pushConfigured } from "@/lib/firebase-push";
 import {
