@@ -41,10 +41,20 @@ function NotificationSettingsPage() {
   const [devices, setDevices] = useState(0);
   const [permission, setPermission] = useState<NotificationPermission | "unsupported">("default");
   const [busy, setBusy] = useState(false);
+  const [inIframe, setInIframe] = useState(false);
 
-  useEffect(() => {
+  const recheckPermission = () => {
     if (typeof window === "undefined" || !("Notification" in window)) setPermission("unsupported");
     else setPermission(Notification.permission);
+  };
+
+  useEffect(() => {
+    recheckPermission();
+    try {
+      setInIframe(window.top !== window.self);
+    } catch {
+      setInIframe(true);
+    }
   }, []);
 
   useEffect(() => {
