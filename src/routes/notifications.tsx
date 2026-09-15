@@ -155,25 +155,63 @@ function NotificationSettingsPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={turnOn}
-                disabled={busy || permission === "unsupported" || !pushConfigured()}
+                disabled={busy || permission === "unsupported" || permission === "denied" || inIframe || !pushConfigured()}
+                title={
+                  permission === "denied"
+                    ? "Notifications are blocked — follow the steps below first"
+                    : inIframe
+                      ? "Open the app in its own tab first"
+                      : undefined
+                }
                 className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground disabled:opacity-50"
               >
                 {permission === "granted" ? "Re-register" : "Turn on"}
               </button>
               <button
                 onClick={test}
-                disabled={busy}
+                disabled={busy || devices === 0}
+                title={devices === 0 ? "Turn on notifications first" : undefined}
                 className="inline-flex items-center gap-1 rounded-xl border border-input px-4 py-2 text-sm font-semibold disabled:opacity-50"
               >
                 <Send className="h-4 w-4" /> Test
               </button>
             </div>
           </div>
+          {devices === 0 && permission !== "granted" && (
+            <p className="mt-3 text-xs text-muted-foreground">Turn on notifications first, then use Test.</p>
+          )}
+          {inIframe && (
+            <div className="mt-3 rounded-xl bg-secondary p-3 text-xs text-muted-foreground">
+              <p className="font-semibold text-foreground">You're viewing Kartogo inside a preview panel</p>
+              <p className="mt-1">
+                Browsers block notification prompts here. Open Kartogo in its own tab (or the installed Android app) to
+                enable notifications.
+              </p>
+              <button
+                onClick={() => window.open(window.location.href, "_blank", "noopener")}
+                className="mt-2 inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
+              >
+                <ExternalLink className="h-3.5 w-3.5" /> Open in new tab
+              </button>
+            </div>
+          )}
           {permission === "denied" && (
-            <p className="mt-3 rounded-xl bg-secondary p-3 text-xs text-muted-foreground">
-              You previously denied notifications. Allow them again from your browser site settings (or Android app
-              settings &rarr; Notifications), then tap Turn on.
-            </p>
+            <div className="mt-3 rounded-xl bg-secondary p-3 text-xs text-muted-foreground">
+              <p className="font-semibold text-foreground">Notifications are blocked for this site</p>
+              <p className="mt-1">Your browser won't ask again — allow them manually:</p>
+              <ol className="mt-2 list-decimal space-y-1 pl-4">
+                <li>Tap the lock/tune icon in the browser address bar (or Android app settings &rarr; Notifications).</li>
+                <li>Open <span className="font-semibold text-foreground">Site settings &rarr; Notifications</span>.</li>
+                <li>Set it to <span className="font-semibold text-foreground">Allow</span>, then reload this page.</li>
+                <li>Tap <span className="font-semibold text-foreground">Turn on</span> above.</li>
+              </ol>
+              <button
+                onClick={recheckPermission}
+                className="mt-2 inline-flex items-center gap-1 rounded-lg border border-input px-3 py-1.5 text-xs font-semibold"
+              >
+                <RefreshCw className="h-3.5 w-3.5" /> I've allowed it — re-check
+              </button>
+            </div>
           )}
         </div>
 
