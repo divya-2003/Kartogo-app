@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useCart, useAuth } from "@/lib/store";
 import { LocationPicker } from "@/components/LocationPicker";
 import { SearchOverlay } from "@/components/SearchOverlay";
-import kartogoLogo from "@/assets/kartogo-logo.png.asset.json";
+import kartogoLogo from "@/assets/kartogo-logo.png";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter";
 
 const SEARCH_TERMS = ["avakaya", "maggi", "agarbatti", "milk", "bread", "paneer"];
@@ -37,7 +37,7 @@ export function Header() {
         {isHome ? (
           <Link to="/" className="flex items-center gap-2">
             <div className="grid h-9 w-9 place-items-center overflow-hidden rounded-xl bg-[#010d30]">
-              <img src={kartogoLogo.url} alt="Kartogo - Neighborhood Store" className="h-full w-full object-cover" />
+              <img src={kartogoLogo} alt="Kartogo - Neighborhood Store" className="h-full w-full scale-110 object-cover" />
             </div>
             <div className="leading-tight">
               <div className="font-display text-lg font-bold tracking-tight">Kartogo</div>

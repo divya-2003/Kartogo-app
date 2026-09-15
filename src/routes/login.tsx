@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useAuth } from "@/lib/store";
 import { toast } from "sonner";
 import { KeyRound, ShieldCheck } from "lucide-react";
-import kartogoLogo from "@/assets/kartogo-logo.png.asset.json";
+import kartogoLogo from "@/assets/kartogo-logo.png";
 import kartogoWordmark from "@/assets/kartogo-wordmark.png.asset.json";
 import { PhoneNumberInput } from "@/components/PhoneNumberInput";
 import { usePhoneCountryDetection } from "@/hooks/use-phone-country";
@@ -144,7 +144,7 @@ function LoginPage() {
       {/* Brand */}
       <div className="mb-8 flex flex-col items-center gap-3">
         <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-2xl bg-[#010d30] shadow-pop">
-          <img src={kartogoLogo.url} alt="Kartogo" className="h-full w-full object-cover" />
+          <img src={kartogoLogo} alt="Kartogo" className="h-full w-full scale-110 object-cover" />
         </div>
         <div className="text-center">
           <h1>
