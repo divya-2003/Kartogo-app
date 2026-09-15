@@ -25,12 +25,12 @@ export function SplashScreen({ minDurationMs = 1800 }: { minDurationMs?: number 
   return (
     <div
       aria-hidden="true"
-      className={`fixed inset-0 z-[100] grid place-items-center bg-[#010d30] transition-opacity duration-500 ${
+      className={`fixed inset-0 z-[100] grid place-items-center bg-[#010d3a] transition-opacity duration-500 ${
         phase === "out" ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
     >
       <div className="flex flex-col items-center px-6 text-center">
-        <img src={kartogoLogo} alt="" width={96} height={96} className="h-24 w-24 animate-splash-pop rounded-3xl bg-[#010d30] object-cover shadow-pop" />
+        <img src={kartogoLogo} alt="" width={96} height={96} className="h-24 w-24 animate-splash-pop rounded-3xl bg-[#010d3a] object-cover shadow-pop" />
         <img src={kartogoWordmark.url} alt="Kartogo" className="mt-4 h-12 w-auto animate-splash-rise object-contain" />
         <div className="mt-1 animate-splash-rise text-sm font-semibold text-white/80 [animation-delay:120ms]">
           Everything You Need, Delivered Fast
