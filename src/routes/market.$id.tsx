@@ -106,15 +106,23 @@ function MarketPage() {
           </div>
         )}
 
-        {/* Category filter strip */}
-        <div className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:px-0">
-          <FilterChip active={cat === "all"} onClick={() => setCat("all")} label="All" />
-          {CATEGORIES.map(c => (
-            <FilterChip key={c.slug} active={cat === c.slug} onClick={() => setCat(c.slug)} label={`${c.emoji} ${c.name}`} />
-          ))}
-        </div>
+        {/* Category filter strip — only categories this market stocks */}
+        {marketProducts.length > 0 && (
+          <div className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:px-0">
+            <FilterChip active={cat === "all"} onClick={() => setCat("all")} label="All" />
+            {CATEGORIES.filter(c => marketProducts.some(p => p.category === c.slug)).map(c => (
+              <FilterChip key={c.slug} active={cat === c.slug} onClick={() => setCat(c.slug)} label={`${c.emoji} ${c.name}`} />
+            ))}
+          </div>
+        )}
 
-        {shown.length === 0 ? (
+        {stockIds === null ? (
+          <p className="mt-6 text-center text-sm text-muted-foreground">Loading this market's items…</p>
+        ) : marketProducts.length === 0 ? (
+          <p className="mt-6 rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+            This market hasn't listed any items yet. Please check back soon.
+          </p>
+        ) : shown.length === 0 ? (
           <p className="mt-6 rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
             No items match your search in this market.
           </p>
