@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, Search, Store, Clock, MapPin, X } from "lucide-react";
-import { getPublicMarketFn, type PublicMarket } from "@/lib/partners.functions";
+import { getPublicMarketFn, listMarketProductIdsFn, type PublicMarket } from "@/lib/partners.functions";
 import { useCatalog } from "@/lib/store";
 import { ProductCard } from "@/components/ProductCard";
 import { CATEGORIES } from "@/lib/data";
@@ -27,21 +27,33 @@ function MarketPage() {
   const [error, setError] = useState(false);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string>("all");
+  const [stockIds, setStockIds] = useState<string[] | null>(null);
 
   useEffect(() => {
     let alive = true;
+    setStockIds(null);
     getPublicMarketFn({ data: { id } })
       .then(m => { if (alive) setMarket(m); })
       .catch(() => { if (alive) setError(true); });
+    listMarketProductIdsFn({ data: { id } })
+      .then(ids => { if (alive) setStockIds(ids); })
+      .catch(() => { if (alive) setStockIds([]); });
     return () => { alive = false; };
   }, [id]);
 
   const term = q.trim().toLowerCase();
-  const shown = useMemo(() => products.filter(p => {
+  // Only the items this market has listed in its own stock.
+  const marketProducts = useMemo(() => {
+    if (!stockIds) return [];
+    const set = new Set(stockIds);
+    return products.filter(p => set.has(p.id));
+  }, [products, stockIds]);
+
+  const shown = useMemo(() => marketProducts.filter(p => {
     if (cat !== "all" && p.category !== cat) return false;
     if (!term) return true;
     return p.name.toLowerCase().includes(term);
-  }), [products, cat, term]);
+  }), [marketProducts, cat, term]);
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -94,15 +106,23 @@ function MarketPage() {
           </div>
         )}
 
-        {/* Category filter strip */}
-        <div className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:px-0">
-          <FilterChip active={cat === "all"} onClick={() => setCat("all")} label="All" />
-          {CATEGORIES.map(c => (
-            <FilterChip key={c.slug} active={cat === c.slug} onClick={() => setCat(c.slug)} label={`${c.emoji} ${c.name}`} />
-          ))}
-        </div>
+        {/* Category filter strip — only categories this market stocks */}
+        {marketProducts.length > 0 && (
+          <div className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:px-0">
+            <FilterChip active={cat === "all"} onClick={() => setCat("all")} label="All" />
+            {CATEGORIES.filter(c => marketProducts.some(p => p.category === c.slug)).map(c => (
+              <FilterChip key={c.slug} active={cat === c.slug} onClick={() => setCat(c.slug)} label={`${c.emoji} ${c.name}`} />
+            ))}
+          </div>
+        )}
 
-        {shown.length === 0 ? (
+        {stockIds === null ? (
+          <p className="mt-6 text-center text-sm text-muted-foreground">Loading this market's items…</p>
+        ) : marketProducts.length === 0 ? (
+          <p className="mt-6 rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+            This market hasn't listed any items yet. Please check back soon.
+          </p>
+        ) : shown.length === 0 ? (
           <p className="mt-6 rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
             No items match your search in this market.
           </p>
