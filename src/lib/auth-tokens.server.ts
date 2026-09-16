@@ -135,3 +135,21 @@ export function verifySupplierToken(token?: string): { supplierId: string; phone
   }
   return null;
 }
+
+// ---- Printer service tokens ----
+// The print shop runs its own portal (same shape as a supplier portal) and logs
+// in with this registered number. Tokens are signed with the supplier secret but
+// carry a distinct role, so a printer token can never pass as a supplier one.
+export const PRINTER_SERVICE = { id: "printer", name: "Kartogo Printer Service", phone: "9999999996" } as const;
+
+export const isPrinterPhone = (phone: string) => phone === PRINTER_SERVICE.phone;
+
+export function issuePrinterToken(phone: string, userId?: string): string {
+  return sign({ role: "printer", phone, userId: userId ?? null, exp: Date.now() + 30 * DAY }, supplierSecret());
+}
+
+export function verifyPrinterToken(token?: string): { phone: string } | null {
+  const data = verify(token, supplierSecret());
+  if (data && data.role === "printer" && typeof data.phone === "string") return { phone: data.phone };
+  return null;
+}

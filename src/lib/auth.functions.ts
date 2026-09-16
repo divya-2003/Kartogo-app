@@ -196,6 +196,12 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
         }
       : null;
 
+    // --- Printer service portal ---
+    const { isPrinterPhone, issuePrinterToken, PRINTER_SERVICE } = await import("./auth-tokens.server");
+    const printer = isPrinterPhone(data.phone)
+      ? { token: issuePrinterToken(data.phone, staff?.userId), service: { name: PRINTER_SERVICE.name, phone: data.phone } }
+      : null;
+
     return {
       ok: true as const,
       phone: data.phone,
@@ -204,6 +210,7 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
       delivery,
       deliveryPending,
       supplier,
+      printer,
     };
   });
 

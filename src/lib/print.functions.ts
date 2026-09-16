@@ -167,12 +167,22 @@ export const listMyPrintJobsFn = createServerFn({ method: "POST" })
     return ((rows ?? []) as JobRow[]).map((r) => toJob(r));
   });
 
-// ---------------- Print shop (admin token): queue ----------------
+// ---------------- Print shop queue ----------------
+// Reachable by an admin OR by the dedicated printer-service portal login.
+async function requirePrintAccess(adminToken?: string, printerToken?: string) {
+  const { verifyAdminToken, verifyPrinterToken } = await import("./auth-tokens.server");
+  if (verifyAdminToken(adminToken)) return;
+  if (printerToken && verifyPrinterToken(printerToken)) return;
+  throw new Error("Print queue authorization required");
+}
+
 export const listPrintJobsFn = createServerFn({ method: "POST" })
-  .inputValidator((data: { adminToken?: string }) => ({ adminToken: String(data?.adminToken ?? "") }))
+  .inputValidator((data: { adminToken?: string; printerToken?: string }) => ({
+    adminToken: String(data?.adminToken ?? ""),
+    printerToken: String(data?.printerToken ?? ""),
+  }))
   .handler(async ({ data }): Promise<PrintJob[]> => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    await requirePrintAccess(data.adminToken, data.printerToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
       .from("print_jobs")
