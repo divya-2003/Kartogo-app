@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, Search, Store, Clock, MapPin, X } from "lucide-react";
-import { getPublicMarketFn, type PublicMarket } from "@/lib/partners.functions";
+import { getPublicMarketFn, listMarketProductIdsFn, type PublicMarket } from "@/lib/partners.functions";
 import { useCatalog } from "@/lib/store";
 import { ProductCard } from "@/components/ProductCard";
 import { CATEGORIES } from "@/lib/data";
@@ -27,21 +27,33 @@ function MarketPage() {
   const [error, setError] = useState(false);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string>("all");
+  const [stockIds, setStockIds] = useState<string[] | null>(null);
 
   useEffect(() => {
     let alive = true;
+    setStockIds(null);
     getPublicMarketFn({ data: { id } })
       .then(m => { if (alive) setMarket(m); })
       .catch(() => { if (alive) setError(true); });
+    listMarketProductIdsFn({ data: { id } })
+      .then(ids => { if (alive) setStockIds(ids); })
+      .catch(() => { if (alive) setStockIds([]); });
     return () => { alive = false; };
   }, [id]);
 
   const term = q.trim().toLowerCase();
-  const shown = useMemo(() => products.filter(p => {
+  // Only the items this market has listed in its own stock.
+  const marketProducts = useMemo(() => {
+    if (!stockIds) return [];
+    const set = new Set(stockIds);
+    return products.filter(p => set.has(p.id));
+  }, [products, stockIds]);
+
+  const shown = useMemo(() => marketProducts.filter(p => {
     if (cat !== "all" && p.category !== cat) return false;
     if (!term) return true;
     return p.name.toLowerCase().includes(term);
-  }), [products, cat, term]);
+  }), [marketProducts, cat, term]);
 
   return (
     <div className="min-h-screen bg-background pb-24">
