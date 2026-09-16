@@ -85,6 +85,7 @@ const NAV = [
   { to: "/admin/reports-riders", label: "Rider report", icon: Bike, permission: "reports" },
   { to: "/admin/recommendations", label: "Recommendations", icon: Sparkles, permission: "recommendations" },
   { to: "/admin/sub-admins", label: "Sub-admins", icon: UsersRound, permission: "sub_admins" },
+  { to: "/admin/portals", label: "Open other portals", icon: ExternalLink, permission: "sub_admins" },
   { to: "/admin/account", label: "Account", icon: UserRound, permission: "account" },
 ] as const;
 
