@@ -169,10 +169,12 @@ export const listMyPrintJobsFn = createServerFn({ method: "POST" })
 
 // ---------------- Print shop (admin token): queue ----------------
 export const listPrintJobsFn = createServerFn({ method: "POST" })
-  .inputValidator((data: { adminToken?: string }) => ({ adminToken: String(data?.adminToken ?? "") }))
+  .inputValidator((data: { adminToken?: string; printerToken?: string }) => ({
+    adminToken: String(data?.adminToken ?? ""),
+    printerToken: String(data?.printerToken ?? ""),
+  }))
   .handler(async ({ data }): Promise<PrintJob[]> => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    await requirePrintAccess(data.adminToken, data.printerToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
       .from("print_jobs")
