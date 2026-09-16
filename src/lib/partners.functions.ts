@@ -174,6 +174,20 @@ export const listPublicMarketsFn = createServerFn({ method: "GET" }).handler(asy
   return (rows as Row[]).map(toPublic);
 });
 
+// Product ids this market actually stocks. Customers browsing a market only
+// see these items — never the whole Kartogo catalogue.
+export const listMarketProductIdsFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data }): Promise<string[]> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("inventory_items")
+      .select("product_id")
+      .eq("market_id", data.id);
+    if (error) throw new Error("Could not load this market's items");
+    return Array.from(new Set((rows ?? []).map((r) => String(r.product_id))));
+  });
+
 export const getPublicMarketFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data }) => {
