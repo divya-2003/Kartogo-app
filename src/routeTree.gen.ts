@@ -46,6 +46,7 @@ import { Route as AdminLogisticsRouteImport } from './routes/admin.logistics'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminPartnersRouteImport } from './routes/admin.partners'
+import { Route as AdminPortalsRouteImport } from './routes/admin.portals'
 import { Route as AdminPrintRouteImport } from './routes/admin.print'
 import { Route as AdminProductsRouteImport } from './routes/admin.products'
 import { Route as AdminPromosRouteImport } from './routes/admin.promos'
@@ -261,6 +262,11 @@ const AdminPartnersRoute = AdminPartnersRouteImport.update({
   path: '/partners',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPortalsRoute = AdminPortalsRouteImport.update({
+  id: '/portals',
+  path: '/portals',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPrintRoute = AdminPrintRouteImport.update({
   id: '/print',
   path: '/print',
@@ -446,6 +452,7 @@ export interface FileRoutesByFullPath {
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/partners': typeof AdminPartnersRoute
+  '/admin/portals': typeof AdminPortalsRoute
   '/admin/print': typeof AdminPrintRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/promos': typeof AdminPromosRoute
@@ -512,6 +519,7 @@ export interface FileRoutesByTo {
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/partners': typeof AdminPartnersRoute
+  '/admin/portals': typeof AdminPortalsRoute
   '/admin/print': typeof AdminPrintRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/promos': typeof AdminPromosRoute
@@ -581,6 +589,7 @@ export interface FileRoutesById {
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/partners': typeof AdminPartnersRoute
+  '/admin/portals': typeof AdminPortalsRoute
   '/admin/print': typeof AdminPrintRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/promos': typeof AdminPromosRoute
@@ -651,6 +660,7 @@ export interface FileRouteTypes {
     | '/admin/notifications'
     | '/admin/orders'
     | '/admin/partners'
+    | '/admin/portals'
     | '/admin/print'
     | '/admin/products'
     | '/admin/promos'
@@ -717,6 +727,7 @@ export interface FileRouteTypes {
     | '/admin/notifications'
     | '/admin/orders'
     | '/admin/partners'
+    | '/admin/portals'
     | '/admin/print'
     | '/admin/products'
     | '/admin/promos'
@@ -785,6 +796,7 @@ export interface FileRouteTypes {
     | '/admin/notifications'
     | '/admin/orders'
     | '/admin/partners'
+    | '/admin/portals'
     | '/admin/print'
     | '/admin/products'
     | '/admin/promos'
@@ -1112,6 +1124,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPartnersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/portals': {
+      id: '/admin/portals'
+      path: '/portals'
+      fullPath: '/admin/portals'
+      preLoaderRoute: typeof AdminPortalsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/print': {
       id: '/admin/print'
       path: '/print'
@@ -1332,6 +1351,7 @@ interface AdminRouteChildren {
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
   AdminPartnersRoute: typeof AdminPartnersRoute
+  AdminPortalsRoute: typeof AdminPortalsRoute
   AdminPrintRoute: typeof AdminPrintRoute
   AdminProductsRoute: typeof AdminProductsRoute
   AdminPromosRoute: typeof AdminPromosRoute
@@ -1365,6 +1385,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminOrdersRoute: AdminOrdersRoute,
   AdminPartnersRoute: AdminPartnersRoute,
+  AdminPortalsRoute: AdminPortalsRoute,
   AdminPrintRoute: AdminPrintRoute,
   AdminProductsRoute: AdminProductsRoute,
   AdminPromosRoute: AdminPromosRoute,

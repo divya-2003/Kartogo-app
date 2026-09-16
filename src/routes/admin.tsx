@@ -4,7 +4,7 @@ import { useOrders } from "@/lib/store";
 import { verifyAdminAccessFn, type AdminSessionAccess } from "@/lib/admin-access.functions";
 import { permissionForAdminPath, type AdminPermission } from "@/lib/admin-access.shared";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Sparkles, LayoutDashboard, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Menu, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound, BellRing, UsersRound, ChevronLeft, Clock } from "lucide-react";
+import { Sparkles, LayoutDashboard, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Menu, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound, BellRing, UsersRound, ChevronLeft, Clock, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Remembers the last successful admin-token verification for this tab so the
