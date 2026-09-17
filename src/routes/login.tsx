@@ -62,7 +62,7 @@ function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { isAdminPhone, delivery, deliveryPending, supplier } = await verifyOtp(e164 ?? phone, otp);
+      const { isAdminPhone, delivery, deliveryPending, supplier, printer } = await verifyOtp(e164 ?? phone, otp);
       // Clear tokens belonging to OTHER roles so a device that previously
       // hosted a supplier/delivery/admin session doesn't bounce a new customer
       // (or a different role) back to the wrong portal via roleRedirectTarget.
@@ -100,6 +100,17 @@ function LoginPage() {
         } catch { /* noop */ }
         toast.success(`Welcome, ${supplier.supplier.name}!`);
         nav({ to: "/supplier", replace: true });
+        return;
+      }
+      // Printer service portal — same shape as the supplier portal.
+      if (printer) {
+        clearKeys(["qk_admin_token", "qk_delivery_token", "qk_delivery_driver", "qk_supplier_token", "qk_supplier"]);
+        try {
+          localStorage.setItem("qk_printer_token", JSON.stringify(printer.token));
+          localStorage.setItem("qk_printer", JSON.stringify(printer.service));
+        } catch { /* noop */ }
+        toast.success(`Welcome, ${printer.service.name}!`);
+        nav({ to: "/printer", replace: true });
         return;
       }
       if (isAdminPhone) {
