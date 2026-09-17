@@ -32,11 +32,19 @@ export const listPortalTargetsFn = createServerFn({ method: "POST" })
 
 export const openPortalAsAdminFn = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
-    z.object({ token: tokenSchema, role: z.enum(["supplier", "delivery"]), refId: z.string().min(1).max(60) }).parse(input),
+    z.object({ token: tokenSchema, role: z.enum(["supplier", "delivery", "printer"]), refId: z.string().min(1).max(60) }).parse(input),
   )
   .handler(async ({ data }) => {
     await requireAdmin(data.token);
-    const { issueSupplierToken, issueDeliveryToken } = await import("./auth-tokens.server");
+    const { issueSupplierToken, issueDeliveryToken, issuePrinterToken, PRINTER_SERVICE } = await import("./auth-tokens.server");
+
+    if (data.role === "printer") {
+      return {
+        role: "printer" as const,
+        token: issuePrinterToken(PRINTER_SERVICE.phone),
+        profile: { id: PRINTER_SERVICE.id, name: PRINTER_SERVICE.name, phone: PRINTER_SERVICE.phone },
+      };
+    }
 
     if (data.role === "supplier") {
       const { findSupplierById } = await import("./suppliers");
