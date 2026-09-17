@@ -1,0 +1,106 @@
+import { createFileRoute, Outlet, Link, useRouter, useRouterState, redirect, isRedirect } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { verifyPrinterTokenFn } from "@/lib/printer.functions";
+import { Printer, User2, Menu, ChevronLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+export const Route = createFileRoute("/printer")({
+  beforeLoad: async () => {
+    if (typeof window === "undefined") return;
+    // Same gate shape as the supplier portal: the token is read locally but the
+    // server verifies its signature before anything renders.
+    let token: string | null = null;
+    try { token = JSON.parse(localStorage.getItem("qk_printer_token") || "null"); } catch { token = null; }
+    if (!token) throw redirect({ to: "/login" });
+    try {
+      const { valid } = await verifyPrinterTokenFn({ data: { token } });
+      if (!valid) throw redirect({ to: "/login" });
+    } catch (e) {
+      if (isRedirect(e)) throw e;
+      throw redirect({ to: "/login" });
+    }
+  },
+  component: PrinterLayout,
+  head: () => ({ meta: [{ title: "Printer Service — Kartogo" }] }),
+});
+
+const NAV = [
+  { to: "/printer", label: "Print queue", icon: Printer },
+  { to: "/printer/account", label: "Account", icon: User2 },
+] as const;
+
+function PrinterLayout() {
+  const router = useRouter();
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const isActive = (to: string) => (to === "/printer" ? path === "/printer" : path.startsWith(to));
+
+  useEffect(() => { setMobileOpen(false); }, [path]);
+
+  const NavList = ({ inSheet = false }: { inSheet?: boolean }) => (
+    <nav className="flex flex-col gap-1">
+      {NAV.map((n) => {
+        const active = isActive(n.to);
+        return (
+          <Link
+            key={n.to}
+            to={n.to}
+            onClick={() => { if (inSheet) setMobileOpen(false); }}
+            className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition ${active ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}
+          >
+            <n.icon className="h-4 w-4" /> {n.label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-border bg-card/95 px-3 py-2 backdrop-blur md:hidden">
+        {path !== "/printer" && (
+          <Button type="button" variant="outline" size="icon" aria-label="Go back" onClick={() => router.history.back()}>
+            <ChevronLeft />
+          </Button>
+        )}
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetTrigger asChild>
+            <button
+              aria-label={mobileOpen ? "Close printer menu" : "Open printer menu"}
+              className="grid h-10 w-10 place-items-center rounded-lg border border-border bg-card hover:bg-secondary"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-72 p-0">
+            <SheetHeader className="border-b border-border p-4">
+              <SheetTitle className="text-left font-display text-base font-bold">Printer Service</SheetTitle>
+            </SheetHeader>
+            <div className="max-h-[calc(100vh-5rem)] overflow-y-auto p-3"><NavList inSheet /></div>
+          </SheetContent>
+        </Sheet>
+        <span className="min-w-0 truncate font-display text-sm font-bold">Printer Service</span>
+        <Link
+          to="/printer/account"
+          aria-label="Printer account"
+          className="ml-auto grid h-9 w-9 place-items-center rounded-full border border-border bg-card hover:bg-secondary"
+        >
+          <User2 className="h-4 w-4" />
+        </Link>
+      </div>
+
+      <div className="mx-auto grid max-w-7xl gap-6 px-4 pb-6 pt-4 md:grid-cols-[220px_minmax(0,1fr)] md:px-6 md:py-6">
+        <aside className="hidden h-fit max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl border border-border bg-card p-3 md:sticky md:top-4 md:block">
+          <div className="mb-3 px-3 pt-1">
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Portal</div>
+            <div className="mt-0.5 truncate text-sm font-bold">Printer Service</div>
+          </div>
+          <NavList />
+        </aside>
+
+        <main className="min-w-0"><Outlet /></main>
+      </div>
+    </div>
+  );
+}
