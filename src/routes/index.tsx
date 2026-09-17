@@ -26,7 +26,7 @@ export const Route = createFileRoute("/")({
 });
 
 /** Detects a saved admin/delivery/supplier session and returns where to send the user. */
-function roleRedirectTarget(): "/delivery" | "/admin" | "/supplier" | "/delivery-request" | null {
+function roleRedirectTarget(): "/delivery" | "/admin" | "/supplier" | "/printer" | "/delivery-request" | null {
   if (typeof window === "undefined") return null;
   // Tokens are written by different flows — some raw, some JSON-encoded. Read
   // both shapes so a portal session is never missed (which would drop a
@@ -47,6 +47,7 @@ function roleRedirectTarget(): "/delivery" | "/admin" | "/supplier" | "/delivery
     if (read("qk_delivery_pending_token")) return "/delivery-request";
     if (read("qk_admin_token")) return "/admin";
     if (read("qk_supplier_token")) return "/supplier";
+    if (read("qk_printer_token")) return "/printer";
   } catch { /* noop */ }
   return null;
 }

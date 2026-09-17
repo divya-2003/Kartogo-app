@@ -22,6 +22,7 @@ import { Route as MenuRouteImport } from './routes/menu'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as PrintRouteImport } from './routes/print'
+import { Route as PrinterRouteImport } from './routes/printer'
 import { Route as RefundReturnsRouteImport } from './routes/refund-returns'
 import { Route as RefundsRouteImport } from './routes/refunds'
 import { Route as RequestServiceRouteImport } from './routes/request-service'
@@ -65,6 +66,8 @@ import { Route as AdminUnserviceableRouteImport } from './routes/admin.unservice
 import { Route as AdminWimsRouteImport } from './routes/admin.wims'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as MarketIdRouteImport } from './routes/market.$id'
+import { Route as PrinterIndexRouteImport } from './routes/printer.index'
+import { Route as PrinterAccountRouteImport } from './routes/printer.account'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as RateOrderOrderIdRouteImport } from './routes/rate-order.$orderId'
 import { Route as SupplierIndexRouteImport } from './routes/supplier.index'
@@ -140,6 +143,11 @@ const OrdersRoute = OrdersRouteImport.update({
 const PrintRoute = PrintRouteImport.update({
   id: '/print',
   path: '/print',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrinterRoute = PrinterRouteImport.update({
+  id: '/printer',
+  path: '/printer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RefundReturnsRoute = RefundReturnsRouteImport.update({
@@ -357,6 +365,16 @@ const MarketIdRoute = MarketIdRouteImport.update({
   path: '/market/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrinterIndexRoute = PrinterIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PrinterRoute,
+} as any)
+const PrinterAccountRoute = PrinterAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => PrinterRoute,
+} as any)
 const ProductIdRoute = ProductIdRouteImport.update({
   id: '/product/$id',
   path: '/product/$id',
@@ -429,6 +447,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
   '/print': typeof PrintRoute
+  '/printer': typeof PrinterRouteWithChildren
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
   '/request-service': typeof RequestServiceRoute
@@ -471,6 +490,7 @@ export interface FileRoutesByFullPath {
   '/admin/wims': typeof AdminWimsRoute
   '/category/$slug': typeof CategorySlugRoute
   '/market/$id': typeof MarketIdRoute
+  '/printer/account': typeof PrinterAccountRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
   '/supplier/account': typeof SupplierAccountRoute
@@ -479,6 +499,7 @@ export interface FileRoutesByFullPath {
   '/supplier/sales': typeof SupplierSalesRoute
   '/track/$orderId': typeof TrackOrderIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/printer/': typeof PrinterIndexRoute
   '/supplier/': typeof SupplierIndexRoute
   '/api/public/ai-daily-forecast': typeof ApiPublicAiDailyForecastRoute
   '/api/public/dispatch-sweep': typeof ApiPublicDispatchSweepRoute
@@ -538,6 +559,7 @@ export interface FileRoutesByTo {
   '/admin/wims': typeof AdminWimsRoute
   '/category/$slug': typeof CategorySlugRoute
   '/market/$id': typeof MarketIdRoute
+  '/printer/account': typeof PrinterAccountRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
   '/supplier/account': typeof SupplierAccountRoute
@@ -546,6 +568,7 @@ export interface FileRoutesByTo {
   '/supplier/sales': typeof SupplierSalesRoute
   '/track/$orderId': typeof TrackOrderIdRoute
   '/admin': typeof AdminIndexRoute
+  '/printer': typeof PrinterIndexRoute
   '/supplier': typeof SupplierIndexRoute
   '/api/public/ai-daily-forecast': typeof ApiPublicAiDailyForecastRoute
   '/api/public/dispatch-sweep': typeof ApiPublicDispatchSweepRoute
@@ -566,6 +589,7 @@ export interface FileRoutesById {
   '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
   '/print': typeof PrintRoute
+  '/printer': typeof PrinterRouteWithChildren
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
   '/request-service': typeof RequestServiceRoute
@@ -608,6 +632,7 @@ export interface FileRoutesById {
   '/admin/wims': typeof AdminWimsRoute
   '/category/$slug': typeof CategorySlugRoute
   '/market/$id': typeof MarketIdRoute
+  '/printer/account': typeof PrinterAccountRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
   '/supplier/account': typeof SupplierAccountRoute
@@ -616,6 +641,7 @@ export interface FileRoutesById {
   '/supplier/sales': typeof SupplierSalesRoute
   '/track/$orderId': typeof TrackOrderIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/printer/': typeof PrinterIndexRoute
   '/supplier/': typeof SupplierIndexRoute
   '/api/public/ai-daily-forecast': typeof ApiPublicAiDailyForecastRoute
   '/api/public/dispatch-sweep': typeof ApiPublicDispatchSweepRoute
@@ -637,6 +663,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/orders'
     | '/print'
+    | '/printer'
     | '/refund-returns'
     | '/refunds'
     | '/request-service'
@@ -679,6 +706,7 @@ export interface FileRouteTypes {
     | '/admin/wims'
     | '/category/$slug'
     | '/market/$id'
+    | '/printer/account'
     | '/product/$id'
     | '/rate-order/$orderId'
     | '/supplier/account'
@@ -687,6 +715,7 @@ export interface FileRouteTypes {
     | '/supplier/sales'
     | '/track/$orderId'
     | '/admin/'
+    | '/printer/'
     | '/supplier/'
     | '/api/public/ai-daily-forecast'
     | '/api/public/dispatch-sweep'
@@ -746,6 +775,7 @@ export interface FileRouteTypes {
     | '/admin/wims'
     | '/category/$slug'
     | '/market/$id'
+    | '/printer/account'
     | '/product/$id'
     | '/rate-order/$orderId'
     | '/supplier/account'
@@ -754,6 +784,7 @@ export interface FileRouteTypes {
     | '/supplier/sales'
     | '/track/$orderId'
     | '/admin'
+    | '/printer'
     | '/supplier'
     | '/api/public/ai-daily-forecast'
     | '/api/public/dispatch-sweep'
@@ -773,6 +804,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/orders'
     | '/print'
+    | '/printer'
     | '/refund-returns'
     | '/refunds'
     | '/request-service'
@@ -815,6 +847,7 @@ export interface FileRouteTypes {
     | '/admin/wims'
     | '/category/$slug'
     | '/market/$id'
+    | '/printer/account'
     | '/product/$id'
     | '/rate-order/$orderId'
     | '/supplier/account'
@@ -823,6 +856,7 @@ export interface FileRouteTypes {
     | '/supplier/sales'
     | '/track/$orderId'
     | '/admin/'
+    | '/printer/'
     | '/supplier/'
     | '/api/public/ai-daily-forecast'
     | '/api/public/dispatch-sweep'
@@ -843,6 +877,7 @@ export interface RootRouteChildren {
   NotificationsRoute: typeof NotificationsRoute
   OrdersRoute: typeof OrdersRoute
   PrintRoute: typeof PrintRoute
+  PrinterRoute: typeof PrinterRouteWithChildren
   RefundReturnsRoute: typeof RefundReturnsRoute
   RefundsRoute: typeof RefundsRoute
   RequestServiceRoute: typeof RequestServiceRoute
@@ -954,6 +989,13 @@ declare module '@tanstack/react-router' {
       path: '/print'
       fullPath: '/print'
       preLoaderRoute: typeof PrintRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/printer': {
+      id: '/printer'
+      path: '/printer'
+      fullPath: '/printer'
+      preLoaderRoute: typeof PrinterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/refund-returns': {
@@ -1257,6 +1299,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/printer/': {
+      id: '/printer/'
+      path: '/'
+      fullPath: '/printer/'
+      preLoaderRoute: typeof PrinterIndexRouteImport
+      parentRoute: typeof PrinterRoute
+    }
+    '/printer/account': {
+      id: '/printer/account'
+      path: '/account'
+      fullPath: '/printer/account'
+      preLoaderRoute: typeof PrinterAccountRouteImport
+      parentRoute: typeof PrinterRoute
+    }
     '/product/$id': {
       id: '/product/$id'
       path: '/product/$id'
@@ -1407,6 +1463,19 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface PrinterRouteChildren {
+  PrinterAccountRoute: typeof PrinterAccountRoute
+  PrinterIndexRoute: typeof PrinterIndexRoute
+}
+
+const PrinterRouteChildren: PrinterRouteChildren = {
+  PrinterAccountRoute: PrinterAccountRoute,
+  PrinterIndexRoute: PrinterIndexRoute,
+}
+
+const PrinterRouteWithChildren =
+  PrinterRoute._addFileChildren(PrinterRouteChildren)
+
 interface SupplierRouteChildren {
   SupplierAccountRoute: typeof SupplierAccountRoute
   SupplierAiRoute: typeof SupplierAiRoute
@@ -1441,6 +1510,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsRoute: NotificationsRoute,
   OrdersRoute: OrdersRoute,
   PrintRoute: PrintRoute,
+  PrinterRoute: PrinterRouteWithChildren,
   RefundReturnsRoute: RefundReturnsRoute,
   RefundsRoute: RefundsRoute,
   RequestServiceRoute: RequestServiceRoute,

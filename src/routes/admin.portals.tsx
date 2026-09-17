@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Boxes, Bike, ShoppingBag, ExternalLink } from "lucide-react";
+import { Boxes, Bike, ShoppingBag, ExternalLink, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { listPortalTargetsFn, openPortalAsAdminFn, type PortalTargets } from "@/lib/admin-portal.functions";
 
@@ -26,15 +26,33 @@ function PortalsPage() {
       .catch(() => toast.error("Could not load the portals list"));
   }, []);
 
-  const open = async (role: "supplier" | "delivery", refId: string) => {
+  // Any portal session left on this device would bounce the customer app
+  // straight back to that portal, so clear them before opening the shop.
+  const clearPortalSessions = () => {
+    for (const k of ["qk_delivery_token", "qk_delivery_driver", "qk_supplier_token", "qk_supplier", "qk_printer_token", "qk_printer"]) {
+      try { localStorage.removeItem(k); } catch { /* noop */ }
+    }
+  };
+
+  const openCustomer = (to: "/" | "/categories") => {
+    clearPortalSessions();
+    nav({ to });
+  };
+
+  const open = async (role: "supplier" | "delivery" | "printer", refId: string) => {
     if (!token) return;
     setBusy(refId);
     try {
       const res = await openPortalAsAdminFn({ data: { token, role, refId } });
+      clearPortalSessions();
       if (res.role === "supplier") {
         localStorage.setItem("qk_supplier_token", JSON.stringify(res.token));
         localStorage.setItem("qk_supplier", JSON.stringify({ id: res.profile.id, name: res.profile.name }));
         nav({ to: "/supplier" });
+      } else if (res.role === "printer") {
+        localStorage.setItem("qk_printer_token", JSON.stringify(res.token));
+        localStorage.setItem("qk_printer", JSON.stringify(res.profile));
+        nav({ to: "/printer" });
       } else {
         localStorage.setItem("qk_delivery_token", res.token);
         localStorage.setItem("qk_delivery_driver", JSON.stringify(res.profile));
@@ -82,10 +100,20 @@ function PortalsPage() {
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-4">
-        <h2 className="flex items-center gap-2 font-display text-lg font-bold"><ShoppingBag className="h-5 w-5 text-primary" /> Customer app</h2>
+        <h2 className="flex items-center gap-2 font-display text-lg font-bold"><Printer className="h-5 w-5 text-primary" /> Printer service</h2>
         <div className="mt-3 flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => nav({ to: "/" })}><ExternalLink /> Open customer home</Button>
-          <Button variant="outline" onClick={() => nav({ to: "/categories" })}><ExternalLink /> Markets & categories</Button>
+          <Button variant="outline" disabled={busy === "printer"} onClick={() => open("printer", "printer")}>
+            <ExternalLink /> Open print queue portal
+          </Button>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-border bg-card p-4">
+        <h2 className="flex items-center gap-2 font-display text-lg font-bold"><ShoppingBag className="h-5 w-5 text-primary" /> Customer app</h2>
+        <p className="mt-1 text-xs text-muted-foreground">Opening the shop signs this device out of any supplier or delivery portal session.</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => openCustomer("/")}><ExternalLink /> Open customer home</Button>
+          <Button variant="outline" onClick={() => openCustomer("/categories")}><ExternalLink /> Markets & categories</Button>
         </div>
       </section>
     </div>
