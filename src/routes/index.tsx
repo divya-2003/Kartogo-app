@@ -26,7 +26,7 @@ export const Route = createFileRoute("/")({
 });
 
 /** Detects a saved admin/delivery/supplier session and returns where to send the user. */
-function roleRedirectTarget(): "/delivery" | "/admin" | "/supplier" | "/delivery-request" | null {
+function roleRedirectTarget(): "/delivery" | "/admin" | "/supplier" | "/printer" | "/delivery-request" | null {
   if (typeof window === "undefined") return null;
   // Tokens are written by different flows — some raw, some JSON-encoded. Read
   // both shapes so a portal session is never missed (which would drop a
