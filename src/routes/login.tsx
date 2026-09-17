@@ -128,6 +128,8 @@ function LoginPage() {
         "qk_delivery_driver",
         "qk_supplier_token",
         "qk_supplier",
+        "qk_printer_token",
+        "qk_printer",
       ]);
       toast.success("Welcome to Kartogo!");
       // replace: Back from the home page closes the app instead of reopening login.
