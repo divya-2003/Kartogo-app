@@ -195,13 +195,13 @@ export const listPrintJobsFn = createServerFn({ method: "POST" })
 
 // ---------------- Print shop: download the uploaded file ----------------
 export const getPrintJobFileFn = createServerFn({ method: "POST" })
-  .inputValidator((data: { adminToken?: string; id: string }) => ({
+  .inputValidator((data: { adminToken?: string; printerToken?: string; id: string }) => ({
     adminToken: String(data?.adminToken ?? ""),
+    printerToken: String(data?.printerToken ?? ""),
     id: String(data?.id ?? ""),
   }))
   .handler(async ({ data }) => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    await requirePrintAccess(data.adminToken, data.printerToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error } = await supabaseAdmin
       .from("print_jobs")
@@ -216,13 +216,17 @@ export const getPrintJobFileFn = createServerFn({ method: "POST" })
 // "ready" also pushes the companion order to "packed" so the delivery partner
 // sees it as ready to pick up.
 export const setPrintJobStatusFn = createServerFn({ method: "POST" })
-  .inputValidator((data: { adminToken?: string; id: string; status: PrintStatus }) => {
+  .inputValidator((data: { adminToken?: string; printerToken?: string; id: string; status: PrintStatus }) => {
     if (!PRINT_STATUSES.includes(data?.status)) throw new Error("Invalid status");
-    return { adminToken: String(data?.adminToken ?? ""), id: String(data?.id ?? ""), status: data.status };
+    return {
+      adminToken: String(data?.adminToken ?? ""),
+      printerToken: String(data?.printerToken ?? ""),
+      id: String(data?.id ?? ""),
+      status: data.status,
+    };
   })
   .handler(async ({ data }) => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    await requirePrintAccess(data.adminToken, data.printerToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: row, error } = await supabaseAdmin
