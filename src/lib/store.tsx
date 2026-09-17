@@ -214,7 +214,7 @@ type AuthCtx = {
   /** Request an SMS OTP. Returns demo-mode info when SMS is bypassed. */
   sendOtp: (phone: string) => Promise<{ demo: boolean; demoCode?: string }>;
   /** Verify the SMS OTP. Returns admin-eligibility, delivery and supplier sessions. */
-  verifyOtp: (phone: string, otp: string) => Promise<{ user: User; isAdminPhone: boolean; delivery: DeliverySession | null; deliveryPending: { name: string; phone: string; requested: boolean; pendingToken: string } | null; supplier: SupplierSession | null }>;
+  verifyOtp: (phone: string, otp: string) => Promise<{ user: User; isAdminPhone: boolean; delivery: DeliverySession | null; deliveryPending: { name: string; phone: string; requested: boolean; pendingToken: string } | null; supplier: SupplierSession | null; printer: { token: string; service: { name: string; phone: string } } | null }>;
   /** Exchange the secret admin passcode for a signed admin token. */
   adminLogin: (passcode: string, phone?: string) => Promise<User>;
   setName: (name: string) => void;
@@ -296,7 +296,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCustomerToken(res.token);
       // A new login is not yet an admin session until the passcode is provided.
       setAdminToken(null);
-      return { user: u, isAdminPhone: res.isAdminPhone, delivery: res.delivery ?? null, deliveryPending: res.deliveryPending ?? null, supplier: res.supplier ?? null };
+      return { user: u, isAdminPhone: res.isAdminPhone, delivery: res.delivery ?? null, deliveryPending: res.deliveryPending ?? null, supplier: res.supplier ?? null, printer: res.printer ?? null };
     },
     adminLogin: async (passcode, phone) => {
       const res = await adminLoginFn({ data: { passcode, phone } });
@@ -362,6 +362,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.removeItem("qk_delivery_driver");
           localStorage.removeItem("qk_supplier_token");
           localStorage.removeItem("qk_supplier");
+          localStorage.removeItem("qk_printer_token");
+          localStorage.removeItem("qk_printer");
           localStorage.removeItem("qk_cart");
           localStorage.removeItem("qk_wishlist");
           // Clear the local address cache so the next person to log in on this

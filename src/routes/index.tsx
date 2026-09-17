@@ -47,6 +47,7 @@ function roleRedirectTarget(): "/delivery" | "/admin" | "/supplier" | "/delivery
     if (read("qk_delivery_pending_token")) return "/delivery-request";
     if (read("qk_admin_token")) return "/admin";
     if (read("qk_supplier_token")) return "/supplier";
+    if (read("qk_printer_token")) return "/printer";
   } catch { /* noop */ }
   return null;
 }
