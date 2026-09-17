@@ -100,10 +100,20 @@ function PortalsPage() {
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-4">
-        <h2 className="flex items-center gap-2 font-display text-lg font-bold"><ShoppingBag className="h-5 w-5 text-primary" /> Customer app</h2>
+        <h2 className="flex items-center gap-2 font-display text-lg font-bold"><Printer className="h-5 w-5 text-primary" /> Printer service</h2>
         <div className="mt-3 flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => nav({ to: "/" })}><ExternalLink /> Open customer home</Button>
-          <Button variant="outline" onClick={() => nav({ to: "/categories" })}><ExternalLink /> Markets & categories</Button>
+          <Button variant="outline" disabled={busy === "printer"} onClick={() => open("printer", "printer")}>
+            <ExternalLink /> Open print queue portal
+          </Button>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-border bg-card p-4">
+        <h2 className="flex items-center gap-2 font-display text-lg font-bold"><ShoppingBag className="h-5 w-5 text-primary" /> Customer app</h2>
+        <p className="mt-1 text-xs text-muted-foreground">Opening the shop signs this device out of any supplier or delivery portal session.</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => openCustomer("/")}><ExternalLink /> Open customer home</Button>
+          <Button variant="outline" onClick={() => openCustomer("/categories")}><ExternalLink /> Markets & categories</Button>
         </div>
       </section>
     </div>
