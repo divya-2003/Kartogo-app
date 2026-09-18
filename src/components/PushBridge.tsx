@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/store";
 import { currentToken, deviceName, onForegroundMessage, platform } from "@/lib/firebase-push";
 import { registerPushTokenFn } from "@/lib/push.functions";
+import { isNativeApp, startNativePush } from "@/lib/native-push";
 
 /**
  * Keeps the customer's FCM registration token in sync with Supabase, shows
@@ -15,11 +16,35 @@ export function PushBridge() {
   const router = useRouter();
   const lastShown = useRef<string>("");
 
+  // 0) Android app: ask for the notification permission, register the phone's
+  // FCM token and handle taps natively. No-ops in a normal browser.
+  useEffect(() => {
+    if (!customerToken) return;
+    let stop: (() => void) | null = null;
+    let cancelled = false;
+    void startNativePush({
+      onToken: (fcmToken) => {
+        void registerPushTokenFn({
+          data: { token: customerToken, fcmToken, platform: "android", deviceName: "Android app" },
+        }).catch(() => { /* best-effort */ });
+      },
+      onForeground: (msg) => {
+        toast(msg.title, {
+          description: msg.body,
+          action: { label: "View", onClick: () => router.navigate({ to: msg.path }) },
+        });
+      },
+      onTap: (path) => router.navigate({ to: path }),
+    }).then((fn) => { if (cancelled) fn(); else stop = fn; });
+    return () => { cancelled = true; stop?.(); };
+  }, [customerToken, router]);
+
   // 1) Register / refresh the device token whenever the customer is logged in.
   useEffect(() => {
     if (!customerToken) return;
     let cancelled = false;
     (async () => {
+      if (await isNativeApp()) return; // native path above owns the token
       const token = await currentToken();
       if (!token || cancelled) return;
       try {
