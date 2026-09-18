@@ -1,6 +1,6 @@
-# Quick Niche Store
+# Kartogo App
 
-Iam planning to build an hyperlocal quick commerce with simple items focusing on niche products like snacks, instant food, stationery, grooming items, pickles, spice powders, local snacks, pooja items, fresh tiffin batter. The MVP for the app is Login with mobile OTP, Product categories, Search, Add to cart, Checkout, Cash/UPI payment, Order status in customer side. Add products, Change prices, Manage inventory, Assign delivery boy, View orders in the admin side.
+Iam planning to build an hyperlocal ecommerce with simple items focusing on products like snacks, instant food, stationery, grooming items, pickles, spice powders, local snacks, pooja items, furniture etc. The MVP for the app is Login with mobile OTP, Product categories, Search, Add to cart, Checkout, Cash/UPI payment, Order status in customer side. Add products, Change prices, Manage inventory, Assign delivery boy, View orders in the admin side.
 
 This project was built with [Lovable](https://lovable.dev).
 
