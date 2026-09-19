@@ -882,6 +882,12 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
     place: async (o) => {
       const ct = tokensRef.current.customerToken;
       if (!ct) throw new Error("Please log in to place an order");
+      // One key per checkout attempt: if the request is retried (double tap,
+      // flaky network) the server returns the first order instead of a second.
+      const clientRequestId =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const row = await placeOrderFn({
         data: {
           token: ct,
@@ -892,6 +898,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
           promoCode: o.promoCode,
           slotId: o.slotId,
           slotDate: o.slotDate,
+          clientRequestId,
         },
       });
       const saved = rowToOrder(row as unknown as OrderRow);

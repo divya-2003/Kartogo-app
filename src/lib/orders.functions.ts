@@ -15,6 +15,12 @@ type PlaceInput = {
   /** Standard orders may be scheduled into one of the admin-managed time slots. */
   slotId?: string;
   slotDate?: string;
+  /**
+   * Idempotency key generated once per checkout attempt by the client. If the
+   * same key arrives twice (double tap, retry after a flaky network) the first
+   * order is returned instead of creating a duplicate.
+   */
+  clientRequestId?: string;
 };
 
 // ---------------- List orders ----------------
@@ -76,6 +82,7 @@ export const placeOrderFn = createServerFn({ method: "POST" })
       promoCode: data.promoCode ? String(data.promoCode).slice(0, 24) : undefined,
       slotId: data.slotId ? String(data.slotId).slice(0, 64) : undefined,
       slotDate: /^\d{4}-\d{2}-\d{2}$/.test(String(data.slotDate ?? "")) ? String(data.slotDate) : undefined,
+      clientRequestId: data.clientRequestId ? String(data.clientRequestId).slice(0, 80) : undefined,
     };
   })
   .handler(async ({ data }) => {
@@ -87,6 +94,19 @@ export const placeOrderFn = createServerFn({ method: "POST" })
 
     const session = verifyCustomerToken(data.token);
     if (!session) throw new Error("Your session has expired. Please log in again.");
+
+    // Idempotency: a repeated checkout attempt with the same key returns the
+    // order that was already created instead of charging and stocking twice.
+    if (data.clientRequestId) {
+      const { data: existing } = await supabaseAdmin
+        .from("app_orders")
+        .select("*")
+        .eq("client_request_id", data.clientRequestId)
+        .eq("customer_phone", session.phone)
+        .maybeSingle();
+      if (existing) return existing;
+    }
+
 
     const items = data.items.map((i) => {
       const p = CATALOG[i.productId];
@@ -208,6 +228,7 @@ export const placeOrderFn = createServerFn({ method: "POST" })
         scheduled_date: slot?.date ?? null,
         scheduled_start: slot?.start ?? null,
         scheduled_end: slot?.end ?? null,
+        client_request_id: data.clientRequestId ?? null,
       })
       .select("*")
       .single();
@@ -224,6 +245,16 @@ export const placeOrderFn = createServerFn({ method: "POST" })
           p_type: "credit",
           p_note: `Refund — order ${id} failed`,
         });
+      }
+      // Two parallel submissions of the same checkout: the loser of the race
+      // hands back the order the winner already created.
+      if (error.code === "23505" && data.clientRequestId) {
+        const { data: twin } = await supabaseAdmin
+          .from("app_orders")
+          .select("*")
+          .eq("client_request_id", data.clientRequestId)
+          .maybeSingle();
+        if (twin) return twin;
       }
       throw new Error("Order could not be saved. Please try again.");
     }
@@ -266,6 +297,18 @@ export const setOrderStatusFn = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { verifyAdminToken } = await import("./auth-tokens.server");
     if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+
+    // Reject an impossible move before touching the database. The Postgres
+    // trigger enforces the same rules as the final authority.
+    const { canTransition } = await import("./order-status");
+    const { data: current } = await supabaseAdmin
+      .from("app_orders")
+      .select("status")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!current) throw new Error("That order no longer exists.");
+    const verdict = canTransition(current.status, data.status);
+    if (!verdict.ok) throw new Error(verdict.reason);
 
     const update: { status: OrderStatus; updated_at: string; cancel_reason?: string } = {
       status: data.status,
@@ -311,6 +354,15 @@ export const setOrderStatusFn = createServerFn({ method: "POST" })
     } catch (e) {
       console.error("status push failed", e);
     }
+
+    const { recordAudit } = await import("./audit.server");
+    await recordAudit({
+      actor: "admin",
+      action: "order.status_change",
+      entityType: "app_orders",
+      entityId: data.id,
+      details: { from: current.status, to: data.status, cancelReason: data.cancelReason ?? null },
+    });
 
     return row;
 

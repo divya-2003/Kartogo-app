@@ -46,6 +46,39 @@ export type Database = {
           },
         ]
       }
+      admin_audit_log: {
+        Row: {
+          action: string
+          actor: string
+          actor_role: string
+          created_at: string
+          details: Json
+          entity_id: string | null
+          entity_type: string
+          id: string
+        }
+        Insert: {
+          action: string
+          actor: string
+          actor_role?: string
+          created_at?: string
+          details?: Json
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor?: string
+          actor_role?: string
+          created_at?: string
+          details?: Json
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+        }
+        Relationships: []
+      }
       ai_forecasts: {
         Row: {
           accuracy: number | null
@@ -167,6 +200,7 @@ export type Database = {
         Row: {
           address: string
           cancel_reason: string | null
+          client_request_id: string | null
           created_at: string
           customer_name: string
           customer_phone: string
@@ -202,6 +236,7 @@ export type Database = {
         Insert: {
           address: string
           cancel_reason?: string | null
+          client_request_id?: string | null
           created_at?: string
           customer_name: string
           customer_phone: string
@@ -237,6 +272,7 @@ export type Database = {
         Update: {
           address?: string
           cancel_reason?: string | null
+          client_request_id?: string | null
           created_at?: string
           customer_name?: string
           customer_phone?: string
