@@ -355,6 +355,15 @@ export const setOrderStatusFn = createServerFn({ method: "POST" })
       console.error("status push failed", e);
     }
 
+    const { recordAudit } = await import("./audit.server");
+    await recordAudit({
+      actor: "admin",
+      action: "order.status_change",
+      entityType: "app_orders",
+      entityId: data.id,
+      details: { from: current.status, to: data.status, cancelReason: data.cancelReason ?? null },
+    });
+
     return row;
 
   });
