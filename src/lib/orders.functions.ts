@@ -246,6 +246,16 @@ export const placeOrderFn = createServerFn({ method: "POST" })
           p_note: `Refund — order ${id} failed`,
         });
       }
+      // Two parallel submissions of the same checkout: the loser of the race
+      // hands back the order the winner already created.
+      if (error.code === "23505" && data.clientRequestId) {
+        const { data: twin } = await supabaseAdmin
+          .from("app_orders")
+          .select("*")
+          .eq("client_request_id", data.clientRequestId)
+          .maybeSingle();
+        if (twin) return twin;
+      }
       throw new Error("Order could not be saved. Please try again.");
     }
 
