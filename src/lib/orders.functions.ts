@@ -298,6 +298,18 @@ export const setOrderStatusFn = createServerFn({ method: "POST" })
     const { verifyAdminToken } = await import("./auth-tokens.server");
     if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
 
+    // Reject an impossible move before touching the database. The Postgres
+    // trigger enforces the same rules as the final authority.
+    const { canTransition } = await import("./order-status");
+    const { data: current } = await supabaseAdmin
+      .from("app_orders")
+      .select("status")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!current) throw new Error("That order no longer exists.");
+    const verdict = canTransition(current.status, data.status);
+    if (!verdict.ok) throw new Error(verdict.reason);
+
     const update: { status: OrderStatus; updated_at: string; cancel_reason?: string } = {
       status: data.status,
       updated_at: new Date().toISOString(),
