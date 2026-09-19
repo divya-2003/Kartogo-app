@@ -95,6 +95,19 @@ export const placeOrderFn = createServerFn({ method: "POST" })
     const session = verifyCustomerToken(data.token);
     if (!session) throw new Error("Your session has expired. Please log in again.");
 
+    // Idempotency: a repeated checkout attempt with the same key returns the
+    // order that was already created instead of charging and stocking twice.
+    if (data.clientRequestId) {
+      const { data: existing } = await supabaseAdmin
+        .from("app_orders")
+        .select("*")
+        .eq("client_request_id", data.clientRequestId)
+        .eq("customer_phone", session.phone)
+        .maybeSingle();
+      if (existing) return existing;
+    }
+
+
     const items = data.items.map((i) => {
       const p = CATALOG[i.productId];
       if (!p) throw new Error("One of the items is no longer available");
