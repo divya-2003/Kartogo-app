@@ -15,6 +15,12 @@ type PlaceInput = {
   /** Standard orders may be scheduled into one of the admin-managed time slots. */
   slotId?: string;
   slotDate?: string;
+  /**
+   * Idempotency key generated once per checkout attempt by the client. If the
+   * same key arrives twice (double tap, retry after a flaky network) the first
+   * order is returned instead of creating a duplicate.
+   */
+  clientRequestId?: string;
 };
 
 // ---------------- List orders ----------------
