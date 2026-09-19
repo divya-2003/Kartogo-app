@@ -22,7 +22,7 @@ export async function recordAudit(entry: AuditEntry): Promise<void> {
       action: entry.action.slice(0, 80),
       entity_type: entry.entityType.slice(0, 60),
       entity_id: entry.entityId ? String(entry.entityId).slice(0, 120) : null,
-      details: entry.details ?? {},
+      details: JSON.parse(JSON.stringify(entry.details ?? {})),
     });
     if (error) console.error("audit write failed", error);
   } catch (e) {
