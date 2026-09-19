@@ -127,7 +127,13 @@ function AdminLayout() {
 
   const NavList = ({ inSheet = false }: { inSheet?: boolean }) => (
     <nav className="flex flex-col gap-1">
-      {NAV.filter((n) => routeAccess?.isSuperAdmin || routeAccess?.permissions.includes(n.permission)).map(n => {
+      {NAV.filter((n) => {
+        // The route context can be missing (SSR, or a verification hiccup that
+        // deliberately keeps the session alive). Show the full menu rather than
+        // crashing the whole admin shell — every page re-checks access anyway.
+        if (!routeAccess || !Array.isArray(routeAccess.permissions)) return true;
+        return routeAccess.isSuperAdmin || routeAccess.permissions.includes(n.permission);
+      }).map(n => {
         const active = isActive(n.to);
         const badge = n.to === "/admin/cancellations" && unseenCancellations > 0 ? unseenCancellations : null;
         return (
