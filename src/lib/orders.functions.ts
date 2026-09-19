@@ -228,6 +228,7 @@ export const placeOrderFn = createServerFn({ method: "POST" })
         scheduled_date: slot?.date ?? null,
         scheduled_start: slot?.start ?? null,
         scheduled_end: slot?.end ?? null,
+        client_request_id: data.clientRequestId ?? null,
       })
       .select("*")
       .single();
