@@ -285,6 +285,15 @@ function Stat({ icon, label, value, accent, warn, onClick }: { icon: React.React
   return <div className={cls}>{inner}</div>;
 }
 
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-border bg-background p-3">
+      <div className="text-[11px] font-semibold text-muted-foreground">{label}</div>
+      <div className="mt-1 font-display text-lg font-bold tabular-nums">{value}</div>
+    </div>
+  );
+}
+
 function Row({ label, value, strong, muted, accent }: { label: string; value: string; strong?: boolean; muted?: boolean; accent?: boolean }) {
   return (
     <div className={`flex items-center justify-between gap-3 py-1 ${strong ? "mt-1 border-t border-border pt-2" : ""}`}>
