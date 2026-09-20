@@ -129,6 +129,37 @@ function Dashboard() {
         <Stat icon={<IndianRupee className="h-5 w-5" />} label="This year's revenue" value={formatINR(yearlyRevenue)} accent onClick={() => setOpenPeriod("year")} />
       </div>
 
+      {live && (
+        <section className="rounded-2xl border border-border bg-card p-5">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-display text-lg font-bold">Action required</h2>
+            <span className="text-xs text-muted-foreground">Live · updates every minute</span>
+          </div>
+          {live.actions.length === 0 ? (
+            <div className="text-sm text-muted-foreground">Nothing needs your attention right now. ✨</div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {live.actions.map((a) => (
+                <Link
+                  key={a.key}
+                  to={a.to}
+                  className="flex items-center gap-2 rounded-xl border border-saffron bg-saffron/10 px-3 py-2 text-sm font-semibold transition hover:border-primary"
+                >
+                  <span className="grid h-6 min-w-6 place-items-center rounded-full bg-destructive px-1.5 text-[11px] font-bold text-destructive-foreground">{a.count}</span>
+                  {a.label}
+                </Link>
+              ))}
+            </div>
+          )}
+          <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <MiniStat label="Active orders" value={String(live.activeOrders)} />
+            <MiniStat label="Delivered today" value={String(live.deliveredToday)} />
+            <MiniStat label="Cancelled today" value={String(live.cancelledToday)} />
+            <MiniStat label="Riders online" value={String(live.onlineDrivers)} />
+          </div>
+        </section>
+      )}
+
       <PendingTopups />
 
       <Dialog open={openPeriod !== null} onOpenChange={(o) => !o && setOpenPeriod(null)}>
