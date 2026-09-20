@@ -69,6 +69,25 @@ function Dashboard() {
   const { orders } = useOrders();
   const { adminAudit } = useAuth();
   const [openPeriod, setOpenPeriod] = useState<null | "today" | "month" | "year">(null);
+  const [live, setLive] = useState<CommandCenter | null>(null);
+
+  // Live operational figures come straight from the database, not the client
+  // cache, so the command centre always reflects the real current state.
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      let token: string | null = null;
+      try { token = JSON.parse(localStorage.getItem("qk_admin_token") || "null"); } catch { token = null; }
+      if (!token) return;
+      try {
+        const res = await adminCommandCenterFn({ data: { token } });
+        if (!cancelled && res.ok) setLive(res);
+      } catch { /* keep the last good snapshot */ }
+    };
+    load();
+    const t = setInterval(load, 60_000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, []);
 
   const today = new Date(); today.setHours(0,0,0,0);
   const monthStart = new Date(); monthStart.setHours(0,0,0,0); monthStart.setDate(1);
