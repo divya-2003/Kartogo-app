@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { adminCommandCenterFn, type CommandCenter } from "@/lib/admin-command-center.functions";
 import { useCatalog, useOrders, useAuth } from "@/lib/store";
 import type { Order } from "@/lib/store";
 import { formatINR } from "@/lib/data";
@@ -68,6 +69,25 @@ function Dashboard() {
   const { orders } = useOrders();
   const { adminAudit } = useAuth();
   const [openPeriod, setOpenPeriod] = useState<null | "today" | "month" | "year">(null);
+  const [live, setLive] = useState<CommandCenter | null>(null);
+
+  // Live operational figures come straight from the database, not the client
+  // cache, so the command centre always reflects the real current state.
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      let token: string | null = null;
+      try { token = JSON.parse(localStorage.getItem("qk_admin_token") || "null"); } catch { token = null; }
+      if (!token) return;
+      try {
+        const res = await adminCommandCenterFn({ data: { token } });
+        if (!cancelled && res.ok) setLive(res);
+      } catch { /* keep the last good snapshot */ }
+    };
+    load();
+    const t = setInterval(load, 60_000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, []);
 
   const today = new Date(); today.setHours(0,0,0,0);
   const monthStart = new Date(); monthStart.setHours(0,0,0,0); monthStart.setDate(1);
@@ -108,6 +128,37 @@ function Dashboard() {
         <Stat icon={<IndianRupee className="h-5 w-5" />} label="This month's revenue" value={formatINR(monthlyRevenue)} accent onClick={() => setOpenPeriod("month")} />
         <Stat icon={<IndianRupee className="h-5 w-5" />} label="This year's revenue" value={formatINR(yearlyRevenue)} accent onClick={() => setOpenPeriod("year")} />
       </div>
+
+      {live && (
+        <section className="rounded-2xl border border-border bg-card p-5">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-display text-lg font-bold">Action required</h2>
+            <span className="text-xs text-muted-foreground">Live · updates every minute</span>
+          </div>
+          {live.actions.length === 0 ? (
+            <div className="text-sm text-muted-foreground">Nothing needs your attention right now. ✨</div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {live.actions.map((a) => (
+                <Link
+                  key={a.key}
+                  to={a.to}
+                  className="flex items-center gap-2 rounded-xl border border-saffron bg-saffron/10 px-3 py-2 text-sm font-semibold transition hover:border-primary"
+                >
+                  <span className="grid h-6 min-w-6 place-items-center rounded-full bg-destructive px-1.5 text-[11px] font-bold text-destructive-foreground">{a.count}</span>
+                  {a.label}
+                </Link>
+              ))}
+            </div>
+          )}
+          <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <MiniStat label="Active orders" value={String(live.activeOrders)} />
+            <MiniStat label="Delivered today" value={String(live.deliveredToday)} />
+            <MiniStat label="Cancelled today" value={String(live.cancelledToday)} />
+            <MiniStat label="Riders online" value={String(live.onlineDrivers)} />
+          </div>
+        </section>
+      )}
 
       <PendingTopups />
 
@@ -232,6 +283,15 @@ function Stat({ icon, label, value, accent, warn, onClick }: { icon: React.React
   );
   if (onClick) return <button type="button" onClick={onClick} className={`${cls} w-full`}>{inner}</button>;
   return <div className={cls}>{inner}</div>;
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-border bg-background p-3">
+      <div className="text-[11px] font-semibold text-muted-foreground">{label}</div>
+      <div className="mt-1 font-display text-lg font-bold tabular-nums">{value}</div>
+    </div>
+  );
 }
 
 function Row({ label, value, strong, muted, accent }: { label: string; value: string; strong?: boolean; muted?: boolean; accent?: boolean }) {
