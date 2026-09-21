@@ -22,6 +22,7 @@ export const NOTIFICATION_TYPES = [
   "ORDER_CANCELLED",
   "TEST",
   "PROMOTION",
+  "BACK_IN_STOCK",
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
@@ -37,6 +38,7 @@ export const MESSAGES: Record<NotificationType, { title: string; body: string }>
   ORDER_CANCELLED: { title: "Order Cancelled", body: "Your Kartogo order has been cancelled." },
   TEST: { title: "Kartogo test notification 🔔", body: "Push notifications are working on this device." },
   PROMOTION: { title: "Kartogo offer", body: "A new offer is waiting for you." },
+  BACK_IN_STOCK: { title: "Back in stock", body: "An item you wanted is available again." },
 };
 
 /** Which preference switch gates each notification type. */
@@ -50,10 +52,12 @@ const PREF_OF: Record<NotificationType, "order_updates" | "delivery_updates" | "
   ORDER_DELIVERED: "delivery_updates",
   TEST: "important_updates",
   PROMOTION: "promotional_offers",
+  BACK_IN_STOCK: "important_updates",
 };
 
 /** Deep link target for a notification tap. */
-export function deepLinkFor(type: NotificationType, orderId?: string | null): string {
+export function deepLinkFor(type: NotificationType, orderId?: string | null, productId?: string | null): string {
+  if (type === "BACK_IN_STOCK" && productId) return `/product/${encodeURIComponent(productId)}`;
   if (!orderId) return "/orders";
   switch (type) {
     case "DRIVER_ASSIGNED":
@@ -118,6 +122,8 @@ export type PushInput = {
   phone: string;
   type: NotificationType;
   orderId?: string | null;
+  productId?: string | null;
+  stockAlertId?: string | null;
   title?: string;
   body?: string;
   /** Skip the per-customer preference check (test pushes from admin). */
@@ -159,6 +165,8 @@ export async function sendPushToCustomer(input: PushInput): Promise<PushOutcome>
       .insert({
         user_phone: phone,
         order_id: input.orderId ?? null,
+        product_id: input.productId ?? null,
+        stock_alert_id: input.stockAlertId ?? null,
         notification_type: input.type,
         title,
         body,
@@ -195,6 +203,7 @@ export async function sendPushToCustomer(input: PushInput): Promise<PushOutcome>
       type: input.type,
       orderId: String(input.orderId ?? ""),
       path: deepLinkFor(input.type, input.orderId),
+      productId: String(input.productId ?? ""),
       notificationId: String(notificationId ?? ""),
     };
 
