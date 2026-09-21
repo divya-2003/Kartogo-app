@@ -63,13 +63,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const capFor = (id: string) => {
       const p = products.find(p => p.id === id);
       const m = p?.maxPerOrder;
-      return m && m > 0 ? m : Infinity;
+      const configured = m && m > 0 ? m : Infinity;
+      return Math.min(configured, Math.max(0, p?.stock ?? 0));
     };
     const clamp = (id: string, qty: number) => {
       const cap = capFor(id);
       if (qty > cap) {
         const p = products.find(p => p.id === id);
-        toast.info(`You can buy up to ${cap} of ${p?.name ?? "this item"} per order`);
+        toast.info(cap > 0
+          ? `Only ${cap} of ${p?.name ?? "this item"} can be added`
+          : `${p?.name ?? "This item"} is out of stock`);
         return cap;
       }
       return qty;

@@ -77,17 +77,38 @@ async function assertCanTouch(who: Who, productId: string, nextCategory?: string
   }
 }
 
-// When an item comes back into stock, close out the "Notify me" restock
-// requests the admin is tracking for it — they become "restocked" (confirmed).
+// When an item comes back into stock, notify each waiting customer before
+// closing their request. The notification history's stock-alert id makes this
+// idempotent when an editor retries the same save.
 async function confirmRestockAlerts(productId: string, stock: number) {
   if (stock <= 0 || !productId) return;
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin
+    const { data: alerts, error } = await supabaseAdmin
       .from("stock_alerts")
-      .update({ status: "restocked", updated_at: new Date().toISOString() })
+      .select("id, customer_phone, product_name")
       .eq("product_id", productId)
       .in("status", ["pending", "sourcing"]);
+    if (error) throw error;
+
+    const { sendPushToCustomer } = await import("./push.server");
+    for (const alert of alerts ?? []) {
+      const phone = String(alert.customer_phone ?? "").trim();
+      if (phone) {
+        await sendPushToCustomer({
+          phone,
+          type: "BACK_IN_STOCK",
+          productId,
+          stockAlertId: String(alert.id),
+          title: `${String(alert.product_name || "Your item")} is back`,
+          body: "It is available again on Kartogo. Tap to view it before it sells out.",
+        });
+      }
+      await supabaseAdmin
+        .from("stock_alerts")
+        .update({ status: "restocked", updated_at: new Date().toISOString() })
+        .eq("id", alert.id);
+    }
   } catch { /* restock confirmation is best-effort */ }
 }
 

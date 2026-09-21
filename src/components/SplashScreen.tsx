@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import kartogoLogo from "@/assets/kartogo-logo.png";
-import kartogoWordmark from "@/assets/kartogo-wordmark.png.asset.json";
+import kartogoWordmark from "@/assets/kartogo-reference-wordmark.png";
 
 /**
  * Animated launch screen. Shows once per browser session while the app boots
@@ -25,14 +24,13 @@ export function SplashScreen({ minDurationMs = 1800 }: { minDurationMs?: number 
   return (
     <div
       aria-hidden="true"
-      className={`fixed inset-0 z-[100] grid place-items-center bg-[#010d30] transition-opacity duration-500 ${
+      className={`fixed inset-0 z-[100] grid place-items-center bg-brand-navy transition-opacity duration-500 ${
         phase === "out" ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
     >
       <div className="flex flex-col items-center px-6 text-center">
-        <img src={kartogoLogo} alt="" width={96} height={96} className="h-24 w-24 animate-splash-pop rounded-3xl bg-[#010d30] object-cover shadow-pop" />
-        <img src={kartogoWordmark.url} alt="Kartogo" className="mt-4 h-12 w-auto animate-splash-rise object-contain" />
-        <div className="mt-1 animate-splash-rise text-sm font-semibold text-white/80 [animation-delay:120ms]">
+        <img src={kartogoWordmark} alt="Kartogo" className="h-auto w-full max-w-[320px] animate-splash-pop object-contain brightness-0 invert sm:max-w-[390px]" />
+        <div className="mt-3 animate-splash-rise text-sm font-semibold text-brand-on-navy/80 [animation-delay:120ms]">
           Everything You Need, Delivered Fast
         </div>
       </div>

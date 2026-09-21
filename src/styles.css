@@ -40,6 +40,8 @@
   --color-leaf-foreground: var(--leaf-foreground);
   --color-cream: var(--cream);
   --color-ink: var(--ink);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-on-navy: var(--brand-on-navy);
 }
 
 :root {
@@ -61,6 +63,8 @@
   --leaf-foreground: oklch(0.985 0 0);
   --cream: oklch(0.97 0.03 92);
   --ink: oklch(0.18 0.01 60);
+  --brand-navy: oklch(0.19 0.075 261);
+  --brand-on-navy: oklch(0.985 0 0);
 
   --secondary: oklch(0.94 0.02 95);
   --secondary-foreground: oklch(0.22 0.02 60);
