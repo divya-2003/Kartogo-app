@@ -14,7 +14,14 @@ export const Route = createFileRoute("/login")({
     redirect: typeof search.redirect === "string" ? search.redirect : undefined,
   }),
   component: LoginPage,
-  head: () => ({ meta: [{ title: "Login — Kartogo" }] }),
+  head: () => ({ meta: [
+    { title: "Login or register — Kartogo" },
+    { name: "description", content: "Login or create your Kartogo account with your mobile number." },
+    { property: "og:title", content: "Login or register — Kartogo" },
+    { property: "og:description", content: "Access orders, saved addresses, favourites and Kartogo Cash." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
 });
 
 function LoginPage() {

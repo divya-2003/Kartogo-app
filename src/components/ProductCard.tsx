@@ -56,6 +56,11 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
 
   // Out-of-stock → raise a restock request with the admin (product + markets).
   const handleNotify = async () => {
+    if (!user) {
+      toast.info("Login to receive a back-in-stock alert");
+      nav({ to: "/login", search: { redirect: `/product/${p.id}` } });
+      return;
+    }
     setNotifying(true);
     try {
       await createStockAlertFn({ data: {

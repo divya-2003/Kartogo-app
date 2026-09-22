@@ -26,7 +26,14 @@ import {
 
 export const Route = createFileRoute("/menu")({
   component: MenuPage,
-  head: () => ({ meta: [{ title: "Profile — Kartogo" }] }),
+  head: () => ({ meta: [
+    { title: "Your account — Kartogo" },
+    { name: "description", content: "Manage your Kartogo account, addresses, orders, favourites and notifications." },
+    { property: "og:title", content: "Your account — Kartogo" },
+    { property: "og:description", content: "Manage your Kartogo shopping account and preferences." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
 });
 
 function MenuPage() {

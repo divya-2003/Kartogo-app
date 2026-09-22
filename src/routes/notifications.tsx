@@ -29,7 +29,7 @@ export const Route = createFileRoute("/notifications")({
 const ROWS: { key: keyof NotificationPrefs; label: string; sub: string }[] = [
   { key: "order_updates", label: "Order Updates", sub: "Confirmation, preparation and cancellation" },
   { key: "delivery_updates", label: "Delivery Updates", sub: "Partner assigned, picked up, nearby, delivered" },
-  { key: "important_updates", label: "Important Updates", sub: "Account, refunds and service alerts" },
+  { key: "important_updates", label: "Important Updates", sub: "Back-in-stock, account, refund and service alerts" },
   { key: "promotional_offers", label: "Promotional Offers", sub: "Coupons and seasonal deals" },
 ];
 

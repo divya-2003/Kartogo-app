@@ -171,7 +171,7 @@ export async function sendPushToCustomer(input: PushInput): Promise<PushOutcome>
         title,
         body,
         status: "pending",
-      })
+      } as never)
       .select("id")
       .maybeSingle();
 

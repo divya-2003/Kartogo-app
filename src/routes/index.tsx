@@ -21,6 +21,10 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "Kartogo — Ongole's 15-min neighbourhood store" },
       { name: "description", content: "Snacks, pickles, instant food, spices, pooja items, tiffin batter — delivered to your door in 15 minutes across Ongole." },
+      { property: "og:title", content: "Kartogo — Everything You Need, Delivered Fast" },
+      { property: "og:description", content: "Shop local essentials and groceries with quick or scheduled delivery." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
 });
@@ -64,7 +68,7 @@ const COUPONS = Object.entries(PROMO_COUPONS).map(([code, c]) => ({
 }));
 
 function Index() {
-  const { ready } = useAuth();
+  const { ready, user } = useAuth();
   const { ready: locReady, location } = useLocation();
   const nav = useNavigate();
   const { products } = useCatalog();
