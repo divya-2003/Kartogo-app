@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useAuth } from "@/lib/store";
 import { toast } from "sonner";
 import { KeyRound, ShieldCheck } from "lucide-react";
-import kartogoWordmark from "@/assets/kartogo-wordmark-on-navy.png.asset.json";
+import kartogoWordmark from "@/assets/kartogo-wordmark-transparent.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { PhoneNumberInput } from "@/components/PhoneNumberInput";
 import { usePhoneCountryDetection } from "@/hooks/use-phone-country";
