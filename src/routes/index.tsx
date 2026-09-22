@@ -194,8 +194,9 @@ function Index() {
               <Link to="/menu" aria-label="Kartogo Cash wallet" className="flex items-center gap-1 rounded-xl bg-card px-3 py-2 text-sm font-bold shadow-pop">
                 <Wallet className="h-4 w-4 shrink-0 text-primary" /> {formatINR(balance)}
               </Link>
-              <Link to="/menu" aria-label="Account" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-card shadow-pop">
-                <User2 className="h-5 w-5" />
+              <Link to="/menu" aria-label={user ? "Account" : "Login or register"} className={`flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-card px-3 shadow-pop ${user ? "w-10" : "min-w-0"}`}>
+                <User2 className="h-5 w-5 shrink-0" />
+                {!user && <span className="hidden text-xs font-extrabold sm:inline">Login / Register</span>}
               </Link>
             </div>
           </div>

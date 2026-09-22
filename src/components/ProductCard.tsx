@@ -28,23 +28,30 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
   const inCart = items.find(i => i.productId === p.id);
   const wished = has(p.id);
   const out = p.stock <= 0;
+  const lowStock = p.stock > 0 && p.stock <= 5;
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!user) {
+      toast.info("Login to save items to your wishlist");
+      nav({ to: "/login", search: { redirect: "/wishlist" } });
+      return;
+    }
     toggle(p.id);
     customerEventService.trackProductFavorite(p.id, !wished);
     toast.success(wished ? "Removed from wishlist" : "Added to wishlist");
   };
 
   const handleAdd = () => {
-    add(p.id);
-    customerEventService.trackAddToCart(p.id);
-    if (recommendationType) customerEventService.trackRecommendationAddedToCart(p.id, recommendationType);
     if (!user) {
       toast.info("Please login to add items to your cart");
       nav({ to: "/login", search: { redirect: "/" } });
+      return;
     }
+    add(p.id);
+    customerEventService.trackAddToCart(p.id);
+    if (recommendationType) customerEventService.trackRecommendationAddedToCart(p.id, recommendationType);
   };
 
   // Out-of-stock → raise a restock request with the admin (product + markets).
@@ -91,6 +98,7 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
           </div>
         )}
         {out && <span className="absolute right-11 top-2 rounded-md bg-destructive px-2 py-0.5 text-[11px] font-bold text-destructive-foreground">Out</span>}
+        {lowStock && <span className="absolute bottom-2 left-2 rounded-md bg-saffron px-2 py-1 text-[11px] font-extrabold text-foreground shadow-pop">Only {p.stock} left</span>}
         <button
           onClick={handleWishlist}
           aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
@@ -131,7 +139,7 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
               <span className="min-w-6 text-center text-xs font-bold">{inCart.qty}</span>
               <button
                 aria-label={`Increase quantity of ${p.name}`}
-                disabled={!!p.maxPerOrder && inCart.qty >= p.maxPerOrder}
+                disabled={inCart.qty >= Math.min(p.maxPerOrder || Infinity, p.stock)}
                 onClick={() => setQty(p.id, inCart.qty + 1)}
                 className="grid h-8 w-8 place-items-center transition hover:bg-primary/80 disabled:opacity-50"
               >
@@ -147,7 +155,7 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
             </button>
           )}
         </div>
-        {!out && !!p.maxPerOrder && (
+        {!out && !lowStock && !!p.maxPerOrder && (
           <div className="mt-1 text-[11px] font-semibold text-muted-foreground">Max {p.maxPerOrder} per order</div>
         )}
 

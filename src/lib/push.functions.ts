@@ -120,7 +120,7 @@ export const listMyNotificationsFn = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows } = await supabaseAdmin
       .from("notifications")
-      .select("id, title, body, notification_type, order_id, status, read_at, created_at")
+      .select("id, title, body, notification_type, order_id, product_id, status, read_at, created_at")
       .eq("user_phone", session.phone)
       .order("created_at", { ascending: false })
       .limit(30);
@@ -190,6 +190,8 @@ export const retryNotificationFn = createServerFn({ method: "POST" })
       phone: String(row.user_phone),
       type: String(row.notification_type) as never,
       orderId: row.order_id ? String(row.order_id) : null,
+      productId: row.product_id ? String(row.product_id) : null,
+      stockAlertId: row.stock_alert_id ? String(row.stock_alert_id) : null,
       title: String(row.title),
       body: String(row.body ?? ""),
       force: true,

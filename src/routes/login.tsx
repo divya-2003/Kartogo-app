@@ -3,8 +3,8 @@ import { useState } from "react";
 import { useAuth } from "@/lib/store";
 import { toast } from "sonner";
 import { KeyRound, ShieldCheck } from "lucide-react";
-import kartogoLogo from "@/assets/kartogo-logo.png";
-import kartogoWordmark from "@/assets/kartogo-wordmark.png.asset.json";
+import kartogoWordmark from "@/assets/kartogo-wordmark-on-navy.png.asset.json";
+import { Button } from "@/components/ui/button";
 import { PhoneNumberInput } from "@/components/PhoneNumberInput";
 import { usePhoneCountryDetection } from "@/hooks/use-phone-country";
 import { toE164, validatePhoneNumber, getCountry } from "@/lib/phone";
@@ -153,17 +153,14 @@ function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-[#010d30] px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-brand-navy px-4">
       {/* Brand */}
       <div className="mb-8 flex flex-col items-center gap-3">
-        <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-2xl bg-[#010d30] shadow-pop">
-          <img src={kartogoLogo} alt="Kartogo" className="h-full w-full scale-110 object-cover" />
-        </div>
         <div className="text-center">
           <h1>
-            <img src={kartogoWordmark.url} alt="Kartogo" className="mx-auto h-10 w-auto object-contain" />
+            <img src={kartogoWordmark.url} alt="Kartogo" className="mx-auto h-auto w-full max-w-[300px] object-contain" />
           </h1>
-          <p className="mt-1 text-sm text-white/70">Everything You Need, Delivered Fast</p>
+          <p className="mt-2 text-sm text-brand-on-navy/70">Everything You Need, Delivered Fast</p>
         </div>
       </div>
 
@@ -184,9 +181,9 @@ function LoginPage() {
                   onValueChange={setPhone}
                 />
               </div>
-              <button disabled={loading} className="w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
+              <Button disabled={loading} className="h-12 w-full rounded-xl font-bold">
                 {loading ? "Sending..." : "Send OTP"}
-              </button>
+              </Button>
               <p className="text-center text-xs text-muted-foreground">An OTP will be sent to your mobile number.</p>
 
             </form>
@@ -211,9 +208,9 @@ function LoginPage() {
                   />
                 </div>
               </div>
-              <button disabled={loading} className="w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
+              <Button disabled={loading} className="h-12 w-full rounded-xl font-bold">
                 {loading ? "Verifying..." : "Verify & continue"}
-              </button>
+              </Button>
               <button type="button" onClick={() => { setStage("phone"); setOtp(""); }} className="w-full text-center text-sm text-muted-foreground hover:text-foreground">Change number</button>
             </form>
           )}
@@ -231,14 +228,14 @@ function LoginPage() {
                   />
                 </div>
               </div>
-              <button disabled={loading} className="w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
+              <Button disabled={loading} className="h-12 w-full rounded-xl font-bold">
                 {loading ? "Verifying..." : "Enter admin portal"}
-              </button>
+              </Button>
               <button type="button" onClick={() => { setStage("otp"); setPasscode(""); }} className="w-full text-center text-sm text-muted-foreground hover:text-foreground">Back</button>
             </form>
           )}
         </div>
-        <p className="mt-4 text-center text-xs text-white/60">
+        <p className="mt-4 text-center text-xs text-brand-on-navy/60">
           By continuing, you agree to Kartogo's terms.
         </p>
       </div>

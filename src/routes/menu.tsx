@@ -69,11 +69,21 @@ function MenuPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-secondary/40">
+      <div className="min-h-screen bg-background">
         <TopBar />
-        <div className="mx-auto max-w-md px-4 py-16 text-center">
-          <h1 className="font-display text-2xl font-bold">Please login</h1>
-          <Link to="/login" className="mt-5 inline-flex rounded-xl bg-primary px-5 py-3 font-bold text-primary-foreground">Login with OTP</Link>
+        <div className="mx-auto max-w-2xl px-5 py-10">
+          <p className="text-sm font-bold uppercase text-primary">Your Kartogo</p>
+          <h1 className="mt-2 font-display text-3xl font-extrabold">One account, easier everyday shopping.</h1>
+          <p className="mt-3 max-w-lg text-muted-foreground">Save addresses and favourites, track every order, manage Kartogo Cash, and get restock alerts.</p>
+          <Link to="/login" search={{ redirect: "/menu" }} className="mt-7 inline-flex h-12 w-full items-center justify-center rounded-md bg-primary px-6 font-bold text-primary-foreground shadow-pop sm:w-auto">
+            Login or register
+          </Link>
+          <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <GuestBenefit icon={<ShoppingBag className="h-5 w-5" />} label="Order tracking" />
+            <GuestBenefit icon={<Heart className="h-5 w-5" />} label="Saved favourites" />
+            <GuestBenefit icon={<MapPin className="h-5 w-5" />} label="Saved addresses" />
+            <GuestBenefit icon={<Bell className="h-5 w-5" />} label="Stock alerts" />
+          </div>
         </div>
       </div>
     );
@@ -296,6 +306,10 @@ function MenuPage() {
       </div>
     </div>
   );
+}
+
+function GuestBenefit({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return <div className="flex min-h-24 flex-col justify-between rounded-lg border border-border bg-card p-4 shadow-sm"><span className="text-primary">{icon}</span><span className="text-sm font-bold">{label}</span></div>;
 }
 
 function TopBar() {
