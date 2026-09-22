@@ -21,6 +21,10 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "Kartogo — Ongole's 15-min neighbourhood store" },
       { name: "description", content: "Snacks, pickles, instant food, spices, pooja items, tiffin batter — delivered to your door in 15 minutes across Ongole." },
+      { property: "og:title", content: "Kartogo — Everything You Need, Delivered Fast" },
+      { property: "og:description", content: "Shop local essentials and groceries with quick or scheduled delivery." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
 });
@@ -64,7 +68,7 @@ const COUPONS = Object.entries(PROMO_COUPONS).map(([code, c]) => ({
 }));
 
 function Index() {
-  const { ready } = useAuth();
+  const { ready, user } = useAuth();
   const { ready: locReady, location } = useLocation();
   const nav = useNavigate();
   const { products } = useCatalog();
@@ -194,8 +198,9 @@ function Index() {
               <Link to="/menu" aria-label="Kartogo Cash wallet" className="flex items-center gap-1 rounded-xl bg-card px-3 py-2 text-sm font-bold shadow-pop">
                 <Wallet className="h-4 w-4 shrink-0 text-primary" /> {formatINR(balance)}
               </Link>
-              <Link to="/menu" aria-label="Account" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-card shadow-pop">
-                <User2 className="h-5 w-5" />
+              <Link to="/menu" aria-label={user ? "Account" : "Login or register"} className={`flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-card px-3 shadow-pop ${user ? "w-10" : "min-w-0"}`}>
+                <User2 className="h-5 w-5 shrink-0" />
+                {!user && <span className="hidden text-xs font-extrabold sm:inline">Login / Register</span>}
               </Link>
             </div>
           </div>

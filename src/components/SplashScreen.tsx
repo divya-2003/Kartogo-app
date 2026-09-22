@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import kartogoWordmark from "@/assets/kartogo-reference-wordmark.png";
+import kartogoWordmark from "@/assets/kartogo-wordmark-transparent.png.asset.json";
 
 /**
  * Animated launch screen. Shows once per browser session while the app boots
@@ -29,7 +29,7 @@ export function SplashScreen({ minDurationMs = 1800 }: { minDurationMs?: number 
       }`}
     >
       <div className="flex flex-col items-center px-6 text-center">
-        <img src={kartogoWordmark} alt="Kartogo" className="h-auto w-full max-w-[320px] animate-splash-pop object-contain brightness-0 invert sm:max-w-[390px]" />
+        <img src={kartogoWordmark.url} alt="Kartogo" className="h-auto w-full max-w-[320px] animate-splash-pop object-contain sm:max-w-[390px]" />
         <div className="mt-3 animate-splash-rise text-sm font-semibold text-brand-on-navy/80 [animation-delay:120ms]">
           Everything You Need, Delivered Fast
         </div>

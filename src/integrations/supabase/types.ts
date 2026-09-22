@@ -1431,11 +1431,9 @@ export type Database = {
           id: string
           notification_type: string
           order_id: string | null
-          product_id: string | null
           read_at: string | null
           sent_at: string | null
           status: string
-          stock_alert_id: string | null
           title: string
           user_phone: string
         }
@@ -1448,11 +1446,9 @@ export type Database = {
           id?: string
           notification_type: string
           order_id?: string | null
-          product_id?: string | null
           read_at?: string | null
           sent_at?: string | null
           status?: string
-          stock_alert_id?: string | null
           title: string
           user_phone: string
         }
@@ -1465,23 +1461,13 @@ export type Database = {
           id?: string
           notification_type?: string
           order_id?: string | null
-          product_id?: string | null
           read_at?: string | null
           sent_at?: string | null
           status?: string
-          stock_alert_id?: string | null
           title?: string
           user_phone?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "notifications_stock_alert_id_fkey"
-            columns: ["stock_alert_id"]
-            isOneToOne: false
-            referencedRelation: "stock_alerts"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       order_call_logs: {
         Row: {

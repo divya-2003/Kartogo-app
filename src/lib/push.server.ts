@@ -171,7 +171,7 @@ export async function sendPushToCustomer(input: PushInput): Promise<PushOutcome>
         title,
         body,
         status: "pending",
-      })
+      } as never)
       .select("id")
       .maybeSingle();
 
@@ -202,7 +202,7 @@ export async function sendPushToCustomer(input: PushInput): Promise<PushOutcome>
     const data = {
       type: input.type,
       orderId: String(input.orderId ?? ""),
-      path: deepLinkFor(input.type, input.orderId),
+      path: deepLinkFor(input.type, input.orderId, input.productId),
       productId: String(input.productId ?? ""),
       notificationId: String(notificationId ?? ""),
     };

@@ -92,14 +92,26 @@ function ProductPage() {
   if (!p) throw notFound();
   const inCart = items.find(i => i.productId === p.id);
   const wished = has(p.id);
+  const lowStock = p.stock > 0 && p.stock <= 5;
+
+  const handleWishlist = () => {
+    if (!user) {
+      toast.info("Login to save items to your wishlist");
+      nav({ to: "/login", search: { redirect: `/product/${p.id}` } });
+      return;
+    }
+    toggle(p.id);
+    toast.success(wished ? "Removed from wishlist" : "Added to wishlist");
+  };
 
   const handleAdd = () => {
-    add(p.id);
-    track.trackAddToCart(p.id);
     if (!user) {
       toast.info("Please login to add items to your cart");
-      nav({ to: "/login", search: { redirect: "/" } });
+      nav({ to: "/login", search: { redirect: `/product/${p.id}` } });
+      return;
     }
+    add(p.id);
+    track.trackAddToCart(p.id);
   };
 
   const off = p.mrp && p.mrp > p.price ? p.mrp - p.price : 0;
@@ -151,7 +163,7 @@ function ProductPage() {
 
         <div className="absolute bottom-16 right-3 flex flex-col gap-3">
           <button
-            onClick={() => { toggle(p.id); toast.success(wished ? "Removed from wishlist" : "Added to wishlist"); }}
+            onClick={handleWishlist}
             aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
             aria-pressed={wished}
             className="grid h-11 w-11 place-items-center rounded-full border border-border bg-card shadow-pop"
@@ -243,6 +255,7 @@ function ProductPage() {
             <div className="mt-2 text-sm font-semibold text-muted-foreground">Max {p.maxPerOrder} per order</div>
           )}
           {p.stock <= 0 && <div className="mt-2 text-sm font-bold text-destructive">Out of stock</div>}
+          {lowStock && <div className="mt-2 inline-flex rounded-lg bg-saffron/20 px-2.5 py-1 text-sm font-extrabold text-foreground">Only {p.stock} left — order soon</div>}
           <nav className="mt-3 text-xs text-muted-foreground">
             <Link to="/" className="hover:text-primary">Home</Link> /{" "}
             <Link to="/category/$slug" params={{ slug: p.category }} className="hover:text-primary">{p.category}</Link> /{" "}
@@ -350,7 +363,7 @@ function ProductPage() {
                 <span className="min-w-8 text-center font-display text-lg font-extrabold">{inCart.qty}</span>
                 <button
                   aria-label="Increase quantity"
-                  disabled={!!p.maxPerOrder && inCart.qty >= p.maxPerOrder}
+                  disabled={inCart.qty >= Math.min(p.maxPerOrder || Infinity, p.stock)}
                   onClick={() => setQty(p.id, inCart.qty + 1)}
                   className="grid h-11 w-12 place-items-center rounded-lg hover:bg-primary/80 disabled:opacity-50"
                 >
@@ -378,7 +391,7 @@ function ProductPage() {
               )}
             </Link>
             <button
-              onClick={() => { toggle(p.id); toast.success(wished ? "Removed from wishlist" : "Added to wishlist"); }}
+              onClick={handleWishlist}
               aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
               aria-pressed={wished}
               className="grid h-12 w-12 place-items-center rounded-xl border border-border bg-card shadow-pop"
@@ -425,6 +438,7 @@ function ProductPage() {
               <div className="mt-2 text-sm font-semibold text-muted-foreground">Max {p.maxPerOrder} per order</div>
             )}
             {p.stock <= 0 && <div className="mt-2 text-sm font-bold text-destructive">Out of stock</div>}
+            {lowStock && <div className="mt-2 inline-flex rounded-lg bg-saffron/20 px-2.5 py-1 text-sm font-extrabold text-foreground">Only {p.stock} left — order soon</div>}
             <nav className="mt-3 text-xs text-muted-foreground">
               <Link to="/" className="hover:text-primary">Home</Link> /{" "}
               <Link to="/category/$slug" params={{ slug: p.category }} className="hover:text-primary">{p.category}</Link> /{" "}
@@ -484,7 +498,7 @@ function ProductPage() {
               <span className="font-display text-lg font-extrabold">{inCart.qty}</span>
               <button
                 aria-label="Increase quantity"
-                disabled={!!p.maxPerOrder && inCart.qty >= p.maxPerOrder}
+                disabled={inCart.qty >= Math.min(p.maxPerOrder || Infinity, p.stock)}
                 onClick={() => setQty(p.id, inCart.qty + 1)}
                 className="grid h-11 w-12 place-items-center rounded-lg hover:bg-primary/80 disabled:opacity-50"
               >
