@@ -1319,6 +1319,464 @@ export type Database = {
           },
         ]
       }
+      mp_booking_status_history: {
+        Row: {
+          booking_id: string
+          created_at: string
+          id: string
+          note: string | null
+          status: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          status: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mp_booking_status_history_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "mp_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mp_bookings: {
+        Row: {
+          address: Json | null
+          amount: number
+          booking_code: string
+          booking_date: string | null
+          created_at: string
+          customer_name: string | null
+          customer_phone: string
+          details: Json
+          end_time: string | null
+          fee: number
+          id: string
+          listing_id: string | null
+          partner_id: string
+          quote_amount: number | null
+          quote_note: string | null
+          service_mode: string | null
+          staff_id: string | null
+          start_time: string | null
+          status: string
+          transaction_type: string
+          updated_at: string
+        }
+        Insert: {
+          address?: Json | null
+          amount?: number
+          booking_code: string
+          booking_date?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone: string
+          details?: Json
+          end_time?: string | null
+          fee?: number
+          id?: string
+          listing_id?: string | null
+          partner_id: string
+          quote_amount?: number | null
+          quote_note?: string | null
+          service_mode?: string | null
+          staff_id?: string | null
+          start_time?: string | null
+          status?: string
+          transaction_type: string
+          updated_at?: string
+        }
+        Update: {
+          address?: Json | null
+          amount?: number
+          booking_code?: string
+          booking_date?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string
+          details?: Json
+          end_time?: string | null
+          fee?: number
+          id?: string
+          listing_id?: string | null
+          partner_id?: string
+          quote_amount?: number | null
+          quote_note?: string | null
+          service_mode?: string | null
+          staff_id?: string | null
+          start_time?: string | null
+          status?: string
+          transaction_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mp_bookings_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "mp_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mp_bookings_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "mp_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mp_bookings_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "mp_staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mp_categories: {
+        Row: {
+          behavior: string
+          created_at: string
+          group_key: string
+          icon: string
+          image_url: string | null
+          is_active: boolean
+          is_popular: boolean
+          legacy_categories: string[]
+          name: string
+          slug: string
+          sort: number
+        }
+        Insert: {
+          behavior?: string
+          created_at?: string
+          group_key: string
+          icon?: string
+          image_url?: string | null
+          is_active?: boolean
+          is_popular?: boolean
+          legacy_categories?: string[]
+          name: string
+          slug: string
+          sort?: number
+        }
+        Update: {
+          behavior?: string
+          created_at?: string
+          group_key?: string
+          icon?: string
+          image_url?: string | null
+          is_active?: boolean
+          is_popular?: boolean
+          legacy_categories?: string[]
+          name?: string
+          slug?: string
+          sort?: number
+        }
+        Relationships: []
+      }
+      mp_favorites: {
+        Row: {
+          created_at: string
+          customer_phone: string
+          entity_id: string
+          entity_type: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_phone: string
+          entity_id: string
+          entity_type: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          customer_phone?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      mp_home_sections: {
+        Row: {
+          is_visible: boolean
+          key: string
+          sort: number
+          title: string
+        }
+        Insert: {
+          is_visible?: boolean
+          key: string
+          sort?: number
+          title: string
+        }
+        Update: {
+          is_visible?: boolean
+          key?: string
+          sort?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      mp_listings: {
+        Row: {
+          attributes: Json
+          category_slug: string
+          created_at: string
+          description: string | null
+          duration_min: number | null
+          home_service_fee: number
+          icon: string
+          id: string
+          images: string[]
+          includes: string[]
+          is_active: boolean
+          listing_type: string
+          mrp: number | null
+          name: string
+          packages: Json
+          partner_id: string
+          price: number | null
+          rating: number
+          review_count: number
+          service_area: string | null
+          service_modes: string[]
+          starting_price: number | null
+          transaction_type: string
+        }
+        Insert: {
+          attributes?: Json
+          category_slug: string
+          created_at?: string
+          description?: string | null
+          duration_min?: number | null
+          home_service_fee?: number
+          icon?: string
+          id?: string
+          images?: string[]
+          includes?: string[]
+          is_active?: boolean
+          listing_type: string
+          mrp?: number | null
+          name: string
+          packages?: Json
+          partner_id: string
+          price?: number | null
+          rating?: number
+          review_count?: number
+          service_area?: string | null
+          service_modes?: string[]
+          starting_price?: number | null
+          transaction_type: string
+        }
+        Update: {
+          attributes?: Json
+          category_slug?: string
+          created_at?: string
+          description?: string | null
+          duration_min?: number | null
+          home_service_fee?: number
+          icon?: string
+          id?: string
+          images?: string[]
+          includes?: string[]
+          is_active?: boolean
+          listing_type?: string
+          mrp?: number | null
+          name?: string
+          packages?: Json
+          partner_id?: string
+          price?: number | null
+          rating?: number
+          review_count?: number
+          service_area?: string | null
+          service_modes?: string[]
+          starting_price?: number | null
+          transaction_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mp_listings_category_slug_fkey"
+            columns: ["category_slug"]
+            isOneToOne: false
+            referencedRelation: "mp_categories"
+            referencedColumns: ["slug"]
+          },
+          {
+            foreignKeyName: "mp_listings_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "mp_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mp_partners: {
+        Row: {
+          address: string | null
+          category_slugs: string[]
+          closes_at: string | null
+          created_at: string
+          description: string | null
+          distance_km: number | null
+          icon: string
+          id: string
+          is_active: boolean
+          name: string
+          opens_at: string | null
+          partner_market_id: string | null
+          partner_type: string
+          photos: string[]
+          rating: number
+          review_count: number
+          service_area: string | null
+          service_modes: string[]
+          slug: string
+          supplier_phone: string | null
+        }
+        Insert: {
+          address?: string | null
+          category_slugs?: string[]
+          closes_at?: string | null
+          created_at?: string
+          description?: string | null
+          distance_km?: number | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          opens_at?: string | null
+          partner_market_id?: string | null
+          partner_type: string
+          photos?: string[]
+          rating?: number
+          review_count?: number
+          service_area?: string | null
+          service_modes?: string[]
+          slug: string
+          supplier_phone?: string | null
+        }
+        Update: {
+          address?: string | null
+          category_slugs?: string[]
+          closes_at?: string | null
+          created_at?: string
+          description?: string | null
+          distance_km?: number | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          opens_at?: string | null
+          partner_market_id?: string | null
+          partner_type?: string
+          photos?: string[]
+          rating?: number
+          review_count?: number
+          service_area?: string | null
+          service_modes?: string[]
+          slug?: string
+          supplier_phone?: string | null
+        }
+        Relationships: []
+      }
+      mp_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          customer_name: string
+          id: string
+          listing_id: string | null
+          partner_id: string | null
+          rating: number
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          customer_name: string
+          id?: string
+          listing_id?: string | null
+          partner_id?: string | null
+          rating: number
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          customer_name?: string
+          id?: string
+          listing_id?: string | null
+          partner_id?: string | null
+          rating?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mp_reviews_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "mp_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mp_reviews_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "mp_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mp_staff: {
+        Row: {
+          id: string
+          is_active: boolean
+          name: string
+          partner_id: string
+          photo_url: string | null
+          rating: number
+          title: string | null
+        }
+        Insert: {
+          id?: string
+          is_active?: boolean
+          name: string
+          partner_id: string
+          photo_url?: string | null
+          rating?: number
+          title?: string | null
+        }
+        Update: {
+          id?: string
+          is_active?: boolean
+          name?: string
+          partner_id?: string
+          photo_url?: string | null
+          rating?: number
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mp_staff_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "mp_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_log: {
         Row: {
           body: string
