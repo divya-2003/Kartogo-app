@@ -65,7 +65,9 @@ import { Route as AdminSurgeRouteImport } from './routes/admin.surge'
 import { Route as AdminUnserviceableRouteImport } from './routes/admin.unserviceable'
 import { Route as AdminWimsRouteImport } from './routes/admin.wims'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as EventIdRouteImport } from './routes/event.$id'
 import { Route as ExploreSlugRouteImport } from './routes/explore.$slug'
+import { Route as ItemIdRouteImport } from './routes/item.$id'
 import { Route as MarketIdRouteImport } from './routes/market.$id'
 import { Route as PrinterIndexRouteImport } from './routes/printer.index'
 import { Route as PrinterAccountRouteImport } from './routes/printer.account'
@@ -363,9 +365,19 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
   path: '/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventIdRoute = EventIdRouteImport.update({
+  id: '/event/$id',
+  path: '/event/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ExploreSlugRoute = ExploreSlugRouteImport.update({
   id: '/explore/$slug',
   path: '/explore/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ItemIdRoute = ItemIdRouteImport.update({
+  id: '/item/$id',
+  path: '/item/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MarketIdRoute = MarketIdRouteImport.update({
@@ -507,7 +519,9 @@ export interface FileRoutesByFullPath {
   '/admin/unserviceable': typeof AdminUnserviceableRoute
   '/admin/wims': typeof AdminWimsRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/event/$id': typeof EventIdRoute
   '/explore/$slug': typeof ExploreSlugRoute
+  '/item/$id': typeof ItemIdRoute
   '/market/$id': typeof MarketIdRoute
   '/printer/account': typeof PrinterAccountRoute
   '/product/$id': typeof ProductIdRoute
@@ -579,7 +593,9 @@ export interface FileRoutesByTo {
   '/admin/unserviceable': typeof AdminUnserviceableRoute
   '/admin/wims': typeof AdminWimsRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/event/$id': typeof EventIdRoute
   '/explore/$slug': typeof ExploreSlugRoute
+  '/item/$id': typeof ItemIdRoute
   '/market/$id': typeof MarketIdRoute
   '/printer/account': typeof PrinterAccountRoute
   '/product/$id': typeof ProductIdRoute
@@ -655,7 +671,9 @@ export interface FileRoutesById {
   '/admin/unserviceable': typeof AdminUnserviceableRoute
   '/admin/wims': typeof AdminWimsRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/event/$id': typeof EventIdRoute
   '/explore/$slug': typeof ExploreSlugRoute
+  '/item/$id': typeof ItemIdRoute
   '/market/$id': typeof MarketIdRoute
   '/printer/account': typeof PrinterAccountRoute
   '/product/$id': typeof ProductIdRoute
@@ -732,7 +750,9 @@ export interface FileRouteTypes {
     | '/admin/unserviceable'
     | '/admin/wims'
     | '/category/$slug'
+    | '/event/$id'
     | '/explore/$slug'
+    | '/item/$id'
     | '/market/$id'
     | '/printer/account'
     | '/product/$id'
@@ -804,7 +824,9 @@ export interface FileRouteTypes {
     | '/admin/unserviceable'
     | '/admin/wims'
     | '/category/$slug'
+    | '/event/$id'
     | '/explore/$slug'
+    | '/item/$id'
     | '/market/$id'
     | '/printer/account'
     | '/product/$id'
@@ -879,7 +901,9 @@ export interface FileRouteTypes {
     | '/admin/unserviceable'
     | '/admin/wims'
     | '/category/$slug'
+    | '/event/$id'
     | '/explore/$slug'
+    | '/item/$id'
     | '/market/$id'
     | '/printer/account'
     | '/product/$id'
@@ -925,7 +949,9 @@ export interface RootRouteChildren {
   WalletRoute: typeof WalletRoute
   WishlistRoute: typeof WishlistRoute
   CategorySlugRoute: typeof CategorySlugRoute
+  EventIdRoute: typeof EventIdRoute
   ExploreSlugRoute: typeof ExploreSlugRoute
+  ItemIdRoute: typeof ItemIdRoute
   MarketIdRoute: typeof MarketIdRoute
   ProductIdRoute: typeof ProductIdRoute
   RateOrderOrderIdRoute: typeof RateOrderOrderIdRoute
@@ -1331,11 +1357,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/event/$id': {
+      id: '/event/$id'
+      path: '/event/$id'
+      fullPath: '/event/$id'
+      preLoaderRoute: typeof EventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/explore/$slug': {
       id: '/explore/$slug'
       path: '/explore/$slug'
       fullPath: '/explore/$slug'
       preLoaderRoute: typeof ExploreSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/item/$id': {
+      id: '/item/$id'
+      path: '/item/$id'
+      fullPath: '/item/$id'
+      preLoaderRoute: typeof ItemIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/market/$id': {
@@ -1582,7 +1622,9 @@ const rootRouteChildren: RootRouteChildren = {
   WalletRoute: WalletRoute,
   WishlistRoute: WishlistRoute,
   CategorySlugRoute: CategorySlugRoute,
+  EventIdRoute: EventIdRoute,
   ExploreSlugRoute: ExploreSlugRoute,
+  ItemIdRoute: ItemIdRoute,
   MarketIdRoute: MarketIdRoute,
   ProductIdRoute: ProductIdRoute,
   RateOrderOrderIdRoute: RateOrderOrderIdRoute,
