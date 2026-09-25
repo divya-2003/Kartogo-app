@@ -71,6 +71,7 @@ import { Route as PrinterIndexRouteImport } from './routes/printer.index'
 import { Route as PrinterAccountRouteImport } from './routes/printer.account'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as RateOrderOrderIdRouteImport } from './routes/rate-order.$orderId'
+import { Route as ServiceIdRouteImport } from './routes/service.$id'
 import { Route as StoreIdRouteImport } from './routes/store.$id'
 import { Route as SupplierIndexRouteImport } from './routes/supplier.index'
 import { Route as SupplierAccountRouteImport } from './routes/supplier.account'
@@ -392,6 +393,11 @@ const RateOrderOrderIdRoute = RateOrderOrderIdRouteImport.update({
   path: '/rate-order/$orderId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ServiceIdRoute = ServiceIdRouteImport.update({
+  id: '/service/$id',
+  path: '/service/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StoreIdRoute = StoreIdRouteImport.update({
   id: '/store/$id',
   path: '/store/$id',
@@ -506,6 +512,7 @@ export interface FileRoutesByFullPath {
   '/printer/account': typeof PrinterAccountRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
+  '/service/$id': typeof ServiceIdRoute
   '/store/$id': typeof StoreIdRoute
   '/supplier/account': typeof SupplierAccountRoute
   '/supplier/ai': typeof SupplierAiRoute
@@ -577,6 +584,7 @@ export interface FileRoutesByTo {
   '/printer/account': typeof PrinterAccountRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
+  '/service/$id': typeof ServiceIdRoute
   '/store/$id': typeof StoreIdRoute
   '/supplier/account': typeof SupplierAccountRoute
   '/supplier/ai': typeof SupplierAiRoute
@@ -652,6 +660,7 @@ export interface FileRoutesById {
   '/printer/account': typeof PrinterAccountRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
+  '/service/$id': typeof ServiceIdRoute
   '/store/$id': typeof StoreIdRoute
   '/supplier/account': typeof SupplierAccountRoute
   '/supplier/ai': typeof SupplierAiRoute
@@ -728,6 +737,7 @@ export interface FileRouteTypes {
     | '/printer/account'
     | '/product/$id'
     | '/rate-order/$orderId'
+    | '/service/$id'
     | '/store/$id'
     | '/supplier/account'
     | '/supplier/ai'
@@ -799,6 +809,7 @@ export interface FileRouteTypes {
     | '/printer/account'
     | '/product/$id'
     | '/rate-order/$orderId'
+    | '/service/$id'
     | '/store/$id'
     | '/supplier/account'
     | '/supplier/ai'
@@ -873,6 +884,7 @@ export interface FileRouteTypes {
     | '/printer/account'
     | '/product/$id'
     | '/rate-order/$orderId'
+    | '/service/$id'
     | '/store/$id'
     | '/supplier/account'
     | '/supplier/ai'
@@ -917,6 +929,7 @@ export interface RootRouteChildren {
   MarketIdRoute: typeof MarketIdRoute
   ProductIdRoute: typeof ProductIdRoute
   RateOrderOrderIdRoute: typeof RateOrderOrderIdRoute
+  ServiceIdRoute: typeof ServiceIdRoute
   StoreIdRoute: typeof StoreIdRoute
   TrackOrderIdRoute: typeof TrackOrderIdRoute
   ApiPublicAiDailyForecastRoute: typeof ApiPublicAiDailyForecastRoute
@@ -1360,6 +1373,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RateOrderOrderIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/service/$id': {
+      id: '/service/$id'
+      path: '/service/$id'
+      fullPath: '/service/$id'
+      preLoaderRoute: typeof ServiceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/store/$id': {
       id: '/store/$id'
       path: '/store/$id'
@@ -1566,6 +1586,7 @@ const rootRouteChildren: RootRouteChildren = {
   MarketIdRoute: MarketIdRoute,
   ProductIdRoute: ProductIdRoute,
   RateOrderOrderIdRoute: RateOrderOrderIdRoute,
+  ServiceIdRoute: ServiceIdRoute,
   StoreIdRoute: StoreIdRoute,
   TrackOrderIdRoute: TrackOrderIdRoute,
   ApiPublicAiDailyForecastRoute: ApiPublicAiDailyForecastRoute,

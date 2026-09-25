@@ -133,12 +133,6 @@ function BookingFlow({ listing, siblings, onBack }: { listing: MpListing & { par
     nav({ to: "/booking/$id", params: { id: r.id }, search: { confirmed: true } });
   };
 
-  const Step = ({ n, title, children }: { n: number; title: string; children: React.ReactNode }) => (
-    <section className="rounded-2xl border border-border bg-card p-4">
-      <h3 className="mb-3 flex items-center gap-2 font-bold"><span className="grid h-6 w-6 place-items-center rounded-full bg-primary text-xs text-primary-foreground">{n}</span>{title}</h3>
-      {children}
-    </section>
-  );
   let n = 0;
   const addressStep = needsAddress && <Step n={++n} title="Address"><AddressField value={address} onChange={onAddr} /></Step>;
 
@@ -218,6 +212,15 @@ function BookingFlow({ listing, siblings, onBack }: { listing: MpListing & { par
         </button>
       </div>
     </div>
+  );
+}
+
+function Step({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-2xl border border-border bg-card p-4">
+      <h3 className="mb-3 flex items-center gap-2 font-bold"><span className="grid h-6 w-6 place-items-center rounded-full bg-primary text-xs text-primary-foreground">{n}</span>{title}</h3>
+      {children}
+    </section>
   );
 }
 
