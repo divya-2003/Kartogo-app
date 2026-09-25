@@ -65,11 +65,16 @@ import { Route as AdminSurgeRouteImport } from './routes/admin.surge'
 import { Route as AdminUnserviceableRouteImport } from './routes/admin.unserviceable'
 import { Route as AdminWimsRouteImport } from './routes/admin.wims'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as EventIdRouteImport } from './routes/event.$id'
+import { Route as ExploreSlugRouteImport } from './routes/explore.$slug'
+import { Route as ItemIdRouteImport } from './routes/item.$id'
 import { Route as MarketIdRouteImport } from './routes/market.$id'
 import { Route as PrinterIndexRouteImport } from './routes/printer.index'
 import { Route as PrinterAccountRouteImport } from './routes/printer.account'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as RateOrderOrderIdRouteImport } from './routes/rate-order.$orderId'
+import { Route as ServiceIdRouteImport } from './routes/service.$id'
+import { Route as StoreIdRouteImport } from './routes/store.$id'
 import { Route as SupplierIndexRouteImport } from './routes/supplier.index'
 import { Route as SupplierAccountRouteImport } from './routes/supplier.account'
 import { Route as SupplierAiRouteImport } from './routes/supplier.ai'
@@ -360,6 +365,21 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
   path: '/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventIdRoute = EventIdRouteImport.update({
+  id: '/event/$id',
+  path: '/event/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreSlugRoute = ExploreSlugRouteImport.update({
+  id: '/explore/$slug',
+  path: '/explore/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ItemIdRoute = ItemIdRouteImport.update({
+  id: '/item/$id',
+  path: '/item/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MarketIdRoute = MarketIdRouteImport.update({
   id: '/market/$id',
   path: '/market/$id',
@@ -383,6 +403,16 @@ const ProductIdRoute = ProductIdRouteImport.update({
 const RateOrderOrderIdRoute = RateOrderOrderIdRouteImport.update({
   id: '/rate-order/$orderId',
   path: '/rate-order/$orderId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServiceIdRoute = ServiceIdRouteImport.update({
+  id: '/service/$id',
+  path: '/service/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StoreIdRoute = StoreIdRouteImport.update({
+  id: '/store/$id',
+  path: '/store/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SupplierIndexRoute = SupplierIndexRouteImport.update({
@@ -489,10 +519,15 @@ export interface FileRoutesByFullPath {
   '/admin/unserviceable': typeof AdminUnserviceableRoute
   '/admin/wims': typeof AdminWimsRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/event/$id': typeof EventIdRoute
+  '/explore/$slug': typeof ExploreSlugRoute
+  '/item/$id': typeof ItemIdRoute
   '/market/$id': typeof MarketIdRoute
   '/printer/account': typeof PrinterAccountRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
+  '/service/$id': typeof ServiceIdRoute
+  '/store/$id': typeof StoreIdRoute
   '/supplier/account': typeof SupplierAccountRoute
   '/supplier/ai': typeof SupplierAiRoute
   '/supplier/orders': typeof SupplierOrdersRoute
@@ -558,10 +593,15 @@ export interface FileRoutesByTo {
   '/admin/unserviceable': typeof AdminUnserviceableRoute
   '/admin/wims': typeof AdminWimsRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/event/$id': typeof EventIdRoute
+  '/explore/$slug': typeof ExploreSlugRoute
+  '/item/$id': typeof ItemIdRoute
   '/market/$id': typeof MarketIdRoute
   '/printer/account': typeof PrinterAccountRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
+  '/service/$id': typeof ServiceIdRoute
+  '/store/$id': typeof StoreIdRoute
   '/supplier/account': typeof SupplierAccountRoute
   '/supplier/ai': typeof SupplierAiRoute
   '/supplier/orders': typeof SupplierOrdersRoute
@@ -631,10 +671,15 @@ export interface FileRoutesById {
   '/admin/unserviceable': typeof AdminUnserviceableRoute
   '/admin/wims': typeof AdminWimsRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/event/$id': typeof EventIdRoute
+  '/explore/$slug': typeof ExploreSlugRoute
+  '/item/$id': typeof ItemIdRoute
   '/market/$id': typeof MarketIdRoute
   '/printer/account': typeof PrinterAccountRoute
   '/product/$id': typeof ProductIdRoute
   '/rate-order/$orderId': typeof RateOrderOrderIdRoute
+  '/service/$id': typeof ServiceIdRoute
+  '/store/$id': typeof StoreIdRoute
   '/supplier/account': typeof SupplierAccountRoute
   '/supplier/ai': typeof SupplierAiRoute
   '/supplier/orders': typeof SupplierOrdersRoute
@@ -705,10 +750,15 @@ export interface FileRouteTypes {
     | '/admin/unserviceable'
     | '/admin/wims'
     | '/category/$slug'
+    | '/event/$id'
+    | '/explore/$slug'
+    | '/item/$id'
     | '/market/$id'
     | '/printer/account'
     | '/product/$id'
     | '/rate-order/$orderId'
+    | '/service/$id'
+    | '/store/$id'
     | '/supplier/account'
     | '/supplier/ai'
     | '/supplier/orders'
@@ -774,10 +824,15 @@ export interface FileRouteTypes {
     | '/admin/unserviceable'
     | '/admin/wims'
     | '/category/$slug'
+    | '/event/$id'
+    | '/explore/$slug'
+    | '/item/$id'
     | '/market/$id'
     | '/printer/account'
     | '/product/$id'
     | '/rate-order/$orderId'
+    | '/service/$id'
+    | '/store/$id'
     | '/supplier/account'
     | '/supplier/ai'
     | '/supplier/orders'
@@ -846,10 +901,15 @@ export interface FileRouteTypes {
     | '/admin/unserviceable'
     | '/admin/wims'
     | '/category/$slug'
+    | '/event/$id'
+    | '/explore/$slug'
+    | '/item/$id'
     | '/market/$id'
     | '/printer/account'
     | '/product/$id'
     | '/rate-order/$orderId'
+    | '/service/$id'
+    | '/store/$id'
     | '/supplier/account'
     | '/supplier/ai'
     | '/supplier/orders'
@@ -889,9 +949,14 @@ export interface RootRouteChildren {
   WalletRoute: typeof WalletRoute
   WishlistRoute: typeof WishlistRoute
   CategorySlugRoute: typeof CategorySlugRoute
+  EventIdRoute: typeof EventIdRoute
+  ExploreSlugRoute: typeof ExploreSlugRoute
+  ItemIdRoute: typeof ItemIdRoute
   MarketIdRoute: typeof MarketIdRoute
   ProductIdRoute: typeof ProductIdRoute
   RateOrderOrderIdRoute: typeof RateOrderOrderIdRoute
+  ServiceIdRoute: typeof ServiceIdRoute
+  StoreIdRoute: typeof StoreIdRoute
   TrackOrderIdRoute: typeof TrackOrderIdRoute
   ApiPublicAiDailyForecastRoute: typeof ApiPublicAiDailyForecastRoute
   ApiPublicDispatchSweepRoute: typeof ApiPublicDispatchSweepRoute
@@ -1292,6 +1357,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/event/$id': {
+      id: '/event/$id'
+      path: '/event/$id'
+      fullPath: '/event/$id'
+      preLoaderRoute: typeof EventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explore/$slug': {
+      id: '/explore/$slug'
+      path: '/explore/$slug'
+      fullPath: '/explore/$slug'
+      preLoaderRoute: typeof ExploreSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/item/$id': {
+      id: '/item/$id'
+      path: '/item/$id'
+      fullPath: '/item/$id'
+      preLoaderRoute: typeof ItemIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/market/$id': {
       id: '/market/$id'
       path: '/market/$id'
@@ -1325,6 +1411,20 @@ declare module '@tanstack/react-router' {
       path: '/rate-order/$orderId'
       fullPath: '/rate-order/$orderId'
       preLoaderRoute: typeof RateOrderOrderIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/service/$id': {
+      id: '/service/$id'
+      path: '/service/$id'
+      fullPath: '/service/$id'
+      preLoaderRoute: typeof ServiceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/store/$id': {
+      id: '/store/$id'
+      path: '/store/$id'
+      fullPath: '/store/$id'
+      preLoaderRoute: typeof StoreIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/supplier/': {
@@ -1522,9 +1622,14 @@ const rootRouteChildren: RootRouteChildren = {
   WalletRoute: WalletRoute,
   WishlistRoute: WishlistRoute,
   CategorySlugRoute: CategorySlugRoute,
+  EventIdRoute: EventIdRoute,
+  ExploreSlugRoute: ExploreSlugRoute,
+  ItemIdRoute: ItemIdRoute,
   MarketIdRoute: MarketIdRoute,
   ProductIdRoute: ProductIdRoute,
   RateOrderOrderIdRoute: RateOrderOrderIdRoute,
+  ServiceIdRoute: ServiceIdRoute,
+  StoreIdRoute: StoreIdRoute,
   TrackOrderIdRoute: TrackOrderIdRoute,
   ApiPublicAiDailyForecastRoute: ApiPublicAiDailyForecastRoute,
   ApiPublicDispatchSweepRoute: ApiPublicDispatchSweepRoute,
