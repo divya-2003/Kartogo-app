@@ -12,11 +12,14 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as BecomePartnerRouteImport } from './routes/become-partner'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as DeliveryRouteImport } from './routes/delivery'
 import { Route as DeliveryRequestRouteImport } from './routes/delivery-request'
+import { Route as FavoritesRouteImport } from './routes/favorites'
+import { Route as HelpRouteImport } from './routes/help'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MenuRouteImport } from './routes/menu'
 import { Route as NotificationsRouteImport } from './routes/notifications'
@@ -64,6 +67,7 @@ import { Route as AdminSubAdminsRouteImport } from './routes/admin.sub-admins'
 import { Route as AdminSurgeRouteImport } from './routes/admin.surge'
 import { Route as AdminUnserviceableRouteImport } from './routes/admin.unserviceable'
 import { Route as AdminWimsRouteImport } from './routes/admin.wims'
+import { Route as BookingIdRouteImport } from './routes/booking.$id'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as EventIdRouteImport } from './routes/event.$id'
 import { Route as ExploreSlugRouteImport } from './routes/explore.$slug'
@@ -100,6 +104,11 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BecomePartnerRoute = BecomePartnerRouteImport.update({
+  id: '/become-partner',
+  path: '/become-partner',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CartRoute = CartRouteImport.update({
   id: '/cart',
   path: '/cart',
@@ -123,6 +132,16 @@ const DeliveryRoute = DeliveryRouteImport.update({
 const DeliveryRequestRoute = DeliveryRequestRouteImport.update({
   id: '/delivery-request',
   path: '/delivery-request',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FavoritesRoute = FavoritesRouteImport.update({
+  id: '/favorites',
+  path: '/favorites',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -360,6 +379,11 @@ const AdminWimsRoute = AdminWimsRouteImport.update({
   path: '/wims',
   getParentRoute: () => AdminRoute,
 } as any)
+const BookingIdRoute = BookingIdRouteImport.update({
+  id: '/booking/$id',
+  path: '/booking/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CategorySlugRoute = CategorySlugRouteImport.update({
   id: '/category/$slug',
   path: '/category/$slug',
@@ -467,11 +491,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRouteWithChildren
+  '/become-partner': typeof BecomePartnerRoute
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/delivery': typeof DeliveryRoute
   '/delivery-request': typeof DeliveryRequestRoute
+  '/favorites': typeof FavoritesRoute
+  '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
   '/notifications': typeof NotificationsRoute
@@ -518,6 +545,7 @@ export interface FileRoutesByFullPath {
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
   '/admin/wims': typeof AdminWimsRoute
+  '/booking/$id': typeof BookingIdRoute
   '/category/$slug': typeof CategorySlugRoute
   '/event/$id': typeof EventIdRoute
   '/explore/$slug': typeof ExploreSlugRoute
@@ -543,11 +571,14 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
+  '/become-partner': typeof BecomePartnerRoute
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/delivery': typeof DeliveryRoute
   '/delivery-request': typeof DeliveryRequestRoute
+  '/favorites': typeof FavoritesRoute
+  '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
   '/notifications': typeof NotificationsRoute
@@ -592,6 +623,7 @@ export interface FileRoutesByTo {
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
   '/admin/wims': typeof AdminWimsRoute
+  '/booking/$id': typeof BookingIdRoute
   '/category/$slug': typeof CategorySlugRoute
   '/event/$id': typeof EventIdRoute
   '/explore/$slug': typeof ExploreSlugRoute
@@ -619,11 +651,14 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRouteWithChildren
+  '/become-partner': typeof BecomePartnerRoute
   '/cart': typeof CartRoute
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/delivery': typeof DeliveryRoute
   '/delivery-request': typeof DeliveryRequestRoute
+  '/favorites': typeof FavoritesRoute
+  '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
   '/notifications': typeof NotificationsRoute
@@ -670,6 +705,7 @@ export interface FileRoutesById {
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
   '/admin/wims': typeof AdminWimsRoute
+  '/booking/$id': typeof BookingIdRoute
   '/category/$slug': typeof CategorySlugRoute
   '/event/$id': typeof EventIdRoute
   '/explore/$slug': typeof ExploreSlugRoute
@@ -698,11 +734,14 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/admin'
+    | '/become-partner'
     | '/cart'
     | '/categories'
     | '/checkout'
     | '/delivery'
     | '/delivery-request'
+    | '/favorites'
+    | '/help'
     | '/login'
     | '/menu'
     | '/notifications'
@@ -749,6 +788,7 @@ export interface FileRouteTypes {
     | '/admin/surge'
     | '/admin/unserviceable'
     | '/admin/wims'
+    | '/booking/$id'
     | '/category/$slug'
     | '/event/$id'
     | '/explore/$slug'
@@ -774,11 +814,14 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/account'
+    | '/become-partner'
     | '/cart'
     | '/categories'
     | '/checkout'
     | '/delivery'
     | '/delivery-request'
+    | '/favorites'
+    | '/help'
     | '/login'
     | '/menu'
     | '/notifications'
@@ -823,6 +866,7 @@ export interface FileRouteTypes {
     | '/admin/surge'
     | '/admin/unserviceable'
     | '/admin/wims'
+    | '/booking/$id'
     | '/category/$slug'
     | '/event/$id'
     | '/explore/$slug'
@@ -849,11 +893,14 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/admin'
+    | '/become-partner'
     | '/cart'
     | '/categories'
     | '/checkout'
     | '/delivery'
     | '/delivery-request'
+    | '/favorites'
+    | '/help'
     | '/login'
     | '/menu'
     | '/notifications'
@@ -900,6 +947,7 @@ export interface FileRouteTypes {
     | '/admin/surge'
     | '/admin/unserviceable'
     | '/admin/wims'
+    | '/booking/$id'
     | '/category/$slug'
     | '/event/$id'
     | '/explore/$slug'
@@ -927,11 +975,14 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRouteWithChildren
+  BecomePartnerRoute: typeof BecomePartnerRoute
   CartRoute: typeof CartRoute
   CategoriesRoute: typeof CategoriesRoute
   CheckoutRoute: typeof CheckoutRoute
   DeliveryRoute: typeof DeliveryRoute
   DeliveryRequestRoute: typeof DeliveryRequestRoute
+  FavoritesRoute: typeof FavoritesRoute
+  HelpRoute: typeof HelpRoute
   LoginRoute: typeof LoginRoute
   MenuRoute: typeof MenuRoute
   NotificationsRoute: typeof NotificationsRoute
@@ -948,6 +999,7 @@ export interface RootRouteChildren {
   TopupRoute: typeof TopupRoute
   WalletRoute: typeof WalletRoute
   WishlistRoute: typeof WishlistRoute
+  BookingIdRoute: typeof BookingIdRoute
   CategorySlugRoute: typeof CategorySlugRoute
   EventIdRoute: typeof EventIdRoute
   ExploreSlugRoute: typeof ExploreSlugRoute
@@ -986,6 +1038,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/become-partner': {
+      id: '/become-partner'
+      path: '/become-partner'
+      fullPath: '/become-partner'
+      preLoaderRoute: typeof BecomePartnerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/cart': {
       id: '/cart'
       path: '/cart'
@@ -1019,6 +1078,20 @@ declare module '@tanstack/react-router' {
       path: '/delivery-request'
       fullPath: '/delivery-request'
       preLoaderRoute: typeof DeliveryRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/favorites': {
+      id: '/favorites'
+      path: '/favorites'
+      fullPath: '/favorites'
+      preLoaderRoute: typeof FavoritesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -1350,6 +1423,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminWimsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/booking/$id': {
+      id: '/booking/$id'
+      path: '/booking/$id'
+      fullPath: '/booking/$id'
+      preLoaderRoute: typeof BookingIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/category/$slug': {
       id: '/category/$slug'
       path: '/category/$slug'
@@ -1600,11 +1680,14 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   AdminRoute: AdminRouteWithChildren,
+  BecomePartnerRoute: BecomePartnerRoute,
   CartRoute: CartRoute,
   CategoriesRoute: CategoriesRoute,
   CheckoutRoute: CheckoutRoute,
   DeliveryRoute: DeliveryRoute,
   DeliveryRequestRoute: DeliveryRequestRoute,
+  FavoritesRoute: FavoritesRoute,
+  HelpRoute: HelpRoute,
   LoginRoute: LoginRoute,
   MenuRoute: MenuRoute,
   NotificationsRoute: NotificationsRoute,
@@ -1621,6 +1704,7 @@ const rootRouteChildren: RootRouteChildren = {
   TopupRoute: TopupRoute,
   WalletRoute: WalletRoute,
   WishlistRoute: WishlistRoute,
+  BookingIdRoute: BookingIdRoute,
   CategorySlugRoute: CategorySlugRoute,
   EventIdRoute: EventIdRoute,
   ExploreSlugRoute: ExploreSlugRoute,
