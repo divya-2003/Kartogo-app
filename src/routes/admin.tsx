@@ -63,6 +63,7 @@ const NAV = [
   { to: "/admin/notifications", label: "Push notifications", icon: BellRing, permission: "notifications" },
 
   { to: "/admin/orders", label: "Orders", icon: ClipboardList, permission: "orders" },
+  { to: "/admin/bookings", label: "Bookings & quotes", icon: ClipboardList, permission: "orders" },
   { to: "/admin/cancellations", label: "Cancellations", icon: PackageX, permission: "orders" },
   { to: "/admin/refund-requests", label: "Refund requests", icon: BadgeIndianRupee, permission: "refunds" },
   { to: "/admin/feedback", label: "Feedback", icon: Star, permission: "feedback" },
