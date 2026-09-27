@@ -1,3 +1,4 @@
+import { MarketplaceCategoryGroups } from "@/components/marketplace/CategoryGroups";
 import { BottomNav } from "@/components/marketplace/BottomNav";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
@@ -57,14 +58,14 @@ function CategoriesPage() {
             <Link to="/" aria-label="Back" className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border hover:bg-secondary">
               <ChevronLeft className="h-5 w-5" />
             </Link>
-            <h1 className="font-display text-xl font-bold">Markets & Categories</h1>
+            <h1 className="font-display text-xl font-bold">Categories</h1>
           </div>
           <div className="mt-3 flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-2 focus-within:ring-2 focus-within:ring-ring">
             <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
             <input
               value={q}
               onChange={e => setQ(e.target.value)}
-              placeholder="Search markets or categories"
+              placeholder="Search categories, services or markets"
               className="w-full bg-transparent text-base outline-none"
             />
             {q && (
@@ -77,6 +78,8 @@ function CategoriesPage() {
       </div>
 
       <div className="mx-auto max-w-2xl px-4 py-5 lg:max-w-7xl lg:px-8">
+        <MarketplaceCategoryGroups term={term} />
+
         {/* Partnered markets */}
         <h2 className="flex items-center gap-2 font-display text-lg font-extrabold">
           <Store className="h-5 w-5 text-primary" /> Partnered markets
