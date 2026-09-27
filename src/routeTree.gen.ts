@@ -41,6 +41,7 @@ import { Route as AdminAccountRouteImport } from './routes/admin.account'
 import { Route as AdminAiRouteImport } from './routes/admin.ai'
 import { Route as AdminAiAlertsRouteImport } from './routes/admin.ai-alerts'
 import { Route as AdminAlertsRouteImport } from './routes/admin.alerts'
+import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
 import { Route as AdminCancellationsRouteImport } from './routes/admin.cancellations'
 import { Route as AdminCombosRouteImport } from './routes/admin.combos'
 import { Route as AdminDeliveryRouteImport } from './routes/admin.delivery'
@@ -247,6 +248,11 @@ const AdminAiAlertsRoute = AdminAiAlertsRouteImport.update({
 const AdminAlertsRoute = AdminAlertsRouteImport.update({
   id: '/alerts',
   path: '/alerts',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBookingsRoute = AdminBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCancellationsRoute = AdminCancellationsRouteImport.update({
@@ -519,6 +525,7 @@ export interface FileRoutesByFullPath {
   '/admin/ai': typeof AdminAiRoute
   '/admin/ai-alerts': typeof AdminAiAlertsRoute
   '/admin/alerts': typeof AdminAlertsRoute
+  '/admin/bookings': typeof AdminBookingsRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/combos': typeof AdminCombosRoute
   '/admin/delivery': typeof AdminDeliveryRoute
@@ -597,6 +604,7 @@ export interface FileRoutesByTo {
   '/admin/ai': typeof AdminAiRoute
   '/admin/ai-alerts': typeof AdminAiAlertsRoute
   '/admin/alerts': typeof AdminAlertsRoute
+  '/admin/bookings': typeof AdminBookingsRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/combos': typeof AdminCombosRoute
   '/admin/delivery': typeof AdminDeliveryRoute
@@ -679,6 +687,7 @@ export interface FileRoutesById {
   '/admin/ai': typeof AdminAiRoute
   '/admin/ai-alerts': typeof AdminAiAlertsRoute
   '/admin/alerts': typeof AdminAlertsRoute
+  '/admin/bookings': typeof AdminBookingsRoute
   '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/combos': typeof AdminCombosRoute
   '/admin/delivery': typeof AdminDeliveryRoute
@@ -762,6 +771,7 @@ export interface FileRouteTypes {
     | '/admin/ai'
     | '/admin/ai-alerts'
     | '/admin/alerts'
+    | '/admin/bookings'
     | '/admin/cancellations'
     | '/admin/combos'
     | '/admin/delivery'
@@ -840,6 +850,7 @@ export interface FileRouteTypes {
     | '/admin/ai'
     | '/admin/ai-alerts'
     | '/admin/alerts'
+    | '/admin/bookings'
     | '/admin/cancellations'
     | '/admin/combos'
     | '/admin/delivery'
@@ -921,6 +932,7 @@ export interface FileRouteTypes {
     | '/admin/ai'
     | '/admin/ai-alerts'
     | '/admin/alerts'
+    | '/admin/bookings'
     | '/admin/cancellations'
     | '/admin/combos'
     | '/admin/delivery'
@@ -1239,6 +1251,13 @@ declare module '@tanstack/react-router' {
       path: '/alerts'
       fullPath: '/admin/alerts'
       preLoaderRoute: typeof AdminAlertsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/bookings': {
+      id: '/admin/bookings'
+      path: '/bookings'
+      fullPath: '/admin/bookings'
+      preLoaderRoute: typeof AdminBookingsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/cancellations': {
@@ -1578,6 +1597,7 @@ interface AdminRouteChildren {
   AdminAiRoute: typeof AdminAiRoute
   AdminAiAlertsRoute: typeof AdminAiAlertsRoute
   AdminAlertsRoute: typeof AdminAlertsRoute
+  AdminBookingsRoute: typeof AdminBookingsRoute
   AdminCancellationsRoute: typeof AdminCancellationsRoute
   AdminCombosRoute: typeof AdminCombosRoute
   AdminDeliveryRoute: typeof AdminDeliveryRoute
@@ -1612,6 +1632,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAiRoute: AdminAiRoute,
   AdminAiAlertsRoute: AdminAiAlertsRoute,
   AdminAlertsRoute: AdminAlertsRoute,
+  AdminBookingsRoute: AdminBookingsRoute,
   AdminCancellationsRoute: AdminCancellationsRoute,
   AdminCombosRoute: AdminCombosRoute,
   AdminDeliveryRoute: AdminDeliveryRoute,
