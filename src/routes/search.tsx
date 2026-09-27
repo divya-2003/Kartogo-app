@@ -8,6 +8,7 @@ import { CATEGORIES } from "@/lib/data";
 import { customerEventService } from "@/lib/recommendations.tracking";
 import { rankProducts, rankCategories } from "@/lib/search-rank";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter";
+import { MarketplaceResults } from "@/components/marketplace/MarketplaceResults";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { z } from "zod";
 
@@ -158,7 +159,7 @@ function SearchPage() {
                 value={input}
                 onChange={(e) => { setInput(e.target.value); setDropdownOpen(true); }}
                 onFocus={() => { setFocused(true); setDropdownOpen(true); }}
-                placeholder={typed ? `Search for "${typed}"` : "Search for"}
+                placeholder={typed ? `Search for "${typed}"` : "Search products, services, stores..."}
                 className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                 onBlur={() => { rememberSearch(input); setTimeout(() => { setFocused(false); setDropdownOpen(false); }, 150); }}
                 aria-label="Search products"
@@ -262,8 +263,9 @@ function SearchPage() {
               Results for "<span className="text-primary">{q}</span>"
             </h2>
             <p className="mb-4 mt-1 text-sm text-muted-foreground">
-              {results.length} item{results.length === 1 ? "" : "s"} found
+              {results.length} product{results.length === 1 ? "" : "s"} found
             </p>
+            <MarketplaceResults q={query} />
             {results.length === 0 ? (
               <>
                 <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">

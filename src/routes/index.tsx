@@ -15,7 +15,7 @@ import { COUPONS as PROMO_COUPONS } from "@/lib/promo";
 import { toast } from "sonner";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter";
 
-const HOME_SEARCH_TERMS = ["avakaya", "maggi", "agarbatti", "milk", "bread", "paneer"];
+const HOME_SEARCH_TERMS = ["milk", "haircut", "avakaya", "AC service", "sofa", "birthday decoration", "paneer"];
 
 export const Route = createFileRoute("/")({
   component: Index,
