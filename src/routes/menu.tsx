@@ -1,3 +1,5 @@
+import { ClipboardList as MClipboard, Star as MStar, MapPin as MMapPin, CreditCard as MCard, Tag as MTag, Store as MStore, Printer as MPrinter, Settings as MSettings, Shield as MShield, FileText as MFile } from "lucide-react";
+import { BottomNav } from "@/components/marketplace/BottomNav";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getReferralFn, applyReferralFn } from "@/lib/promo.functions";
@@ -246,11 +248,19 @@ function MenuPage() {
             )}
           </div>
 
+          <Row to="/orders" icon={<MClipboard className="h-5 w-5" />} label="Orders & Bookings" />
+          <Row to="/favorites" icon={<MStar className="h-5 w-5" />} label="Favorites" sub="Stores, services & event providers" />
+          <Row to="/account" icon={<MMapPin className="h-5 w-5" />} label="Addresses" sub="Home, Work & other saved places" />
+          <Row to="/wallet" icon={<MCard className="h-5 w-5" />} label="Payments" sub="Kartogo Cash & transactions" />
+          <Row to="/" icon={<MTag className="h-5 w-5" />} label="Offers" sub="Coupons on the home page" />
           <Row to="/notifications" icon={<Bell className="h-5 w-5" />} label="Notifications" sub="Order, delivery & offer alerts" />
+          <Row to="/become-partner" icon={<MStore className="h-5 w-5" />} label="Become a Partner" sub="Sell products or offer services" />
+          <Row to="/print" icon={<MPrinter className="h-5 w-5" />} label="Print Store" />
           <Row to="/refunds" icon={<IndianRupee className="h-5 w-5" />} label="Your Refunds" />
-          <Row to="/wishlist" icon={<Heart className="h-5 w-5" />} label="Your Wishlist" />
+          <Row to="/wishlist" icon={<Heart className="h-5 w-5" />} label="Saved Items" sub="Your grocery wishlist" />
           <Row onClick={() => soon("E-Gift Cards")} icon={<CreditCard className="h-5 w-5" />} label="E-Gift Cards" />
-          <Row to="/support" icon={<Headphones className="h-5 w-5" />} label="Help & Support" />
+          <Row to="/help" icon={<Headphones className="h-5 w-5" />} label="Help & Support" />
+          <Row to="/notifications" icon={<MSettings className="h-5 w-5" />} label="Settings" sub="Notification preferences" />
           <Row to="/account" icon={<UserCircle2 className="h-5 w-5" />} label="Profile" />
           {/* Refer & earn (expandable) */}
           <div>
