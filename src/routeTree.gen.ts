@@ -26,6 +26,7 @@ import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as PrintRouteImport } from './routes/print'
 import { Route as PrinterRouteImport } from './routes/printer'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RefundReturnsRouteImport } from './routes/refund-returns'
 import { Route as RefundsRouteImport } from './routes/refunds'
 import { Route as RequestServiceRouteImport } from './routes/request-service'
@@ -33,6 +34,7 @@ import { Route as SearchRouteImport } from './routes/search'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SupplierRouteImport } from './routes/supplier'
 import { Route as SupportRouteImport } from './routes/support'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TopupRouteImport } from './routes/topup'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as WishlistRouteImport } from './routes/wishlist'
@@ -175,6 +177,11 @@ const PrinterRoute = PrinterRouteImport.update({
   path: '/printer',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RefundReturnsRoute = RefundReturnsRouteImport.update({
   id: '/refund-returns',
   path: '/refund-returns',
@@ -208,6 +215,11 @@ const SupplierRoute = SupplierRouteImport.update({
 const SupportRoute = SupportRouteImport.update({
   id: '/support',
   path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TopupRoute = TopupRouteImport.update({
@@ -511,6 +523,7 @@ export interface FileRoutesByFullPath {
   '/orders': typeof OrdersRoute
   '/print': typeof PrintRoute
   '/printer': typeof PrinterRouteWithChildren
+  '/privacy': typeof PrivacyRoute
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
   '/request-service': typeof RequestServiceRoute
@@ -518,6 +531,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/supplier': typeof SupplierRouteWithChildren
   '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/topup': typeof TopupRoute
   '/wallet': typeof WalletRoute
   '/wishlist': typeof WishlistRoute
@@ -591,12 +605,14 @@ export interface FileRoutesByTo {
   '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
   '/print': typeof PrintRoute
+  '/privacy': typeof PrivacyRoute
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
   '/request-service': typeof RequestServiceRoute
   '/search': typeof SearchRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/topup': typeof TopupRoute
   '/wallet': typeof WalletRoute
   '/wishlist': typeof WishlistRoute
@@ -673,6 +689,7 @@ export interface FileRoutesById {
   '/orders': typeof OrdersRoute
   '/print': typeof PrintRoute
   '/printer': typeof PrinterRouteWithChildren
+  '/privacy': typeof PrivacyRoute
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
   '/request-service': typeof RequestServiceRoute
@@ -680,6 +697,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/supplier': typeof SupplierRouteWithChildren
   '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/topup': typeof TopupRoute
   '/wallet': typeof WalletRoute
   '/wishlist': typeof WishlistRoute
@@ -757,6 +775,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/print'
     | '/printer'
+    | '/privacy'
     | '/refund-returns'
     | '/refunds'
     | '/request-service'
@@ -764,6 +783,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/supplier'
     | '/support'
+    | '/terms'
     | '/topup'
     | '/wallet'
     | '/wishlist'
@@ -837,12 +857,14 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/orders'
     | '/print'
+    | '/privacy'
     | '/refund-returns'
     | '/refunds'
     | '/request-service'
     | '/search'
     | '/sitemap.xml'
     | '/support'
+    | '/terms'
     | '/topup'
     | '/wallet'
     | '/wishlist'
@@ -918,6 +940,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/print'
     | '/printer'
+    | '/privacy'
     | '/refund-returns'
     | '/refunds'
     | '/request-service'
@@ -925,6 +948,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/supplier'
     | '/support'
+    | '/terms'
     | '/topup'
     | '/wallet'
     | '/wishlist'
@@ -1001,6 +1025,7 @@ export interface RootRouteChildren {
   OrdersRoute: typeof OrdersRoute
   PrintRoute: typeof PrintRoute
   PrinterRoute: typeof PrinterRouteWithChildren
+  PrivacyRoute: typeof PrivacyRoute
   RefundReturnsRoute: typeof RefundReturnsRoute
   RefundsRoute: typeof RefundsRoute
   RequestServiceRoute: typeof RequestServiceRoute
@@ -1008,6 +1033,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SupplierRoute: typeof SupplierRouteWithChildren
   SupportRoute: typeof SupportRoute
+  TermsRoute: typeof TermsRoute
   TopupRoute: typeof TopupRoute
   WalletRoute: typeof WalletRoute
   WishlistRoute: typeof WishlistRoute
@@ -1148,6 +1174,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrinterRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/refund-returns': {
       id: '/refund-returns'
       path: '/refund-returns'
@@ -1195,6 +1228,13 @@ declare module '@tanstack/react-router' {
       path: '/support'
       fullPath: '/support'
       preLoaderRoute: typeof SupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/topup': {
@@ -1715,6 +1755,7 @@ const rootRouteChildren: RootRouteChildren = {
   OrdersRoute: OrdersRoute,
   PrintRoute: PrintRoute,
   PrinterRoute: PrinterRouteWithChildren,
+  PrivacyRoute: PrivacyRoute,
   RefundReturnsRoute: RefundReturnsRoute,
   RefundsRoute: RefundsRoute,
   RequestServiceRoute: RequestServiceRoute,
@@ -1722,6 +1763,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SupplierRoute: SupplierRouteWithChildren,
   SupportRoute: SupportRoute,
+  TermsRoute: TermsRoute,
   TopupRoute: TopupRoute,
   WalletRoute: WalletRoute,
   WishlistRoute: WishlistRoute,
