@@ -1,3 +1,4 @@
+import { BottomNav } from "@/components/marketplace/BottomNav";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, Home, LayoutGrid, TrendingUp, Printer, Search, Store, Clock, X } from "lucide-react";
@@ -141,24 +142,7 @@ function CategoriesPage() {
           </div>
         )}
       </div>
-
-      {/* Bottom nav */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur">
-        <div className="mx-auto flex max-w-2xl items-center justify-around px-2 py-2 lg:max-w-7xl">
-          <Link to="/" className="flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-bold text-muted-foreground">
-            <Home className="h-5 w-5" /> Home
-          </Link>
-          <Link to="/categories" className="flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-bold text-primary">
-            <LayoutGrid className="h-5 w-5" /> Markets
-          </Link>
-          <Link to="/search" search={{ q: "" }} className="flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-bold text-muted-foreground">
-            <TrendingUp className="h-5 w-5" /> Trending
-          </Link>
-          <Link to="/print" className="flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-bold text-muted-foreground">
-            <Printer className="h-5 w-5" /> Print Store
-          </Link>
-        </div>
-      </nav>
+      <BottomNav />
     </div>
   );
 }
