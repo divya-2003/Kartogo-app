@@ -107,7 +107,7 @@ function MenuPage() {
   const soon = (label: string) => toast.info(`${label} coming soon`);
 
   return (
-    <div className="min-h-screen bg-secondary/40 pb-12">
+    <div className="min-h-screen bg-secondary/40 pb-24">
       <TopBar />
 
       <div className="mx-auto max-w-2xl px-4 md:px-6">
@@ -313,6 +313,10 @@ function MenuPage() {
         </div>
 
 
+        <div className="mt-4 flex gap-2">
+          <Link to="/privacy" className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3 text-sm font-bold"><MShield className="h-4 w-4" />Privacy</Link>
+          <Link to="/terms" className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3 text-sm font-bold"><MFile className="h-4 w-4" />Terms</Link>
+        </div>
         {/* Logout */}
         <button
           onClick={handleLogout}
@@ -321,6 +325,7 @@ function MenuPage() {
           <LogOut className="h-5 w-5" /> Logout
         </button>
       </div>
+      <BottomNav />
     </div>
   );
 }
