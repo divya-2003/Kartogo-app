@@ -1,3 +1,5 @@
+import { BottomNav } from "@/components/marketplace/BottomNav";
+import { OrdersTabs, BookingsList } from "@/components/marketplace/BookingsList";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import {
@@ -41,11 +43,12 @@ import { customerEventService } from "@/lib/recommendations.tracking";
 
 export const Route = createFileRoute("/orders")({
   component: OrdersPage,
-  validateSearch: (search: Record<string, unknown>): { open?: string; report?: number } => ({
+  validateSearch: (search: Record<string, unknown>): { open?: string; report?: number; tab?: "all" | "orders" | "bookings" } => ({
+    tab: search.tab === "orders" || search.tab === "bookings" || search.tab === "all" ? search.tab : undefined,
     open: typeof search.open === "string" ? search.open : undefined,
     report: typeof search.report === "number" ? search.report : undefined,
   }),
-  head: () => ({ meta: [{ title: "My orders — Kartogo" }] }),
+  head: () => ({ meta: [{ title: "Orders & Bookings — Kartogo" }, { name: "description", content: "Track your Kartogo product orders and service, home-service and event bookings in one place." }, { property: "og:title", content: "Orders & Bookings — Kartogo" }, { property: "og:description", content: "All your orders and bookings in one place." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });
 
 const STEPS: { key: OrderStatus; label: string; icon: React.ReactNode }[] = [
@@ -194,7 +197,8 @@ function OrdersPage() {
       return next;
     });
   };
-  const { open: openParam, report: reportParam } = Route.useSearch();
+  const { open: openParam, report: reportParam, tab: tabParam } = Route.useSearch();
+  const tab = tabParam ?? "all";
   useEffect(() => {
     if (openParam) setOpenId(openParam);
   }, [openParam]);
@@ -444,7 +448,7 @@ function OrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary/40">
+    <div className="min-h-screen bg-secondary/40 pb-24">
       <Header />
       {notices.length > 0 && (
         <div className="fixed left-1/2 top-20 z-50 w-[min(92vw,420px)] -translate-x-1/2 space-y-2">
@@ -461,8 +465,12 @@ function OrdersPage() {
       )}
       <div className="mx-auto max-w-2xl px-3 py-5 md:px-4 md:py-8">
         <div className="mb-5 flex items-center justify-between gap-3">
-          <h1 className="font-display text-2xl font-bold md:text-3xl">Your Orders</h1>
+          <h1 className="font-display text-2xl font-bold md:text-3xl">Orders & Bookings</h1>
         </div>
+        <OrdersTabs tab={tab} />
+        {tab !== "orders" && <BookingsList compact={tab === "all"} />}
+        {tab !== "bookings" && (<>
+        {tab === "all" && <h2 className="mb-2 mt-4 font-display text-lg font-bold">Orders</h2>}
 
         {mine.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
@@ -854,7 +862,9 @@ function OrdersPage() {
             })}
           </div>
         )}
+        </>)}
       </div>
+      <BottomNav />
 
       {cancelTarget && (
         <CancelReasonModal
