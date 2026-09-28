@@ -206,6 +206,7 @@ export type Database = {
           customer_phone: string
           delivery_boy_id: string | null
           delivery_fee: number
+          delivery_speed: string | null
           discount: number
           driver_surge_share: number
           id: string
@@ -242,6 +243,7 @@ export type Database = {
           customer_phone: string
           delivery_boy_id?: string | null
           delivery_fee?: number
+          delivery_speed?: string | null
           discount?: number
           driver_surge_share?: number
           id: string
@@ -278,6 +280,7 @@ export type Database = {
           customer_phone?: string
           delivery_boy_id?: string | null
           delivery_fee?: number
+          delivery_speed?: string | null
           discount?: number
           driver_surge_share?: number
           id?: string
