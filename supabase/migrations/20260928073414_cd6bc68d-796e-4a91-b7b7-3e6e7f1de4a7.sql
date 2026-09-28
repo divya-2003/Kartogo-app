@@ -1,0 +1,3 @@
+ALTER TABLE public.mp_partners ADD COLUMN IF NOT EXISTS weekly_off integer[] NOT NULL DEFAULT '{}', ADD COLUMN IF NOT EXISTS closed_dates date[] NOT NULL DEFAULT '{}';
+ALTER TABLE public.mp_staff ADD COLUMN IF NOT EXISTS off_weekdays integer[] NOT NULL DEFAULT '{}', ADD COLUMN IF NOT EXISTS off_dates date[] NOT NULL DEFAULT '{}';
+CREATE INDEX IF NOT EXISTS mp_partners_supplier_phone_idx ON public.mp_partners(supplier_phone);
