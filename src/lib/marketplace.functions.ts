@@ -83,15 +83,21 @@ const toTime = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${
 
 async function computeSlots(listingId: string, date: string) {
   const s = await db();
-  const { data: l } = await s.from("mp_listings").select("id,partner_id,duration_min, partner:mp_partners(opens_at,closes_at)").eq("id", listingId).maybeSingle();
+  const { data: l } = await s.from("mp_listings").select("id,partner_id,duration_min, partner:mp_partners(opens_at,closes_at,weekly_off,closed_dates)").eq("id", listingId).maybeSingle();
   if (!l) return { slots: [], staff: [] };
   const dur = l.duration_min || 60;
   const open = toMin(l.partner?.opens_at ?? "09:00");
   const close = toMin(l.partner?.closes_at ?? "20:00");
-  const [{ data: staff }, { data: booked }] = await Promise.all([
-    s.from("mp_staff").select("id,name,title,rating,photo_url").eq("partner_id", l.partner_id).eq("is_active", true),
+  const [{ data: staffAll }, { data: booked }] = await Promise.all([
+    s.from("mp_staff").select("id,name,title,rating,photo_url,off_weekdays,off_dates").eq("partner_id", l.partner_id).eq("is_active", true),
     s.from("mp_bookings").select("staff_id,start_time,end_time").eq("partner_id", l.partner_id).eq("booking_date", date).neq("status", "CANCELLED"),
   ]);
+  // Partner-managed availability: weekly offs, closed dates and staff leave.
+  const weekday = new Date(`${date}T00:00:00Z`).getUTCDay();
+  if ((l.partner?.weekly_off ?? []).includes(weekday) || (l.partner?.closed_dates ?? []).includes(date)) {
+    return { slots: [], staff: [], duration: dur };
+  }
+  const staff = (staffAll ?? []).filter((st: any) => !(st.off_weekdays ?? []).includes(weekday) && !(st.off_dates ?? []).includes(date));
   // Customer timezone is IST; hide past slots for today.
   const nowIst = new Date(Date.now() + 5.5 * 3600_000);
   const todayIst = nowIst.toISOString().slice(0, 10);
