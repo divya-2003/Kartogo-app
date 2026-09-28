@@ -15,6 +15,8 @@ type PlaceInput = {
   /** Standard orders may be scheduled into one of the admin-managed time slots. */
   slotId?: string;
   slotDate?: string;
+  /** Grocery delivery speed chosen at checkout. */
+  deliverySpeed?: "30min" | "same_day" | "next_day";
   /**
    * Idempotency key generated once per checkout attempt by the client. If the
    * same key arrives twice (double tap, retry after a flaky network) the first
@@ -82,6 +84,7 @@ export const placeOrderFn = createServerFn({ method: "POST" })
       promoCode: data.promoCode ? String(data.promoCode).slice(0, 24) : undefined,
       slotId: data.slotId ? String(data.slotId).slice(0, 64) : undefined,
       slotDate: /^\d{4}-\d{2}-\d{2}$/.test(String(data.slotDate ?? "")) ? String(data.slotDate) : undefined,
+      deliverySpeed: (["30min", "same_day", "next_day"] as const).find((v) => v === data.deliverySpeed),
       clientRequestId: data.clientRequestId ? String(data.clientRequestId).slice(0, 80) : undefined,
     };
   })
@@ -229,7 +232,8 @@ export const placeOrderFn = createServerFn({ method: "POST" })
         scheduled_start: slot?.start ?? null,
         scheduled_end: slot?.end ?? null,
         client_request_id: data.clientRequestId ?? null,
-      })
+        delivery_speed: data.deliverySpeed ?? null,
+      } as never)
       .select("*")
       .single();
 

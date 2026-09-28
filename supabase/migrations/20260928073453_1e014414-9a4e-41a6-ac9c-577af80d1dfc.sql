@@ -1,0 +1,1 @@
+ALTER TABLE public.app_orders ADD COLUMN IF NOT EXISTS delivery_speed text;

@@ -206,6 +206,7 @@ export type Database = {
           customer_phone: string
           delivery_boy_id: string | null
           delivery_fee: number
+          delivery_speed: string | null
           discount: number
           driver_surge_share: number
           id: string
@@ -242,6 +243,7 @@ export type Database = {
           customer_phone: string
           delivery_boy_id?: string | null
           delivery_fee?: number
+          delivery_speed?: string | null
           discount?: number
           driver_surge_share?: number
           id: string
@@ -278,6 +280,7 @@ export type Database = {
           customer_phone?: string
           delivery_boy_id?: string | null
           delivery_fee?: number
+          delivery_speed?: string | null
           discount?: number
           driver_surge_share?: number
           id?: string
@@ -1629,6 +1632,7 @@ export type Database = {
         Row: {
           address: string | null
           category_slugs: string[]
+          closed_dates: string[]
           closes_at: string | null
           created_at: string
           description: string | null
@@ -1647,10 +1651,12 @@ export type Database = {
           service_modes: string[]
           slug: string
           supplier_phone: string | null
+          weekly_off: number[]
         }
         Insert: {
           address?: string | null
           category_slugs?: string[]
+          closed_dates?: string[]
           closes_at?: string | null
           created_at?: string
           description?: string | null
@@ -1669,10 +1675,12 @@ export type Database = {
           service_modes?: string[]
           slug: string
           supplier_phone?: string | null
+          weekly_off?: number[]
         }
         Update: {
           address?: string | null
           category_slugs?: string[]
+          closed_dates?: string[]
           closes_at?: string | null
           created_at?: string
           description?: string | null
@@ -1691,6 +1699,7 @@ export type Database = {
           service_modes?: string[]
           slug?: string
           supplier_phone?: string | null
+          weekly_off?: number[]
         }
         Relationships: []
       }
@@ -1744,6 +1753,8 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          off_dates: string[]
+          off_weekdays: number[]
           partner_id: string
           photo_url: string | null
           rating: number
@@ -1753,6 +1764,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          off_dates?: string[]
+          off_weekdays?: number[]
           partner_id: string
           photo_url?: string | null
           rating?: number
@@ -1762,6 +1775,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          off_dates?: string[]
+          off_weekdays?: number[]
           partner_id?: string
           photo_url?: string | null
           rating?: number

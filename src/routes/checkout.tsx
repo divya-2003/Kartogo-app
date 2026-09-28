@@ -79,14 +79,18 @@ function CheckoutPage() {
   const [slots, setSlots] = useState<DeliverySlot[]>([]);
   const [slotId, setSlotId] = useState<string | null>(null);
   const [slotDate, setSlotDate] = useState<string | null>(null);
+  // Grocery delivery speed — sits on top of the existing Quick/Standard zones.
+  // 30-minute is only offered inside the Quick zone.
+  const [speed, setSpeed] = useState<"30min" | "same_day" | "next_day">(isQuick ? "30min" : "same_day");
+  useEffect(() => { if (!isQuick && speed === "30min") setSpeed("same_day"); }, [isQuick, speed]);
   useEffect(() => {
-    if (isQuick) return;
+    if (speed === "30min") return;
     let alive = true;
     void listDeliverySlotsFn({ data: {} })
       .then(rows => { if (alive) setSlots(rows); })
       .catch(() => {});
     return () => { alive = false; };
-  }, [isQuick]);
+  }, [speed]);
 
 
   const userName = user?.name?.trim() || "Kartogo User";
@@ -366,7 +370,8 @@ function CheckoutPage() {
         promoCode: appliedCode ?? undefined,
         paymentMethod: payment,
         slotId: slotId ?? undefined,
-        slotDate: slotDate ?? undefined,
+        slotDate: speed === "30min" ? undefined : (slotDate ?? undefined),
+        deliverySpeed: speed,
       });
       clear();
       // Feed the recommendation engine: purchase events, refreshed preferences,
@@ -447,8 +452,35 @@ function CheckoutPage() {
               })()}
             </section>
 
-            {/* Scheduled delivery — Standard orders can pick a time window */}
-            {!isQuick && slots.length > 0 && (
+            {/* Delivery speed — 30-minute (Quick zone), same-day or next-day */}
+            <section className="rounded-2xl border border-border bg-card p-5">
+              <h2 className="font-display text-lg font-bold">Delivery speed</h2>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {([
+                  { v: "30min", t: "30 minutes", d: isQuick ? "Quick delivery" : "Not in your area" },
+                  { v: "same_day", t: "Same day", d: "Later today" },
+                  { v: "next_day", t: "Next day", d: "Tomorrow" },
+                ] as const).map(o => {
+                  const disabled = o.v === "30min" && !isQuick;
+                  const on = speed === o.v;
+                  return (
+                    <button
+                      key={o.v}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => { setSpeed(o.v); setSlotId(null); setSlotDate(null); }}
+                      className={`rounded-xl border p-3 text-left transition disabled:cursor-not-allowed disabled:opacity-50 ${on ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}
+                    >
+                      <div className="text-sm font-bold">{o.t}</div>
+                      <div className="text-xs text-muted-foreground">{o.d}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* Scheduled delivery — same-day / next-day orders can pick a time window */}
+            {speed !== "30min" && slots.length > 0 && (
               <section className="rounded-2xl border border-border bg-card p-5">
                 <h2 className="font-display text-lg font-bold">Delivery time</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -456,14 +488,14 @@ function CheckoutPage() {
                 </p>
                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
                   <button
-                    onClick={() => { setSlotId(null); setSlotDate(null); }}
+                    onClick={() => { setSlotId(null); setSlotDate(speed === "next_day" ? ymd(new Date(Date.now() + 86400000)) : null); }}
                     className={`rounded-xl border p-3 text-left transition ${!slotId ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}
                   >
                     <div className="text-sm font-bold">As soon as possible</div>
-                    <div className="text-xs text-muted-foreground">Standard delivery today</div>
+                    <div className="text-xs text-muted-foreground">{speed === "next_day" ? "Any time tomorrow" : "Standard delivery today"}</div>
                   </button>
-                  {slots.map(s => {
-                    const today = slotAvailableToday(s);
+                  {slots.filter(s => speed === "next_day" || slotAvailableToday(s)).map(s => {
+                    const today = speed === "same_day";
                     const date = today ? ymd(new Date()) : ymd(new Date(Date.now() + 86400000));
                     const chosen = slotId === s.id;
                     return (
