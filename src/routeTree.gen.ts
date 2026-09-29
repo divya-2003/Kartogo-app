@@ -87,6 +87,7 @@ import { Route as SupplierAccountRouteImport } from './routes/supplier.account'
 import { Route as SupplierAiRouteImport } from './routes/supplier.ai'
 import { Route as SupplierOrdersRouteImport } from './routes/supplier.orders'
 import { Route as SupplierSalesRouteImport } from './routes/supplier.sales'
+import { Route as SupplierServicesRouteImport } from './routes/supplier.services'
 import { Route as TrackOrderIdRouteImport } from './routes/track.$orderId'
 import { Route as ApiPublicAiDailyForecastRouteImport } from './routes/api/public/ai-daily-forecast'
 import { Route as ApiPublicDispatchSweepRouteImport } from './routes/api/public/dispatch-sweep'
@@ -482,6 +483,11 @@ const SupplierSalesRoute = SupplierSalesRouteImport.update({
   path: '/sales',
   getParentRoute: () => SupplierRoute,
 } as any)
+const SupplierServicesRoute = SupplierServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
+  getParentRoute: () => SupplierRoute,
+} as any)
 const TrackOrderIdRoute = TrackOrderIdRouteImport.update({
   id: '/track/$orderId',
   path: '/track/$orderId',
@@ -581,6 +587,7 @@ export interface FileRoutesByFullPath {
   '/supplier/ai': typeof SupplierAiRoute
   '/supplier/orders': typeof SupplierOrdersRoute
   '/supplier/sales': typeof SupplierSalesRoute
+  '/supplier/services': typeof SupplierServicesRoute
   '/track/$orderId': typeof TrackOrderIdRoute
   '/admin/': typeof AdminIndexRoute
   '/printer/': typeof PrinterIndexRoute
@@ -662,6 +669,7 @@ export interface FileRoutesByTo {
   '/supplier/ai': typeof SupplierAiRoute
   '/supplier/orders': typeof SupplierOrdersRoute
   '/supplier/sales': typeof SupplierSalesRoute
+  '/supplier/services': typeof SupplierServicesRoute
   '/track/$orderId': typeof TrackOrderIdRoute
   '/admin': typeof AdminIndexRoute
   '/printer': typeof PrinterIndexRoute
@@ -747,6 +755,7 @@ export interface FileRoutesById {
   '/supplier/ai': typeof SupplierAiRoute
   '/supplier/orders': typeof SupplierOrdersRoute
   '/supplier/sales': typeof SupplierSalesRoute
+  '/supplier/services': typeof SupplierServicesRoute
   '/track/$orderId': typeof TrackOrderIdRoute
   '/admin/': typeof AdminIndexRoute
   '/printer/': typeof PrinterIndexRoute
@@ -833,6 +842,7 @@ export interface FileRouteTypes {
     | '/supplier/ai'
     | '/supplier/orders'
     | '/supplier/sales'
+    | '/supplier/services'
     | '/track/$orderId'
     | '/admin/'
     | '/printer/'
@@ -914,6 +924,7 @@ export interface FileRouteTypes {
     | '/supplier/ai'
     | '/supplier/orders'
     | '/supplier/sales'
+    | '/supplier/services'
     | '/track/$orderId'
     | '/admin'
     | '/printer'
@@ -998,6 +1009,7 @@ export interface FileRouteTypes {
     | '/supplier/ai'
     | '/supplier/orders'
     | '/supplier/sales'
+    | '/supplier/services'
     | '/track/$orderId'
     | '/admin/'
     | '/printer/'
@@ -1601,6 +1613,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SupplierSalesRouteImport
       parentRoute: typeof SupplierRoute
     }
+    '/supplier/services': {
+      id: '/supplier/services'
+      path: '/services'
+      fullPath: '/supplier/services'
+      preLoaderRoute: typeof SupplierServicesRouteImport
+      parentRoute: typeof SupplierRoute
+    }
     '/track/$orderId': {
       id: '/track/$orderId'
       path: '/track/$orderId'
@@ -1722,6 +1741,7 @@ interface SupplierRouteChildren {
   SupplierAiRoute: typeof SupplierAiRoute
   SupplierOrdersRoute: typeof SupplierOrdersRoute
   SupplierSalesRoute: typeof SupplierSalesRoute
+  SupplierServicesRoute: typeof SupplierServicesRoute
   SupplierIndexRoute: typeof SupplierIndexRoute
 }
 
@@ -1730,6 +1750,7 @@ const SupplierRouteChildren: SupplierRouteChildren = {
   SupplierAiRoute: SupplierAiRoute,
   SupplierOrdersRoute: SupplierOrdersRoute,
   SupplierSalesRoute: SupplierSalesRoute,
+  SupplierServicesRoute: SupplierServicesRoute,
   SupplierIndexRoute: SupplierIndexRoute,
 }
 
