@@ -724,6 +724,7 @@ export type PlaceOrderInput = {
   /** Standard deliveries may be booked into a time slot. */
   slotId?: string;
   slotDate?: string;
+  deliverySpeed?: "30min" | "same_day" | "next_day";
 };
 const OrdersContext = createContext<OrdersCtx | null>(null);
 
@@ -901,6 +902,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
           promoCode: o.promoCode,
           slotId: o.slotId,
           slotDate: o.slotDate,
+          deliverySpeed: o.deliverySpeed,
           clientRequestId,
         },
       });
