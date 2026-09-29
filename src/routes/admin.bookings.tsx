@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { adminListBookingsFn, adminUpdateBookingFn } from "@/lib/marketplace.functions";
 import { useAuth } from "@/lib/store";
+import { adminListMpPartnersFn, adminLinkPartnerPhoneFn } from "@/lib/partner-manage.functions";
 import { formatINR } from "@/lib/data";
 import { STATUS_LABELS, TX_LABELS, timelineFor, fmtDate, fmtTime, type Booking, type BookingStatus } from "@/lib/marketplace";
 
@@ -63,6 +64,32 @@ function AdminBookings() {
           })}
         </div>
       )}
+      <PartnerOwners token={adminToken ?? ""} />
     </div>
+  );
+}
+
+function PartnerOwners({ token }: { token: string }) {
+  const qc = useQueryClient();
+  const { data = [] } = useQuery({ queryKey: ["mp-partner-owners", token], queryFn: () => adminListMpPartnersFn({ data: { token } }), enabled: !!token });
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const save = async (id: string) => {
+    const v = (draft[id] ?? "").trim();
+    if (v && !/^\d{10}$/.test(v)) return void toast.error("Enter a 10-digit number");
+    const r = await adminLinkPartnerPhoneFn({ data: { token, partnerId: id, phone: v || null } });
+    if (r.ok) { toast.success("Partner login updated"); qc.invalidateQueries({ queryKey: ["mp-partner-owners"] }); } else toast.error("Couldn't update");
+  };
+  return (
+    <section className="space-y-2 rounded-2xl border border-border bg-card p-4">
+      <h2 className="font-display text-lg font-bold">Partner self-service logins</h2>
+      <p className="text-xs text-muted-foreground">Link a partner to a supplier mobile number. They can then manage their listings, staff and availability under "My services". Bookings stay with Kartogo.</p>
+      {data.map(p => (
+        <div key={p.id} className="flex flex-wrap items-center gap-2 border-t border-border pt-2 text-sm">
+          <div className="min-w-0 flex-1 truncate font-semibold">{p.name}</div>
+          <input className="w-36 rounded-md border border-border bg-background px-2 py-1" placeholder="Mobile" value={draft[p.id] ?? p.supplier_phone ?? ""} onChange={e => setDraft({ ...draft, [p.id]: e.target.value })} />
+          <button onClick={() => save(p.id)} className="rounded-md bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">Save</button>
+        </div>
+      ))}
+    </section>
   );
 }
