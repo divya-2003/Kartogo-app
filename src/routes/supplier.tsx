@@ -4,7 +4,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { verifySupplierTokenFn } from "@/lib/supplier.functions";
 import { findSupplierById } from "@/lib/suppliers";
 import { SupplierContext, type SupplierInfo } from "@/lib/supplier-context";
-import { Boxes, ClipboardList, User2, BarChart3, Sparkles, Menu, ChevronLeft } from "lucide-react";
+import { CalendarClock, Boxes, ClipboardList, User2, BarChart3, Sparkles, Menu, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 
@@ -32,6 +32,7 @@ export const Route = createFileRoute("/supplier")({
 const NAV = [
   { to: "/supplier", label: "Inventory", short: "Stock", icon: Boxes },
   { to: "/supplier/orders", label: "Orders", short: "Orders", icon: ClipboardList },
+  { to: "/supplier/services", label: "My services", short: "Services", icon: CalendarClock },
   { to: "/supplier/sales", label: "Sales", short: "Sales", icon: BarChart3 },
   { to: "/supplier/ai", label: "AI insights", short: "AI", icon: Sparkles },
   { to: "/supplier/account", label: "Account", short: "Account", icon: User2 },
