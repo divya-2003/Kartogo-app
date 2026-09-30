@@ -10,14 +10,17 @@ import { HighlightText } from "@/components/HighlightText";
 import { createStockAlertFn } from "@/lib/stock-alerts.functions";
 import { customerEventService } from "@/lib/recommendations.tracking";
 
-export function ProductCard({ p, bestseller, recommendationType, onProductOpen, highlight }: {
+export function ProductCard({ p, bestseller, recommendationType, onProductOpen, highlight, quickBadge }: {
   p: Product;
   bestseller?: boolean;
   recommendationType?: string;
   onProductOpen?: (productId: string) => void;
   /** Search query whose matching characters should be emphasised in the title. */
   highlight?: string;
+  /** Shows the green "Quick" flag when this item also ships on 30-minute delivery. */
+  quickBadge?: boolean;
 }) {
+
   const { items, add, setQty } = useCart();
   const { user } = useAuth();
   const { has, toggle } = useWishlist();
