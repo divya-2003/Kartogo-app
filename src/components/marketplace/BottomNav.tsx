@@ -1,14 +1,14 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, LayoutGrid, ClipboardList, User2 } from "lucide-react";
+import { Home, LayoutGrid, TrendingUp, Printer } from "lucide-react";
 
 const ITEMS = [
   { to: "/", label: "Home", icon: Home, match: (p: string) => p === "/" },
   { to: "/categories", label: "Categories", icon: LayoutGrid, match: (p: string) => p.startsWith("/categories") || p.startsWith("/explore") },
-  { to: "/orders", label: "Orders & Bookings", icon: ClipboardList, match: (p: string) => p.startsWith("/orders") || p.startsWith("/booking") },
-  { to: "/menu", label: "Account", icon: User2, match: (p: string) => p.startsWith("/menu") || p.startsWith("/account") },
+  { to: "/search", label: "Trending", icon: TrendingUp, match: (p: string) => p.startsWith("/search") },
+  { to: "/print", label: "Print Store", icon: Printer, match: (p: string) => p.startsWith("/print") },
 ] as const;
 
-/** The four-tab customer navigation: Home, Categories, Orders & Bookings, Account. */
+/** The four-tab customer navigation: Home, Categories, Trending, Print Store. */
 export function BottomNav() {
   const path = useRouterState({ select: s => s.location.pathname });
   return (
@@ -17,7 +17,7 @@ export function BottomNav() {
         {ITEMS.map(({ to, label, icon: Icon, match }) => {
           const active = match(path);
           return (
-            <Link key={to} to={to} aria-current={active ? "page" : undefined}
+            <Link key={to} to={to} search={to === "/search" ? ({ q: "" } as never) : undefined} aria-current={active ? "page" : undefined}
               className={`flex flex-1 flex-col items-center gap-0.5 py-1 text-center text-[11px] font-bold leading-tight transition-colors ${active ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
               <Icon className="h-5 w-5" /> {label}
             </Link>
