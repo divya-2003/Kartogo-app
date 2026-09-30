@@ -151,10 +151,6 @@ function Index() {
     return true;
   });
 
-  const applyCoupon = (code: string) => {
-    try { localStorage.setItem("qk_promo_code", code); } catch { /* ignore */ }
-    toast.success(`${code} saved — it'll be ready at checkout`);
-  };
 
   // Category "Deal Zone" tiles, modelled on the reference grid.
   const tiles = [
