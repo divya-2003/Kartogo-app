@@ -36,11 +36,26 @@ function CartPage() {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-[1fr_320px]">
-            <div className="divide-y divide-border rounded-2xl border border-border bg-card">
-              {items.map(i => {
-                const p = products.find(p => p.id === i.productId);
-                if (!p) return null;
+            <div className="space-y-4">
+              {SEGMENTS.map(seg => {
+                const rows = items
+                  .map(i => ({ i, p: products.find(p => p.id === i.productId) }))
+                  .filter((r): r is { i: typeof items[number]; p: NonNullable<typeof r.p> } => !!r.p && tierOf(r.p) === seg.tier);
+                if (rows.length === 0) return null;
                 return (
+                  <div key={seg.tier} className="overflow-hidden rounded-2xl border border-border bg-card">
+                    <div className="flex items-center justify-between gap-3 border-b border-border bg-secondary/40 px-4 py-2.5">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${seg.tier === "quick" ? "bg-leaf/15 text-leaf" : "bg-primary/10 text-primary"}`}>
+                          {seg.tier === "quick" ? <Zap className="h-4 w-4" /> : <PackageCheck className="h-4 w-4" />}
+                        </span>
+                        <span className="truncate font-display text-sm font-extrabold">{TIER_LABEL[seg.tier]}</span>
+                        <span className="shrink-0 text-xs text-muted-foreground">({rows.length})</span>
+                      </div>
+                      <span className="shrink-0 whitespace-nowrap text-right text-xs font-bold text-muted-foreground">{tierEta(seg.tier)}</span>
+                    </div>
+                    <div className="divide-y divide-border">
+                      {rows.map(({ i, p }) => (
                   <div key={i.productId} className="flex items-start gap-3 p-3 sm:p-4">
                     <div className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-cream bg-grain text-2xl sm:h-16 sm:w-16 sm:text-3xl">{p.image ? <img src={p.image} alt={p.name} loading="lazy" className="h-full w-full object-cover" /> : p.emoji}</div>
                     <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
@@ -59,10 +74,13 @@ function CartPage() {
                       </div>
                     </div>
                   </div>
-
+                      ))}
+                    </div>
+                  </div>
                 );
               })}
             </div>
+
             <aside className="h-fit rounded-2xl border border-border bg-card p-5">
               <div className="font-display text-lg font-bold">Bill summary</div>
               <div className="my-4 space-y-2 text-sm">

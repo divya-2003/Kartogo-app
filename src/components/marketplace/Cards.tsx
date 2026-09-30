@@ -8,6 +8,10 @@ import { toggleFavoriteFn, myFavoritesFn } from "@/lib/marketplace.functions";
 import { type MpListing, type MpPartner, listingPrice, listingRoute, isOpenNow, fmtTime } from "@/lib/marketplace";
 
 export function Rating({ value, count }: { value: number; count?: number }) {
+  // Only ever show stars backed by real customer reviews.
+  if (!Number(value) || count === 0) {
+    return <span className="inline-flex items-center rounded-md bg-secondary px-1.5 py-0.5 text-[11px] font-bold text-muted-foreground">New</span>;
+  }
   return (
     <span className="inline-flex items-center gap-1 rounded-md bg-leaf/15 px-1.5 py-0.5 text-[11px] font-bold text-leaf">
       <Star className="h-3 w-3 fill-current" /> {Number(value).toFixed(1)}
@@ -15,6 +19,7 @@ export function Rating({ value, count }: { value: number; count?: number }) {
     </span>
   );
 }
+
 
 export function Thumb({ images, icon, className = "" }: { images?: string[]; icon: string; className?: string }) {
   if (images?.[0]) return <img src={images[0]} alt="" loading="lazy" className={`object-cover ${className}`} />;
