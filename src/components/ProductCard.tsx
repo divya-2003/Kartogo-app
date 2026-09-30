@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Plus, Minus, Heart, BellRing } from "lucide-react";
+import { Plus, Minus, Heart, BellRing, Zap } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Product } from "@/lib/data";
@@ -107,6 +107,12 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
         )}
         {out && <span className="absolute right-11 top-2 rounded-md bg-destructive px-2 py-0.5 text-[11px] font-bold text-destructive-foreground">Out</span>}
         {lowStock && <span className="absolute bottom-2 left-2 rounded-md bg-saffron px-2 py-1 text-[11px] font-extrabold text-foreground shadow-pop">Only {p.stock} left</span>}
+        {quickBadge && (
+          <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-md bg-leaf px-2 py-1 text-[11px] font-extrabold text-primary-foreground shadow-pop">
+            <Zap className="h-3 w-3 fill-current" /> Quick
+          </span>
+        )}
+
         <button
           onClick={handleWishlist}
           aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
