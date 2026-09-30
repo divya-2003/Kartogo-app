@@ -251,8 +251,9 @@ function Index() {
             <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 shadow-pop">
               <Search className="h-5 w-5 text-muted-foreground" />
               <span className="w-full truncate text-left text-sm text-muted-foreground">
-                {typedTerm ? `Search for "${typedTerm}"` : "Search products, services, stores..."}
+                Search for "{typedTerm}"
               </span>
+
             </div>
           </Link>
 
@@ -323,13 +324,7 @@ function Index() {
                 <div className="font-display text-lg font-extrabold text-foreground">{c.flat}</div>
                 <div className="rounded-full bg-card px-2 py-0.5 text-[11px] font-semibold">{c.above}</div>
                 <div className="text-[11px] font-bold tracking-wide text-primary">Code: {c.code}</div>
-                <button
-                  type="button"
-                  onClick={() => applyCoupon(c.code)}
-                  className="mt-1 w-full rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:bg-primary/90"
-                >
-                  Apply
-                </button>
+
               </div>
             ))}
           </div>

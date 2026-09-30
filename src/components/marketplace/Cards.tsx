@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { Star, MapPin, Clock, Heart, Home as HomeIcon, Package, Truck, Wrench } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -151,10 +151,17 @@ export function EmptyState({ title, body, children }: { title: string; body?: st
 }
 
 export function PageTop({ title, back = "/" }: { title: string; back?: string }) {
+  const router = useRouter();
+  const nav = useNavigate();
+  // Single-tap back: use the router's own history so one click always moves.
+  const goBack = () => {
+    if (router.history.canGoBack()) router.history.back();
+    else void nav({ to: back as never });
+  };
   return (
     <div className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
       <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3 lg:max-w-5xl">
-        <button type="button" onClick={() => (window.history.length > 1 ? window.history.back() : (window.location.href = back))} aria-label="Back"
+        <button type="button" onClick={goBack} aria-label="Back"
           className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border hover:bg-secondary">
           <span aria-hidden className="text-lg leading-none">‹</span>
         </button>
@@ -163,3 +170,4 @@ export function PageTop({ title, back = "/" }: { title: string; back?: string })
     </div>
   );
 }
+
