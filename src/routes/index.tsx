@@ -14,6 +14,8 @@ import { useCatalog, useAuth, useLocation, useCart, useWallet } from "@/lib/stor
 import { COUPONS as PROMO_COUPONS } from "@/lib/promo";
 import { toast } from "sonner";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter";
+import { isQuickProduct } from "@/lib/delivery-tier";
+
 
 const HOME_SEARCH_TERMS = ["milk", "haircut", "avakaya", "AC service", "sofa", "birthday decoration", "paneer"];
 
@@ -367,19 +369,22 @@ function Index() {
               <Link to="/category/$slug" params={{ slug: "combos" }} className="shrink-0 text-sm font-bold text-primary">See all</Link>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
-              {combos.map(p => <ProductCard key={p.id} p={p} />)}
+              {combos.map(p => <ProductCard key={p.id} p={p} quickBadge={showQuickFlag && isQuickProduct(p)} />)}
             </div>
           </div>
         )}
 
         {/* ---------- From Ongole homes ---------- */}
+        {local.length > 0 && (
         <div className="mt-6">
           <h2 className="font-display text-xl font-extrabold">From Ongole homes</h2>
           <p className="text-sm text-muted-foreground">Pickles, podis & tiffin batter from local makers.</p>
           <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
-            {local.map(p => <ProductCard key={p.id} p={p} bestseller={bestsellerIds.has(p.id)} />)}
+            {local.map(p => <ProductCard key={p.id} p={p} bestseller={bestsellerIds.has(p.id)} quickBadge={showQuickFlag && isQuickProduct(p)} />)}
           </div>
         </div>
+        )}
+
 
       </div>
 
