@@ -138,10 +138,15 @@ function Index() {
   }
 
 
-  const bestsellerIds = new Set(products.slice(0, 10).map(p => p.id));
-  const combos = products.filter(p => p.category === "combos").slice(0, 10);
-  const local = products.filter(p => ["pickles", "local-snacks", "tiffin-batter", "spice-powders"].includes(p.category)).slice(0, 8);
-  const dealProduct = products.find(p => p.mrp && p.mrp > p.price) ?? products[0];
+  // Quick only lists 30-minute stock; Standard lists everything and flags the
+  // items that also ship quick.
+  const tierProducts = service === "quick" ? products.filter(isQuickProduct) : products;
+  const showQuickFlag = service === "standard";
+  const bestsellerIds = new Set(tierProducts.slice(0, 10).map(p => p.id));
+  const combos = tierProducts.filter(p => p.category === "combos").slice(0, 10);
+  const local = tierProducts.filter(p => ["pickles", "local-snacks", "tiffin-batter", "spice-powders"].includes(p.category)).slice(0, 8);
+  const dealProduct = tierProducts.find(p => p.mrp && p.mrp > p.price) ?? tierProducts[0] ?? products[0];
+
 
   // "Reorder" merges replenishment + buy-again into one rail (no duplicates).
   const seenReorder = new Set<string>();
