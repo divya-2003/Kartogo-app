@@ -38,11 +38,14 @@ function ItemPage() {
   const [address, setAddress] = useState<{ line: string; landmark?: string }>({ line: "" });
   const [checkout, setCheckout] = useState(false);
   const [busy, setBusy] = useState(false);
-  const onAddr = useCallback((v: { line: string; landmark?: string }) => setAddress(v), []);
+  // Showroom visit flow (furniture & electronics): pick a day and a slot.
+  const [visit, setVisit] = useState(false);
+  const [visitDate, setVisitDate] = useState(nextDays(3)[1].iso);
+  const [visitTime, setVisitTime] = useState(VISIT_TIMES[0]);
 
   if (isLoading) return <div className="min-h-screen bg-background"><PageTop title="Loading…" /><div className="mx-auto mt-4 h-72 max-w-2xl animate-pulse rounded-2xl bg-secondary" /></div>;
   if (!data) return <div className="min-h-screen bg-background"><PageTop title="Not found" /><div className="mx-auto max-w-2xl p-4"><EmptyState title="This item isn't available" /></div></div>;
-  const l = data.listing as MpListing & { partner: { name: string; slug: string } };
+  const l = data.listing as MpListing & { partner: { name: string; slug: string; address?: string | null } };
   const a = l.attributes ?? {};
   const isFurniture = l.category_slug === "furniture";
   const v = variant ?? a.variants?.[0] ?? null;
@@ -60,6 +63,21 @@ function ItemPage() {
     if (!r.ok) return void toast.error(r.error);
     nav({ to: "/booking/$id", params: { id: r.id }, search: { confirmed: true } });
   };
+
+  const bookVisit = async () => {
+    if (!customerToken) { toast("Please login to book a visit"); nav({ to: "/login", search: { redirect: `/item/${l.id}` } }); return; }
+    setBusy(true);
+    const r = await createBookingFn({ data: {
+      token: customerToken, listingId: l.id, storeVisit: true, date: visitDate, time: visitTime,
+      details: { variant: v ?? "", visit_store: l.partner.name },
+    } }).catch(() => null);
+    setBusy(false);
+    if (!r) return void toast.error("Network error, please try again");
+    if (!r.ok) return void toast.error(r.error);
+    toast.success("Showroom visit booked");
+    nav({ to: "/booking/$id", params: { id: r.id }, search: { confirmed: true } });
+  };
+
 
   return (
     <div className="min-h-screen bg-background pb-28">
