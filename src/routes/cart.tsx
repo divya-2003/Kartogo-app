@@ -2,10 +2,14 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { useCart, useCatalog } from "@/lib/store";
 import { formatINR } from "@/lib/data";
-import { Trash2, Plus, Minus, ShoppingBag } from "lucide-react";
+import { Trash2, Plus, Minus, ShoppingBag, Zap, PackageCheck } from "lucide-react";
 import { useEffect } from "react";
 import { RecommendationRow } from "@/components/RecommendationRow";
 import { useFrequentlyBoughtTogether, useCustomerTracking } from "@/hooks/use-recommendations";
+import { tierOf, tierEta, TIER_LABEL, type DeliveryTier } from "@/lib/delivery-tier";
+
+const SEGMENTS: { tier: DeliveryTier }[] = [{ tier: "quick" }, { tier: "standard" }];
+
 
 export const Route = createFileRoute("/cart")({
   component: CartPage,
