@@ -127,7 +127,10 @@ const bookingSchema = z.object({
   address: z.object({ line: z.string().max(300), landmark: z.string().max(200).optional() }).nullable().optional(),
   packageName: z.string().max(60).nullable().optional(),
   details: z.record(z.string(), z.union([z.string().max(1000), z.number(), z.boolean()])).optional(),
+  /** Furniture/electronics: book a showroom appointment instead of a delivery. */
+  storeVisit: z.boolean().optional(),
   customerName: z.string().max(80).optional(),
+
 });
 
 function code() { return "KB" + Math.random().toString(36).slice(2, 8).toUpperCase(); }
