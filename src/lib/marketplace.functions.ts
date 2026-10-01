@@ -172,10 +172,16 @@ export const createBookingFn = createServerFn({ method: "POST" })
     } else if (tx === "QUOTE_REQUEST") {
       if (!data.date) return { ok: false as const, error: "Choose the event date." };
     } else if (tx === "PRODUCT_ORDER") {
-      if (!data.date) return { ok: false as const, error: "Choose a delivery date." };
-      const qty = Math.max(1, Math.min(5, Number(data.details?.quantity ?? 1)));
-      amount = Number(l.price ?? 0) * qty;
+      if (!data.date) return { ok: false as const, error: storeVisit ? "Choose a visit date." : "Choose a delivery date." };
+      if (storeVisit) {
+        if (!data.time) return { ok: false as const, error: "Choose a visit time." };
+        start = data.time;
+      } else {
+        const qty = Math.max(1, Math.min(5, Number(data.details?.quantity ?? 1)));
+        amount = Number(l.price ?? 0) * qty;
+      }
     }
+
 
     const { data: cust } = await s.from("customers").select("name").eq("phone", session.phone).maybeSingle();
     const row = {
