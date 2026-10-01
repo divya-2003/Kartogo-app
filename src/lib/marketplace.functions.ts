@@ -127,7 +127,10 @@ const bookingSchema = z.object({
   address: z.object({ line: z.string().max(300), landmark: z.string().max(200).optional() }).nullable().optional(),
   packageName: z.string().max(60).nullable().optional(),
   details: z.record(z.string(), z.union([z.string().max(1000), z.number(), z.boolean()])).optional(),
+  /** Furniture/electronics: book a showroom appointment instead of a delivery. */
+  storeVisit: z.boolean().optional(),
   customerName: z.string().max(80).optional(),
+
 });
 
 function code() { return "KB" + Math.random().toString(36).slice(2, 8).toUpperCase(); }
@@ -144,8 +147,11 @@ export const createBookingFn = createServerFn({ method: "POST" })
     let staffId: string | null = null, start: string | null = null, end: string | null = null, amount = 0, fee = 0;
     const mode = tx === "HOME_SERVICE_BOOKING" ? "HOME_SERVICE" : (data.serviceMode ?? null);
     if (mode && l.service_modes?.length && !l.service_modes.includes(mode)) return { ok: false as const, error: "This service mode isn't offered." };
-    if ((mode === "HOME_SERVICE" || tx === "EVENT_BOOKING" || tx === "QUOTE_REQUEST" || tx === "PRODUCT_ORDER") && !data.address?.line?.trim())
+    const storeVisit = tx === "PRODUCT_ORDER" && data.storeVisit === true;
+    if (!storeVisit && (mode === "HOME_SERVICE" || tx === "EVENT_BOOKING" || tx === "QUOTE_REQUEST" || tx === "PRODUCT_ORDER") && !data.address?.line?.trim())
       return { ok: false as const, error: "Please add an address." };
+
+
 
     if (tx === "SERVICE_BOOKING" || tx === "HOME_SERVICE_BOOKING") {
       if (!data.date || !data.time) return { ok: false as const, error: "Choose a date and time." };
@@ -166,17 +172,24 @@ export const createBookingFn = createServerFn({ method: "POST" })
     } else if (tx === "QUOTE_REQUEST") {
       if (!data.date) return { ok: false as const, error: "Choose the event date." };
     } else if (tx === "PRODUCT_ORDER") {
-      if (!data.date) return { ok: false as const, error: "Choose a delivery date." };
-      const qty = Math.max(1, Math.min(5, Number(data.details?.quantity ?? 1)));
-      amount = Number(l.price ?? 0) * qty;
+      if (!data.date) return { ok: false as const, error: storeVisit ? "Choose a visit date." : "Choose a delivery date." };
+      if (storeVisit) {
+        if (!data.time) return { ok: false as const, error: "Choose a visit time." };
+        start = data.time;
+      } else {
+        const qty = Math.max(1, Math.min(5, Number(data.details?.quantity ?? 1)));
+        amount = Number(l.price ?? 0) * qty;
+      }
     }
+
 
     const { data: cust } = await s.from("customers").select("name").eq("phone", session.phone).maybeSingle();
     const row = {
       booking_code: code(), customer_phone: session.phone, customer_name: cust?.name ?? data.customerName ?? null,
       partner_id: l.partner_id, listing_id: l.id, transaction_type: tx, service_mode: mode, staff_id: staffId,
-      booking_date: data.date ?? null, start_time: start, end_time: end, address: data.address ?? null,
-      details: { ...(data.details ?? {}), package: data.packageName ?? null }, amount, fee,
+      booking_date: data.date ?? null, start_time: start, end_time: end, address: storeVisit ? null : (data.address ?? null),
+      details: { ...(data.details ?? {}), package: storeVisit ? "Showroom visit" : (data.packageName ?? null), store_visit: storeVisit }, amount, fee,
+
       status: "BOOKING_REQUESTED",
     };
     const { data: ins, error } = await s.from("mp_bookings").insert(row).select("id,booking_code").single();
