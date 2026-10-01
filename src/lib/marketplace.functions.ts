@@ -147,8 +147,11 @@ export const createBookingFn = createServerFn({ method: "POST" })
     let staffId: string | null = null, start: string | null = null, end: string | null = null, amount = 0, fee = 0;
     const mode = tx === "HOME_SERVICE_BOOKING" ? "HOME_SERVICE" : (data.serviceMode ?? null);
     if (mode && l.service_modes?.length && !l.service_modes.includes(mode)) return { ok: false as const, error: "This service mode isn't offered." };
-    if ((mode === "HOME_SERVICE" || tx === "EVENT_BOOKING" || tx === "QUOTE_REQUEST" || tx === "PRODUCT_ORDER") && !data.address?.line?.trim())
+    const storeVisit = tx === "PRODUCT_ORDER" && data.storeVisit === true;
+    if (!storeVisit && (mode === "HOME_SERVICE" || tx === "EVENT_BOOKING" || tx === "QUOTE_REQUEST" || tx === "PRODUCT_ORDER") && !data.address?.line?.trim())
       return { ok: false as const, error: "Please add an address." };
+
+
 
     if (tx === "SERVICE_BOOKING" || tx === "HOME_SERVICE_BOOKING") {
       if (!data.date || !data.time) return { ok: false as const, error: "Choose a date and time." };
