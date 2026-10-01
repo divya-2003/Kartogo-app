@@ -187,8 +187,9 @@ export const createBookingFn = createServerFn({ method: "POST" })
     const row = {
       booking_code: code(), customer_phone: session.phone, customer_name: cust?.name ?? data.customerName ?? null,
       partner_id: l.partner_id, listing_id: l.id, transaction_type: tx, service_mode: mode, staff_id: staffId,
-      booking_date: data.date ?? null, start_time: start, end_time: end, address: data.address ?? null,
-      details: { ...(data.details ?? {}), package: data.packageName ?? null }, amount, fee,
+      booking_date: data.date ?? null, start_time: start, end_time: end, address: storeVisit ? null : (data.address ?? null),
+      details: { ...(data.details ?? {}), package: storeVisit ? "Showroom visit" : (data.packageName ?? null), store_visit: storeVisit }, amount, fee,
+
       status: "BOOKING_REQUESTED",
     };
     const { data: ins, error } = await s.from("mp_bookings").insert(row).select("id,booking_code").single();
