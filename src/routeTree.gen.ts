@@ -19,6 +19,7 @@ import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as DeliveryRouteImport } from './routes/delivery'
 import { Route as DeliveryRequestRouteImport } from './routes/delivery-request'
 import { Route as FavoritesRouteImport } from './routes/favorites'
+import { Route as FoodRouteImport } from './routes/food'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MenuRouteImport } from './routes/menu'
@@ -30,6 +31,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RefundReturnsRouteImport } from './routes/refund-returns'
 import { Route as RefundsRouteImport } from './routes/refunds'
 import { Route as RequestServiceRouteImport } from './routes/request-service'
+import { Route as RidesRouteImport } from './routes/rides'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SupplierRouteImport } from './routes/supplier'
@@ -143,6 +145,11 @@ const FavoritesRoute = FavoritesRouteImport.update({
   path: '/favorites',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FoodRoute = FoodRouteImport.update({
+  id: '/food',
+  path: '/food',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HelpRoute = HelpRouteImport.update({
   id: '/help',
   path: '/help',
@@ -196,6 +203,11 @@ const RefundsRoute = RefundsRouteImport.update({
 const RequestServiceRoute = RequestServiceRouteImport.update({
   id: '/request-service',
   path: '/request-service',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RidesRoute = RidesRouteImport.update({
+  id: '/rides',
+  path: '/rides',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SearchRoute = SearchRouteImport.update({
@@ -522,6 +534,7 @@ export interface FileRoutesByFullPath {
   '/delivery': typeof DeliveryRoute
   '/delivery-request': typeof DeliveryRequestRoute
   '/favorites': typeof FavoritesRoute
+  '/food': typeof FoodRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
@@ -533,6 +546,7 @@ export interface FileRoutesByFullPath {
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
   '/request-service': typeof RequestServiceRoute
+  '/rides': typeof RidesRoute
   '/search': typeof SearchRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/supplier': typeof SupplierRouteWithChildren
@@ -606,6 +620,7 @@ export interface FileRoutesByTo {
   '/delivery': typeof DeliveryRoute
   '/delivery-request': typeof DeliveryRequestRoute
   '/favorites': typeof FavoritesRoute
+  '/food': typeof FoodRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
@@ -616,6 +631,7 @@ export interface FileRoutesByTo {
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
   '/request-service': typeof RequestServiceRoute
+  '/rides': typeof RidesRoute
   '/search': typeof SearchRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
@@ -690,6 +706,7 @@ export interface FileRoutesById {
   '/delivery': typeof DeliveryRoute
   '/delivery-request': typeof DeliveryRequestRoute
   '/favorites': typeof FavoritesRoute
+  '/food': typeof FoodRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
@@ -701,6 +718,7 @@ export interface FileRoutesById {
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
   '/request-service': typeof RequestServiceRoute
+  '/rides': typeof RidesRoute
   '/search': typeof SearchRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/supplier': typeof SupplierRouteWithChildren
@@ -777,6 +795,7 @@ export interface FileRouteTypes {
     | '/delivery'
     | '/delivery-request'
     | '/favorites'
+    | '/food'
     | '/help'
     | '/login'
     | '/menu'
@@ -788,6 +807,7 @@ export interface FileRouteTypes {
     | '/refund-returns'
     | '/refunds'
     | '/request-service'
+    | '/rides'
     | '/search'
     | '/sitemap.xml'
     | '/supplier'
@@ -861,6 +881,7 @@ export interface FileRouteTypes {
     | '/delivery'
     | '/delivery-request'
     | '/favorites'
+    | '/food'
     | '/help'
     | '/login'
     | '/menu'
@@ -871,6 +892,7 @@ export interface FileRouteTypes {
     | '/refund-returns'
     | '/refunds'
     | '/request-service'
+    | '/rides'
     | '/search'
     | '/sitemap.xml'
     | '/support'
@@ -944,6 +966,7 @@ export interface FileRouteTypes {
     | '/delivery'
     | '/delivery-request'
     | '/favorites'
+    | '/food'
     | '/help'
     | '/login'
     | '/menu'
@@ -955,6 +978,7 @@ export interface FileRouteTypes {
     | '/refund-returns'
     | '/refunds'
     | '/request-service'
+    | '/rides'
     | '/search'
     | '/sitemap.xml'
     | '/supplier'
@@ -1030,6 +1054,7 @@ export interface RootRouteChildren {
   DeliveryRoute: typeof DeliveryRoute
   DeliveryRequestRoute: typeof DeliveryRequestRoute
   FavoritesRoute: typeof FavoritesRoute
+  FoodRoute: typeof FoodRoute
   HelpRoute: typeof HelpRoute
   LoginRoute: typeof LoginRoute
   MenuRoute: typeof MenuRoute
@@ -1041,6 +1066,7 @@ export interface RootRouteChildren {
   RefundReturnsRoute: typeof RefundReturnsRoute
   RefundsRoute: typeof RefundsRoute
   RequestServiceRoute: typeof RequestServiceRoute
+  RidesRoute: typeof RidesRoute
   SearchRoute: typeof SearchRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SupplierRoute: typeof SupplierRouteWithChildren
@@ -1137,6 +1163,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FavoritesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/food': {
+      id: '/food'
+      path: '/food'
+      fullPath: '/food'
+      preLoaderRoute: typeof FoodRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/help': {
       id: '/help'
       path: '/help'
@@ -1212,6 +1245,13 @@ declare module '@tanstack/react-router' {
       path: '/request-service'
       fullPath: '/request-service'
       preLoaderRoute: typeof RequestServiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rides': {
+      id: '/rides'
+      path: '/rides'
+      fullPath: '/rides'
+      preLoaderRoute: typeof RidesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search': {
@@ -1769,6 +1809,7 @@ const rootRouteChildren: RootRouteChildren = {
   DeliveryRoute: DeliveryRoute,
   DeliveryRequestRoute: DeliveryRequestRoute,
   FavoritesRoute: FavoritesRoute,
+  FoodRoute: FoodRoute,
   HelpRoute: HelpRoute,
   LoginRoute: LoginRoute,
   MenuRoute: MenuRoute,
@@ -1780,6 +1821,7 @@ const rootRouteChildren: RootRouteChildren = {
   RefundReturnsRoute: RefundReturnsRoute,
   RefundsRoute: RefundsRoute,
   RequestServiceRoute: RequestServiceRoute,
+  RidesRoute: RidesRoute,
   SearchRoute: SearchRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SupplierRoute: SupplierRouteWithChildren,
