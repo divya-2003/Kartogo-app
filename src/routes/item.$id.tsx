@@ -10,6 +10,9 @@ import { useAuth } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import type { MpListing } from "@/lib/marketplace";
 
+const VISIT_TIMES = ["10:00", "12:00", "14:00", "17:00", "19:00"];
+const timeLabel = (t: string) => { const h = Number(t.slice(0, 2)); return `${h % 12 || 12}:00 ${h < 12 ? "AM" : "PM"}`; };
+
 // Marketplace products (furniture, electronics) sold by local sellers. These
 // use scheduled delivery rather than the quick grocery cart.
 export const Route = createFileRoute("/item/$id")({
@@ -38,6 +41,8 @@ function ItemPage() {
   const [address, setAddress] = useState<{ line: string; landmark?: string }>({ line: "" });
   const [checkout, setCheckout] = useState(false);
   const [busy, setBusy] = useState(false);
+  const onAddr = useCallback((v: { line: string; landmark?: string }) => setAddress(v), []);
+
   // Showroom visit flow (furniture & electronics): pick a day and a slot.
   const [visit, setVisit] = useState(false);
   const [visitDate, setVisitDate] = useState(nextDays(3)[1].iso);
