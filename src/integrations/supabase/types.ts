@@ -2627,6 +2627,48 @@ export type Database = {
         }
         Relationships: []
       }
+      service_orders: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_name: string | null
+          customer_phone: string
+          details: Json
+          id: string
+          kind: string
+          order_code: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          customer_name?: string | null
+          customer_phone: string
+          details?: Json
+          id?: string
+          kind: string
+          order_code: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string
+          details?: Json
+          id?: string
+          kind?: string
+          order_code?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       staff_accounts: {
         Row: {
           created_at: string
