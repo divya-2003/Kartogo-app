@@ -19,6 +19,7 @@ import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as DeliveryRouteImport } from './routes/delivery'
 import { Route as DeliveryRequestRouteImport } from './routes/delivery-request'
 import { Route as FavoritesRouteImport } from './routes/favorites'
+import { Route as FoodRouteImport } from './routes/food'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MenuRouteImport } from './routes/menu'
@@ -141,6 +142,11 @@ const DeliveryRequestRoute = DeliveryRequestRouteImport.update({
 const FavoritesRoute = FavoritesRouteImport.update({
   id: '/favorites',
   path: '/favorites',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FoodRoute = FoodRouteImport.update({
+  id: '/food',
+  path: '/food',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HelpRoute = HelpRouteImport.update({
@@ -522,6 +528,7 @@ export interface FileRoutesByFullPath {
   '/delivery': typeof DeliveryRoute
   '/delivery-request': typeof DeliveryRequestRoute
   '/favorites': typeof FavoritesRoute
+  '/food': typeof FoodRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
@@ -606,6 +613,7 @@ export interface FileRoutesByTo {
   '/delivery': typeof DeliveryRoute
   '/delivery-request': typeof DeliveryRequestRoute
   '/favorites': typeof FavoritesRoute
+  '/food': typeof FoodRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
@@ -690,6 +698,7 @@ export interface FileRoutesById {
   '/delivery': typeof DeliveryRoute
   '/delivery-request': typeof DeliveryRequestRoute
   '/favorites': typeof FavoritesRoute
+  '/food': typeof FoodRoute
   '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/menu': typeof MenuRoute
@@ -777,6 +786,7 @@ export interface FileRouteTypes {
     | '/delivery'
     | '/delivery-request'
     | '/favorites'
+    | '/food'
     | '/help'
     | '/login'
     | '/menu'
@@ -861,6 +871,7 @@ export interface FileRouteTypes {
     | '/delivery'
     | '/delivery-request'
     | '/favorites'
+    | '/food'
     | '/help'
     | '/login'
     | '/menu'
@@ -944,6 +955,7 @@ export interface FileRouteTypes {
     | '/delivery'
     | '/delivery-request'
     | '/favorites'
+    | '/food'
     | '/help'
     | '/login'
     | '/menu'
@@ -1030,6 +1042,7 @@ export interface RootRouteChildren {
   DeliveryRoute: typeof DeliveryRoute
   DeliveryRequestRoute: typeof DeliveryRequestRoute
   FavoritesRoute: typeof FavoritesRoute
+  FoodRoute: typeof FoodRoute
   HelpRoute: typeof HelpRoute
   LoginRoute: typeof LoginRoute
   MenuRoute: typeof MenuRoute
@@ -1135,6 +1148,13 @@ declare module '@tanstack/react-router' {
       path: '/favorites'
       fullPath: '/favorites'
       preLoaderRoute: typeof FavoritesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/food': {
+      id: '/food'
+      path: '/food'
+      fullPath: '/food'
+      preLoaderRoute: typeof FoodRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/help': {
@@ -1769,6 +1789,7 @@ const rootRouteChildren: RootRouteChildren = {
   DeliveryRoute: DeliveryRoute,
   DeliveryRequestRoute: DeliveryRequestRoute,
   FavoritesRoute: FavoritesRoute,
+  FoodRoute: FoodRoute,
   HelpRoute: HelpRoute,
   LoginRoute: LoginRoute,
   MenuRoute: MenuRoute,
