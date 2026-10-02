@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { Truck, Wrench, Ruler, Layers, Minus, Plus, CalendarClock } from "lucide-react";
+import { Truck, Wrench, Ruler, Layers, Minus, Plus, CalendarClock, Store, MapPin } from "lucide-react";
 import { getListingFn, createBookingFn } from "@/lib/marketplace.functions";
 import { Rating, Thumb, FavButton, EmptyState, PageTop } from "@/components/marketplace/Cards";
 import { AddressField, DatePicker, nextDays } from "@/components/marketplace/AddressField";
@@ -135,13 +135,47 @@ function ItemPage() {
               <p className="text-[11px] text-muted-foreground">Pay on delivery. The seller confirms your delivery slot.</p>
             </div>
           )}
+
+          {visit && (
+            <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
+              <div className="flex items-center gap-2 font-bold"><Store className="h-4 w-4" />Showroom visit</div>
+              <div className="flex items-start gap-2 text-sm text-muted-foreground"><MapPin className="mt-0.5 h-4 w-4 shrink-0" /><span><b className="text-foreground">{l.partner.name}</b>{l.partner.address ? ` · ${l.partner.address}` : ""}</span></div>
+              <div><div className="mb-2 flex items-center gap-1 font-bold"><CalendarClock className="h-4 w-4" />Visit date</div><DatePicker value={visitDate} onChange={setVisitDate} start={0} /></div>
+              <div>
+                <div className="mb-2 font-bold">Visit time</div>
+                <div className="flex flex-wrap gap-2">
+                  {VISIT_TIMES.map(t => (
+                    <button key={t} onClick={() => setVisitTime(t)} className={`rounded-full border px-3 py-1.5 text-sm font-semibold ${visitTime === t ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>{timeLabel(t)}</button>
+                  ))}
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground">Free visit. Your appointment pass appears in My Orders → Bookings.</p>
+            </div>
+          )}
         </div>
       </div>
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-3 backdrop-blur">
-        <button disabled={busy} onClick={buy} className="mx-auto flex h-12 w-full max-w-2xl items-center justify-center rounded-xl bg-primary font-bold text-primary-foreground disabled:opacity-50">
-          {busy ? "Placing order…" : checkout ? "Place order" : "Buy Now"}
-        </button>
+        <div className="mx-auto flex max-w-2xl gap-2">
+          {visit ? (
+            <>
+              <button disabled={busy} onClick={() => setVisit(false)} className="h-12 flex-1 rounded-xl border border-border font-bold">Back</button>
+              <button disabled={busy} onClick={bookVisit} className="h-12 flex-[2] rounded-xl bg-primary font-bold text-primary-foreground disabled:opacity-50">{busy ? "Booking…" : `Book visit · ${timeLabel(visitTime)}`}</button>
+            </>
+          ) : (
+            <>
+              {!checkout && (
+                <button onClick={() => setVisit(true)} className="flex h-12 flex-1 items-center justify-center gap-1.5 rounded-xl border border-primary font-bold text-primary">
+                  <Store className="h-4 w-4" /> Visit store
+                </button>
+              )}
+              <button disabled={busy} onClick={buy} className="h-12 flex-1 rounded-xl bg-primary font-bold text-primary-foreground disabled:opacity-50">
+                {busy ? "Placing order…" : checkout ? "Place order" : "Buy Now"}
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </div>
+
   );
 }
