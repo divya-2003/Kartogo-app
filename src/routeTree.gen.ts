@@ -31,6 +31,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RefundReturnsRouteImport } from './routes/refund-returns'
 import { Route as RefundsRouteImport } from './routes/refunds'
 import { Route as RequestServiceRouteImport } from './routes/request-service'
+import { Route as RidesRouteImport } from './routes/rides'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SupplierRouteImport } from './routes/supplier'
@@ -202,6 +203,11 @@ const RefundsRoute = RefundsRouteImport.update({
 const RequestServiceRoute = RequestServiceRouteImport.update({
   id: '/request-service',
   path: '/request-service',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RidesRoute = RidesRouteImport.update({
+  id: '/rides',
+  path: '/rides',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SearchRoute = SearchRouteImport.update({
@@ -540,6 +546,7 @@ export interface FileRoutesByFullPath {
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
   '/request-service': typeof RequestServiceRoute
+  '/rides': typeof RidesRoute
   '/search': typeof SearchRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/supplier': typeof SupplierRouteWithChildren
@@ -624,6 +631,7 @@ export interface FileRoutesByTo {
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
   '/request-service': typeof RequestServiceRoute
+  '/rides': typeof RidesRoute
   '/search': typeof SearchRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
@@ -710,6 +718,7 @@ export interface FileRoutesById {
   '/refund-returns': typeof RefundReturnsRoute
   '/refunds': typeof RefundsRoute
   '/request-service': typeof RequestServiceRoute
+  '/rides': typeof RidesRoute
   '/search': typeof SearchRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/supplier': typeof SupplierRouteWithChildren
@@ -798,6 +807,7 @@ export interface FileRouteTypes {
     | '/refund-returns'
     | '/refunds'
     | '/request-service'
+    | '/rides'
     | '/search'
     | '/sitemap.xml'
     | '/supplier'
@@ -882,6 +892,7 @@ export interface FileRouteTypes {
     | '/refund-returns'
     | '/refunds'
     | '/request-service'
+    | '/rides'
     | '/search'
     | '/sitemap.xml'
     | '/support'
@@ -967,6 +978,7 @@ export interface FileRouteTypes {
     | '/refund-returns'
     | '/refunds'
     | '/request-service'
+    | '/rides'
     | '/search'
     | '/sitemap.xml'
     | '/supplier'
@@ -1054,6 +1066,7 @@ export interface RootRouteChildren {
   RefundReturnsRoute: typeof RefundReturnsRoute
   RefundsRoute: typeof RefundsRoute
   RequestServiceRoute: typeof RequestServiceRoute
+  RidesRoute: typeof RidesRoute
   SearchRoute: typeof SearchRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SupplierRoute: typeof SupplierRouteWithChildren
@@ -1232,6 +1245,13 @@ declare module '@tanstack/react-router' {
       path: '/request-service'
       fullPath: '/request-service'
       preLoaderRoute: typeof RequestServiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rides': {
+      id: '/rides'
+      path: '/rides'
+      fullPath: '/rides'
+      preLoaderRoute: typeof RidesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search': {
@@ -1801,6 +1821,7 @@ const rootRouteChildren: RootRouteChildren = {
   RefundReturnsRoute: RefundReturnsRoute,
   RefundsRoute: RefundsRoute,
   RequestServiceRoute: RequestServiceRoute,
+  RidesRoute: RidesRoute,
   SearchRoute: SearchRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SupplierRoute: SupplierRouteWithChildren,
