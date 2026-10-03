@@ -14,7 +14,7 @@ export const Route = createFileRoute("/category/$slug")({
   },
   component: CategoryPage,
   notFoundComponent: () => <div className="p-10 text-center">Category not found.</div>,
-  errorComponent: ({ error }) => <div className="p-10 text-center text-destructive">{error.message}</div>,
+  errorComponent: ({ error }) => <div className="p-10 text-center text-destructive">{(error as Error).message}</div>,
   head: ({ loaderData }) => ({
     meta: [
       { title: `${loaderData?.cat.name ?? "Category"} — Kartogo Ongole` },
