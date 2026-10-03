@@ -31,7 +31,7 @@ export function SplashScreen({ minDurationMs = 1800 }: { minDurationMs?: number 
       <div className="flex flex-col items-center px-6 text-center">
         <img src={kartogoWordmark.url} alt="Kartogo" className="h-auto w-full max-w-[320px] animate-splash-pop object-contain sm:max-w-[390px]" />
         <div className="mt-3 animate-splash-rise text-sm font-semibold text-brand-on-navy/80 [animation-delay:120ms]">
-          Your local. Your choice.
+          Everything You Need, Delivered Fast
         </div>
       </div>
     </div>

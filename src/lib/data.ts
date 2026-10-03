@@ -18,8 +18,13 @@ import p17 from "@/assets/products/p17.jpg";
 import p18 from "@/assets/products/p18.jpg";
 import p19 from "@/assets/products/p19.jpg";
 import p20 from "@/assets/products/p20.jpg";
+import c1 from "@/assets/products/c1.jpg";
+import c2 from "@/assets/products/c2.jpg";
+import c3 from "@/assets/products/c3.jpg";
+import c4 from "@/assets/products/c4.jpg";
+import c5 from "@/assets/products/c5.jpg";
 
-const IMG: Record<string, string> = { p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20 };
+const IMG: Record<string, string> = { p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, c1, c2, c3, c4, c5 };
 
 export type Category = {
   slug: string;
@@ -56,6 +61,7 @@ export const CATEGORIES: Category[] = [
   { slug: "tiffin-batter", name: "Tiffin Batter", emoji: "🥞", tint: "bg-primary/15" },
   { slug: "beverages", name: "Beverages", emoji: "☕", tint: "bg-leaf/15" },
   { slug: "pharmacy", name: "Pharmacy", emoji: "💊", tint: "bg-leaf/20" },
+  { slug: "cosmetics", name: "Cosmetics", emoji: "💄", tint: "bg-primary/15" },
   { slug: "combos", name: "Combos", emoji: "🎁", tint: "bg-primary/20" },
 ];
 
@@ -90,6 +96,11 @@ const RAW_PRODUCTS: Product[] = [
   { id: "p28", name: "Cough Syrup", category: "pharmacy", price: 85, mrp: 115, unit: "100ml", stock: 35, emoji: "🍶", description: "Soothing relief for dry and chesty cough." },
   { id: "p29", name: "Pain Relief Balm", category: "pharmacy", price: 55, mrp: 75, unit: "25g", stock: 48, emoji: "🫙", description: "Fast-acting balm for headaches and body pain." },
   { id: "p30", name: "Surgical Face Mask", category: "pharmacy", price: 50, mrp: 80, unit: "10 pack", stock: 100, emoji: "😷", description: "3-ply disposable protective face masks." },
+  { id: "c1", name: "Aloe Vera Face Gel", category: "cosmetics", price: 149, mrp: 199, unit: "100ml tube", stock: 40, emoji: "🌿", description: "Soothing aloe gel that hydrates, cools and calms skin after sun exposure." },
+  { id: "c2", name: "Kajal Eyeliner", category: "cosmetics", price: 129, mrp: 175, unit: "1 stick", stock: 55, emoji: "🖤", description: "Intense black, smudge-proof kajal that lasts all day." },
+  { id: "c3", name: "Tinted Lip Balm", category: "cosmetics", price: 99, mrp: 140, unit: "10ml", stock: 60, emoji: "💋", description: "Nourishing lip balm with a soft rosy tint for everyday wear." },
+  { id: "c4", name: "Sunscreen SPF 50", category: "cosmetics", price: 299, mrp: 399, unit: "118ml", stock: 35, emoji: "☀️", description: "Lightweight, non-greasy broad spectrum UVA/UVB protection, water resistant." },
+  { id: "c5", name: "Rose Water Face Mist", category: "cosmetics", price: 159, mrp: 220, unit: "100ml", stock: 45, emoji: "🌹", description: "Alcohol-free rose water mist to refresh and tone skin anytime." },
 ];
 
 export const PRODUCTS: Product[] = RAW_PRODUCTS.map(p => ({ ...p, image: IMG[p.id] }));
