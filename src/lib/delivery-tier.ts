@@ -12,6 +12,7 @@ export const QUICK_CATEGORIES = new Set([
   "pooja",
   "local-snacks",
   "pharmacy",
+  "cosmetics",
 ]);
 
 export function isQuickProduct(p: Pick<Product, "category">): boolean {
