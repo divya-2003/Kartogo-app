@@ -1,5 +1,5 @@
 import { BottomNav } from "@/components/marketplace/BottomNav";
-import { OrdersTabs, BookingsList } from "@/components/marketplace/BookingsList";
+import { OrdersTabs, BookingsList, ServiceOrdersList } from "@/components/marketplace/BookingsList";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import {
@@ -468,6 +468,7 @@ function OrdersPage() {
           <h1 className="font-display text-2xl font-bold md:text-3xl">Orders & Bookings</h1>
         </div>
         <OrdersTabs tab={tab} />
+        {tab !== "orders" && <ServiceOrdersList />}
         {tab !== "orders" && <BookingsList compact={tab === "all"} />}
         {tab !== "bookings" && (<>
         {tab === "all" && <h2 className="mb-2 mt-4 font-display text-lg font-bold">Orders</h2>}
