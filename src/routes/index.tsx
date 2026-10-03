@@ -385,6 +385,21 @@ function Index() {
         </div>
         )}
 
+        {/* ---------- Food & Rides ---------- */}
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <Link to="/food" className="rounded-3xl bg-accent p-4 text-accent-foreground shadow-pop">
+            <div className="text-3xl">🍛</div>
+            <div className="mt-2 font-display text-lg font-extrabold">Kartogo Food</div>
+            <div className="text-xs opacity-90">Biryani, tiffins & meal combos</div>
+          </Link>
+          <Link to="/rides" className="rounded-3xl bg-primary p-4 text-primary-foreground shadow-pop">
+            <div className="text-3xl">🛺</div>
+            <div className="mt-2 font-display text-lg font-extrabold">Kartogo Rides</div>
+            <div className="text-xs opacity-90">Bike, auto & car · upfront fares</div>
+          </Link>
+        </div>
+
+
 
       </div>
 

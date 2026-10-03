@@ -70,7 +70,7 @@ export const Route = createFileRoute("/product/$id")({
     };
   },
   notFoundComponent: () => <div className="p-10 text-center">Product not found.</div>,
-  errorComponent: ({ error }) => <div className="p-10 text-center text-destructive">{error.message}</div>,
+  errorComponent: ({ error }) => <div className="p-10 text-center text-destructive">{(error as Error).message}</div>,
 });
 
 function ProductPage() {

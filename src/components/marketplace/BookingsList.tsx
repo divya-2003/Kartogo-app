@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { myBookingsFn } from "@/lib/marketplace.functions";
+import { myServiceOrdersFn, cancelServiceOrderFn } from "@/lib/service-orders.functions";
 import { useAuth } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { STATUS_LABELS, TX_LABELS, fmtDate, fmtTime, type Booking } from "@/lib/marketplace";
@@ -46,6 +48,47 @@ export function BookingsList({ compact = false }: { compact?: boolean }) {
             <div className="mt-3 flex items-center justify-between">
               <span className="font-display font-extrabold">{b.transaction_type === "QUOTE_REQUEST" && b.quote_amount == null ? "Awaiting quote" : formatINR(Number(b.amount) + Number(b.fee))}</span>
               <Link to="/booking/$id" params={{ id: b.id }} className="rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">View Booking</Link>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const SO_LABEL: Record<string, string> = { PLACED: "Placed", SEARCHING: "Finding driver", CANCELLED: "Cancelled", DELIVERED: "Delivered", COMPLETED: "Completed" };
+
+/** Food delivery orders and ride bookings. */
+export function ServiceOrdersList() {
+  const { customerToken } = useAuth();
+  const qc = useQueryClient();
+  const { data = [] } = useQuery({ queryKey: ["service-orders", customerToken], queryFn: () => myServiceOrdersFn({ data: { token: customerToken ?? undefined } }), enabled: !!customerToken, refetchInterval: 30_000 });
+  if (!data.length) return null;
+  const cancel = async (id: string) => {
+    const r = await cancelServiceOrderFn({ data: { token: customerToken!, id } }).catch(() => null);
+    if (r?.ok) { toast("Cancelled"); qc.invalidateQueries({ queryKey: ["service-orders"] }); } else toast.error(r?.error ?? "Couldn't cancel");
+  };
+  return (
+    <div className="mb-4">
+      <h2 className="mb-2 font-display text-lg font-bold">Food & rides</h2>
+      <div className="space-y-3">
+        {data.map(o => (
+          <article key={o.id} className="rounded-2xl border border-border bg-card p-4 shadow-pop">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-muted-foreground">{o.kind === "FOOD" ? "Food order" : "Ride"} · #{o.order_code}</div>
+                <div className="truncate font-bold">{o.kind === "FOOD" ? "🍛" : "🛺"} {o.title}</div>
+                <div className="truncate text-xs text-muted-foreground">
+                  {o.kind === "FOOD"
+                    ? (o.details.items ?? []).map((i: any) => `${i.qty}× ${i.name}`).join(", ")
+                    : `${o.details.pickup?.label} → ${o.details.drop?.label}`}
+                </div>
+              </div>
+              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${TONE[o.status] ?? "bg-primary/10 text-primary"}`}>{SO_LABEL[o.status] ?? o.status}</span>
+            </div>
+            <div className="mt-3 flex items-center justify-between">
+              <span className="font-display font-extrabold">{formatINR(Number(o.amount))}</span>
+              {(o.status === "PLACED" || o.status === "SEARCHING") && <button onClick={() => cancel(o.id)} className="rounded-lg border border-destructive px-3 py-1.5 text-xs font-bold text-destructive">Cancel</button>}
             </div>
           </article>
         ))}
