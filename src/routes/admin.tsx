@@ -4,7 +4,7 @@ import { useOrders } from "@/lib/store";
 import { verifyAdminAccessFn, type AdminSessionAccess } from "@/lib/admin-access.functions";
 import { permissionForAdminPath, type AdminPermission } from "@/lib/admin-access.shared";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Sparkles, LayoutDashboard, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Menu, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound, BellRing, UsersRound, ChevronLeft, Clock, ExternalLink } from "lucide-react";
+import { Sparkles, LayoutDashboard, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Menu, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound, BellRing, UsersRound, ChevronLeft, Clock, ExternalLink, RefreshCw, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Remembers the last successful admin-token verification for this tab so the
@@ -208,8 +208,59 @@ function AdminLayout() {
           <NavList />
         </aside>
 
-        <main className="min-w-0"><Outlet /></main>
+        <main className="min-w-0">
+          <AdminPageTools />
+        </main>
       </div>
     </div>
+  );
+}
+
+// Reload + in-page search that only looks at the admin page currently open.
+function AdminPageTools() {
+  const pathname = useRouterState({ select: s => s.location.pathname });
+  const [reloadKey, setReloadKey] = useState(0);
+  const [q, setQ] = useState("");
+  const [hits, setHits] = useState<number | null>(null);
+  useEffect(() => { setQ(""); }, [pathname]);
+  useEffect(() => {
+    const root = document.getElementById("admin-page-content");
+    if (!root) return;
+    const term = q.trim().toLowerCase();
+    const items = root.querySelectorAll<HTMLElement>("tbody tr, li, [data-search-item], .rounded-2xl.border, .rounded-xl.border");
+    let n = 0;
+    items.forEach(el => {
+      if (!term) { el.style.display = ""; return; }
+      // Keep containers that hold matching children visible.
+      const match = (el.textContent ?? "").toLowerCase().includes(term);
+      el.style.display = match ? "" : "none";
+      if (match) n++;
+    });
+    setHits(term ? n : null);
+  }, [q, reloadKey, pathname]);
+  return (
+    <>
+      <div className="mb-4 flex items-center gap-2">
+        <div className="flex flex-1 items-center gap-2 rounded-xl border border-input bg-card px-3 py-2 focus-within:ring-2 focus-within:ring-ring">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <input
+            value={q}
+            onChange={e => setQ(e.target.value)}
+            placeholder="Search this page"
+            className="w-full bg-transparent text-sm outline-none"
+          />
+          {hits !== null && <span className="shrink-0 text-xs text-muted-foreground">{hits} found</span>}
+          {q && (
+            <button type="button" aria-label="Clear search" onClick={() => setQ("")} className="grid h-6 w-6 place-items-center rounded-full hover:bg-secondary">
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+        <Button variant="outline" onClick={() => { setQ(""); setReloadKey(k => k + 1); }} className="shrink-0 gap-2 rounded-xl">
+          <RefreshCw className="h-4 w-4" /> Reload
+        </Button>
+      </div>
+      <div id="admin-page-content" key={reloadKey}><Outlet /></div>
+    </>
   );
 }
