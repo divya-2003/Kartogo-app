@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/store";
-import { currentToken, deviceName, onForegroundMessage, platform } from "@/lib/firebase-push";
+import { enablePush, currentToken, deviceName, onForegroundMessage, platform } from "@/lib/firebase-push";
 import { registerPushTokenFn } from "@/lib/push.functions";
 import { isNativeApp, startNativePush } from "@/lib/native-push";
 
@@ -45,6 +45,12 @@ export function PushBridge() {
     let cancelled = false;
     (async () => {
       if (await isNativeApp()) return; // native path above owns the token
+      // First login on this install: ask for notification access automatically.
+      if (typeof Notification !== "undefined" && Notification.permission === "default"
+        && !localStorage.getItem("qk_push_asked")) {
+        localStorage.setItem("qk_push_asked", "1");
+        try { await enablePush(); } catch { /* user can enable later */ }
+      }
       const token = await currentToken();
       if (!token || cancelled) return;
       try {
