@@ -47,7 +47,7 @@ function MenuPage() {
   const [amount, setAmount] = useState("");
   const [showAddr, setShowAddr] = useState(false);
 
-  // Refer & earn — both friends get Kartogo Cash when the code is claimed.
+  // Refer & earn — both friends get Kartogo Cash after a first order of ₹200+.
   const [showRefer, setShowRefer] = useState(false);
   const [referral, setReferral] = useState<{ code: string | null; invited: number; reward: number } | null>(null);
   const [friendCode, setFriendCode] = useState("");
@@ -66,7 +66,7 @@ function MenuPage() {
     try {
       const res = await applyReferralFn({ data: { token, code: friendCode } });
       if (!res.ok) { toast.error(res.reason); return; }
-      toast.success(`Referral applied — ₹${res.reward} added to your Kartogo Cash`);
+      toast.success(`Referral applied — you and your friend get ₹${res.reward} after your first order of ₹200+`);
       setFriendCode("");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not apply that code");
