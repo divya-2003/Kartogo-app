@@ -117,19 +117,7 @@ export const applyReferralFn = createServerFn({ method: "POST" })
     if ((orders ?? 0) > 0) return fail("Referral codes only work before your first order");
 
     await supabaseAdmin.from("customers").update({ referred_by: code }).eq("id", me.id);
-    await supabaseAdmin.rpc("adjust_wallet", {
-      p_phone: session.phone,
-      p_amount: REFERRAL_REWARD,
-      p_type: "credit",
-      p_note: `Referral bonus (${code})`,
-    });
-    await supabaseAdmin.rpc("adjust_wallet", {
-      p_phone: friend.phone as string,
-      p_amount: REFERRAL_REWARD,
-      p_type: "credit",
-      p_note: "Friend joined Kartogo with your code",
-    });
-
+    // Rewards are paid when this customer places a first order of ₹200 or more.
     return { ok: true as const, reward: REFERRAL_REWARD };
   });
 

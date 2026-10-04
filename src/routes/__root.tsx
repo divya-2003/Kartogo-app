@@ -7,6 +7,7 @@ import {
   Scripts,
   Link,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Toaster } from "sonner";
 import { SplashScreen } from "@/components/SplashScreen";
 import { PushBridge } from "@/components/PushBridge";
@@ -103,6 +104,25 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function RouteMemory() {
+  const router = useRouter();
+  useEffect(() => {
+    // App reload that landed on "/" (e.g. Android app reopening its start URL):
+    // go back to the page the customer was on.
+    try {
+      const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+      const last = sessionStorage.getItem("qk_last_path");
+      if (nav?.type === "reload" && last && last !== "/" && window.location.pathname === "/") {
+        void router.navigate({ to: last, replace: true });
+      }
+    } catch { /* noop */ }
+    return router.subscribe("onResolved", ({ toLocation }) => {
+      try { sessionStorage.setItem("qk_last_path", toLocation.href); } catch { /* noop */ }
+    });
+  }, [router]);
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
@@ -117,6 +137,7 @@ function RootComponent() {
                     <WishlistProvider>
                       <Outlet />
                       <SplashScreen />
+<RouteMemory />
                       <PushBridge />
                       <Toaster position="top-center" richColors />
 

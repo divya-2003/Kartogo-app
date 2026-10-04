@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Plus, Minus, Heart, BellRing, Zap } from "lucide-react";
+import { Plus, Minus, Heart, BellRing, Zap, Share2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Product } from "@/lib/data";
@@ -120,6 +120,21 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
           className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-card/90 shadow-pop backdrop-blur transition hover:bg-card"
         >
           <Heart className={`h-4 w-4 ${wished ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+        </button>
+        <button
+          onClick={async (e) => {
+            e.preventDefault(); e.stopPropagation();
+            const url = `${window.location.origin}/product/${p.id}`;
+            const text = `${p.name} for ${formatINR(p.price)} on Kartogo`;
+            try {
+              if (navigator.share) await navigator.share({ title: p.name, text, url });
+              else { await navigator.clipboard.writeText(url); toast.success("Product link copied"); }
+            } catch { /* share cancelled */ }
+          }}
+          aria-label={`Share ${p.name}`}
+          className="absolute right-2 top-11 grid h-8 w-8 place-items-center rounded-full bg-card/90 shadow-pop backdrop-blur transition hover:bg-card"
+        >
+          <Share2 className="h-4 w-4 text-muted-foreground" />
         </button>
       </Link>
       <div className="flex flex-1 flex-col gap-1 p-3">

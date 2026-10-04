@@ -451,6 +451,21 @@ function LocationPickerClient({
                 )}
               </div>
 
+              {query.trim() && (
+                <button
+                  type="button"
+                  onClick={useCurrentLocation}
+                  disabled={locating}
+                  className="flex w-full items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2.5 text-left hover:bg-primary/10 disabled:opacity-60"
+                >
+                  {locating ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <LocateFixed className="h-4 w-4 text-primary" />}
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-primary">{locating ? "Detecting your location..." : "Detect my location automatically"}</span>
+                    <span className="block text-xs text-muted-foreground">Use GPS instead of typing the address</span>
+                  </span>
+                </button>
+              )}
+
               {denied ? (
                 <div className="space-y-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
                   <div className="flex items-start gap-2">

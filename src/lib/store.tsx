@@ -42,13 +42,31 @@ type CartCtx = {
 
 const CartContext = createContext<CartCtx | null>(null);
 
+// Session keys are mirrored into a long-lived cookie so a phone that clears
+// app storage on close still keeps the customer signed in.
+const SESSION_KEYS = new Set(["qk_user", "qk_customer_token", "qk_admin_token"]);
+function readCookie(key: string): string | null {
+  const m = document.cookie.match(new RegExp("(?:^|; )" + key + "=([^;]*)"));
+  return m ? decodeURIComponent(m[1]) : null;
+}
 function read<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
-  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) as T : fallback; } catch { return fallback; }
+  let v: string | null = null;
+  try { v = localStorage.getItem(key); } catch { /* noop */ }
+  if (!v && SESSION_KEYS.has(key)) v = readCookie(key);
+  if (!v || v === "null") return fallback;
+  try { return JSON.parse(v) as T; } catch { return v as unknown as T; }
 }
 function write(key: string, value: unknown) {
   if (typeof window === "undefined") return;
-  try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
+  const raw = JSON.stringify(value);
+  try { localStorage.setItem(key, raw); } catch { /* noop */ }
+  if (SESSION_KEYS.has(key)) {
+    const secure = location.protocol === "https:" ? "; Secure" : "";
+    document.cookie = value == null
+      ? `${key}=; path=/; max-age=0; SameSite=Lax${secure}`
+      : `${key}=${encodeURIComponent(raw)}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax${secure}`;
+  }
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -297,6 +315,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const u: User = { phone: res.phone ?? phone, role: "customer" };
       setUser(u);
       setCustomerToken(res.token);
+      write("qk_user", u);
+      write("qk_customer_token", res.token);
       // A new login is not yet an admin session until the passcode is provided.
       setAdminToken(null);
       return { user: u, isAdminPhone: res.isAdminPhone, delivery: res.delivery ?? null, deliveryPending: res.deliveryPending ?? null, supplier: res.supplier ?? null, printer: res.printer ?? null };
