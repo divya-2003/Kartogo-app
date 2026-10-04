@@ -7,6 +7,7 @@ import {
   Scripts,
   Link,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Toaster } from "sonner";
 import { SplashScreen } from "@/components/SplashScreen";
 import { PushBridge } from "@/components/PushBridge";
