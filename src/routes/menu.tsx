@@ -273,7 +273,7 @@ function MenuPage() {
               <div className="flex-1">
                 <div className="font-semibold">Refer &amp; earn</div>
                 <div className="text-xs text-muted-foreground">
-                  {referral ? `${referral.invited} friend${referral.invited === 1 ? "" : "s"} joined · ₹${referral.reward} each` : "Invite friends, both get Kartogo Cash"}
+                  {referral ? `${referral.invited} friend${referral.invited === 1 ? "" : "s"} joined · ₹${referral.reward} each` : "Both get Kartogo Cash when your friend’s first order is ₹200+"}
                 </div>
               </div>
               <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${showRefer ? "rotate-180" : ""}`} />
