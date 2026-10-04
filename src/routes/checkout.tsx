@@ -91,6 +91,15 @@ function CheckoutPage() {
       .catch(() => {});
     return () => { alive = false; };
   }, [speed]);
+  // No "as soon as possible" option — preselect the first available window.
+  useEffect(() => {
+    if (speed === "30min" || slotId) return;
+    const first = slots.find(s => speed === "next_day" || slotAvailableToday(s));
+    if (first) {
+      setSlotId(first.id);
+      setSlotDate(speed === "next_day" ? ymd(new Date(Date.now() + 86400000)) : ymd(new Date()));
+    }
+  }, [slots, speed, slotId]);
 
 
   const userName = user?.name?.trim() || "Kartogo User";

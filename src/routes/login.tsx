@@ -35,14 +35,22 @@ function LoginPage() {
   const [stage, setStage] = useState<"phone" | "otp" | "passcode">("phone");
   const [loading, setLoading] = useState(false);
   const [demoCode, setDemoCode] = useState<string | null>(null);
+  const [resendAt, setResendAt] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (stage !== "otp") return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [stage]);
+  const secsLeft = Math.max(0, Math.ceil((resendAt - now) / 1000));
 
   // The E.164 number is what the OTP backend receives; the UI keeps showing
   // whatever the customer typed.
   const e164 = toE164(phone, country);
   const displayNumber = e164 ?? `${getCountry(country).dialCode} ${phone}`;
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSend = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!validatePhoneNumber(phone, country) || !e164) {
       toast.error("Please enter a valid mobile number.");
       return;
@@ -51,6 +59,8 @@ function LoginPage() {
     try {
       const { demo, demoCode } = await sendOtp(e164);
       setStage("otp");
+      setResendAt(Date.now() + 120_000);
+      setNow(Date.now());
       if (demo && demoCode) {
         setDemoCode(demoCode);
         setOtp(demoCode);
@@ -218,6 +228,13 @@ function LoginPage() {
               <Button disabled={loading} className="h-12 w-full rounded-xl font-bold">
                 {loading ? "Verifying..." : "Verify & continue"}
               </Button>
+              <div className="text-center text-sm">
+                {secsLeft > 0 ? (
+                  <span className="text-muted-foreground">Didn't get it? Resend OTP in <span className="font-semibold text-foreground">{Math.floor(secsLeft / 60)}:{String(secsLeft % 60).padStart(2, "0")}</span></span>
+                ) : (
+                  <button type="button" disabled={loading} onClick={() => { setOtp(""); void handleSend(); }} className="font-semibold text-primary hover:underline">Didn't receive the OTP? Resend OTP</button>
+                )}
+              </div>
               <button type="button" onClick={() => { setStage("phone"); setOtp(""); }} className="w-full text-center text-sm text-muted-foreground hover:text-foreground">Change number</button>
             </form>
           )}
