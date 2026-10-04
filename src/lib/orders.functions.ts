@@ -268,6 +268,36 @@ export const placeOrderFn = createServerFn({ method: "POST" })
       await recordRedemption(promoCode, session.phone, id, discount);
     }
 
+    // Refer & earn: reward both sides only when the referred customer's FIRST
+    // order is worth ₹200 or more.
+    try {
+      if (subtotal >= 200) {
+        const { count } = await supabaseAdmin
+          .from("app_orders").select("id", { count: "exact", head: true })
+          .eq("customer_phone", session.phone);
+        const { data: me } = await supabaseAdmin
+          .from("customers").select("referred_by").eq("phone", session.phone).maybeSingle();
+        const code = me?.referred_by as string | null | undefined;
+        if (count === 1 && code) {
+          const { data: friend } = await supabaseAdmin
+            .from("customers").select("phone").eq("referral_code", code).maybeSingle();
+          const { REFERRAL_REWARD } = await import("./promo");
+          await supabaseAdmin.rpc("adjust_wallet", {
+            p_phone: session.phone, p_amount: REFERRAL_REWARD, p_type: "credit",
+            p_note: `Referral bonus (${code}) — first order`,
+          });
+          if (friend?.phone) {
+            await supabaseAdmin.rpc("adjust_wallet", {
+              p_phone: friend.phone as string, p_amount: REFERRAL_REWARD, p_type: "credit",
+              p_note: "Your friend placed their first Kartogo order",
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.error("referral reward failed", e);
+    }
+
     // Push: order confirmed (best-effort — never blocks the order)
     try {
       const { sendPushToCustomer } = await import("./push.server");
