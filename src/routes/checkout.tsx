@@ -484,16 +484,9 @@ function CheckoutPage() {
               <section className="rounded-2xl border border-border bg-card p-5">
                 <h2 className="font-display text-lg font-bold">Delivery time</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Choose a window that suits you, or let us deliver as soon as we can.
+                  Choose a delivery window that suits you.
                 </p>
                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  <button
-                    onClick={() => { setSlotId(null); setSlotDate(speed === "next_day" ? ymd(new Date(Date.now() + 86400000)) : null); }}
-                    className={`rounded-xl border p-3 text-left transition ${!slotId ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}
-                  >
-                    <div className="text-sm font-bold">As soon as possible</div>
-                    <div className="text-xs text-muted-foreground">{speed === "next_day" ? "Any time tomorrow" : "Standard delivery today"}</div>
-                  </button>
                   {slots.filter(s => speed === "next_day" || slotAvailableToday(s)).map(s => {
                     const today = speed === "same_day";
                     const date = today ? ymd(new Date()) : ymd(new Date(Date.now() + 86400000));

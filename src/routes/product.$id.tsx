@@ -2,6 +2,7 @@ import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-ro
 import { toast } from "sonner";
 import { useCart, useCatalog, useAuth, useWishlist } from "@/lib/store";
 import { formatINR, PRODUCTS } from "@/lib/data";
+import { isQuickProduct } from "@/lib/delivery-tier";
 import { getProductRatingsFn } from "@/lib/reviews.functions";
 import { Heart, Star, ChevronLeft, ChevronRight, Search, Share2, Package, PackageCheck, Info, Timer, ShoppingCart, Minus, Plus } from "lucide-react";
 import { useEffect, useMemo } from "react";
@@ -243,7 +244,7 @@ function ProductPage() {
           </div>
           <div className="flex flex-col items-center gap-1 rounded-2xl bg-card p-4 text-center shadow-pop">
             <Timer className="h-7 w-7 text-primary" />
-            <div className="text-xs font-semibold text-muted-foreground">Superfast delivery</div>
+            <div className="text-xs font-semibold text-muted-foreground">{isQuickProduct(p) ? "Superfast delivery" : "Same day delivery"}</div>
           </div>
         </div>
 
@@ -427,7 +428,7 @@ function ProductPage() {
             </div>
             <div className="flex flex-col items-center gap-1 rounded-2xl bg-secondary/60 p-4 text-center">
               <Timer className="h-7 w-7 text-primary" />
-              <div className="text-xs font-semibold text-muted-foreground">Superfast delivery</div>
+              <div className="text-xs font-semibold text-muted-foreground">{isQuickProduct(p) ? "Superfast delivery" : "Same day delivery"}</div>
             </div>
           </div>
 
