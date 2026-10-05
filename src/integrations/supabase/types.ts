@@ -2629,41 +2629,65 @@ export type Database = {
       }
       service_orders: {
         Row: {
+          accepted_at: string | null
           amount: number
           created_at: string
           customer_name: string | null
           customer_phone: string
           details: Json
+          driver_id: string | null
+          driver_lat: number | null
+          driver_lng: number | null
+          driver_location_at: string | null
+          driver_name: string | null
+          driver_phone: string | null
           id: string
           kind: string
           order_code: string
           status: string
+          status_history: Json
           title: string
           updated_at: string
         }
         Insert: {
+          accepted_at?: string | null
           amount?: number
           created_at?: string
           customer_name?: string | null
           customer_phone: string
           details?: Json
+          driver_id?: string | null
+          driver_lat?: number | null
+          driver_lng?: number | null
+          driver_location_at?: string | null
+          driver_name?: string | null
+          driver_phone?: string | null
           id?: string
           kind: string
           order_code: string
           status?: string
+          status_history?: Json
           title: string
           updated_at?: string
         }
         Update: {
+          accepted_at?: string | null
           amount?: number
           created_at?: string
           customer_name?: string | null
           customer_phone?: string
           details?: Json
+          driver_id?: string | null
+          driver_lat?: number | null
+          driver_lng?: number | null
+          driver_location_at?: string | null
+          driver_name?: string | null
+          driver_phone?: string | null
           id?: string
           kind?: string
           order_code?: string
           status?: string
+          status_history?: Json
           title?: string
           updated_at?: string
         }
