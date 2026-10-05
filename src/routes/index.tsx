@@ -23,10 +23,10 @@ export const Route = createFileRoute("/")({
   component: Index,
   head: () => ({
     meta: [
-      { title: "Kartogo — Ongole's 15-min neighbourhood store" },
-      { name: "description", content: "Snacks, pickles, instant food, spices, pooja items, tiffin batter — delivered to your door in 15 minutes across Ongole." },
-      { property: "og:title", content: "Kartogo — Everything You Need, Delivered Fast" },
-      { property: "og:description", content: "Shop local essentials and groceries with quick or scheduled delivery." },
+      { title: "Kartogo — Groceries, Food & Essentials Delivered Fast in Ongole" },
+      { name: "description", content: "Order groceries, snacks, homemade pickles, tiffin batter and daily essentials on Kartogo with 15-minute quick delivery or scheduled slots across Ongole, Andhra Pradesh." },
+      { property: "og:title", content: "Kartogo — Groceries, Food & Essentials Delivered Fast in Ongole" },
+      { property: "og:description", content: "Order groceries, snacks, homemade pickles, tiffin batter and daily essentials on Kartogo with 15-minute quick delivery or scheduled slots across Ongole, Andhra Pradesh." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
