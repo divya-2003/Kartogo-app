@@ -87,6 +87,7 @@ import { Route as StoreIdRouteImport } from './routes/store.$id'
 import { Route as SupplierIndexRouteImport } from './routes/supplier.index'
 import { Route as SupplierAccountRouteImport } from './routes/supplier.account'
 import { Route as SupplierAiRouteImport } from './routes/supplier.ai'
+import { Route as SupplierBookingsRouteImport } from './routes/supplier.bookings'
 import { Route as SupplierOrdersRouteImport } from './routes/supplier.orders'
 import { Route as SupplierSalesRouteImport } from './routes/supplier.sales'
 import { Route as SupplierServicesRouteImport } from './routes/supplier.services'
@@ -485,6 +486,11 @@ const SupplierAiRoute = SupplierAiRouteImport.update({
   path: '/ai',
   getParentRoute: () => SupplierRoute,
 } as any)
+const SupplierBookingsRoute = SupplierBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
+  getParentRoute: () => SupplierRoute,
+} as any)
 const SupplierOrdersRoute = SupplierOrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
@@ -599,6 +605,7 @@ export interface FileRoutesByFullPath {
   '/store/$id': typeof StoreIdRoute
   '/supplier/account': typeof SupplierAccountRoute
   '/supplier/ai': typeof SupplierAiRoute
+  '/supplier/bookings': typeof SupplierBookingsRoute
   '/supplier/orders': typeof SupplierOrdersRoute
   '/supplier/sales': typeof SupplierSalesRoute
   '/supplier/services': typeof SupplierServicesRoute
@@ -683,6 +690,7 @@ export interface FileRoutesByTo {
   '/store/$id': typeof StoreIdRoute
   '/supplier/account': typeof SupplierAccountRoute
   '/supplier/ai': typeof SupplierAiRoute
+  '/supplier/bookings': typeof SupplierBookingsRoute
   '/supplier/orders': typeof SupplierOrdersRoute
   '/supplier/sales': typeof SupplierSalesRoute
   '/supplier/services': typeof SupplierServicesRoute
@@ -771,6 +779,7 @@ export interface FileRoutesById {
   '/store/$id': typeof StoreIdRoute
   '/supplier/account': typeof SupplierAccountRoute
   '/supplier/ai': typeof SupplierAiRoute
+  '/supplier/bookings': typeof SupplierBookingsRoute
   '/supplier/orders': typeof SupplierOrdersRoute
   '/supplier/sales': typeof SupplierSalesRoute
   '/supplier/services': typeof SupplierServicesRoute
@@ -860,6 +869,7 @@ export interface FileRouteTypes {
     | '/store/$id'
     | '/supplier/account'
     | '/supplier/ai'
+    | '/supplier/bookings'
     | '/supplier/orders'
     | '/supplier/sales'
     | '/supplier/services'
@@ -944,6 +954,7 @@ export interface FileRouteTypes {
     | '/store/$id'
     | '/supplier/account'
     | '/supplier/ai'
+    | '/supplier/bookings'
     | '/supplier/orders'
     | '/supplier/sales'
     | '/supplier/services'
@@ -1031,6 +1042,7 @@ export interface FileRouteTypes {
     | '/store/$id'
     | '/supplier/account'
     | '/supplier/ai'
+    | '/supplier/bookings'
     | '/supplier/orders'
     | '/supplier/sales'
     | '/supplier/services'
@@ -1639,6 +1651,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SupplierAiRouteImport
       parentRoute: typeof SupplierRoute
     }
+    '/supplier/bookings': {
+      id: '/supplier/bookings'
+      path: '/bookings'
+      fullPath: '/supplier/bookings'
+      preLoaderRoute: typeof SupplierBookingsRouteImport
+      parentRoute: typeof SupplierRoute
+    }
     '/supplier/orders': {
       id: '/supplier/orders'
       path: '/orders'
@@ -1779,6 +1798,7 @@ const PrinterRouteWithChildren =
 interface SupplierRouteChildren {
   SupplierAccountRoute: typeof SupplierAccountRoute
   SupplierAiRoute: typeof SupplierAiRoute
+  SupplierBookingsRoute: typeof SupplierBookingsRoute
   SupplierOrdersRoute: typeof SupplierOrdersRoute
   SupplierSalesRoute: typeof SupplierSalesRoute
   SupplierServicesRoute: typeof SupplierServicesRoute
@@ -1788,6 +1808,7 @@ interface SupplierRouteChildren {
 const SupplierRouteChildren: SupplierRouteChildren = {
   SupplierAccountRoute: SupplierAccountRoute,
   SupplierAiRoute: SupplierAiRoute,
+  SupplierBookingsRoute: SupplierBookingsRoute,
   SupplierOrdersRoute: SupplierOrdersRoute,
   SupplierSalesRoute: SupplierSalesRoute,
   SupplierServicesRoute: SupplierServicesRoute,
