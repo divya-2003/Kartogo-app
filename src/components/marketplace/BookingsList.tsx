@@ -5,7 +5,7 @@ import { myBookingsFn } from "@/lib/marketplace.functions";
 import { myServiceOrdersFn, cancelServiceOrderFn } from "@/lib/service-orders.functions";
 import { useAuth } from "@/lib/store";
 import { formatINR } from "@/lib/data";
-import { STATUS_LABELS, TX_LABELS, fmtDate, fmtTime, type Booking } from "@/lib/marketplace";
+import { TX_LABELS, fmtDate, fmtTime, bookingStatusLabel, type Booking } from "@/lib/marketplace";
 
 export function OrdersTabs({ tab }: { tab: "all" | "orders" | "bookings" }) {
   return (
@@ -43,7 +43,7 @@ export function BookingsList({ compact = false }: { compact?: boolean }) {
                 <div className="truncate font-bold">{b.listing?.icon} {b.listing?.name}</div>
                 <div className="text-xs text-muted-foreground">{b.partner?.name}{b.booking_date ? ` · ${fmtDate(b.booking_date)}` : ""}{b.start_time ? ` • ${fmtTime(b.start_time)}` : ""}</div>
               </div>
-              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${TONE[b.status] ?? "bg-primary/10 text-primary"}`}>{STATUS_LABELS[b.status]}</span>
+              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${TONE[b.status] ?? "bg-primary/10 text-primary"}`}>{bookingStatusLabel(b)}</span>
             </div>
             <div className="mt-3 flex items-center justify-between">
               <span className="font-display font-extrabold">{b.transaction_type === "QUOTE_REQUEST" && b.quote_amount == null ? "Awaiting quote" : formatINR(Number(b.amount) + Number(b.fee))}</span>
@@ -56,7 +56,7 @@ export function BookingsList({ compact = false }: { compact?: boolean }) {
   );
 }
 
-const SO_LABEL: Record<string, string> = { PLACED: "Placed", SEARCHING: "Finding driver", CANCELLED: "Cancelled", DELIVERED: "Delivered", COMPLETED: "Completed" };
+const SO_LABEL: Record<string, string> = { PLACED: "Order placed", SEARCHING: "Finding driver", ACCEPTED: "Partner assigned", PICKED_UP: "On the way", ARRIVED: "Driver arrived", IN_TRIP: "On trip", CANCELLED: "Cancelled", DELIVERED: "Delivered", COMPLETED: "Completed" };
 
 /** Food delivery orders and ride bookings. */
 export function ServiceOrdersList() {
@@ -83,6 +83,7 @@ export function ServiceOrdersList() {
                     ? (o.details.items ?? []).map((i: any) => `${i.qty}× ${i.name}`).join(", ")
                     : `${o.details.pickup?.label} → ${o.details.drop?.label}`}
                 </div>
+                {(o as any).driver_name && <div className="mt-1 text-xs font-semibold text-leaf">🛵 {(o as any).driver_name}{(o as any).driver_phone ? ` · ${(o as any).driver_phone}` : ""}</div>}
               </div>
               <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${TONE[o.status] ?? "bg-primary/10 text-primary"}`}>{SO_LABEL[o.status] ?? o.status}</span>
             </div>

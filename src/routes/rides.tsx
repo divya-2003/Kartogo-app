@@ -6,7 +6,7 @@ import { PageTop } from "@/components/marketplace/Cards";
 import { useAuth } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { VEHICLES, distanceKm, quote, type Vehicle } from "@/lib/rides";
-import { createRideFn, cancelServiceOrderFn } from "@/lib/service-orders.functions";
+import { createRideFn, cancelServiceOrderFn, myServiceOrdersFn } from "@/lib/service-orders.functions";
 
 export const Route = createFileRoute("/rides")({
   head: () => ({
@@ -19,8 +19,15 @@ export const Route = createFileRoute("/rides")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>): { drop?: string; type?: string } => ({
+    drop: typeof s.drop === "string" ? s.drop.slice(0, 200) : undefined,
+    type: typeof s.type === "string" ? s.type : undefined,
+  }),
   component: RidesPage,
 });
+
+// Stores don't have saved map pins yet, so store drops use Ongole town centre for the fare.
+const TOWN_CENTRE = { lat: 15.5057, lng: 80.0499 };
 
 type Place = { label: string; lat: number; lng: number };
 
@@ -66,11 +73,14 @@ function PlacePicker({ label, value, onChange, allowCurrent }: { label: string; 
 function RidesPage() {
   const { customerToken } = useAuth();
   const nav = useNavigate();
+  const search = Route.useSearch();
   const [pickup, setPickup] = useState<Place | null>(null);
-  const [drop, setDrop] = useState<Place | null>(null);
-  const [vehicle, setVehicle] = useState<Vehicle>("auto");
+  const [drop, setDrop] = useState<Place | null>(() =>
+    search.drop ? { label: search.drop, ...TOWN_CENTRE }
+    : search.type === "station" ? PLACES[0] : null);
+  const [vehicle, setVehicle] = useState<Vehicle>(search.type === "cab" ? "car" : search.type === "bike" ? "bike" : "auto");
   const [busy, setBusy] = useState(false);
-  const [ride, setRide] = useState<{ id: string; code: string; stage: "searching" | "found" } | null>(null);
+  const [ride, setRide] = useState<{ id: string; code: string; stage: "searching" | "found"; status?: string; driver?: string; driverPhone?: string } | null>(null);
   const [nearby, setNearby] = useState<Record<Vehicle, number>>({ bike: 0, auto: 0, car: 0 });
 
   // Auto-fill pickup from current location on first load.
@@ -79,11 +89,17 @@ function RidesPage() {
     setNearby({ bike: 3 + Math.floor(Math.random() * 5), auto: 2 + Math.floor(Math.random() * 4), car: 1 + Math.floor(Math.random() * 3) });
   }, []);
 
+  // Follow the real ride status as the driver updates it.
   useEffect(() => {
-    if (ride?.stage !== "searching") return;
-    const t = setTimeout(() => setRide(r => r && { ...r, stage: "found" }), 6000);
-    return () => clearTimeout(t);
-  }, [ride?.stage]);
+    if (!ride || !customerToken) return;
+    const poll = async () => {
+      const rows = await myServiceOrdersFn({ data: { token: customerToken } }).catch(() => []);
+      const r = rows.find(x => x.id === ride.id) as any;
+      if (r) setRide(cur => cur && { ...cur, status: r.status, stage: r.status === "SEARCHING" ? "searching" : "found", driver: r.driver_name ?? undefined, driverPhone: r.driver_phone ?? undefined });
+    };
+    const t = setInterval(poll, 8000);
+    return () => clearInterval(t);
+  }, [ride?.id, customerToken]);
 
   const km = useMemo(() => pickup && drop ? distanceKm(pickup, drop) : null, [pickup, drop]);
 
@@ -123,8 +139,9 @@ function RidesPage() {
           ) : (
             <>
               <div className="text-6xl">{v.icon}</div>
-              <h2 className="font-display text-xl font-extrabold">Request sent to nearby drivers</h2>
-              <p className="text-sm text-muted-foreground">A driver will confirm shortly. You can follow this ride in My Orders.</p>
+              <h2 className="font-display text-xl font-extrabold">{ride.status === "ARRIVED" ? "Your driver has arrived" : ride.status === "IN_TRIP" ? "On the way to drop" : ride.status === "COMPLETED" ? "Ride completed" : ride.status === "CANCELLED" ? "Ride cancelled" : "Driver is on the way"}</h2>
+              {ride.driver && <p className="text-sm font-semibold">{ride.driver}{ride.driverPhone ? ` · ${ride.driverPhone}` : ""}</p>}
+              <p className="text-sm text-muted-foreground">Booking #{ride.code}</p>
             </>
           )}
           <div className="rounded-2xl border border-border bg-card p-4 text-left text-sm">

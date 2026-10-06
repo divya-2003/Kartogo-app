@@ -132,3 +132,40 @@ export const adminListMpPartnersFn = createServerFn({ method: "POST" })
     const { data: rows } = await d.from("mp_partners").select("id,name,partner_type,supplier_phone").order("name");
     return (rows ?? []) as { id: string; name: string; partner_type: string; supplier_phone: string | null }[];
   });
+
+// Partner-side bookings: owners see their own bookings and can confirm, cancel or complete them.
+export const myPartnerBookingsFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ token: tok }).parse(d))
+  .handler(async ({ data }) => {
+    const s = await session(data.token);
+    if (!s) return [];
+    const d = await db();
+    const { data: partners } = await d.from("mp_partners").select("id,name").eq("supplier_phone", s.phone);
+    if (!partners?.length) return [];
+    const ids = partners.map((p: any) => p.id);
+    const { data: rows } = await d.from("mp_bookings")
+      .select("*, listing:mp_listings(name,icon), staff:mp_staff(name)")
+      .in("partner_id", ids).order("booking_date", { ascending: true }).order("start_time", { ascending: true }).limit(300);
+    const names = Object.fromEntries(partners.map((p: any) => [p.id, p.name]));
+    return (rows ?? []).map((r: any) => ({ ...r, partner_name: names[r.partner_id], customer_phone: r.customer_phone ? `••••••${String(r.customer_phone).slice(-4)}` : null })) as any[];
+  });
+
+export const partnerUpdateBookingFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({
+    token: tok, id: z.string().uuid(),
+    status: z.enum(["PROVIDER_CONFIRMED", "SERVICE_STARTED", "SERVICE_COMPLETED", "CANCELLED"]),
+  }).parse(d))
+  .handler(async ({ data }) => {
+    const s = await session(data.token);
+    if (!s) return { ok: false, error: "Not allowed" };
+    const d = await db();
+    const { data: b } = await d.from("mp_bookings").select("id,partner_id,status").eq("id", data.id).maybeSingle();
+    if (!b) return { ok: false, error: "Booking not found" };
+    const { data: owner } = await d.from("mp_partners").select("id").eq("id", b.partner_id).eq("supplier_phone", s.phone).maybeSingle();
+    if (!owner) return { ok: false, error: "Not allowed" };
+    if (b.status === "CANCELLED" || b.status === "SERVICE_COMPLETED") return { ok: false, error: "This booking is already closed" };
+    const { error } = await d.from("mp_bookings").update({ status: data.status }).eq("id", data.id);
+    if (error) return { ok: false, error: "Could not update" };
+    await d.from("mp_booking_status_history").insert({ booking_id: data.id, status: data.status, note: "Updated by partner" });
+    return { ok: true };
+  });
