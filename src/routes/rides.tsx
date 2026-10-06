@@ -19,8 +19,15 @@ export const Route = createFileRoute("/rides")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>): { drop?: string; type?: string } => ({
+    drop: typeof s.drop === "string" ? s.drop.slice(0, 200) : undefined,
+    type: typeof s.type === "string" ? s.type : undefined,
+  }),
   component: RidesPage,
 });
+
+// Stores don't have saved map pins yet, so store drops use Ongole town centre for the fare.
+const TOWN_CENTRE = { lat: 15.5057, lng: 80.0499 };
 
 type Place = { label: string; lat: number; lng: number };
 
@@ -66,9 +73,12 @@ function PlacePicker({ label, value, onChange, allowCurrent }: { label: string; 
 function RidesPage() {
   const { customerToken } = useAuth();
   const nav = useNavigate();
+  const search = Route.useSearch();
   const [pickup, setPickup] = useState<Place | null>(null);
-  const [drop, setDrop] = useState<Place | null>(null);
-  const [vehicle, setVehicle] = useState<Vehicle>("auto");
+  const [drop, setDrop] = useState<Place | null>(() =>
+    search.drop ? { label: search.drop, ...TOWN_CENTRE }
+    : search.type === "station" ? PLACES[0] : null);
+  const [vehicle, setVehicle] = useState<Vehicle>(search.type === "cab" ? "car" : search.type === "bike" ? "bike" : "auto");
   const [busy, setBusy] = useState(false);
   const [ride, setRide] = useState<{ id: string; code: string; stage: "searching" | "found" } | null>(null);
   const [nearby, setNearby] = useState<Record<Vehicle, number>>({ bike: 0, auto: 0, car: 0 });
