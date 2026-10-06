@@ -6,7 +6,7 @@ import { PageTop } from "@/components/marketplace/Cards";
 import { useAuth } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { VEHICLES, distanceKm, quote, type Vehicle } from "@/lib/rides";
-import { createRideFn, cancelServiceOrderFn } from "@/lib/service-orders.functions";
+import { createRideFn, cancelServiceOrderFn, myServiceOrdersFn } from "@/lib/service-orders.functions";
 
 export const Route = createFileRoute("/rides")({
   head: () => ({
