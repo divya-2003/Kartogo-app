@@ -80,7 +80,7 @@ function RidesPage() {
     : search.type === "station" ? PLACES[0] : null);
   const [vehicle, setVehicle] = useState<Vehicle>(search.type === "cab" ? "car" : search.type === "bike" ? "bike" : "auto");
   const [busy, setBusy] = useState(false);
-  const [ride, setRide] = useState<{ id: string; code: string; stage: "searching" | "found" } | null>(null);
+  const [ride, setRide] = useState<{ id: string; code: string; stage: "searching" | "found"; status?: string; driver?: string; driverPhone?: string } | null>(null);
   const [nearby, setNearby] = useState<Record<Vehicle, number>>({ bike: 0, auto: 0, car: 0 });
 
   // Auto-fill pickup from current location on first load.
@@ -89,11 +89,17 @@ function RidesPage() {
     setNearby({ bike: 3 + Math.floor(Math.random() * 5), auto: 2 + Math.floor(Math.random() * 4), car: 1 + Math.floor(Math.random() * 3) });
   }, []);
 
+  // Follow the real ride status as the driver updates it.
   useEffect(() => {
-    if (ride?.stage !== "searching") return;
-    const t = setTimeout(() => setRide(r => r && { ...r, stage: "found" }), 6000);
-    return () => clearTimeout(t);
-  }, [ride?.stage]);
+    if (!ride || !customerToken) return;
+    const poll = async () => {
+      const rows = await myServiceOrdersFn({ data: { token: customerToken } }).catch(() => []);
+      const r = rows.find(x => x.id === ride.id) as any;
+      if (r) setRide(cur => cur && { ...cur, status: r.status, stage: r.status === "SEARCHING" ? "searching" : "found", driver: r.driver_name ?? undefined, driverPhone: r.driver_phone ?? undefined });
+    };
+    const t = setInterval(poll, 8000);
+    return () => clearInterval(t);
+  }, [ride?.id, customerToken]);
 
   const km = useMemo(() => pickup && drop ? distanceKm(pickup, drop) : null, [pickup, drop]);
 
@@ -133,8 +139,9 @@ function RidesPage() {
           ) : (
             <>
               <div className="text-6xl">{v.icon}</div>
-              <h2 className="font-display text-xl font-extrabold">Request sent to nearby drivers</h2>
-              <p className="text-sm text-muted-foreground">A driver will confirm shortly. You can follow this ride in My Orders.</p>
+              <h2 className="font-display text-xl font-extrabold">{ride.status === "ARRIVED" ? "Your driver has arrived" : ride.status === "IN_TRIP" ? "On the way to drop" : ride.status === "COMPLETED" ? "Ride completed" : ride.status === "CANCELLED" ? "Ride cancelled" : "Driver is on the way"}</h2>
+              {ride.driver && <p className="text-sm font-semibold">{ride.driver}{ride.driverPhone ? ` · ${ride.driverPhone}` : ""}</p>}
+              <p className="text-sm text-muted-foreground">Booking #{ride.code}</p>
             </>
           )}
           <div className="rounded-2xl border border-border bg-card p-4 text-left text-sm">
