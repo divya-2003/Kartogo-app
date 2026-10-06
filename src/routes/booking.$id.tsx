@@ -7,7 +7,7 @@ import { getBookingFn, cancelBookingFn } from "@/lib/marketplace.functions";
 import { EmptyState, PageTop } from "@/components/marketplace/Cards";
 import { useAuth } from "@/lib/store";
 import { formatINR } from "@/lib/data";
-import { STATUS_LABELS, TX_LABELS, timelineFor, canCustomerCancel, fmtDate, fmtTime, type Booking } from "@/lib/marketplace";
+import { STATUS_LABELS, TX_LABELS, timelineFor, canCustomerCancel, fmtDate, fmtTime, bookedLabel, type Booking } from "@/lib/marketplace";
 
 export const Route = createFileRoute("/booking/$id")({
   validateSearch: (s: Record<string, unknown>): { confirmed?: boolean } => ({ confirmed: s.confirmed === true || s.confirmed === "true" ? true : undefined }),
@@ -57,7 +57,8 @@ function BookingPage() {
   const curIdx = steps.indexOf(b.status);
   const isQuote = b.transaction_type === "QUOTE_REQUEST";
   const travelling = b.status === "PROFESSIONAL_TRAVELLING" || b.status === "ARRIVED";
-  const title = confirmed ? (isQuote ? "Quote Requested" : b.transaction_type === "PRODUCT_ORDER" ? "Order Placed" : b.transaction_type === "EVENT_BOOKING" ? "Booking Requested" : "Booking Confirmed") : TX_LABELS[b.transaction_type];
+  const isVisit = !!(b.details as any)?.store_visit;
+  const title = confirmed ? (isQuote ? "Quote Requested" : isVisit ? "Visit Booked" : b.transaction_type === "PRODUCT_ORDER" ? "Order Placed" : "Service Booked") : isVisit ? "Showroom visit" : TX_LABELS[b.transaction_type];
 
   const cancel = async () => {
     if (!confirm("Cancel this booking?")) return;
@@ -80,6 +81,15 @@ function BookingPage() {
             <div className="mt-2 font-display text-xl font-extrabold">{title}</div>
             <div className="text-sm text-muted-foreground">Booking ID {b.booking_code}</div>
           </div>
+        )}
+
+        {isVisit && b.status !== "CANCELLED" && (
+          <Link to="/rides" search={{ drop: `${b.partner?.name ?? "Store"}${b.partner?.address ? `, ${b.partner.address}` : ""}` } as never}
+            className="flex items-center gap-3 rounded-2xl border-2 border-primary bg-primary/5 p-4">
+            <span className="text-3xl">🛺</span>
+            <div className="min-w-0 flex-1"><div className="font-display font-bold">Book a ride with us</div><div className="text-xs text-muted-foreground">Drop at {b.partner?.name ?? "the store"} — you choose the pickup</div></div>
+            <span className="rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">Book ride</span>
+          </Link>
         )}
 
         {travelling && (
@@ -123,7 +133,7 @@ function BookingPage() {
                 return (
                   <li key={s} className="flex items-center gap-3">
                     <span className={`h-3 w-3 shrink-0 rounded-full ${done ? "bg-leaf" : "border-2 border-border"}`} />
-                    <span className={`text-sm ${done ? "font-bold" : "text-muted-foreground"}`}>{STATUS_LABELS[s]}</span>
+                    <span className={`text-sm ${done ? "font-bold" : "text-muted-foreground"}`}>{s === "BOOKING_REQUESTED" ? bookedLabel(b) : STATUS_LABELS[s]}</span>
                   </li>
                 );
               })}
