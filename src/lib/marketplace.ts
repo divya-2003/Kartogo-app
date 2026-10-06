@@ -61,6 +61,18 @@ export const GROUP_LABELS: Record<CategoryGroup, string> = {
   events: "Events",
 };
 
+/** "Order placed" for product orders, "Service booked" for services, "Visit booked" for showroom visits. */
+export function bookedLabel(b: { transaction_type: string; details?: Record<string, unknown> | null }): string {
+  if (b.details && (b.details as any).store_visit) return "Visit booked";
+  if (b.transaction_type === "PRODUCT_ORDER") return "Order placed";
+  if (b.transaction_type === "QUOTE_REQUEST") return "Quote requested";
+  return "Service booked";
+}
+export function bookingStatusLabel(b: { status: string; transaction_type: string; details?: Record<string, unknown> | null }): string {
+  if (b.status === "BOOKING_REQUESTED") return bookedLabel(b);
+  return STATUS_LABELS[b.status] ?? b.status;
+}
+
 export const STATUS_LABELS: Record<string, string> = {
   BOOKING_REQUESTED: "Requested",
   PROVIDER_CONFIRMED: "Confirmed",
