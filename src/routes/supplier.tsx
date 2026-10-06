@@ -32,6 +32,7 @@ export const Route = createFileRoute("/supplier")({
 const NAV = [
   { to: "/supplier", label: "Inventory", short: "Stock", icon: Boxes },
   { to: "/supplier/orders", label: "Orders", short: "Orders", icon: ClipboardList },
+  { to: "/supplier/bookings", label: "Bookings", short: "Bookings", icon: CalendarCheck },
   { to: "/supplier/services", label: "My services", short: "Services", icon: CalendarClock },
   { to: "/supplier/sales", label: "Sales", short: "Sales", icon: BarChart3 },
   { to: "/supplier/ai", label: "AI insights", short: "AI", icon: Sparkles },
