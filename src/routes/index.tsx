@@ -1,5 +1,6 @@
 import { HomeMarketplace } from "@/components/marketplace/HomeMarketplace";
 import { BottomNav } from "@/components/marketplace/BottomNav";
+import { SectionBar, type SectionId } from "@/components/marketplace/SectionBar";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Zap, PackageCheck, Search, Wallet, User2, Home, LayoutGrid, ShoppingBag, TrendingUp, Ticket, CheckCircle2, Printer } from "lucide-react";
@@ -95,6 +96,7 @@ function Index() {
   // quick-service areas, Standard everywhere else we serve.
   const quickAvailable = !!location?.serviceable && isQuickArea(location.query || location.area);
   const [service, setService] = useState<"quick" | "standard">("standard");
+  const [section, setSection] = useState<SectionId>("shop");
   useEffect(() => {
     // A customer sent here from the unserviceable screen explicitly asked for
     // Standard — honour that over the auto-detected tier.
@@ -211,8 +213,10 @@ function Index() {
           </div>
 
 
-          {/* service options — Quick vs Standard, based on the saved location */}
-          <div className="mt-4 grid grid-cols-2 gap-2">
+          <SectionBar value={section} onChange={setSection} />
+
+          {/* service options — Quick vs Standard, shown under Shop */}
+          <div className={`mt-3 grid-cols-2 gap-2 ${section === "shop" ? "grid" : "hidden"}`}>
             <button
               type="button"
               onClick={() => {
