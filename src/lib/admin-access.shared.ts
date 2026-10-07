@@ -31,7 +31,7 @@ export function permissionForAdminPath(path: string): AdminPermission {
   if (path.startsWith("/admin/ai")) return "ai";
   if (path.startsWith("/admin/alerts") || path.startsWith("/admin/stock-alerts")) return "alerts";
   if (path.startsWith("/admin/notifications")) return "notifications";
-  if (path.startsWith("/admin/orders") || path.startsWith("/admin/cancellations")) return "orders";
+  if (path.startsWith("/admin/orders") || path.startsWith("/admin/cancellations") || path.startsWith("/admin/bookings") || path.startsWith("/admin/food-rides")) return "orders";
   if (path.startsWith("/admin/refund-requests")) return "refunds";
   if (path.startsWith("/admin/feedback")) return "feedback";
   if (path.startsWith("/admin/delivery")) return "delivery";
