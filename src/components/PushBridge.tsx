@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { BellRing } from "lucide-react";
 import { useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/store";
@@ -15,6 +16,35 @@ export function PushBridge() {
   const { customerToken } = useAuth();
   const router = useRouter();
   const lastShown = useRef<string>("");
+  const [ask, setAsk] = useState(false);
+
+  // Ask for notification access right after login, the same way we ask for
+  // location: a clear card whose button triggers the browser's own prompt
+  // (browsers block the prompt unless it comes from a tap).
+  useEffect(() => {
+    if (!customerToken) { setAsk(false); return; }
+    void (async () => {
+      if (await isNativeApp()) return;
+      if (typeof Notification === "undefined" || Notification.permission !== "default") return;
+      if (window.top !== window.self) return; // preview frame can't show the prompt
+      const later = Number(localStorage.getItem("qk_push_later") || 0);
+      if (Date.now() - later < 3 * 864e5) return;
+      setAsk(true);
+    })();
+  }, [customerToken]);
+
+  const allow = async () => {
+    setAsk(false);
+    const r = await enablePush().catch(() => ({ status: "unsupported" as const }));
+    if (r.status === "registered" && customerToken) {
+      await registerPushTokenFn({ data: { token: customerToken, fcmToken: r.token, platform: platform(), deviceName: deviceName() } }).catch(() => {});
+      toast.success("Notifications turned on");
+    } else if (r.status === "not-configured") {
+      toast.error("Notifications aren't set up for the website yet.");
+    } else if (r.status === "denied") {
+      localStorage.setItem("qk_push_later", String(Date.now()));
+    }
+  };
 
   // 0) Android app: ask for the notification permission, register the phone's
   // FCM token and handle taps natively. No-ops in a normal browser.
@@ -45,12 +75,6 @@ export function PushBridge() {
     let cancelled = false;
     (async () => {
       if (await isNativeApp()) return; // native path above owns the token
-      // First login on this install: ask for notification access automatically.
-      if (typeof Notification !== "undefined" && Notification.permission === "default"
-        && !localStorage.getItem("qk_push_asked")) {
-        localStorage.setItem("qk_push_asked", "1");
-        try { await enablePush(); } catch { /* user can enable later */ }
-      }
       const token = await currentToken();
       if (!token || cancelled) return;
       try {
@@ -95,5 +119,18 @@ export function PushBridge() {
     return () => navigator.serviceWorker.removeEventListener("message", onMessageEvent);
   }, [router]);
 
-  return null;
+  if (!ask) return null;
+  return (
+    <div className="fixed inset-0 z-[90] grid place-items-end bg-foreground/40 p-4 sm:place-items-center" role="dialog" aria-modal="true">
+      <div className="w-full max-w-sm rounded-3xl bg-card p-6 text-center shadow-pop">
+        <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-primary/10 text-primary"><BellRing className="h-7 w-7" /></div>
+        <h2 className="mt-3 font-display text-xl font-extrabold">Turn on notifications</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Get live updates when your order is confirmed, your rider is nearby and it's delivered.</p>
+        <div className="mt-5 flex gap-2">
+          <button onClick={() => { localStorage.setItem("qk_push_later", String(Date.now())); setAsk(false); }} className="h-11 flex-1 rounded-xl border border-border font-bold">Not now</button>
+          <button onClick={() => void allow()} className="h-11 flex-1 rounded-xl bg-primary font-bold text-primary-foreground">Allow</button>
+        </div>
+      </div>
+    </div>
+  );
 }
