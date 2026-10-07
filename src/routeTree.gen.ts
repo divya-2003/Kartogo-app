@@ -50,6 +50,7 @@ import { Route as AdminCancellationsRouteImport } from './routes/admin.cancellat
 import { Route as AdminCombosRouteImport } from './routes/admin.combos'
 import { Route as AdminDeliveryRouteImport } from './routes/admin.delivery'
 import { Route as AdminFeedbackRouteImport } from './routes/admin.feedback'
+import { Route as AdminFoodRidesRouteImport } from './routes/admin.food-rides'
 import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
 import { Route as AdminLogisticsRouteImport } from './routes/admin.logistics'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
@@ -299,6 +300,11 @@ const AdminDeliveryRoute = AdminDeliveryRouteImport.update({
 const AdminFeedbackRoute = AdminFeedbackRouteImport.update({
   id: '/feedback',
   path: '/feedback',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFoodRidesRoute = AdminFoodRidesRouteImport.update({
+  id: '/food-rides',
+  path: '/food-rides',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminInventoryRoute = AdminInventoryRouteImport.update({
@@ -570,6 +576,7 @@ export interface FileRoutesByFullPath {
   '/admin/combos': typeof AdminCombosRoute
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/feedback': typeof AdminFeedbackRoute
+  '/admin/food-rides': typeof AdminFoodRidesRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/logistics': typeof AdminLogisticsRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -655,6 +662,7 @@ export interface FileRoutesByTo {
   '/admin/combos': typeof AdminCombosRoute
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/feedback': typeof AdminFeedbackRoute
+  '/admin/food-rides': typeof AdminFoodRidesRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/logistics': typeof AdminLogisticsRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -744,6 +752,7 @@ export interface FileRoutesById {
   '/admin/combos': typeof AdminCombosRoute
   '/admin/delivery': typeof AdminDeliveryRoute
   '/admin/feedback': typeof AdminFeedbackRoute
+  '/admin/food-rides': typeof AdminFoodRidesRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/logistics': typeof AdminLogisticsRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -834,6 +843,7 @@ export interface FileRouteTypes {
     | '/admin/combos'
     | '/admin/delivery'
     | '/admin/feedback'
+    | '/admin/food-rides'
     | '/admin/inventory'
     | '/admin/logistics'
     | '/admin/notifications'
@@ -919,6 +929,7 @@ export interface FileRouteTypes {
     | '/admin/combos'
     | '/admin/delivery'
     | '/admin/feedback'
+    | '/admin/food-rides'
     | '/admin/inventory'
     | '/admin/logistics'
     | '/admin/notifications'
@@ -1007,6 +1018,7 @@ export interface FileRouteTypes {
     | '/admin/combos'
     | '/admin/delivery'
     | '/admin/feedback'
+    | '/admin/food-rides'
     | '/admin/inventory'
     | '/admin/logistics'
     | '/admin/notifications'
@@ -1392,6 +1404,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFeedbackRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/food-rides': {
+      id: '/admin/food-rides'
+      path: '/food-rides'
+      fullPath: '/admin/food-rides'
+      preLoaderRoute: typeof AdminFoodRidesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/inventory': {
       id: '/admin/inventory'
       path: '/inventory'
@@ -1720,6 +1739,7 @@ interface AdminRouteChildren {
   AdminCombosRoute: typeof AdminCombosRoute
   AdminDeliveryRoute: typeof AdminDeliveryRoute
   AdminFeedbackRoute: typeof AdminFeedbackRoute
+  AdminFoodRidesRoute: typeof AdminFoodRidesRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
   AdminLogisticsRoute: typeof AdminLogisticsRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
@@ -1755,6 +1775,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCombosRoute: AdminCombosRoute,
   AdminDeliveryRoute: AdminDeliveryRoute,
   AdminFeedbackRoute: AdminFeedbackRoute,
+  AdminFoodRidesRoute: AdminFoodRidesRoute,
   AdminInventoryRoute: AdminInventoryRoute,
   AdminLogisticsRoute: AdminLogisticsRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
