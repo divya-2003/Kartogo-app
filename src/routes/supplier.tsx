@@ -4,7 +4,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { verifySupplierTokenFn } from "@/lib/supplier.functions";
 import { findSupplierById } from "@/lib/suppliers";
 import { SupplierContext, type SupplierInfo } from "@/lib/supplier-context";
-import { CalendarClock, Boxes, ClipboardList, User2, BarChart3, Sparkles, Menu, ChevronLeft } from "lucide-react";
+import { CalendarCheck, CalendarClock, Boxes, ClipboardList, User2, BarChart3, Sparkles, Menu, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 
