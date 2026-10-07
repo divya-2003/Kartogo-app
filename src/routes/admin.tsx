@@ -103,6 +103,7 @@ function AdminLayout() {
   const { orders } = useOrders();
   const [cancelSeenCount, setCancelSeenCount] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [q, setQ] = useState("");
   const cancelledCount = orders.filter(o => o.status === "cancelled").length;
   const isActive = (to: string) => (to === "/admin" ? path === "/admin" : path.startsWith(to));
   const unseenCancellations = Math.max(0, cancelledCount - cancelSeenCount);
@@ -135,7 +136,7 @@ function AdminLayout() {
         // crashing the whole admin shell — every page re-checks access anyway.
         if (!routeAccess || !Array.isArray(routeAccess.permissions)) return true;
         return routeAccess.isSuperAdmin || routeAccess.permissions.includes(n.permission);
-      }).map(n => {
+      }).filter(n => !q.trim() || n.label.toLowerCase().includes(q.trim().toLowerCase())).map(n => {
         const active = isActive(n.to);
         const badge = n.to === "/admin/cancellations" && unseenCancellations > 0 ? unseenCancellations : null;
         return (
@@ -210,7 +211,7 @@ function AdminLayout() {
         </aside>
 
         <main className="min-w-0">
-          <AdminPageTools />
+          <AdminPageTools q={q} setQ={setQ} pages={NAV.filter(n => !routeAccess || !Array.isArray(routeAccess.permissions) || routeAccess.isSuperAdmin || routeAccess.permissions.includes(n.permission))} />
         </main>
       </div>
     </div>
@@ -218,10 +219,11 @@ function AdminLayout() {
 }
 
 // Reload + in-page search that only looks at the admin page currently open.
-function AdminPageTools() {
+function AdminPageTools({ q, setQ, pages }: { q: string; setQ: (v: string) => void; pages: readonly (typeof NAV)[number][] }) {
   const pathname = useRouterState({ select: s => s.location.pathname });
   const [reloadKey, setReloadKey] = useState(0);
-  const [q, setQ] = useState("");
+  const term = q.trim().toLowerCase();
+  const pageHits = term ? pages.filter(p => p.label.toLowerCase().includes(term) || p.to.toLowerCase().includes(term)) : [];
   const [hits, setHits] = useState<number | null>(null);
   useEffect(() => { setQ(""); }, [pathname]);
   useEffect(() => {
@@ -247,7 +249,7 @@ function AdminPageTools() {
           <input
             value={q}
             onChange={e => setQ(e.target.value)}
-            placeholder="Search this page"
+            placeholder="Search admin pages, menu and this page"
             className="w-full bg-transparent text-sm outline-none"
           />
           {hits !== null && <span className="shrink-0 text-xs text-muted-foreground">{hits} found</span>}
@@ -261,6 +263,18 @@ function AdminPageTools() {
           <RefreshCw className="h-4 w-4" /> Reload
         </Button>
       </div>
+      {pageHits.length > 0 && (
+        <div className="mb-4 rounded-xl border border-border bg-card p-2">
+          <div className="px-2 pb-1 text-xs font-semibold text-muted-foreground">Admin pages</div>
+          <div className="flex flex-wrap gap-2">
+            {pageHits.map(p => (
+              <Link key={p.to} to={p.to} onClick={() => setQ("")} className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-semibold hover:bg-secondary">
+                <p.icon className="h-4 w-4" />{p.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
       <div id="admin-page-content" key={reloadKey}><Outlet /></div>
     </>
   );
