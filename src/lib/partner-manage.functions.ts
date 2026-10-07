@@ -169,3 +169,54 @@ export const partnerUpdateBookingFn = createServerFn({ method: "POST" })
     await d.from("mp_booking_status_history").insert({ booking_id: data.id, status: data.status, note: "Updated by partner" });
     return { ok: true };
   });
+
+// AI insights for service/booking businesses, built from the partner's own bookings and listings.
+export const partnerServiceInsightsFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ token: tok }).parse(d))
+  .handler(async ({ data }) => {
+    const s = await session(data.token);
+    if (!s) return null;
+    const d = await db();
+    const { data: partners } = await d.from("mp_partners").select("id,name,partner_type").eq("supplier_phone", s.phone);
+    if (!partners?.length) return null;
+    const ids = partners.map((p: any) => p.id);
+    const since = new Date(Date.now() - 90 * 864e5).toISOString();
+    const [{ data: bookings }, { data: listings }] = await Promise.all([
+      d.from("mp_bookings").select("status,booking_date,start_time,amount,fee,listing_id,transaction_type,created_at").in("partner_id", ids).gte("created_at", since).limit(2000),
+      d.from("mp_listings").select("id,name,price,starting_price,is_active").in("partner_id", ids),
+    ]);
+    const b = (bookings ?? []) as any[];
+    const names: Record<string, string> = Object.fromEntries((listings ?? []).map((l: any) => [l.id, l.name]));
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const byHour: Record<string, number> = {}, byDay: Record<string, number> = {}, byListing: Record<string, { n: number; rev: number }> = {};
+    let revenue = 0, cancelled = 0, completed = 0;
+    for (const x of b) {
+      if (x.status === "CANCELLED") { cancelled++; continue; }
+      if (x.status === "SERVICE_COMPLETED") completed++;
+      const amt = Number(x.amount) + Number(x.fee ?? 0); revenue += amt;
+      if (x.start_time) { const h = x.start_time.slice(0, 2); byHour[h] = (byHour[h] ?? 0) + 1; }
+      if (x.booking_date) { const dd = days[new Date(x.booking_date + "T00:00:00").getDay()]; byDay[dd] = (byDay[dd] ?? 0) + 1; }
+      const n = names[x.listing_id] ?? "Other"; byListing[n] = { n: (byListing[n]?.n ?? 0) + 1, rev: (byListing[n]?.rev ?? 0) + amt };
+    }
+    const top = Object.entries(byListing).sort((a, b) => b[1].n - a[1].n).slice(0, 5).map(([name, v]) => ({ name, bookings: v.n, revenue: v.rev }));
+    const peakHours = Object.entries(byHour).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([h, n]) => ({ hour: `${h}:00`, bookings: n }));
+    const busyDays = Object.entries(byDay).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([day, n]) => ({ day, bookings: n }));
+    const unused = (listings ?? []).filter((l: any) => l.is_active && !byListing[l.name]).map((l: any) => l.name).slice(0, 5);
+    const stats = { total: b.length, revenue, cancelled, completed, cancelRate: b.length ? Math.round((cancelled / b.length) * 100) : 0, top, peakHours, busyDays, unused };
+
+    let tips: string[] = [];
+    if (b.length) {
+      try {
+        const { createLovableAiGatewayProvider, requireAiKey } = await import("./ai-gateway.server");
+        const { generateText } = await import("ai");
+        const gateway = createLovableAiGatewayProvider(requireAiKey());
+        const r = await generateText({
+          model: gateway("google/gemini-3.5-flash"),
+          system: "You advise a small Indian service business (salon, home services, events or furniture showroom) on Kartogo. Use only the given numbers. Reply with exactly 4 short, practical tips, one per line, no numbering, no markdown.",
+          prompt: `Business: ${partners.map((p: any) => `${p.name} (${p.partner_type})`).join(", ")}\nLast 90 days: ${JSON.stringify(stats)}`,
+        });
+        tips = r.text.split("\n").map(t => t.replace(/^[-*•\d.\s]+/, "").trim()).filter(Boolean).slice(0, 4);
+      } catch (e) { console.error("partner insights ai", e); }
+    }
+    return { stats, tips };
+  });
