@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Sparkles, Bot, Send, PackageX, ClipboardList, Flame, Gauge } from "lucide-react";
+import { ServiceInsights } from "@/components/ai/ServiceInsights";
 import { aiOpsDashboardFn, dismissAiInsightFn, markAiInsightsReadFn, aiAssistantFn, type AiChatMessage } from "@/lib/ai-ops.functions";
 import {
   InsightCard, ScoreCard, SectionCard, ProductForecastTable, ForecastChart, ConfidenceBar,
@@ -92,6 +93,8 @@ function SupplierAiPage() {
           Mark read{unread ? ` (${unread})` : ""}
         </button>
       </div>
+
+      <ServiceInsights />
 
       {loading ? <p className="text-sm text-muted-foreground">Loading…</p> : !data ? null : (
         <>
