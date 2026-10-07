@@ -20,6 +20,7 @@ export const Route = createFileRoute("/food")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>): { q?: string } => ({ q: typeof s.q === "string" ? s.q.slice(0, 40) : undefined }),
   component: FoodPage,
 });
 
@@ -34,7 +35,8 @@ function FoodPage() {
   const nav = useNavigate();
   const [kitchen, setKitchen] = useState<Kitchen | null>(null);
   const [vegOnly, setVegOnly] = useState(false);
-  const [q, setQ] = useState("");
+  const initialQ = Route.useSearch().q ?? "";
+  const [q, setQ] = useState(initialQ);
   const [lines, setLines] = useState<Line[]>([]);
   const [custom, setCustom] = useState<{ dish: Dish; addons: string[] } | null>(null);
   const [checkout, setCheckout] = useState(false);
