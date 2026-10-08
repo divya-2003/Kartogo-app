@@ -18,3 +18,15 @@
 - [x] Verify
 - [ ] Partner self-service portal for listings/staff/availability (admin manages bookings for now)
 - [ ] 30-min / same-day / next-day choice inside the grocery checkout (existing Quick/Standard + slots kept)
+
+## Oct 5 batch
+- [x] Partner bookings page (to confirm / ongoing / today / cancelled)
+- [x] Rider portal: food & ride requests, accept, status updates, live location
+- [x] Ride-to-store after showroom visit
+- [x] Order placed / Service booked / Visit booked labels
+- [x] Top section bar (Shop, Food, Rides, Beauty & Wellness, Home Services, Events)
+- [x] Admin Food & rides view
+- [x] Seller AI insights for services
+- [x] Admin search across all pages + side menu
+- [x] Automatic "Allow notifications" prompt after login
+- [ ] Web push keys — waiting on user to update Firebase connection with "Include web push"
