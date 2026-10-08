@@ -9,6 +9,7 @@ import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter";
 
 const SUGGESTIONS = ["avakaya", "maggi", "agarbatti", "batter", "coffee", "tea"];
+const RECENT_KEY = "qk_recent_searches";
 
 export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { products } = useCatalog();
@@ -43,9 +44,26 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
     return rankProducts(products, query).slice(0, 12);
   }, [products, query]);
 
+  const [recent, setRecent] = useState<string[]>([]);
+  useEffect(() => {
+    if (!open) return;
+    try {
+      const list = JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]") as unknown;
+      setRecent(Array.isArray(list) ? list.filter((x): x is string => typeof x === "string").slice(0, 8) : []);
+    } catch { setRecent([]); }
+  }, [open]);
+  const clearRecent = () => {
+    setRecent([]);
+    try { localStorage.removeItem(RECENT_KEY); } catch { /* ignore */ }
+  };
+
   const submit = (term?: string) => {
     const value = (term ?? q).trim();
     if (!value) return;
+    try {
+      const next = [value, ...recent.filter(t => t.toLowerCase() !== value.toLowerCase())].slice(0, 8);
+      localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+    } catch { /* ignore */ }
     nav({ to: "/search", search: { q: value } });
     onClose();
   };
@@ -88,6 +106,21 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
       <div className="mx-auto w-full max-w-3xl flex-1 overflow-y-auto px-4 py-5 md:px-6">
         {!query ? (
           <div>
+            {recent.length > 0 && (
+              <div className="mb-5">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Recent searches</h3>
+                  <button type="button" onClick={clearRecent} className="text-xs font-bold text-primary hover:underline">Clear all</button>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {recent.map(term => (
+                    <button key={term} onClick={() => submit(term)} className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-secondary">
+                      {term}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <h3 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Popular searches</h3>
             <div className="mt-3 flex flex-wrap gap-2">
               {SUGGESTIONS.map(term => (

@@ -3,6 +3,13 @@ import { ProductCard } from "@/components/ProductCard";
 import { useCatalog } from "@/lib/store";
 import { useRecommendationImpressions, type Recommendation } from "@/hooks/use-recommendations";
 
+/** Short top-left tag shown on recommended product cards. */
+export function recommendationTag(type: string): string | undefined {
+  if (type === "FREQUENTLY_BOUGHT_TOGETHER") return "Bought Together";
+  if (type === "BUY_AGAIN" || type === "REPLENISHMENT") return "Frequently Bought";
+  return undefined;
+}
+
 /**
  * Shared renderer for every recommendation section. It only renders when there
  * are real, currently available products to show — empty sections never appear.
@@ -42,8 +49,7 @@ export function RecommendationRow({
       <div className={`mt-3 grid gap-3 ${compact ? "grid-cols-2 md:grid-cols-4" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-5"}`}>
         {resolved.map(({ rec, product }) => (
           <div key={`${rec.type}-${rec.productId}`} onClickCapture={() => onClick(rec)}>
-            <ProductCard p={product} recommendationType={rec.type} />
-            <p className="mt-1 px-1 text-[11px] font-semibold text-muted-foreground">{rec.reason}</p>
+            <ProductCard p={product} recommendationType={rec.type} tag={recommendationTag(rec.type)} />
           </div>
         ))}
       </div>
