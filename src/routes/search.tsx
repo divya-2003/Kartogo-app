@@ -230,9 +230,19 @@ function SearchPage() {
           <section className="mb-6 space-y-4">
             {recent.length > 0 && (
               <div>
-                <h2 className="flex items-center gap-2 font-display text-sm font-extrabold uppercase tracking-wide text-muted-foreground">
-                  <Clock className="h-4 w-4" /> Recent searches
-                </h2>
+                <div className="flex items-center justify-between gap-2">
+                  <h2 className="flex items-center gap-2 font-display text-sm font-extrabold uppercase tracking-wide text-muted-foreground">
+                    <Clock className="h-4 w-4" /> Recent searches
+                  </h2>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => { setRecent([]); try { localStorage.removeItem(RECENT_KEY); } catch { /* ignore */ } }}
+                    className="text-xs font-bold text-primary hover:underline"
+                  >
+                    Clear all
+                  </button>
+                </div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {recent.map(term => (
                     <button key={term} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => submitSearch(term)} className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold hover:bg-secondary">

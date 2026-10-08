@@ -10,10 +10,12 @@ import { HighlightText } from "@/components/HighlightText";
 import { createStockAlertFn } from "@/lib/stock-alerts.functions";
 import { customerEventService } from "@/lib/recommendations.tracking";
 
-export function ProductCard({ p, bestseller, recommendationType, onProductOpen, highlight, quickBadge }: {
+export function ProductCard({ p, bestseller, recommendationType, onProductOpen, highlight, quickBadge, tag }: {
   p: Product;
   bestseller?: boolean;
   recommendationType?: string;
+  /** Top-left label such as "Bought Together" / "Frequently Bought". */
+  tag?: string;
   onProductOpen?: (productId: string) => void;
   /** Search query whose matching characters should be emphasised in the title. */
   highlight?: string;
@@ -91,8 +93,13 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
         ) : (
           <div className="text-6xl transition group-hover:scale-110">{p.emoji}</div>
         )}
-        {(bestseller || (p.mrp && p.mrp > p.price)) && (
+        {(tag || bestseller || (p.mrp && p.mrp > p.price)) && (
           <div className="absolute left-2 top-2 flex flex-col gap-1">
+            {tag && (
+              <span className="w-fit rounded-md bg-secondary/90 px-2 py-0.5 text-[11px] font-bold text-foreground shadow-pop backdrop-blur">
+                {tag}
+              </span>
+            )}
             {bestseller && (
               <span className="rounded-md bg-saffron px-2 py-0.5 text-[11px] font-bold text-foreground shadow-pop">
                 BESTSELLER
