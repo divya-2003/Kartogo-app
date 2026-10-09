@@ -254,11 +254,11 @@ function Index() {
           </div>
 
           {/* search — opens the full Trending / search page */}
-          <Link to="/search" search={{ q: "" }} className="mt-3 block pb-4">
+          <Link to={(section === "rides" ? "/rides" : section === "food" ? "/food" : "/search") as never} search={(section === "rides" || section === "food" ? {} : { q: "" }) as never} className="mt-3 block pb-4">
             <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 shadow-pop">
               <Search className="h-5 w-5 text-muted-foreground" />
               <span className="w-full truncate text-left text-sm text-muted-foreground">
-                Search for "{typedTerm}"
+                {section === "rides" ? "Where do you want to go?" : `Search for "${SECTION_SEARCH[section]?.[typedIdx(typedTerm)] ?? typedTerm}"`}
               </span>
 
             </div>

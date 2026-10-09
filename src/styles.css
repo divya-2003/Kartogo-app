@@ -35,6 +35,14 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-saffron: var(--saffron);
+  --color-sec-shop: var(--sec-shop);
+  --color-sec-food: var(--sec-food);
+  --color-sec-rides: var(--sec-rides);
+  --color-sec-beauty: var(--sec-beauty);
+  --color-sec-home: var(--sec-home);
+  --color-sec-events: var(--sec-events);
+  --color-sec-dark-fg: var(--sec-dark-fg);
+  --color-sec-light-fg: var(--sec-light-fg);
   --color-saffron-foreground: var(--saffron-foreground);
   --color-leaf: var(--leaf);
   --color-leaf-foreground: var(--leaf-foreground);
@@ -57,6 +65,14 @@
 
   --primary: oklch(0.46 0.09 155);       /* market green #2d6a4f */
   --primary-foreground: oklch(0.985 0.02 95);
+  --sec-shop: oklch(0.2 0.07 265);
+  --sec-food: oklch(0.82 0.15 80);
+  --sec-rides: oklch(0.42 0.08 155);
+  --sec-beauty: oklch(0.56 0.2 0);
+  --sec-home: oklch(0.58 0.14 235);
+  --sec-events: oklch(0.52 0.22 292);
+  --sec-dark-fg: oklch(0.99 0 0);
+  --sec-light-fg: oklch(0.18 0.01 60);
   --saffron: oklch(0.83 0.16 85);        /* golden yellow #f5b800 */
   --saffron-foreground: oklch(0.18 0.01 60);
   --leaf: oklch(0.6 0.13 150);
