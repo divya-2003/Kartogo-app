@@ -1,5 +1,11 @@
 # Roadmap
 
+## Dedicated home sections
+- [ ] Restrict Shop discovery and recommendations to Shop products
+- [ ] Show the food ordering and ride booking interfaces under their own tabs
+- [ ] Design separate Beauty, Home Services and Events discovery views
+- [ ] Test section boundaries and verify each home tab
+
 - [x] Apply Kartogo opening/login branding and guest-first account flow
 - [x] Add low-stock badges and enforce stock quantity limits
 - [x] Send and record back-in-stock notifications with product deep links
