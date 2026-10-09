@@ -188,7 +188,7 @@ function Index() {
           {/* collapsing block — folds away as the customer scrolls down */}
           <div
             className={`overflow-hidden transition-all duration-300 ${
-              collapsed ? "max-h-0 -translate-y-1 opacity-0" : "max-h-64 translate-y-0 opacity-100"
+              collapsed ? "max-h-0 -translate-y-1 opacity-0" : "max-h-[28rem] translate-y-0 opacity-100"
             }`}
           >
           {/* row: delivery time + wallet + profile */}
