@@ -20,6 +20,14 @@ import { isQuickProduct } from "@/lib/delivery-tier";
 
 const HOME_SEARCH_TERMS = ["milk", "haircut", "avakaya", "AC service", "sofa", "birthday decoration", "paneer"];
 
+const SECTION_SEARCH: Partial<Record<SectionId, string[]>> = {
+  shop: ["milk", "avakaya", "paneer", "bread", "agarbatti"],
+  food: ["biryani", "idli", "dosa", "cake", "meals"],
+  beauty: ["haircut", "facial", "spa", "bridal makeup"],
+  home: ["AC service", "plumber", "cleaning", "electrician"],
+  events: ["birthday decoration", "photographer", "DJ", "catering"],
+};
+
 export const Route = createFileRoute("/")({
   component: Index,
   head: () => ({
@@ -77,7 +85,8 @@ function Index() {
   const { ready: locReady, location } = useLocation();
   const nav = useNavigate();
   const { products } = useCatalog();
-  const typedTerm = useTypewriterPlaceholder(HOME_SEARCH_TERMS);
+  const [section, setSection] = useState<SectionId>("shop");
+  const typedTerm = useTypewriterPlaceholder(SECTION_SEARCH[section] ?? HOME_SEARCH_TERMS);
   const { count, subtotal } = useCart();
   const { balance } = useWallet();
   const { bundle } = useRecommendationBundle(8);
@@ -96,7 +105,6 @@ function Index() {
   // quick-service areas, Standard everywhere else we serve.
   const quickAvailable = !!location?.serviceable && isQuickArea(location.query || location.area);
   const [service, setService] = useState<"quick" | "standard">("standard");
-  const [section, setSection] = useState<SectionId>("shop");
   useEffect(() => {
     // A customer sent here from the unserviceable screen explicitly asked for
     // Standard — honour that over the auto-detected tier.
@@ -258,7 +266,7 @@ function Index() {
             <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 shadow-pop">
               <Search className="h-5 w-5 text-muted-foreground" />
               <span className="w-full truncate text-left text-sm text-muted-foreground">
-                {section === "rides" ? "Where do you want to go?" : `Search for "${SECTION_SEARCH[section]?.[typedIdx(typedTerm)] ?? typedTerm}"`}
+                {section === "rides" ? "Where do you want to go?" : `Search for "${typedTerm}"`}
               </span>
 
             </div>
