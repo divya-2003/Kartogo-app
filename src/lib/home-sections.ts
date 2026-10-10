@@ -1,6 +1,6 @@
 import type { CategoryGroup, MpCategory, MpListing, MpPartner } from "./marketplace";
 
-export type HomeSection = "shop" | "food" | "rides" | "beauty" | "home" | "events";
+export type HomeSection = "shop" | "food" | "health" | "rides" | "beauty" | "home" | "events";
 
 export function sectionGroup(section: HomeSection): CategoryGroup | null {
   if (section === "home") return "home_services";

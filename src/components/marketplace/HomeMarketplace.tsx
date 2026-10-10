@@ -7,6 +7,7 @@ import type { MpCategory, MpListing, MpPartner } from "@/lib/marketplace";
 
 const DESIGN = {
   shop: { title: "Explore Shop", note: "Furniture, electronics & everyday essentials", colour: "text-sec-shop", layout: "grid-cols-2 lg:grid-cols-4" },
+  health: { title: "Hospitals & Healthcare", note: "Clinics, doctor appointments & lab tests near you", colour: "text-sec-health", layout: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" },
   beauty: { title: "Beauty & Wellness", note: "Salon appointments, spa rituals & beauty at home", colour: "text-sec-beauty", layout: "grid-cols-2 lg:grid-cols-4" },
   home: { title: "Home Services", note: "Cleaning, repairs & care for your home", colour: "text-sec-home", layout: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" },
   events: { title: "Events", note: "Venues, photography & celebrations", colour: "text-sec-events", layout: "grid-cols-2 lg:grid-cols-3" },

@@ -6,7 +6,7 @@ export type TransactionType = "PRODUCT_ORDER" | "SERVICE_BOOKING" | "HOME_SERVIC
 export type PartnerType = "RETAILER" | "SERVICE_PROVIDER" | "PROFESSIONAL" | "EVENT_PROVIDER" | "FURNITURE_SELLER" | "HOME_SERVICE_PROVIDER";
 export type ServiceMode = "AT_SALON" | "HOME_SERVICE";
 export type CategoryBehavior = "PRODUCT" | "FURNITURE" | "SALON" | "HOME_SERVICE" | "EVENT" | "QUOTE";
-export type CategoryGroup = "shop" | "beauty" | "home_services" | "events";
+export type CategoryGroup = "shop" | "health" | "beauty" | "home_services" | "events";
 
 export type BookingStatus =
   | "BOOKING_REQUESTED" | "PROVIDER_CONFIRMED" | "PROFESSIONAL_ASSIGNED" | "PROFESSIONAL_TRAVELLING"
@@ -56,6 +56,7 @@ export type Booking = {
 
 export const GROUP_LABELS: Record<CategoryGroup, string> = {
   shop: "Shop",
+  health: "Hospitals & Healthcare",
   beauty: "Beauty & Wellness",
   home_services: "Home Services",
   events: "Events",

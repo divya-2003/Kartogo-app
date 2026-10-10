@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { listMpCategoriesFn } from "@/lib/marketplace.functions";
 import { GROUP_LABELS, type CategoryGroup, type MpCategory } from "@/lib/marketplace";
 
-const TINTS: Record<CategoryGroup, string> = { shop: "bg-leaf/10", beauty: "bg-saffron/15", home_services: "bg-primary/10", events: "bg-secondary" };
+const TINTS: Record<CategoryGroup, string> = { shop: "bg-leaf/10", health: "bg-sec-health/10", beauty: "bg-saffron/15", home_services: "bg-primary/10", events: "bg-secondary" };
 
 /** Data-driven category groups (Shop, Beauty & Wellness, Home Services, Events). */
 export function MarketplaceCategoryGroups({ term = "" }: { term?: string }) {
