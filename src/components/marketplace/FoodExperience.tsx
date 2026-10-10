@@ -83,11 +83,11 @@ export function FoodExperience({ embedded = false, initialQ = "" }: { embedded?:
               </div>
             </div>
             <div className="mt-4 flex gap-2">
-              <Button variant="ghost" onClick={() => setVegOnly(v => !v)} className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold ${vegOnly ? "border-leaf bg-leaf/10 text-leaf" : "border-border"}`}><VegMark veg /> Veg only</Button>
+              <Button size="natural" variant="ghost" onClick={() => setVegOnly(v => !v)} className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold ${vegOnly ? "border-leaf bg-leaf/10 text-leaf" : "border-border"}`}><VegMark veg /> Veg only</Button>
             </div>
             <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {kitchens.map(k => (
-                <Button variant="ghost" key={k.id} onClick={() => openKitchen(k)} className="block w-full overflow-hidden rounded-3xl border border-border bg-card text-left shadow-pop">
+                <Button size="natural" variant="ghost" key={k.id} onClick={() => openKitchen(k)} className="block w-full overflow-hidden rounded-3xl border border-border bg-card text-left shadow-pop">
                   <div className="relative">
                     <img src={k.image} alt={k.name} loading="lazy" className="h-40 w-full object-cover" />
                     {k.tag && <span className="absolute left-3 top-3 rounded-md bg-accent px-2 py-1 text-[11px] font-extrabold text-accent-foreground">{k.tag}</span>}
@@ -142,11 +142,11 @@ export function FoodExperience({ embedded = false, initialQ = "" }: { embedded?:
                   </div>
                   <div className="flex shrink-0 flex-col items-end justify-center gap-1">
                     {n === 0 ? (
-                      <Button variant="ghost" onClick={() => d.addons?.length ? setCustom({ dish: d, addons: [] }) : add(d, [])} className="rounded-lg border border-primary px-5 py-1.5 text-sm font-extrabold text-primary">ADD</Button>
+                      <Button size="natural" variant="ghost" onClick={() => d.addons?.length ? setCustom({ dish: d, addons: [] }) : add(d, [])} className="rounded-lg border border-primary px-5 py-1.5 text-sm font-extrabold text-primary">ADD</Button>
                     ) : (
                       <div className="flex items-center gap-3 rounded-lg bg-primary px-2 py-1.5 text-primary-foreground">
-                        <Button variant="ghost" aria-label="Decrease" onClick={() => dec(d.id)}><Minus className="h-4 w-4" /></Button><b className="text-sm">{n}</b>
-                        <Button variant="ghost" aria-label="Increase" onClick={() => d.addons?.length ? setCustom({ dish: d, addons: [] }) : add(d, [])}><Plus className="h-4 w-4" /></Button>
+                        <Button size="natural" variant="ghost" aria-label="Decrease" onClick={() => dec(d.id)}><Minus className="h-4 w-4" /></Button><b className="text-sm">{n}</b>
+                        <Button size="natural" variant="ghost" aria-label="Increase" onClick={() => d.addons?.length ? setCustom({ dish: d, addons: [] }) : add(d, [])}><Plus className="h-4 w-4" /></Button>
                       </div>
                     )}
                     {d.addons?.length ? <span className="text-[10px] text-muted-foreground">Customisable</span> : null}
@@ -161,7 +161,7 @@ export function FoodExperience({ embedded = false, initialQ = "" }: { embedded?:
       {custom && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40" onClick={() => setCustom(null)}>
           <div className="w-full max-w-2xl rounded-t-3xl bg-card p-5" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between"><div className="font-display text-lg font-extrabold">{custom.dish.name}</div><Button variant="ghost" aria-label="Close" onClick={() => setCustom(null)}><X className="h-5 w-5" /></Button></div>
+            <div className="flex items-center justify-between"><div className="font-display text-lg font-extrabold">{custom.dish.name}</div><Button size="natural" variant="ghost" aria-label="Close" onClick={() => setCustom(null)}><X className="h-5 w-5" /></Button></div>
             <div className="mt-3 space-y-2">
               {(custom.dish.addons ?? []).map(a => (
                 <label key={a.id} className="flex items-center justify-between rounded-xl border border-border p-3 text-sm">
@@ -170,7 +170,7 @@ export function FoodExperience({ embedded = false, initialQ = "" }: { embedded?:
                 </label>
               ))}
             </div>
-            <Button variant="ghost" onClick={() => { add(custom.dish, custom.addons); setCustom(null); }} className="mt-4 h-12 w-full rounded-xl bg-primary font-bold text-primary-foreground">Add item · {formatINR(dishUnitPrice(custom.dish, custom.addons))}</Button>
+            <Button size="natural" variant="ghost" onClick={() => { add(custom.dish, custom.addons); setCustom(null); }} className="mt-4 h-12 w-full rounded-xl bg-primary font-bold text-primary-foreground">Add item · {formatINR(dishUnitPrice(custom.dish, custom.addons))}</Button>
           </div>
         </div>
       )}
@@ -178,8 +178,8 @@ export function FoodExperience({ embedded = false, initialQ = "" }: { embedded?:
       {kitchen && count > 0 && (
         <div className={`fixed inset-x-0 ${embedded ? "bottom-[72px]" : "bottom-0"} z-40 border-t border-border bg-card/95 p-3 backdrop-blur`}>
           <div className="mx-auto flex max-w-2xl gap-2">
-            {checkout && <Button variant="ghost" onClick={() => setCheckout(false)} className="h-12 flex-1 rounded-xl border border-border font-bold">Edit</Button>}
-            <Button variant="ghost" disabled={busy} onClick={() => checkout ? place() : setCheckout(true)} className="flex h-12 flex-[2] items-center justify-between rounded-xl bg-primary px-4 font-bold text-primary-foreground disabled:opacity-50">
+            {checkout && <Button size="natural" variant="ghost" onClick={() => setCheckout(false)} className="h-12 flex-1 rounded-xl border border-border font-bold">Edit</Button>}
+            <Button size="natural" variant="ghost" disabled={busy} onClick={() => checkout ? place() : setCheckout(true)} className="flex h-12 flex-[2] items-center justify-between rounded-xl bg-primary px-4 font-bold text-primary-foreground disabled:opacity-50">
               <span className="flex items-center gap-2"><ShoppingBag className="h-4 w-4" />{count} item{count > 1 ? "s" : ""} · {formatINR(subtotal + (checkout ? FOOD_DELIVERY_FEE : 0))}</span>
               <span>{busy ? "Placing…" : checkout ? "Place order" : "Checkout"}</span>
             </Button>
