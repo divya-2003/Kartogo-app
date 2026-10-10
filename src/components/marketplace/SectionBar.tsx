@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
 
 export type SectionId = "shop" | "food" | "rides" | "beauty" | "home" | "events";
@@ -35,17 +36,17 @@ export const SECTIONS: { id: SectionId; label: string; icon: string; subs: Sub[]
 ];
 
 const CARD: Record<SectionId, { title: string; sub: string; cls: string; muted: string }> = {
-  shop: { title: "Shop", sub: "Groceries & daily essentials", cls: "bg-sec-shop text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
-  food: { title: "Food", sub: "Biryani, tiffins & meal combos", cls: "bg-sec-food text-sec-light-fg", muted: "text-sec-light-fg/75" },
-  rides: { title: "Rides", sub: "Bike, auto & car · upfront fares", cls: "bg-sec-rides text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
-  beauty: { title: "Beauty", sub: "Salon, parlour & spa", cls: "bg-sec-beauty text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
-  home: { title: "Services", sub: "Cleaning, AC & repairs", cls: "bg-sec-home text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
-  events: { title: "Events", sub: "Venues, decor & photos", cls: "bg-sec-events text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
+  shop: { title: "Shop", sub: "Groceries & daily essentials", cls: "bg-sec-shop text-sec-dark-fg hover:bg-sec-shop hover:text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
+  food: { title: "Food", sub: "Biryani, tiffins & meal combos", cls: "bg-sec-food text-sec-light-fg hover:bg-sec-food hover:text-sec-light-fg", muted: "text-sec-light-fg/75" },
+  rides: { title: "Rides", sub: "Bike, auto & car · upfront fares", cls: "bg-sec-rides text-sec-dark-fg hover:bg-sec-rides hover:text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
+  beauty: { title: "Beauty", sub: "Salon, parlour & spa", cls: "bg-sec-beauty text-sec-dark-fg hover:bg-sec-beauty hover:text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
+  home: { title: "Services", sub: "Cleaning, AC & repairs", cls: "bg-sec-home text-sec-dark-fg hover:bg-sec-home hover:text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
+  events: { title: "Events", sub: "Venues, decor & photos", cls: "bg-sec-events text-sec-dark-fg hover:bg-sec-events hover:text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
 };
 
 /** Coloured service cards (Shop, Food, Rides…) with the categories of the chosen section. */
 export function SectionBar({ value, onChange }: { value: SectionId; onChange: (v: SectionId) => void }) {
-  const current = SECTIONS.find(s => s.id === value)!;
+  const current = SECTIONS.find(s => s.id === value) ?? SECTIONS[0];
   return (
     <div className="mt-3">
       <div className="flex gap-2.5 overflow-x-auto pb-2 pt-1 [overscroll-behavior-x:contain] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist">
@@ -53,12 +54,12 @@ export function SectionBar({ value, onChange }: { value: SectionId; onChange: (v
           const c = CARD[s.id];
           const active = value === s.id;
           return (
-            <button key={s.id} type="button" role="tab" aria-selected={active} onClick={() => onChange(s.id)}
-              className={`flex w-[9.5rem] shrink-0 flex-col items-start rounded-3xl px-3.5 py-3 text-left shadow-pop transition duration-200 ${c.cls} ${active ? "ring-2 ring-foreground/80 ring-offset-2 ring-offset-background" : "opacity-75 hover:opacity-100"}`}>
+            <Button variant="ghost" key={s.id} type="button" role="tab" aria-selected={active} aria-label={s.label} onClick={() => onChange(s.id)}
+              className={`flex h-[7.5rem] w-[10.5rem] whitespace-normal shrink-0 flex-col items-start rounded-3xl px-3.5 py-3 text-left shadow-pop transition duration-200 ${c.cls} ${active ? "ring-2 ring-foreground/80 ring-offset-2 ring-offset-background" : "opacity-75 hover:opacity-100"}`}>
               <span className="text-2xl leading-none">{s.icon}</span>
               <span className="mt-2 font-display text-base font-extrabold leading-tight">{c.title}</span>
-              <span className={`mt-0.5 line-clamp-1 text-[11px] font-medium ${c.muted}`}>{c.sub}</span>
-            </button>
+              <span className={`mt-0.5 line-clamp-2 min-h-8 text-[11px] font-medium ${c.muted}`}>{c.sub}</span>
+            </Button>
           );
         })}
       </div>

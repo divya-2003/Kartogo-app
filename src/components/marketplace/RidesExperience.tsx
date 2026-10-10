@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { LocateFixed, MapPin, Navigation, Clock, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { PageTop } from "@/components/marketplace/Cards";
 import { useAuth } from "@/lib/store";
 import { formatINR } from "@/lib/data";
@@ -40,14 +41,14 @@ function PlacePicker({ label, value, onChange, allowCurrent }: { label: string; 
   };
   return (
     <div>
-      <button onClick={() => setOpen(o => !o)} className="flex w-full items-center gap-3 rounded-xl border border-border bg-background p-3 text-left">
+      <Button size="natural" variant="ghost" onClick={() => setOpen(o => !o)} className="flex w-full items-center gap-3 rounded-xl border border-border bg-background p-3 text-left">
         {allowCurrent ? <span className="h-3 w-3 rounded-full bg-leaf" /> : <span className="h-3 w-3 rounded-sm bg-destructive" />}
         <div className="min-w-0"><div className="text-[11px] font-bold uppercase text-muted-foreground">{label}</div><div className={`truncate text-sm font-semibold ${value ? "" : "text-muted-foreground"}`}>{value?.label ?? "Choose a place"}</div></div>
-      </button>
+      </Button>
       {open && (
         <div className="mt-2 space-y-1 rounded-xl border border-border bg-card p-2">
-          {allowCurrent && <button onClick={locate} className="flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm font-bold text-primary hover:bg-secondary">{locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}Use current location</button>}
-          {PLACES.map(p => <button key={p.label} onClick={() => { onChange(p); setOpen(false); }} className="flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm hover:bg-secondary"><MapPin className="h-4 w-4 text-muted-foreground" />{p.label}</button>)}
+          {allowCurrent && <Button size="natural" variant="ghost" onClick={locate} className="h-auto whitespace-normal flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm font-bold text-primary hover:bg-secondary">{locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}Use current location</Button>}
+          {PLACES.map(p => <Button size="natural" variant="ghost" key={p.label} onClick={() => { onChange(p); setOpen(false); }} className="flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm hover:bg-secondary"><MapPin className="h-4 w-4 text-muted-foreground" />{p.label}</Button>)}
         </div>
       )}
     </div>
@@ -133,8 +134,8 @@ export function RidesExperience({ embedded = false, search = {} }: { embedded?: 
             <div className="mt-3 flex justify-between border-t border-border pt-2 font-bold"><span>Fare</span><span>{formatINR(quote(vehicle, km ?? 1).fare)}</span></div>
           </div>
           <div className="flex gap-2">
-            <button onClick={cancel} className="h-12 flex-1 rounded-xl border border-destructive font-bold text-destructive">Cancel ride</button>
-            <button onClick={() => nav({ to: "/orders", search: { tab: "bookings" } })} className="h-12 flex-1 rounded-xl bg-primary font-bold text-primary-foreground">My Orders</button>
+            <Button size="natural" variant="ghost" onClick={cancel} className="h-auto whitespace-normal h-12 flex-1 rounded-xl border border-destructive font-bold text-destructive">Cancel ride</Button>
+            <Button size="natural" variant="ghost" onClick={() => nav({ to: "/orders", search: { tab: "bookings" } })} className="h-12 flex-1 rounded-xl bg-primary font-bold text-primary-foreground">My Orders</Button>
           </div>
         </div>
       </div>
@@ -155,7 +156,7 @@ export function RidesExperience({ embedded = false, search = {} }: { embedded?: 
           {VEHICLES.map(v => {
             const q = quote(v.id, km ?? 0);
             return (
-              <button key={v.id} onClick={() => setVehicle(v.id)} className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left ${vehicle === v.id ? "border-primary bg-primary/5" : "border-border bg-card"}`}>
+              <Button size="natural" variant="ghost" key={v.id} onClick={() => setVehicle(v.id)} className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left ${vehicle === v.id ? "border-primary bg-primary/5" : "border-border bg-card"}`}>
                 <span className="text-3xl">{v.icon}</span>
                 <div className="min-w-0 flex-1">
                   <div className="font-bold">{v.label} <span className="text-xs font-normal text-muted-foreground">· {v.seats} seat{v.seats > 1 ? "s" : ""}</span></div>
@@ -165,16 +166,16 @@ export function RidesExperience({ embedded = false, search = {} }: { embedded?: 
                   </div>
                 </div>
                 <span className="font-display text-lg font-extrabold">{km != null ? formatINR(q.fare) : `${formatINR(v.perKm)}/km`}</span>
-              </button>
+              </Button>
             );
           })}
         </div>
         <p className="text-xs text-muted-foreground">Upfront fare — what you see is what you pay. Pay the driver by cash or UPI.</p>
       </div>
       <div className={`fixed inset-x-0 ${embedded ? "bottom-[72px]" : "bottom-0"} z-40 border-t border-border bg-card/95 p-3 backdrop-blur`}>
-        <button disabled={busy || !pickup || !drop} onClick={book} className="mx-auto flex h-12 w-full max-w-2xl items-center justify-center rounded-xl bg-primary font-bold text-primary-foreground disabled:opacity-50">
+        <Button size="natural" variant="ghost" disabled={busy || !pickup || !drop} onClick={book} className="h-auto whitespace-normal mx-auto flex h-12 w-full max-w-2xl items-center justify-center rounded-xl bg-primary font-bold text-primary-foreground disabled:opacity-50">
           {busy ? "Booking…" : `Book ${(VEHICLES.find(x => x.id === vehicle) ?? VEHICLES[0]).label}${km != null ? ` · ${formatINR(quote(vehicle, km).fare)}` : ""}`}
-        </button>
+        </Button>
       </div>
     </div>
   );
