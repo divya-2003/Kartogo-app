@@ -1,3 +1,10 @@
+import { FoodExperience } from "@/components/marketplace/FoodExperience";
+import { RidesExperience } from "@/components/marketplace/RidesExperience";
+import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { listMpCategoriesFn } from "@/lib/marketplace.functions";
+import { catalogProductInShop } from "@/lib/home-sections";
+import type { MpCategory } from "@/lib/marketplace";
 import { HomeMarketplace } from "@/components/marketplace/HomeMarketplace";
 import { BottomNav } from "@/components/marketplace/BottomNav";
 import { SectionBar, type SectionId } from "@/components/marketplace/SectionBar";
@@ -84,7 +91,9 @@ function Index() {
   const { ready, user } = useAuth();
   const { ready: locReady, location } = useLocation();
   const nav = useNavigate();
-  const { products } = useCatalog();
+  const { products: catalogProducts } = useCatalog();
+  const categoriesQuery = useQuery({ queryKey: ["mp-cats"], queryFn: () => listMpCategoriesFn(), staleTime: 5 * 60_000 });
+  const products = catalogProducts.filter(p => catalogProductInShop(p, (categoriesQuery.data?.categories ?? []) as MpCategory[]));
   const [section, setSection] = useState<SectionId>("shop");
   const typedTerm = useTypewriterPlaceholder(SECTION_SEARCH[section] ?? HOME_SEARCH_TERMS);
   const { count, subtotal } = useCart();
@@ -182,7 +191,7 @@ function Index() {
       <AutoLocationGate />
       <h1 className="sr-only">Kartogo — Ongole's 15-minute neighbourhood store</h1>
       {/* ---------- Warm top (sticky) ---------- */}
-      <div className="sticky top-0 z-30 bg-gradient-to-b from-[oklch(0.9_0.07_70)] to-background shadow-sm">
+      <div className="sticky top-0 z-30 bg-gradient-to-b from-saffron/20 to-background shadow-sm">
 
         <div className="mx-auto max-w-2xl px-4 pt-4 lg:max-w-7xl lg:px-8">
           {/* collapsing block — folds away as the customer scrolls down */}
@@ -225,7 +234,7 @@ function Index() {
 
           {/* service options — Quick vs Standard, shown under Shop */}
           <div className={`mt-3 grid-cols-2 gap-2 ${section === "shop" ? "grid" : "hidden"}`}>
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={() => {
                 if (quickAvailable) setService("quick");
@@ -242,8 +251,8 @@ function Index() {
                   {quickAvailable ? deliveryWindow(location?.etaMinutes) : "Not in your area"}
                 </span>
               </span>
-            </button>
-            <button
+            </Button>
+            <Button variant="ghost"
               type="button"
               onClick={() => setService("standard")}
               className={`flex min-w-0 items-center gap-2 rounded-2xl border px-3 py-2.5 text-left transition ${
@@ -257,12 +266,12 @@ function Index() {
                   Same day, all areas
                 </span>
               </span>
-            </button>
+            </Button>
           </div>
           </div>
 
           {/* search — opens the full Trending / search page */}
-          <Link to={(section === "rides" ? "/rides" : section === "food" ? "/food" : "/search") as never} search={(section === "rides" || section === "food" ? {} : { q: "" }) as never} className="mt-3 block pb-4">
+          <Link to={(section === "rides" ? "/rides" : section === "food" ? "/food" : "/search") as never} search={(section === "rides" || section === "food" ? {} : { q: "", section }) as never} className="mt-3 block pb-4">
             <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 shadow-pop">
               <Search className="h-5 w-5 text-muted-foreground" />
               <span className="w-full truncate text-left text-sm text-muted-foreground">
@@ -276,6 +285,7 @@ function Index() {
       </div>
 
       <div className="mx-auto max-w-2xl px-4 pb-56 lg:max-w-7xl lg:px-8">
+        {section === "food" ? <FoodExperience embedded /> : section === "rides" ? <RidesExperience embedded /> : section !== "shop" ? <HomeMarketplace section={section} /> : <>
         {/* ---------- Category icon row (single scrollable strip, faded ends) ---------- */}
         <div className="relative">
           <div className="flex gap-4 overflow-x-auto py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -291,12 +301,12 @@ function Index() {
         </div>
 
 
-        <HomeMarketplace />
+        {service === "standard" && <HomeMarketplace section="shop" />}
 
         {/* ---------- Deal tiles grid ---------- */}
         <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {/* Big deal-zone card */}
-          <Link to="/product/$id" params={{ id: dealProduct.id }} className="row-span-2 flex flex-col overflow-hidden rounded-3xl border border-border bg-card p-3 shadow-pop">
+          {dealProduct && <Link to="/product/$id" params={{ id: dealProduct.id }} className="row-span-2 flex flex-col overflow-hidden rounded-3xl border border-border bg-card p-3 shadow-pop">
             <div className="font-display text-lg font-extrabold">Deal Zone</div>
             <div className="my-2 grid flex-1 place-items-center">
               {dealProduct.image ? (
@@ -309,7 +319,7 @@ function Index() {
               {dealProduct.mrp && <span className="text-sm text-muted-foreground line-through">{formatINR(dealProduct.mrp)}</span>}
               <span className="font-display text-xl font-extrabold text-primary">{formatINR(dealProduct.price)}</span>
             </div>
-          </Link>
+          </Link>}
 
           {tiles.map(t => (
             <Link
@@ -351,23 +361,23 @@ function Index() {
         <RecommendationRow
           title="Reorder"
           subtitle="Your regulars and past favourites, ready to add again."
-          items={reorderItems}
+          items={reorderItems.filter(r => tierProducts.some(p => p.id === r.productId))}
         />
 
         <RecommendationRow
           title="Recommended for you"
           subtitle="Picked from what you browse and buy."
-          items={bundle.personalized}
+          items={bundle.personalized.filter(r => tierProducts.some(p => p.id === r.productId))}
         />
         <RecommendationRow
           title="Frequently bought together"
           subtitle="Shoppers usually add these alongside your picks."
-          items={bundle.frequentlyBoughtTogether}
+          items={bundle.frequentlyBoughtTogether.filter(r => tierProducts.some(p => p.id === r.productId))}
         />
         <RecommendationRow
           title="Popular near you"
           subtitle="Trending with Ongole shoppers this week."
-          items={bundle.popular}
+          items={bundle.popular.filter(r => tierProducts.some(p => p.id === r.productId))}
         />
 
         {/* ---------- Combo bundles ---------- */}
@@ -397,26 +407,16 @@ function Index() {
         </div>
         )}
 
-        {/* ---------- Food & Rides ---------- */}
-        <div className="mt-6 grid grid-cols-2 gap-3">
-          <Link to="/food" className="rounded-3xl bg-accent p-4 text-accent-foreground shadow-pop">
-            <div className="text-3xl">🍛</div>
-            <div className="mt-2 font-display text-lg font-extrabold">Kartogo Food</div>
-            <div className="text-xs opacity-90">Biryani, tiffins & meal combos</div>
-          </Link>
-          <Link to="/rides" className="rounded-3xl bg-primary p-4 text-primary-foreground shadow-pop">
-            <div className="text-3xl">🛺</div>
-            <div className="mt-2 font-display text-lg font-extrabold">Kartogo Rides</div>
-            <div className="text-xs opacity-90">Bike, auto & car · upfront fares</div>
-          </Link>
-        </div>
+        <Link to="/print" className="mt-5 flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-pop"><Printer className="h-5 w-5 text-primary" /><span className="flex-1 text-sm font-bold">Kartogo Print Store</span></Link>
+        </>}
+
 
 
 
       </div>
 
       {/* ---------- Floating free-delivery + cart bar ---------- */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-[72px] z-40 px-4">
+      {section === "shop" && <div className="pointer-events-none fixed inset-x-0 bottom-[72px] z-40 px-4">
         <div className="mx-auto flex max-w-2xl items-stretch gap-2 lg:max-w-7xl">
           <div className="pointer-events-auto flex flex-1 items-center gap-3 rounded-2xl bg-ink px-4 py-3 text-background shadow-pop">
             <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-background/10">
@@ -446,6 +446,7 @@ function Index() {
           )}
         </div>
       </div>
+      }
       <BottomNav />
     </div>
   );

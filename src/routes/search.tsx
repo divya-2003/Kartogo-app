@@ -11,8 +11,12 @@ import { useTypewriterPlaceholder } from "@/hooks/use-typewriter";
 import { MarketplaceResults } from "@/components/marketplace/MarketplaceResults";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { z } from "zod";
+import { useQuery } from "@tanstack/react-query";
+import { listMpCategoriesFn } from "@/lib/marketplace.functions";
+import { catalogProductInShop } from "@/lib/home-sections";
+import type { MpCategory } from "@/lib/marketplace";
 
-const SearchSchema = z.object({ q: z.string().optional().default("") });
+const SearchSchema = z.object({ q: z.string().optional().default(""), section: z.enum(["shop", "beauty", "home", "events"]).optional() });
 
 export const Route = createFileRoute("/search")({
   validateSearch: SearchSchema,
@@ -20,7 +24,11 @@ export const Route = createFileRoute("/search")({
   head: () => ({
     meta: [
       { title: "Trending — Kartogo Ongole" },
-      { name: "description", content: "Trending deals and best-sellers on Kartogo — snacks, pickles, instant food, spices and more, delivered in 15 minutes across Ongole." },
+      { name: "description", content: "Find products, services and local providers on Kartogo in Ongole." },
+      { property: "og:title", content: "Search & Trending — Kartogo Ongole" },
+      { property: "og:description", content: "Find products, services and local providers on Kartogo in Ongole." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
 });
@@ -30,14 +38,19 @@ const SEARCH_TERMS = ["avakaya", "maggi", "agarbatti", "milk", "bread", "paneer"
 const POPULAR = ["avakaya", "maggi", "milk", "bread", "coffee", "agarbatti"];
 
 function SearchPage() {
-  const { q } = Route.useSearch();
-  const { products } = useCatalog();
+  const { q, section } = Route.useSearch();
+  const { products: allProducts } = useCatalog();
+  const cats = useQuery({ queryKey: ["mp-cats"], queryFn: () => listMpCategoriesFn(), staleTime: 5 * 60_000 });
+  const serviceSearch = section && section !== "shop";
+  const products = useMemo(() => serviceSearch ? [] : allProducts.filter(p => !section || catalogProductInShop(p, (cats.data?.categories ?? []) as MpCategory[])), [allProducts, section, serviceSearch, cats.data]);
+  const sectionLabel = section === "beauty" ? "Beauty & Wellness" : section === "home" ? "Home Services" : section === "events" ? "Events" : section === "shop" ? "Shop" : "Trending";
   const nav = useNavigate();
   const [input, setInput] = useState(q ?? "");
   const [recent, setRecent] = useState<string[]>([]);
   const [focused, setFocused] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const typed = useTypewriterPlaceholder(SEARCH_TERMS);
+  const popularTerms = section === "beauty" ? ["haircut", "spa", "makeup"] : section === "home" ? ["cleaning", "plumbing", "AC service"] : section === "events" ? ["photography", "catering", "decorations"] : POPULAR;
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Debounce so heavy ranking doesn't run on every keystroke.
@@ -85,13 +98,13 @@ function SearchPage() {
   useEffect(() => {
     const value = debounced.trim();
     if (value === (q ?? "").trim()) return;
-    void nav({ to: "/search", search: { q: value }, replace: true });
+    void nav({ to: "/search", search: { q: value, section }, replace: true });
   }, [debounced]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const query = q.trim().toLowerCase();
   const results = useMemo(() => rankProducts(products, query), [products, query]);
 
-  const categoryNames = useMemo(() => CATEGORIES.map(c => c.name), []);
+  const categoryNames = useMemo(() => serviceSearch ? [] : CATEGORIES.map(c => c.name), [serviceSearch]);
   const slugOf = (name: string) => CATEGORIES.find(c => c.name === name)?.slug ?? "";
 
   // Instant suggestions use the debounced text so the overlay feels live but cheap.
@@ -110,7 +123,7 @@ function SearchPage() {
   const submitSearch = (value: string) => {
     setInput(value);
     setDropdownOpen(false);
-    void nav({ to: "/search", search: { q: value }, replace: true });
+    void nav({ to: "/search", search: { q: value, section }, replace: true });
   };
 
   // While typing, results take over the full screen (own scrollbar) so the
@@ -147,7 +160,7 @@ function SearchPage() {
           <Link to="/" aria-label="Back" className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border hover:bg-secondary">
             <ChevronLeft className="h-5 w-5" />
           </Link>
-          <h1 className="font-display text-xl font-bold">Trending</h1>
+          <h1 className="font-display text-xl font-bold">{sectionLabel}</h1>
         </div>
         <div className="relative mx-auto max-w-2xl px-4 pb-3 lg:max-w-7xl lg:px-8">
           <form onSubmit={(e) => { e.preventDefault(); submitSearch(input); rememberSearch(input); }}>
@@ -159,7 +172,7 @@ function SearchPage() {
                 value={input}
                 onChange={(e) => { setInput(e.target.value); setDropdownOpen(true); }}
                 onFocus={() => { setFocused(true); setDropdownOpen(true); }}
-                placeholder={typed ? `Search for "${typed}"` : "Search products, services, stores..."}
+                placeholder={serviceSearch ? `Search ${sectionLabel.toLowerCase()}…` : `Search for "${typed}"`}
                 className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                 onBlur={() => { rememberSearch(input); setTimeout(() => { setFocused(false); setDropdownOpen(false); }, 150); }}
                 aria-label="Search products"
@@ -225,6 +238,7 @@ function SearchPage() {
       </div>
 
       <div className="mx-auto max-w-2xl px-4 py-5 lg:max-w-7xl lg:px-8">
+        {!query && serviceSearch && <MarketplaceResults q="" section={section} />}
         {/* Quick-select pills whenever the box is focused and empty */}
         {showPills && (
           <section className="mb-6 space-y-4">
@@ -257,7 +271,7 @@ function SearchPage() {
                 <Flame className="h-4 w-4" /> Popular searches
               </h2>
               <div className="mt-2 flex flex-wrap gap-2">
-                {POPULAR.map(term => (
+                {popularTerms.map(term => (
                   <button key={term} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => submitSearch(term)} className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold hover:bg-secondary">
                     {term}
                   </button>
@@ -273,10 +287,10 @@ function SearchPage() {
               Results for "<span className="text-primary">{q}</span>"
             </h2>
             <p className="mb-4 mt-1 text-sm text-muted-foreground">
-              {results.length} product{results.length === 1 ? "" : "s"} found
+              {serviceSearch ? `Searching ${sectionLabel.toLowerCase()}` : `${results.length} product${results.length === 1 ? "" : "s"} found`}
             </p>
-            <MarketplaceResults q={query} />
-            {results.length === 0 ? (
+            <MarketplaceResults q={query} section={section} />
+            {serviceSearch ? null : results.length === 0 ? (
               <>
                 <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
                   <p className="font-display text-lg font-extrabold">No exact matches found</p>
@@ -284,7 +298,7 @@ function SearchPage() {
                     We couldn't find “{q}”. Here's what everyone else is buying right now.
                   </p>
                   <div className="mt-4 flex flex-wrap justify-center gap-2">
-                    {POPULAR.map(term => (
+                    {popularTerms.map(term => (
                       <button key={term} type="button" onClick={() => submitSearch(term)} className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-secondary">
                         {term}
                       </button>
@@ -336,10 +350,10 @@ function SearchPage() {
 
             <div className="flex items-center gap-2">
               <Flame className="h-5 w-5 fill-saffron text-saffron" />
-              <h2 className="font-display text-xl font-extrabold">Trending now</h2>
+              <h2 className="font-display text-xl font-extrabold">{serviceSearch ? "" : "Trending now"}</h2>
             </div>
             <p className="mb-4 mt-1 text-sm text-muted-foreground">
-              Hottest deals flying off the shelves in Ongole.
+              {serviceSearch ? "" : "Hottest deals flying off the shelves in Ongole."}
             </p>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5">
               {trending.map(p => <ProductCard key={p.id} p={p} bestseller={bestsellerIds.has(p.id)} />)}

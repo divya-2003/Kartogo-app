@@ -1,68 +1,49 @@
 import { Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { Printer, ChevronRight } from "lucide-react";
-import { listMpCategoriesFn, homeMarketplaceFn } from "@/lib/marketplace.functions";
-import { ListingCard, PartnerCard } from "./Cards";
+import { useQueries, useQuery } from "@tanstack/react-query";
+import { listMpCategoriesFn, listCategoryFn } from "@/lib/marketplace.functions";
+import { ListingCard, PartnerCard, SkeletonGrid } from "./Cards";
+import { sectionCategories, type HomeSection } from "@/lib/home-sections";
 import type { MpCategory, MpListing, MpPartner } from "@/lib/marketplace";
 
-type Section = { key: string; title: string; is_visible: boolean; sort: number };
+const DESIGN = {
+  shop: { title: "Explore Shop", note: "Furniture, electronics & everyday essentials", colour: "text-sec-shop", layout: "grid-cols-2 lg:grid-cols-4" },
+  beauty: { title: "Beauty & Wellness", note: "Salon appointments, spa rituals & beauty at home", colour: "text-sec-beauty", layout: "grid-cols-2 lg:grid-cols-4" },
+  home: { title: "Home Services", note: "Cleaning, repairs & care for your home", colour: "text-sec-home", layout: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" },
+  events: { title: "Events", note: "Venues, photography & celebrations", colour: "text-sec-events", layout: "grid-cols-2 lg:grid-cols-3" },
+};
 
-/** Marketplace discovery block for Home. Section visibility/order come from the database so admin can control them. */
-export function HomeMarketplace() {
+export function HomeMarketplace({ section = "shop", term = "" }: { section?: Exclude<HomeSection, "food" | "rides">; term?: string }) {
   const cats = useQuery({ queryKey: ["mp-cats"], queryFn: () => listMpCategoriesFn(), staleTime: 5 * 60_000 });
-  const home = useQuery({ queryKey: ["mp-home"], queryFn: () => homeMarketplaceFn(), staleTime: 60_000 });
-  const sections = ((cats.data?.sections ?? []) as Section[]).filter(s => s.is_visible);
-  const visible = (k: string) => !cats.data || sections.some(s => s.key === k);
-  const titleOf = (k: string, d: string) => sections.find(s => s.key === k)?.title ?? d;
-  const popular = ((cats.data?.categories ?? []) as MpCategory[]).filter(c => c.is_popular).slice(0, 8);
-  const trending = (home.data?.trending ?? []) as MpListing[];
-  const fresh = ((home.data?.fresh ?? []) as MpListing[]).filter(l => l.transaction_type !== "PRODUCT_ORDER");
-  const stores = (home.data?.stores ?? []) as MpPartner[];
-
-  const blocks: Record<string, React.ReactNode> = {
-    popular_categories: (
-      <section key="popular_categories" className="mt-5">
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="font-display text-lg font-extrabold">{titleOf("popular_categories", "What are you looking for?")}</h2>
-          <Link to="/categories" className="inline-flex items-center text-xs font-bold text-primary">View All Categories<ChevronRight className="h-4 w-4" /></Link>
-        </div>
-        <div className="grid grid-cols-4 gap-2 lg:grid-cols-8">
-          {cats.isLoading ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-20 animate-pulse rounded-2xl bg-secondary" />) :
-            popular.map(c => (
-              <Link key={c.slug} to="/explore/$slug" params={{ slug: c.slug }} className="flex flex-col items-center gap-1 rounded-2xl border border-border bg-card p-2 text-center shadow-pop transition hover:-translate-y-0.5">
-                <span className="text-2xl">{c.icon}</span><span className="text-[11px] font-bold leading-tight">{c.name}</span>
-              </Link>
-            ))}
-        </div>
-      </section>
-    ),
-    trending_services: trending.length > 0 && (
-      <section key="trending_services" className="mt-5">
-        <h2 className="mb-2 font-display text-lg font-extrabold">{titleOf("trending_services", "Trending Services")}</h2>
-        <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none]">{trending.map(l => <ListingCard key={l.id} l={l} compact />)}</div>
-      </section>
-    ),
-    new_stores: stores.length > 0 && (
-      <section key="new_stores" className="mt-5">
-        <h2 className="mb-2 font-display text-lg font-extrabold">{titleOf("new_stores", "New Stores")}</h2>
-        <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none]">{stores.map(p => <PartnerCard key={p.id} p={p} compact />)}</div>
-      </section>
-    ),
-    new_services: fresh.length > 0 && (
-      <section key="new_services" className="mt-5">
-        <h2 className="mb-2 font-display text-lg font-extrabold">{titleOf("new_services", "New Services")}</h2>
-        <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none]">{fresh.map(l => <ListingCard key={l.id} l={l} compact />)}</div>
-      </section>
-    ),
-  };
-  const order = sections.length ? sections.map(s => s.key) : ["popular_categories", "trending_services", "new_stores", "new_services"];
-
+  const categories = sectionCategories((cats.data?.categories ?? []) as MpCategory[], section);
+  const results = useQueries({ queries: categories.map(c => ({ queryKey: ["mp-category", c.slug], queryFn: () => listCategoryFn({ data: { slug: c.slug } }), staleTime: 60_000 })) });
+  const listings = Array.from(new Map(results.flatMap(r => (r.data?.listings ?? []) as MpListing[]).map(l => [l.id, l])).values());
+  const partners = Array.from(new Map(results.flatMap(r => (r.data?.partners ?? []) as MpPartner[]).map(p => [p.id, p])).values());
+  const q = term.trim().toLowerCase();
+  const shown = listings.map(l => ({ ...l, images: l.images?.length ? l.images : [categories.find(c => c.slug === l.category_slug)?.image_url].filter((url): url is string => Boolean(url)) })).filter(l => !q || `${l.name} ${l.description ?? ""} ${l.partner?.name ?? ""}`.toLowerCase().includes(q));
+  const stores = partners.filter(p => !q || `${p.name} ${p.description ?? ""}`.toLowerCase().includes(q));
+  const d = DESIGN[section];
+  const loading = cats.isLoading || results.some(r => r.isLoading);
+  const error = cats.isError || results.some(r => r.isError);
   return (
-    <>
-      {order.filter(k => blocks[k] && visible(k)).map(k => blocks[k])}
-      <Link to="/print" className="mt-5 flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-pop">
-        <Printer className="h-5 w-5 text-primary" /><span className="flex-1 text-sm font-bold">Kartogo Print Store</span><ChevronRight className="h-4 w-4 text-muted-foreground" />
-      </Link>
-    </>
+    <section className="py-6" aria-label={d.title}>
+      <div className="mb-5 border-b border-border pb-4">
+        <h2 className={`font-display text-2xl font-extrabold ${d.colour}`}>{d.title}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{d.note}</p>
+      </div>
+      <div className={`mb-6 grid gap-3 ${section === "events" ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3 sm:grid-cols-4 lg:grid-cols-6"}`}>
+        {categories.filter(c => !q || c.name.toLowerCase().includes(q)).map(c => (
+          <Link key={c.slug} to="/explore/$slug" params={{ slug: c.slug }} className="overflow-hidden rounded-xl border border-border bg-card">
+            {c.image_url ? <img src={c.image_url} alt={c.name} loading="lazy" className={`${section === "events" ? "aspect-[3/2]" : "aspect-square"} w-full object-cover`} /> : <span className="grid aspect-square place-items-center bg-secondary text-4xl">{c.icon}</span>}
+            <span className="block px-2 py-3 text-center text-xs font-bold">{c.name}</span>
+          </Link>
+        ))}
+      </div>
+      {loading ? <SkeletonGrid n={4} /> : <>
+        {error && <p role="alert" className="py-4 text-sm text-muted-foreground">Couldn't load all listings. Please try again.</p>}
+        {shown.length > 0 && <><h3 className="mb-3 font-display text-lg font-extrabold">{section === "shop" ? "Products from local stores" : section === "beauty" ? "Book your next appointment" : section === "home" ? "Services for your home" : "Plan your occasion"}</h3><div className={`grid gap-4 ${d.layout}`}>{shown.map(l => <ListingCard key={l.id} l={l} />)}</div></>}
+        {stores.length > 0 && <><h3 className="mb-3 mt-7 font-display text-lg font-extrabold">{section === "shop" ? "Stores" : section === "beauty" ? "Salons & wellness providers" : section === "home" ? "Service professionals" : "Event partners"}</h3><div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">{stores.map(p => <PartnerCard key={p.id} p={p} />)}</div></>}
+        {!shown.length && !stores.length && !error && <p className="py-6 text-sm text-muted-foreground">{q ? "No matches in this section." : "New listings coming soon."}</p>}
+      </>}
+    </section>
   );
 }
