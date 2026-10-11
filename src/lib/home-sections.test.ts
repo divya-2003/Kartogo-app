@@ -34,7 +34,7 @@ describe("dedicated home sections", () => {
   });
 });
 describe("healthcare section", () => {
-  const cats = [{ slug: "lab-tests", group_key: "health", legacy_categories: [] }, { slug: "salon", group_key: "beauty", legacy_categories: [] }] as MpCategory[];
+  const cats = [{ slug: "lab-tests", group_key: "health", legacy_categories: [] }, { slug: "salon", group_key: "beauty", legacy_categories: [] }] as unknown as MpCategory[];
   it("keeps lab tests only in Hospitals & Healthcare", () => {
     expect(listingInSection({ category_slug: "lab-tests" }, cats, "health")).toBe(true);
     expect(listingInSection({ category_slug: "lab-tests" }, cats, "beauty")).toBe(false);
