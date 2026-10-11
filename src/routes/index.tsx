@@ -30,6 +30,7 @@ const HOME_SEARCH_TERMS = ["milk", "haircut", "avakaya", "AC service", "sofa", "
 const SECTION_SEARCH: Partial<Record<SectionId, string[]>> = {
   shop: ["milk", "avakaya", "paneer", "bread", "agarbatti"],
   food: ["biryani", "idli", "dosa", "cake", "meals"],
+  health: ["doctor appointment", "blood test", "clinic", "full body checkup"],
   beauty: ["haircut", "facial", "spa", "bridal makeup"],
   home: ["AC service", "plumber", "cleaning", "electrician"],
   events: ["birthday decoration", "photographer", "DJ", "catering"],

@@ -41,8 +41,8 @@ export function HomeMarketplace({ section = "shop", term = "" }: { section?: Exc
       </div>
       {loading ? <SkeletonGrid n={4} /> : <>
         {error && <p role="alert" className="py-4 text-sm text-muted-foreground">Couldn't load all listings. Please try again.</p>}
-        {shown.length > 0 && <><h3 className="mb-3 font-display text-lg font-extrabold">{section === "shop" ? "Products from local stores" : section === "beauty" ? "Book your next appointment" : section === "home" ? "Services for your home" : "Plan your occasion"}</h3><div className={`grid gap-4 ${d.layout}`}>{shown.map(l => <ListingCard key={l.id} l={l} />)}</div></>}
-        {stores.length > 0 && <><h3 className="mb-3 mt-7 font-display text-lg font-extrabold">{section === "shop" ? "Stores" : section === "beauty" ? "Salons & wellness providers" : section === "home" ? "Service professionals" : "Event partners"}</h3><div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">{stores.map(p => <PartnerCard key={p.id} p={p} />)}</div></>}
+        {shown.length > 0 && <><h3 className="mb-3 font-display text-lg font-extrabold">{section === "shop" ? "Products from local stores" : section === "health" ? "Book a consultation or test" : section === "beauty" ? "Book your next appointment" : section === "home" ? "Services for your home" : "Plan your occasion"}</h3><div className={`grid gap-4 ${d.layout}`}>{shown.map(l => <ListingCard key={l.id} l={l} />)}</div></>}
+        {stores.length > 0 && <><h3 className="mb-3 mt-7 font-display text-lg font-extrabold">{section === "shop" ? "Stores" : section === "health" ? "Hospitals, clinics & labs" : section === "beauty" ? "Salons & wellness providers" : section === "home" ? "Service professionals" : "Event partners"}</h3><div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">{stores.map(p => <PartnerCard key={p.id} p={p} />)}</div></>}
         {!shown.length && !stores.length && !error && <p className="py-6 text-sm text-muted-foreground">{q ? "No matches in this section." : "New listings coming soon."}</p>}
       </>}
     </section>
