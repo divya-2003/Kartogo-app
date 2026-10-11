@@ -16,7 +16,7 @@ import { listMpCategoriesFn } from "@/lib/marketplace.functions";
 import { catalogProductInShop } from "@/lib/home-sections";
 import type { MpCategory } from "@/lib/marketplace";
 
-const SearchSchema = z.object({ q: z.string().optional().default(""), section: z.enum(["shop", "beauty", "home", "events"]).optional() });
+const SearchSchema = z.object({ q: z.string().optional().default(""), section: z.enum(["shop", "health", "beauty", "home", "events"]).optional() });
 
 export const Route = createFileRoute("/search")({
   validateSearch: SearchSchema,
@@ -43,14 +43,14 @@ function SearchPage() {
   const cats = useQuery({ queryKey: ["mp-cats"], queryFn: () => listMpCategoriesFn(), staleTime: 5 * 60_000 });
   const serviceSearch = section && section !== "shop";
   const products = useMemo(() => serviceSearch ? [] : allProducts.filter(p => !section || catalogProductInShop(p, (cats.data?.categories ?? []) as MpCategory[])), [allProducts, section, serviceSearch, cats.data]);
-  const sectionLabel = section === "beauty" ? "Beauty & Wellness" : section === "home" ? "Home Services" : section === "events" ? "Events" : section === "shop" ? "Shop" : "Trending";
+  const sectionLabel = section === "health" ? "Hospitals & Healthcare" : section === "beauty" ? "Beauty & Wellness" : section === "home" ? "Home Services" : section === "events" ? "Events" : section === "shop" ? "Shop" : "Trending";
   const nav = useNavigate();
   const [input, setInput] = useState(q ?? "");
   const [recent, setRecent] = useState<string[]>([]);
   const [focused, setFocused] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const typed = useTypewriterPlaceholder(SEARCH_TERMS);
-  const popularTerms = section === "beauty" ? ["haircut", "spa", "makeup"] : section === "home" ? ["cleaning", "plumbing", "AC service"] : section === "events" ? ["photography", "catering", "decorations"] : POPULAR;
+  const popularTerms = section === "health" ? ["doctor", "blood test", "clinic"] : section === "beauty" ? ["haircut", "spa", "makeup"] : section === "home" ? ["cleaning", "plumbing", "AC service"] : section === "events" ? ["photography", "catering", "decorations"] : POPULAR;
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Debounce so heavy ranking doesn't run on every keystroke.
