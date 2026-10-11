@@ -197,7 +197,7 @@ function TrackOrderPage() {
         <button
           type="button"
           aria-label="Go back"
-          onClick={() => void navigate({ to: "/orders" })}
+          onClick={() => { if (window.history.length > 1) window.history.back(); else void navigate({ to: "/orders", replace: true }); }}
           className="grid h-9 w-9 place-items-center rounded-full border border-dashed border-primary/50 text-primary"
         >
           <ArrowLeft className="h-4 w-4" />

@@ -102,7 +102,7 @@ function CheckoutPage() {
   }, [slots, speed, slotId]);
 
 
-  const userName = user?.name?.trim() || "Kartogo User";
+  const userName = user?.name?.trim() || "Customer";
   // The address the customer picked in "Select your location" is always the
   // default delivery address here — never an older saved one.
   const currentLocationId = location ? `location:${location.query}` : null;

@@ -467,13 +467,13 @@ function LocationPickerClient({
               )}
 
               {denied ? (
-                <div className="space-y-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                <div className="space-y-2 rounded-xl border border-border bg-card p-3 text-sm text-foreground">
                   <div className="flex items-start gap-2">
-                    <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                     <span>{denied.reason}</span>
                   </div>
                   {requested ? (
-                    <div className="flex items-center justify-center gap-2 rounded-lg bg-leaf/10 px-3 py-2 text-xs font-bold text-leaf">
+                    <div className="flex items-center justify-center gap-2 rounded-lg bg-secondary px-3 py-2 text-xs font-bold text-foreground">
                       <Check className="h-3.5 w-3.5" /> Location requested
                     </div>
                   ) : (
@@ -481,7 +481,7 @@ function LocationPickerClient({
                       type="button"
                       onClick={() => void requestArea()}
                       disabled={requesting}
-                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-destructive px-3 py-2 text-xs font-bold text-destructive-foreground hover:bg-destructive/90 disabled:opacity-60"
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
                     >
                       {requesting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
                       Request Kartogo to your area

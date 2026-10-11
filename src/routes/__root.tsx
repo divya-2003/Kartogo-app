@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import { Toaster } from "sonner";
 import { SplashScreen } from "@/components/SplashScreen";
 import { PushBridge } from "@/components/PushBridge";
+import { IdleReturnHome } from "@/components/IdleReturnHome";
 import { CartProvider, AuthProvider, CatalogProvider, OrdersProvider, LocationProvider, WalletProvider, WishlistProvider, DriversProvider } from "@/lib/store";
 
 import appCss from "../styles.css?url";
@@ -139,6 +140,7 @@ function RootComponent() {
                       <SplashScreen />
 <RouteMemory />
                       <PushBridge />
+                      <IdleReturnHome />
                       <Toaster position="top-center" richColors />
 
                     </WishlistProvider>
