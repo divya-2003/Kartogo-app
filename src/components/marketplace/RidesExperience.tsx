@@ -27,28 +27,63 @@ const PLACES: Place[] = [
   { label: "Trunk Road", lat: 15.5148, lng: 80.0472 },
 ];
 
+/** Live address search (OpenStreetMap) biased to India. */
+async function searchPlaces(q: string): Promise<Place[]> {
+  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=in&limit=6&q=${encodeURIComponent(q)}`;
+  const res = await fetch(url, { headers: { "Accept-Language": "en" } });
+  if (!res.ok) return [];
+  const rows = (await res.json()) as { display_name: string; lat: string; lon: string }[];
+  return rows.map(r => ({ label: r.display_name, lat: Number(r.lat), lng: Number(r.lon) }));
+}
+
+async function addressFor(lat: number, lng: number): Promise<string> {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=17&lat=${lat}&lon=${lng}`, { headers: { "Accept-Language": "en" } });
+    const j = res.ok ? await res.json() as { display_name?: string } : null;
+    return j?.display_name ?? "Current location";
+  } catch { return "Current location"; }
+}
+
 function PlacePicker({ label, value, onChange, allowCurrent }: { label: string; value: Place | null; onChange: (p: Place) => void; allowCurrent?: boolean }) {
   const [open, setOpen] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [q, setQ] = useState("");
+  const [results, setResults] = useState<Place[]>([]);
+  const [searching, setSearching] = useState(false);
+  useEffect(() => {
+    const term = q.trim();
+    if (term.length < 3) { setResults([]); return; }
+    let alive = true;
+    setSearching(true);
+    const t = setTimeout(() => {
+      searchPlaces(term).then(r => { if (alive) setResults(r); }).catch(() => {}).finally(() => { if (alive) setSearching(false); });
+    }, 350);
+    return () => { alive = false; clearTimeout(t); };
+  }, [q]);
+  const pick = (p: Place) => { onChange(p); setOpen(false); setQ(""); };
   const locate = () => {
     if (!navigator.geolocation) return void toast.error("Location isn't available on this device");
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
-      p => { setLocating(false); setOpen(false); onChange({ label: "Current location", lat: p.coords.latitude, lng: p.coords.longitude }); },
-      () => { setLocating(false); toast.error("Couldn't get your location. Pick a place instead."); },
+      async p => { const { latitude: lat, longitude: lng } = p.coords; const label = await addressFor(lat, lng); setLocating(false); pick({ label, lat, lng }); },
+      () => { setLocating(false); toast.error("Couldn't get your location. Search for a place instead."); },
       { enableHighAccuracy: true, timeout: 10000 },
     );
   };
+  const local = PLACES.filter(p => !q.trim() || p.label.toLowerCase().includes(q.trim().toLowerCase()));
   return (
     <div>
       <Button size="natural" variant="ghost" onClick={() => setOpen(o => !o)} className="flex w-full items-center gap-3 rounded-xl border border-border bg-background p-3 text-left">
-        {allowCurrent ? <span className="h-3 w-3 rounded-full bg-leaf" /> : <span className="h-3 w-3 rounded-sm bg-destructive" />}
+        {allowCurrent ? <span className="h-3 w-3 shrink-0 rounded-full bg-leaf" /> : <span className="h-3 w-3 shrink-0 rounded-sm bg-destructive" />}
         <div className="min-w-0"><div className="text-[11px] font-bold uppercase text-muted-foreground">{label}</div><div className={`truncate text-sm font-semibold ${value ? "" : "text-muted-foreground"}`}>{value?.label ?? "Choose a place"}</div></div>
       </Button>
       {open && (
         <div className="mt-2 space-y-1 rounded-xl border border-border bg-card p-2">
+          <input autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder={`Search ${label.toLowerCase()} address`} aria-label={`Search ${label} address`} className="mb-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
           {allowCurrent && <Button size="natural" variant="ghost" onClick={locate} className="h-auto whitespace-normal flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm font-bold text-primary hover:bg-secondary">{locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}Use current location</Button>}
-          {PLACES.map(p => <Button size="natural" variant="ghost" key={p.label} onClick={() => { onChange(p); setOpen(false); }} className="flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm hover:bg-secondary"><MapPin className="h-4 w-4 text-muted-foreground" />{p.label}</Button>)}
+          {searching && <div className="flex items-center gap-2 p-2 text-xs text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" />Searching…</div>}
+          {results.map(p => <Button size="natural" variant="ghost" key={`${p.lat},${p.lng}`} onClick={() => pick(p)} className="h-auto whitespace-normal flex w-full items-start gap-2 rounded-lg p-2 text-left text-sm hover:bg-secondary"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" /><span className="line-clamp-2">{p.label}</span></Button>)}
+          {local.map(p => <Button size="natural" variant="ghost" key={p.label} onClick={() => pick(p)} className="flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm hover:bg-secondary"><MapPin className="h-4 w-4 text-muted-foreground" />{p.label}</Button>)}
         </div>
       )}
     </div>
@@ -69,7 +104,11 @@ export function RidesExperience({ embedded = false, search = {} }: { embedded?: 
 
   // Auto-fill pickup from current location on first load.
   useEffect(() => {
-    navigator.geolocation?.getCurrentPosition(p => setPickup(cur => cur ?? { label: "Current location", lat: p.coords.latitude, lng: p.coords.longitude }), () => {}, { timeout: 8000 });
+    navigator.geolocation?.getCurrentPosition(async p => {
+      const { latitude: lat, longitude: lng } = p.coords;
+      const label = await addressFor(lat, lng);
+      setPickup(cur => cur ?? { label, lat, lng });
+    }, () => {}, { timeout: 8000 });
     setNearby({ bike: 3 + Math.floor(Math.random() * 5), auto: 2 + Math.floor(Math.random() * 4), car: 1 + Math.floor(Math.random() * 3) });
   }, []);
 
