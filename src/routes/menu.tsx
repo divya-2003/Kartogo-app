@@ -1,4 +1,4 @@
-import { ClipboardList as MClipboard, Star as MStar, MapPin as MMapPin, CreditCard as MCard, Tag as MTag, Store as MStore, Printer as MPrinter, Settings as MSettings, Shield as MShield, FileText as MFile } from "lucide-react";
+import { ClipboardList as MClipboard, Star as MStar, MapPin as MMapPin, CreditCard as MCard, Tag as MTag, Store as MStore, Printer as MPrinter, Settings as MSettings, Shield as MShield, FileText as MFile, Pencil as MPencil } from "lucide-react";
 import { BottomNav } from "@/components/marketplace/BottomNav";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -116,10 +116,11 @@ function MenuPage() {
           <div className="grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-primary text-primary-foreground">
             <UserCircle2 className="h-12 w-12" />
           </div>
-          <div>
-            <div className="font-display text-2xl font-bold">{user.name || "Kartogo User"}</div>
+          <div className="min-w-0 flex-1">
+            {user.name?.trim() && <div className="truncate font-display text-2xl font-bold">{user.name}</div>}
             <div className="text-sm text-muted-foreground">+91 {user.phone}</div>
           </div>
+          <Link to="/account" aria-label="Edit profile" className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-bold shadow-pop"><MPencil className="h-4 w-4" />Edit</Link>
         </div>
 
         {/* Quick action cards */}
