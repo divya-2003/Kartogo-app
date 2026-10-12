@@ -12,6 +12,7 @@ import { Toaster } from "sonner";
 import { SplashScreen } from "@/components/SplashScreen";
 import { PushBridge } from "@/components/PushBridge";
 import { IdleReturnHome } from "@/components/IdleReturnHome";
+import { BottomSectionBack } from "@/components/BottomSectionBack";
 import { CartProvider, AuthProvider, CatalogProvider, OrdersProvider, LocationProvider, WalletProvider, WishlistProvider, DriversProvider } from "@/lib/store";
 
 import appCss from "../styles.css?url";
@@ -141,6 +142,7 @@ function RootComponent() {
 <RouteMemory />
                       <PushBridge />
                       <IdleReturnHome />
+                      <BottomSectionBack />
                       <Toaster position="top-center" richColors />
 
                     </WishlistProvider>

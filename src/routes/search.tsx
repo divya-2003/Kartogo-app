@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { listMpCategoriesFn } from "@/lib/marketplace.functions";
 import { catalogProductInShop } from "@/lib/home-sections";
 import type { MpCategory } from "@/lib/marketplace";
+import { Button } from "@/components/ui/button";
 
 const SearchSchema = z.object({ q: z.string().optional().default(""), section: z.enum(["shop", "health", "beauty", "home", "events"]).optional() });
 
@@ -248,14 +249,14 @@ function SearchPage() {
                   <h2 className="flex items-center gap-2 font-display text-sm font-extrabold uppercase tracking-wide text-muted-foreground">
                     <Clock className="h-4 w-4" /> Recent searches
                   </h2>
-                  <button
+                   <Button variant="link" size="sm"
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => { setRecent([]); try { localStorage.removeItem(RECENT_KEY); } catch { /* ignore */ } }}
                     className="text-xs font-bold text-primary hover:underline"
                   >
                     Clear all
-                  </button>
+                   </Button>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {recent.map(term => (
@@ -327,13 +328,13 @@ function SearchPage() {
                   <h2 className="flex items-center gap-2 font-display text-sm font-extrabold uppercase tracking-wide text-muted-foreground">
                     <Clock className="h-4 w-4" /> Recent searches
                   </h2>
-                  <button
+                   <Button variant="link" size="sm"
                     type="button"
                     onClick={() => { setRecent([]); try { localStorage.removeItem(RECENT_KEY); } catch { /* ignore */ } }}
                     className="text-xs font-bold text-primary hover:underline"
                   >
                     Clear all
-                  </button>
+                   </Button>
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   {recent.map(term => (
