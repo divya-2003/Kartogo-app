@@ -1,5 +1,12 @@
 # Roadmap
 
+## Customer navigation fixes
+- [ ] Show full top-section labels and remove shortcut category rows
+- [ ] Stop home-header blinking during slow scrolling
+- [ ] Verify Clear all removes recent searches
+- [ ] Ensure bottom-section back navigation returns Home
+- [ ] Verify the requested flows on screen
+
 ## Dedicated home sections
 - [x] Restrict Shop discovery and recommendations to Shop products
 - [x] Show the food ordering and ride booking interfaces under their own tabs

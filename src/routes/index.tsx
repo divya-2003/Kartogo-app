@@ -17,7 +17,7 @@ import { AutoLocationGate } from "@/components/AutoLocationGate";
 import { ProductCard } from "@/components/ProductCard";
 import { RecommendationRow } from "@/components/RecommendationRow";
 import { useRecommendationBundle, useCustomerTracking } from "@/hooks/use-recommendations";
-import { CATEGORIES, formatINR } from "@/lib/data";
+import { formatINR } from "@/lib/data";
 import { useCatalog, useAuth, useLocation, useCart, useWallet } from "@/lib/store";
 import { COUPONS as PROMO_COUPONS } from "@/lib/promo";
 import { toast } from "sonner";
@@ -128,24 +128,6 @@ function Index() {
     setService(quickAvailable ? "quick" : "standard");
   }, [quickAvailable]);
 
-  // Collapsing header: once the page is scrolled at all, only the search bar
-  // stays pinned. The full bar returns *only* at the very top of the page —
-  // direction-based toggling caused flicker, so it is intentionally avoided.
-  const [collapsed, setCollapsed] = useState(false);
-  useEffect(() => {
-    let frame = 0;
-    const apply = () => {
-      frame = 0;
-      const y = window.scrollY;
-      // Hysteresis: collapse past 72px, expand only back at the very top.
-      setCollapsed(prev => (prev ? y > 4 : y > 72));
-    };
-    const onScroll = () => { if (!frame) frame = requestAnimationFrame(apply); };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    apply();
-    return () => { window.removeEventListener("scroll", onScroll); if (frame) cancelAnimationFrame(frame); };
-  }, []);
-
   useEffect(() => {
     if (roleTarget) nav({ to: roleTarget, replace: true });
   }, [roleTarget, nav]);
@@ -191,16 +173,10 @@ function Index() {
     <div className="min-h-screen bg-background pb-24">
       <AutoLocationGate />
       <h1 className="sr-only">Kartogo — Ongole's 15-minute neighbourhood store</h1>
-      {/* ---------- Warm top (sticky) ---------- */}
-      <div className="sticky top-0 z-30 bg-gradient-to-b from-saffron/20 to-background shadow-sm">
+      {/* The top area scrolls naturally; only the search remains sticky. */}
+      <div className="bg-gradient-to-b from-saffron/20 to-background">
 
         <div className="mx-auto max-w-2xl px-4 pt-4 lg:max-w-7xl lg:px-8">
-          {/* collapsing block — folds away as the customer scrolls down */}
-          <div
-            className={`overflow-hidden transition-all duration-300 ${
-              collapsed ? "max-h-0 -translate-y-1 opacity-0" : "max-h-[28rem] translate-y-0 opacity-100"
-            }`}
-          >
           {/* row: delivery time + wallet + profile */}
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
             <div className="min-w-0">
@@ -269,8 +245,11 @@ function Index() {
               </span>
             </Button>
           </div>
-          </div>
+        </div>
+      </div>
 
+      <div className="sticky top-0 z-30 bg-background shadow-sm">
+        <div className="mx-auto max-w-2xl px-4 lg:max-w-7xl lg:px-8">
           {/* search — opens the full Trending / search page */}
           <Link to={(section === "rides" ? "/rides" : section === "food" ? "/food" : "/search") as never} search={(section === "rides" || section === "food" ? {} : { q: "", section }) as never} className="mt-3 block pb-4">
             <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 shadow-pop">
@@ -288,18 +267,6 @@ function Index() {
       <div className="mx-auto max-w-2xl px-4 pb-56 lg:max-w-7xl lg:px-8">
         {section === "food" ? <FoodExperience embedded /> : section === "rides" ? <RidesExperience embedded /> : section !== "shop" ? <HomeMarketplace section={section} /> : <>
         {/* ---------- Category icon row (single scrollable strip, faded ends) ---------- */}
-        <div className="relative">
-          <div className="flex gap-4 overflow-x-auto py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {CATEGORIES.map(c => (
-              <Link key={c.slug} to="/category/$slug" params={{ slug: c.slug }} className="flex w-16 shrink-0 flex-col items-center gap-1">
-                <div className={`grid h-14 w-14 place-items-center rounded-2xl ${c.tint} text-2xl`}>{c.emoji}</div>
-                <div className="truncate text-center text-[11px] font-semibold leading-tight">{c.name}</div>
-              </Link>
-            ))}
-          </div>
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-background to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-background to-transparent" />
-        </div>
 
 
         {service === "standard" && <HomeMarketplace section="shop" />}

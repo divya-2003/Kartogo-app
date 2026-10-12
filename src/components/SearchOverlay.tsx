@@ -7,6 +7,7 @@ import { rankProducts } from "@/lib/search-rank";
 import { HighlightText } from "@/components/HighlightText";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter";
+import { Button } from "@/components/ui/button";
 
 const SUGGESTIONS = ["avakaya", "maggi", "agarbatti", "batter", "coffee", "tea"];
 const RECENT_KEY = "qk_recent_searches";
@@ -110,7 +111,7 @@ export function SearchOverlay({ open, onClose }: { open: boolean; onClose: () =>
               <div className="mb-5">
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Recent searches</h3>
-                  <button type="button" onClick={clearRecent} className="text-xs font-bold text-primary hover:underline">Clear all</button>
+                   <Button variant="link" size="sm" type="button" onClick={clearRecent} className="shrink-0 text-xs font-bold">Clear all</Button>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {recent.map(term => (

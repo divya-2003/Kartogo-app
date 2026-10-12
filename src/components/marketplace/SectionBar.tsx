@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Link } from "@tanstack/react-router";
 
 export type SectionId = "shop" | "food" | "health" | "rides" | "beauty" | "home" | "events";
 
@@ -50,7 +49,6 @@ const CARD: Record<SectionId, { title: string; sub: string; cls: string; muted: 
 
 /** Coloured service cards that always fit the screen width (no sideways scrolling). */
 export function SectionBar({ value, onChange }: { value: SectionId; onChange: (v: SectionId) => void }) {
-  const current = SECTIONS.find(s => s.id === value) ?? SECTIONS[0];
   return (
     <div className="mt-3">
       <div className="grid grid-cols-7 gap-1 pb-2 pt-1 sm:gap-2.5" role="tablist">
@@ -58,22 +56,14 @@ export function SectionBar({ value, onChange }: { value: SectionId; onChange: (v
           const c = CARD[s.id];
           const active = value === s.id;
           return (
-            <Button variant="ghost" key={s.id} type="button" role="tab" aria-selected={active} aria-label={s.label} onClick={() => onChange(s.id)}
-              className={`flex h-auto min-w-0 flex-col items-center whitespace-normal rounded-2xl px-0.5 py-2 text-center shadow-pop transition duration-200 sm:h-[7.5rem] sm:items-start sm:rounded-3xl sm:px-3.5 sm:py-3 sm:text-left ${c.cls} ${active ? "ring-2 ring-foreground/80 ring-offset-2 ring-offset-background" : "opacity-75 hover:opacity-100"}`}>
-              <span className="text-xl leading-none sm:text-2xl">{s.icon}</span>
-              <span className="mt-1 w-full truncate font-display text-[10px] font-extrabold leading-tight sm:mt-2 sm:text-base">{c.title}</span>
-              <span className={`mt-0.5 hidden line-clamp-2 min-h-8 text-[11px] font-medium sm:block ${c.muted}`}>{c.sub}</span>
+            <Button variant="ghost" size="natural" key={s.id} type="button" role="tab" aria-selected={active} aria-label={s.label} onClick={() => onChange(s.id)}
+              className={`flex min-h-20 min-w-0 flex-col items-center justify-start gap-1 rounded-2xl px-0.5 py-3 text-center shadow-pop transition-colors sm:min-h-36 sm:items-start sm:gap-2 sm:rounded-3xl sm:px-3 sm:py-4 sm:text-left ${c.cls} ${active ? "ring-2 ring-foreground/80 ring-offset-2 ring-offset-background" : "opacity-75 hover:opacity-100"}`}>
+              <span className="shrink-0 text-xl leading-none sm:text-2xl">{s.icon}</span>
+              <span className="w-full whitespace-normal break-words font-display text-[10px] font-extrabold leading-normal sm:text-base">{c.title}</span>
+              <span className={`hidden w-full whitespace-normal text-[11px] font-medium leading-relaxed sm:block ${c.muted}`}>{c.sub}</span>
             </Button>
           );
         })}
-      </div>
-      <div className="mt-2 grid gap-2 sm:flex sm:gap-3" style={{ gridTemplateColumns: `repeat(${current.subs.length}, minmax(0, 1fr))` }}>
-        {current.subs.map(sub => (
-          <Link key={sub.label} to={sub.to as never} params={sub.params as never} search={sub.search as never} className="flex min-w-0 flex-col items-center gap-1 sm:w-[4.5rem]">
-            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-card text-xl shadow-pop sm:h-12 sm:w-12 sm:text-2xl">{sub.icon}</span>
-            <span className="line-clamp-2 text-center text-[10px] font-semibold leading-tight sm:text-[11px]">{sub.label}</span>
-          </Link>
-        ))}
       </div>
     </div>
   );
