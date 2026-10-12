@@ -15,8 +15,7 @@ export function BottomSectionBack() {
     if (blocker.status !== "blocked") return;
     blocker.reset();
     // Let the history adapter cancel the original pop before replacing this section.
-    const timer = window.setTimeout(() => { void router.navigate({ to: "/", replace: true }); }, 0);
-    return () => window.clearTimeout(timer);
+    window.setTimeout(() => { void router.navigate({ to: "/", replace: true }); }, 0);
   }, [blocker, router]);
   return null;
 }
