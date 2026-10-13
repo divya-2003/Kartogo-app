@@ -6,10 +6,12 @@ import { backMustReturnHome } from "@/lib/customer-navigation";
 export function BottomSectionBack() {
   const router = useRouter();
   useEffect(() => {
+    console.log("bottom-back mounted", window.location.pathname);
     let returnHome = false;
     const unblock = router.history.block({
       enableBeforeUnload: false,
       blockerFn: ({ currentLocation, nextLocation, action }) => {
+        console.log("bottom-back blocker", currentLocation.pathname, nextLocation.pathname, action);
         if (!backMustReturnHome(currentLocation.pathname, nextLocation.pathname, action)) return false;
         returnHome = true;
         return true;
