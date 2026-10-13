@@ -1,64 +1,27 @@
-import { useEffect, useRef } from "react";
-import { useRouter, useRouterState } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { backMustReturnHome } from "@/lib/customer-navigation";
 
 /** Bottom-level customer sections return home, regardless of earlier login history. */
 export function BottomSectionBack() {
-  const router = useRouter();
-  const path = useRouterState({ select: state => state.location.pathname });
-  const currentPath = useRef(path);
-  const currentIndex = useRef(0);
-  currentPath.current = path;
   useEffect(() => {
-    currentIndex.current = router.history.location.state.__TSR_index;
-  }, [path, router]);
-  useEffect(() => {
-    const originKey = "qk_back_origin";
-    const saveOrigin = () => {
-      if (!backMustReturnHome(window.location.pathname, "/login", "BACK")) return;
-      try { sessionStorage.setItem(originKey, window.location.pathname); } catch { /* storage unavailable */ }
-    };
-    const savedOrigin = () => {
-      try { return sessionStorage.getItem(originKey) ?? ""; } catch { return ""; }
-    };
-    if (window.location.pathname === "/") {
-      try { sessionStorage.removeItem(originKey); } catch { /* storage unavailable */ }
-    }
-    const goHome = (restoreDocument = false) => {
-      currentPath.current = "/";
-      if (restoreDocument) { window.location.replace("/"); return; }
-      void router.navigate({ to: "/", replace: true });
+    let previousPath = window.location.pathname;
+    let previousIndex = window.history.state?.__TSR_index ?? 0;
+    const sample = () => {
+      previousPath = window.location.pathname;
+      previousIndex = window.history.state?.__TSR_index ?? previousIndex;
     };
     const onBack = (event: PopStateEvent) => {
-      const previousIndex = currentIndex.current;
       const nextIndex = typeof event.state?.__TSR_index === "number" ? event.state.__TSR_index : previousIndex - 1;
-      const sameDocumentBack = nextIndex < previousIndex && backMustReturnHome(currentPath.current, window.location.pathname, "BACK");
-      const restoredDocumentBack = backMustReturnHome(savedOrigin(), window.location.pathname, "BACK");
-      if (!sameDocumentBack && !restoredDocumentBack) return;
+      if (nextIndex >= previousIndex || !backMustReturnHome(previousPath, window.location.pathname, "BACK")) { sample(); return; }
       event.stopImmediatePropagation();
-      goHome(restoredDocumentBack && !sameDocumentBack);
+      window.location.replace("/");
     };
-    const onLink = (event: MouseEvent) => {
-      if (!(event.target instanceof Element)) return;
-      const anchor = event.target.closest("a[href]");
-      if (!(anchor instanceof HTMLAnchorElement) || anchor.origin !== window.location.origin) return;
-      try { sessionStorage.setItem(originKey, anchor.pathname); } catch { /* storage unavailable */ }
-    };
-    const onRestore = (event: PageTransitionEvent) => {
-      if (event.persisted && backMustReturnHome(savedOrigin(), window.location.pathname, "BACK")) goHome(true);
-    };
-    const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
-    if (navigation?.type === "back_forward" && backMustReturnHome(savedOrigin(), window.location.pathname, "BACK")) goHome(true);
-    window.addEventListener("pagehide", saveOrigin);
-    document.addEventListener("click", onLink, { capture: true });
-    window.addEventListener("pageshow", onRestore);
+    const timer = window.setInterval(sample, 100);
     window.addEventListener("popstate", onBack, { capture: true });
     return () => {
-      window.removeEventListener("pagehide", saveOrigin);
-      document.removeEventListener("click", onLink, { capture: true });
-      window.removeEventListener("pageshow", onRestore);
+      window.clearInterval(timer);
       window.removeEventListener("popstate", onBack, { capture: true });
     };
-  }, [router]);
+  }, []);
   return null;
 }
