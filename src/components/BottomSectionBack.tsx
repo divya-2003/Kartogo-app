@@ -7,10 +7,14 @@ export function BottomSectionBack() {
   const router = useRouter();
   const path = useRouterState({ select: state => state.location.pathname });
   const currentPath = useRef(path);
+  const currentIndex = useRef(0);
   currentPath.current = path;
   useEffect(() => {
+    currentIndex.current = router.history.location.state.__TSR_index;
+  }, [path, router]);
+  useEffect(() => {
     const onBack = (event: PopStateEvent) => {
-      const previousIndex = router.history.location.state.__TSR_index;
+      const previousIndex = currentIndex.current;
       const nextIndex = typeof event.state?.__TSR_index === "number" ? event.state.__TSR_index : previousIndex - 1;
       if (nextIndex >= previousIndex || !backMustReturnHome(currentPath.current, window.location.pathname, "BACK")) return;
       event.stopImmediatePropagation();
