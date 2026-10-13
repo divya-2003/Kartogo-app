@@ -21,9 +21,10 @@ export function BottomSectionBack() {
     const savedOrigin = () => {
       try { return sessionStorage.getItem(originKey) ?? ""; } catch { return ""; }
     };
-    const goHome = () => {
+    const goHome = (restoreDocument = false) => {
       try { sessionStorage.removeItem(originKey); } catch { /* storage unavailable */ }
       currentPath.current = "/";
+      if (restoreDocument) { window.location.replace("/"); return; }
       void router.navigate({ to: "/", replace: true });
     };
     const onBack = (event: PopStateEvent) => {
@@ -33,7 +34,7 @@ export function BottomSectionBack() {
       const restoredDocumentBack = backMustReturnHome(savedOrigin(), window.location.pathname, "BACK");
       if (!sameDocumentBack && !restoredDocumentBack) return;
       event.stopImmediatePropagation();
-      goHome();
+      goHome(restoredDocumentBack && !sameDocumentBack);
     };
     const onLink = (event: MouseEvent) => {
       if (!(event.target instanceof Element)) return;
@@ -42,10 +43,10 @@ export function BottomSectionBack() {
       try { sessionStorage.setItem(originKey, anchor.pathname); } catch { /* storage unavailable */ }
     };
     const onRestore = (event: PageTransitionEvent) => {
-      if (event.persisted && backMustReturnHome(savedOrigin(), window.location.pathname, "BACK")) goHome();
+      if (event.persisted && backMustReturnHome(savedOrigin(), window.location.pathname, "BACK")) goHome(true);
     };
     const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
-    if (navigation?.type === "back_forward" && backMustReturnHome(savedOrigin(), window.location.pathname, "BACK")) goHome();
+    if (navigation?.type === "back_forward" && backMustReturnHome(savedOrigin(), window.location.pathname, "BACK")) goHome(true);
     window.addEventListener("pagehide", saveOrigin);
     document.addEventListener("click", onLink, { capture: true });
     window.addEventListener("pageshow", onRestore);
