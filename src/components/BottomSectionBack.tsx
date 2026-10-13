@@ -15,6 +15,7 @@ export function BottomSectionBack() {
   useEffect(() => {
     const originKey = "qk_back_origin";
     const saveOrigin = () => {
+      if (!backMustReturnHome(window.location.pathname, "/login", "BACK")) return;
       try { sessionStorage.setItem(originKey, window.location.pathname); } catch { /* storage unavailable */ }
     };
     const savedOrigin = () => {
