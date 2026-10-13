@@ -37,6 +37,8 @@ export function BottomSectionBack() {
     const onRestore = (event: PageTransitionEvent) => {
       if (event.persisted && backMustReturnHome(savedOrigin(), window.location.pathname, "BACK")) goHome();
     };
+    const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+    if (navigation?.type === "back_forward" && backMustReturnHome(savedOrigin(), window.location.pathname, "BACK")) goHome();
     window.addEventListener("pagehide", saveOrigin);
     window.addEventListener("pageshow", onRestore);
     window.addEventListener("popstate", onBack, { capture: true });
