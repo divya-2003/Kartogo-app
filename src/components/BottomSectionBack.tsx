@@ -21,8 +21,10 @@ export function BottomSectionBack() {
     const savedOrigin = () => {
       try { return sessionStorage.getItem(originKey) ?? ""; } catch { return ""; }
     };
-    const goHome = (restoreDocument = false) => {
+    if (window.location.pathname === "/") {
       try { sessionStorage.removeItem(originKey); } catch { /* storage unavailable */ }
+    }
+    const goHome = (restoreDocument = false) => {
       currentPath.current = "/";
       if (restoreDocument) { window.location.replace("/"); return; }
       void router.navigate({ to: "/", replace: true });
