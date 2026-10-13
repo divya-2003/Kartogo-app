@@ -53,6 +53,8 @@ export const Route = createFileRoute("/")({
 /** Detects a saved admin/delivery/supplier session and returns where to send the user. */
 function roleRedirectTarget(): "/delivery" | "/admin" | "/supplier" | "/printer" | "/delivery-request" | null {
   if (typeof window === "undefined") return null;
+  // Explicit customer bottom-navigation must not trigger portal auto-opening.
+  try { if (sessionStorage.getItem("qk_customer_home") === "1") return null; } catch { /* storage unavailable */ }
   // Tokens are written by different flows — some raw, some JSON-encoded. Read
   // both shapes so a portal session is never missed (which would drop a
   // supplier/rider/admin onto the customer home page).
