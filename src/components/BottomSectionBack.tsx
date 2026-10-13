@@ -34,16 +34,24 @@ export function BottomSectionBack() {
       event.stopImmediatePropagation();
       goHome();
     };
+    const onLink = (event: MouseEvent) => {
+      if (!(event.target instanceof Element)) return;
+      const anchor = event.target.closest("a[href]");
+      if (!(anchor instanceof HTMLAnchorElement) || anchor.origin !== window.location.origin) return;
+      try { sessionStorage.setItem(originKey, anchor.pathname); } catch { /* storage unavailable */ }
+    };
     const onRestore = (event: PageTransitionEvent) => {
       if (event.persisted && backMustReturnHome(savedOrigin(), window.location.pathname, "BACK")) goHome();
     };
     const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
     if (navigation?.type === "back_forward" && backMustReturnHome(savedOrigin(), window.location.pathname, "BACK")) goHome();
     window.addEventListener("pagehide", saveOrigin);
+    document.addEventListener("click", onLink, { capture: true });
     window.addEventListener("pageshow", onRestore);
     window.addEventListener("popstate", onBack, { capture: true });
     return () => {
       window.removeEventListener("pagehide", saveOrigin);
+      document.removeEventListener("click", onLink, { capture: true });
       window.removeEventListener("pageshow", onRestore);
       window.removeEventListener("popstate", onBack, { capture: true });
     };
