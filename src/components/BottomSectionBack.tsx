@@ -14,6 +14,7 @@ export function BottomSectionBack() {
   }, [path, router]);
   useEffect(() => {
     const onBack = (event: PopStateEvent) => {
+      console.debug("bottom-back", currentPath.current, currentIndex.current, event.state?.__TSR_index, window.location.pathname);
       const previousIndex = currentIndex.current;
       const nextIndex = typeof event.state?.__TSR_index === "number" ? event.state.__TSR_index : previousIndex - 1;
       if (nextIndex >= previousIndex || !backMustReturnHome(currentPath.current, window.location.pathname, "BACK")) return;
