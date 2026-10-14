@@ -129,8 +129,11 @@ function SearchPage() {
 
   // While typing, results take over the full screen (own scrollbar) so the
   // page behind is hidden; with an empty box the normal page shows through.
-  const showDropdown = dropdownOpen && liveQuery.length > 0 && (suggestions.length > 0 || catSuggestions.length > 0);
-  const showPills = focused && input.trim().length === 0;
+  // `leaving` keeps the overlay up while opening a tapped result, so the
+  // results page behind never flashes during the transition.
+  const [leaving, setLeaving] = useState(false);
+  const showDropdown = (dropdownOpen || leaving) && liveQuery.length > 0 && (suggestions.length > 0 || catSuggestions.length > 0);
+  void focused;
 
   // Measure the sticky header so the overlay starts exactly below it.
   const headerRef = useRef<HTMLDivElement>(null);
@@ -199,7 +202,7 @@ function SearchPage() {
                       to="/category/$slug"
                       params={{ slug: slugOf(c) }}
                       onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => { rememberSearch(liveQuery); setDropdownOpen(false); }}
+                      onClick={() => { setLeaving(true); rememberSearch(liveQuery); }}
                       className="flex items-center gap-3 px-3 py-2.5 hover:bg-secondary"
                     >
                       <LayoutList className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -216,7 +219,7 @@ function SearchPage() {
                       to="/product/$id"
                       params={{ id: p.id }}
                       onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => { rememberSearch(liveQuery); customerEventService.trackSearch(liveQuery, p.id); setDropdownOpen(false); }}
+                      onClick={() => { setLeaving(true); rememberSearch(liveQuery); customerEventService.trackSearch(liveQuery, p.id); }}
                       className="flex items-center gap-3 px-3 py-2 hover:bg-secondary"
                     >
                       <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-lg bg-secondary text-lg">
@@ -312,32 +315,6 @@ function SearchPage() {
           </>
         ) : (
           <>
-            {!showPills && recent.length > 0 && (
-              <section className="mb-6">
-                <div className="flex items-center justify-between gap-2">
-                  <h2 className="flex items-center gap-2 font-display text-sm font-extrabold uppercase tracking-wide text-muted-foreground">
-                    <Clock className="h-4 w-4" /> Recent searches
-                  </h2>
-                   <Button variant="link" size="sm"
-                    type="button"
-                    onClick={() => { setRecent([]); try { localStorage.removeItem(RECENT_KEY); } catch { /* ignore */ } }}
-                    className="text-xs font-bold text-primary hover:underline"
-                  >
-                    Clear all
-                   </Button>
-                </div>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  {recent.map(term => (
-                    <span key={term} className="inline-flex items-center gap-1 rounded-full border border-border bg-card py-1.5 pl-3 pr-1.5 text-xs font-semibold">
-                      <button type="button" onClick={() => submitSearch(term)} className="max-w-[9rem] truncate">{term}</button>
-                      <button type="button" aria-label={`Remove ${term}`} onClick={() => forgetSearch(term)} className="grid h-5 w-5 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </section>
-            )}
 
             <div className="flex items-center gap-2">
               <Flame className="h-5 w-5 fill-saffron text-saffron" />
