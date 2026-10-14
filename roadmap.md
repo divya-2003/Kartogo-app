@@ -1,11 +1,11 @@
 # Roadmap
 
 ## Customer navigation fixes
-- [ ] Show full top-section labels and remove shortcut category rows
-- [ ] Stop home-header blinking during slow scrolling
-- [ ] Verify Clear all removes recent searches
-- [ ] Ensure bottom-section back navigation returns Home
-- [ ] Verify the requested flows on screen
+- [x] Show full top-section labels and remove shortcut category rows
+- [x] Stop home-header blinking during slow scrolling
+- [x] Verify Clear all removes recent searches
+- [x] Ensure bottom-section back navigation returns Home
+- [x] Verify the requested flows on screen
 
 ## Dedicated home sections
 - [x] Restrict Shop discovery and recommendations to Shop products

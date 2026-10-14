@@ -4,4 +4,4 @@
 - Share Food and Rides experiences as presentation components between their home tabs and dedicated routes so existing ordering and booking flows stay identical.
 - Load dedicated marketplace discovery with existing category-read functions so global home preview limits cannot hide a section's catalog.
 - Keep the home top area in normal document flow with a separate sticky search band; scroll-driven header height changes cause scroll anchoring feedback and blinking.
-- Intercept customer bottom-section backward history traversal before routing and replace its destination with Home; do not insert dummy history entries or intercept forward/detail navigation.
+- Use the router history blocker for customer bottom-section backward traversal, await POP restoration before replacing with Home, and preserve explicit customer-home intent so portal auto-redirects cannot override it; never insert dummy history entries or intercept forward/detail navigation.
