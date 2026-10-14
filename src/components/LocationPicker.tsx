@@ -256,8 +256,15 @@ function LocationPickerClient({
               etaMinutes: result.etaMinutes ?? undefined,
             });
           } else {
-            if (result.address) setQuery(result.address);
-            setDenied({ reason: result.reason, pincode: result.pincode ?? null, area: result.address ?? "", lat: pos.coords.latitude, lng: pos.coords.longitude });
+            // Detected via GPS: skip the "not serviceable" card and take the
+            // customer home a moment later; home shows the right options.
+            const label = result.address ?? "Current location";
+            setLocation({ query: label, area: label, serviceable: false });
+            toast.success("Location detected");
+            setTimeout(() => {
+              setOpen(false);
+              if (typeof window !== "undefined" && window.location.pathname !== "/") window.location.assign("/");
+            }, 1000);
           }
         } catch {
           toast.error("Couldn't detect your location. Please try again.");

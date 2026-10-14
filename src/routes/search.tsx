@@ -241,44 +241,34 @@ function SearchPage() {
       <div className="mx-auto max-w-2xl px-4 py-5 lg:max-w-7xl lg:px-8">
         {!query && serviceSearch && <MarketplaceResults q="" section={section} />}
         {/* Quick-select pills whenever the box is focused and empty */}
-        {showPills && (
-          <section className="mb-6 space-y-4">
-            {recent.length > 0 && (
-              <div>
-                <div className="flex items-center justify-between gap-2">
-                  <h2 className="flex items-center gap-2 font-display text-sm font-extrabold uppercase tracking-wide text-muted-foreground">
-                    <Clock className="h-4 w-4" /> Recent searches
-                  </h2>
-                   <Button variant="link" size="sm"
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => { setRecent([]); try { localStorage.removeItem(RECENT_KEY); } catch { /* ignore */ } }}
-                    className="text-xs font-bold text-primary hover:underline"
-                  >
-                    Clear all
-                   </Button>
-                </div>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {recent.map(term => (
-                    <button key={term} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => submitSearch(term)} className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold hover:bg-secondary">
-                      {term}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-            <div>
+        {/* Recent searches bar — always visible, Clear all on the far right */}
+        {!serviceSearch && (
+          <section className="mb-6">
+            <div className="flex items-center justify-between gap-2">
               <h2 className="flex items-center gap-2 font-display text-sm font-extrabold uppercase tracking-wide text-muted-foreground">
-                <Flame className="h-4 w-4" /> Popular searches
+                <Clock className="h-4 w-4" /> Recent searches
               </h2>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {popularTerms.map(term => (
-                  <button key={term} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => submitSearch(term)} className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold hover:bg-secondary">
-                    {term}
-                  </button>
+              <Button variant="link" size="sm" type="button" disabled={recent.length === 0}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => { setRecent([]); try { localStorage.removeItem(RECENT_KEY); } catch { /* ignore */ } }}
+                className="ml-auto shrink-0 text-xs font-bold text-primary hover:underline">
+                Clear all
+              </Button>
+            </div>
+            {recent.length > 0 ? (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {recent.map(term => (
+                  <span key={term} className="inline-flex items-center gap-1 rounded-full border border-border bg-card py-1.5 pl-3 pr-1.5 text-xs font-semibold">
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => submitSearch(term)} className="max-w-[9rem] truncate">{term}</button>
+                    <button type="button" aria-label={`Remove ${term}`} onMouseDown={(e) => e.preventDefault()} onClick={() => forgetSearch(term)} className="grid h-5 w-5 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
                 ))}
               </div>
-            </div>
+            ) : (
+              <p className="mt-2 text-xs text-muted-foreground">Your searches will appear here.</p>
+            )}
           </section>
         )}
 
