@@ -25,6 +25,8 @@ export function Header() {
   const router = useRouter();
   const isHome = location === "/";
   const goBack = () => {
+    // Orders always step back to the Profile page, never into live tracking.
+    if (isOrders && !isAdmin) { void router.navigate({ to: "/menu", replace: true }); return; }
     if (typeof window !== "undefined" && window.history.length > 1) router.history.back();
     else void router.navigate({ to: isAdmin ? "/admin" : "/" });
   };
