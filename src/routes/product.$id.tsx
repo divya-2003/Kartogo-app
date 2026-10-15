@@ -5,7 +5,77 @@ import { formatINR, PRODUCTS } from "@/lib/data";
 import { isQuickProduct } from "@/lib/delivery-tier";
 import { getProductRatingsFn } from "@/lib/reviews.functions";
 import { Heart, Star, ChevronLeft, ChevronRight, Search, Share2, Package, PackageCheck, Info, Timer, ShoppingCart, Minus, Plus } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+/** Swipeable image gallery: scroll-snap strip with dots and arrows. */
+function ProductGallery({ images, name, emoji, className = "" }: { images: string[]; name: string; emoji: string; className?: string }) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [idx, setIdx] = useState(0);
+
+  const onScroll = () => {
+    const el = trackRef.current;
+    if (!el) return;
+    setIdx(Math.round(el.scrollLeft / el.clientWidth));
+  };
+  const go = (i: number) => {
+    const el = trackRef.current;
+    if (!el) return;
+    el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
+  };
+
+  if (!images.length) {
+    return <div className={`grid place-items-center ${className}`}><div className="text-[10rem]">{emoji}</div></div>;
+  }
+
+  return (
+    <div className={`relative ${className}`}>
+      <div
+        ref={trackRef}
+        onScroll={onScroll}
+        className="flex h-full w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {images.map((src, i) => (
+          <div key={i} className="grid h-full w-full shrink-0 snap-center place-items-center">
+            <img src={src} alt={`${name} — image ${i + 1}`} width={768} height={768} className="h-full w-full object-contain" draggable={false} />
+          </div>
+        ))}
+      </div>
+      {images.length > 1 && (
+        <>
+          <button
+            onClick={() => go(Math.max(0, idx - 1))}
+            aria-label="Previous image"
+            className="absolute left-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-card/90 shadow-pop disabled:opacity-40"
+            disabled={idx === 0}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => go(Math.min(images.length - 1, idx + 1))}
+            aria-label="Next image"
+            className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-card/90 shadow-pop disabled:opacity-40"
+            disabled={idx === images.length - 1}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+          <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5">
+            {images.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => go(i)}
+                aria-label={`Go to image ${i + 1}`}
+                className={`h-1.5 rounded-full transition-all ${i === idx ? "w-4 bg-primary" : "w-1.5 bg-muted-foreground/40"}`}
+              />
+            ))}
+          </div>
+          <div className="absolute right-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-bold text-white">
+            {idx + 1}/{images.length}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 import { RecommendationRow } from "@/components/RecommendationRow";
 import { useFrequentlyBoughtTogether, useCustomerTracking } from "@/hooks/use-recommendations";
 
