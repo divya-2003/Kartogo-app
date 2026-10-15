@@ -4,7 +4,7 @@ import { useCatalog } from "@/lib/store";
 import { CATEGORIES, formatINR, type Product } from "@/lib/data";
 import { Plus, Pencil, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
-import { ImagePicker } from "@/components/ImagePicker";
+import { MultiImagePicker } from "@/components/ImagePicker";
 
 export const Route = createFileRoute("/admin/products")({ component: ProductsAdmin });
 
