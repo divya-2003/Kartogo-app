@@ -544,6 +544,7 @@ function rowToProduct(r: CatalogItemRow): Product {
     stock: Number(r.stock),
     emoji: r.emoji,
     image: r.image ?? undefined,
+    images: Array.isArray(r.images) && r.images.length ? r.images : undefined,
     description: r.description,
     maxPerOrder: r.max_per_order == null ? undefined : Number(r.max_per_order),
   };
@@ -620,7 +621,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       supplierToken, adminToken: at,
       id: p.id, name: p.name, category: p.category, price: p.price,
       mrp: p.mrp, unit: p.unit, stock: p.stock, emoji: p.emoji,
-      image: p.image, description: p.description, maxPerOrder: p.maxPerOrder ?? null,
+      image: p.image, images: p.images ?? [], description: p.description, maxPerOrder: p.maxPerOrder ?? null,
     } }).then(refreshCatalog).catch(() => { /* keep optimistic */ });
   };
 
