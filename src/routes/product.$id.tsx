@@ -164,6 +164,7 @@ function ProductPage() {
   const inCart = items.find(i => i.productId === p.id);
   const wished = has(p.id);
   const lowStock = p.stock > 0 && p.stock <= 5;
+  const gallery = p.images?.length ? p.images : p.image ? [p.image] : [];
 
   const handleWishlist = () => {
     if (!user) {
@@ -191,12 +192,8 @@ function ProductPage() {
     <div className="min-h-screen bg-secondary/40 pb-28 lg:pb-10">
       {/* ---------- Hero image with floating controls (mobile & tablet only) ---------- */}
       <div className="relative bg-card lg:hidden">
-        <div className="mx-auto grid aspect-square w-full max-w-xl place-items-center overflow-hidden md:aspect-[4/3]">
-          {p.image ? (
-            <img src={p.image} alt={p.name} width={768} height={768} className="h-full w-full object-contain" />
-          ) : (
-            <div className="text-[10rem]">{p.emoji}</div>
-          )}
+        <div className="mx-auto aspect-square w-full max-w-xl overflow-hidden md:aspect-[4/3]">
+          <ProductGallery images={gallery} name={p.name} emoji={p.emoji} className="h-full w-full" />
         </div>
 
         <button
@@ -347,12 +344,8 @@ function ProductPage() {
       <div className="mx-auto hidden max-w-6xl gap-6 px-6 pt-6 lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
         {/* Left: image panel */}
         <div className="relative self-start overflow-hidden rounded-3xl bg-card shadow-pop">
-          <div className="grid aspect-square w-full place-items-center p-6">
-            {p.image ? (
-              <img src={p.image} alt={p.name} width={768} height={768} className="h-full w-full object-contain" />
-            ) : (
-              <div className="text-[12rem]">{p.emoji}</div>
-            )}
+          <div className="aspect-square w-full p-6">
+            <ProductGallery images={gallery} name={p.name} emoji={p.emoji} className="h-full w-full" />
           </div>
           <button
             onClick={() => window.history.back()}
