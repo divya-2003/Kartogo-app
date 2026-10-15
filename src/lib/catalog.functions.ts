@@ -15,6 +15,7 @@ export type CatalogItemRow = {
   stock: number;
   emoji: string;
   image: string | null;
+  images: string[] | null;
   description: string;
   source: string;
   max_per_order: number | null;
@@ -117,7 +118,7 @@ export const listCatalogItemsFn = createServerFn({ method: "GET" }).handler(asyn
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("catalog_items")
-    .select("id, name, category, price, mrp, unit, stock, emoji, image, description, source, max_per_order")
+    .select("id, name, category, price, mrp, unit, stock, emoji, image, images, description, source, max_per_order")
     .eq("is_deleted", false)
     .order("created_at", { ascending: true });
   if (error) {
@@ -141,7 +142,7 @@ export const upsertCatalogItemFn = createServerFn({ method: "POST" })
   .inputValidator((data: {
     supplierToken?: string; adminToken?: string;
     id?: string; name?: string; category?: string; price?: number; mrp?: number;
-    unit?: string; stock?: number; emoji?: string; image?: string; description?: string;
+    unit?: string; stock?: number; emoji?: string; image?: string; images?: string[]; description?: string;
     maxPerOrder?: number | null;
   }) => ({
     supplierToken: data?.supplierToken ? String(data.supplierToken) : "",
@@ -155,6 +156,9 @@ export const upsertCatalogItemFn = createServerFn({ method: "POST" })
     stock: Math.max(0, Math.floor(num(data?.stock))),
     emoji: str(data?.emoji, 8) || "🛒",
     image: data?.image ? String(data.image).trim().slice(0, 2_000_000) : null,
+    images: Array.isArray(data?.images)
+      ? data.images.filter((u) => typeof u === "string" && u.trim()).map((u) => u.trim().slice(0, 2_000_000)).slice(0, 8)
+      : [],
     description: str(data?.description, 2000),
     maxPerOrder: data?.maxPerOrder == null || num(data?.maxPerOrder) <= 0 ? null : Math.floor(num(data?.maxPerOrder)),
   }))
@@ -175,6 +179,7 @@ export const upsertCatalogItemFn = createServerFn({ method: "POST" })
       stock: data.stock,
       emoji: data.emoji,
       image: data.image,
+      images: data.images,
       description: data.description,
       max_per_order: data.maxPerOrder,
       source: who.source,

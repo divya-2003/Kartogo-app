@@ -43,6 +43,8 @@ export type Product = {
   stock: number;
   emoji: string;
   image?: string;
+  /** Extra gallery images; `image` stays the cover. Shown as a swipeable gallery on the product page. */
+  images?: string[];
   description: string;
   tags?: string[];
   /** Max units a single customer can buy per order. undefined/0 = no limit. */

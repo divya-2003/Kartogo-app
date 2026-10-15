@@ -521,6 +521,8 @@ export const useWallet = () => {
 // ---------------- Catalog (products + inventory editable) ----------------
 type CatalogCtx = {
   products: Product[];
+  /** True once the shared server catalog has been fetched at least once. */
+  loaded: boolean;
   upsert: (p: Product) => void;
   remove: (id: string) => void;
   setStock: (id: string, stock: number) => void;
@@ -544,6 +546,7 @@ function rowToProduct(r: CatalogItemRow): Product {
     stock: Number(r.stock),
     emoji: r.emoji,
     image: r.image ?? undefined,
+    images: Array.isArray(r.images) && r.images.length ? r.images : undefined,
     description: r.description,
     maxPerOrder: r.max_per_order == null ? undefined : Number(r.max_per_order),
   };
@@ -557,6 +560,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   // Local overrides for seed PRODUCTS (stock/price tweaks). Supplier-added items
   // now come from the server so every browser sees them.
   const [seedOverrides, setSeedOverrides] = useState<Record<string, Partial<Product>>>({});
+  const [catalogLoaded, setCatalogLoaded] = useState(false);
 
   // Read the shared server catalog. This is what makes an item added on the
   // supplier page appear in the customer + admin apps too.
@@ -566,6 +570,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       setSupplierProducts(res.items.map(rowToProduct));
       setDeletedIds(res.deletedIds ?? []);
     } catch { /* keep last good */ }
+    finally { setCatalogLoaded(true); }
   }, []);
 
   useEffect(() => {
@@ -620,12 +625,13 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       supplierToken, adminToken: at,
       id: p.id, name: p.name, category: p.category, price: p.price,
       mrp: p.mrp, unit: p.unit, stock: p.stock, emoji: p.emoji,
-      image: p.image, description: p.description, maxPerOrder: p.maxPerOrder ?? null,
+      image: p.image, images: p.images ?? [], description: p.description, maxPerOrder: p.maxPerOrder ?? null,
     } }).then(refreshCatalog).catch(() => { /* keep optimistic */ });
   };
 
   const value: CatalogCtx = {
     products,
+    loaded: catalogLoaded,
     upsert: (p) => {
       // Optimistic update
       setSupplierProducts(prev => {

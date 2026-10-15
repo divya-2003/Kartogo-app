@@ -320,6 +320,7 @@ export type Database = {
           emoji: string
           id: string
           image: string | null
+          images: string[]
           is_deleted: boolean
           max_per_order: number | null
           mrp: number | null
@@ -339,6 +340,7 @@ export type Database = {
           emoji?: string
           id: string
           image?: string | null
+          images?: string[]
           is_deleted?: boolean
           max_per_order?: number | null
           mrp?: number | null
@@ -358,6 +360,7 @@ export type Database = {
           emoji?: string
           id?: string
           image?: string | null
+          images?: string[]
           is_deleted?: boolean
           max_per_order?: number | null
           mrp?: number | null

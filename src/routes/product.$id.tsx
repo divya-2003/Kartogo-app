@@ -5,7 +5,77 @@ import { formatINR, PRODUCTS } from "@/lib/data";
 import { isQuickProduct } from "@/lib/delivery-tier";
 import { getProductRatingsFn } from "@/lib/reviews.functions";
 import { Heart, Star, ChevronLeft, ChevronRight, Search, Share2, Package, PackageCheck, Info, Timer, ShoppingCart, Minus, Plus } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+/** Swipeable image gallery: scroll-snap strip with dots and arrows. */
+function ProductGallery({ images, name, emoji, className = "" }: { images: string[]; name: string; emoji: string; className?: string }) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [idx, setIdx] = useState(0);
+
+  const onScroll = () => {
+    const el = trackRef.current;
+    if (!el) return;
+    setIdx(Math.round(el.scrollLeft / el.clientWidth));
+  };
+  const go = (i: number) => {
+    const el = trackRef.current;
+    if (!el) return;
+    el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
+  };
+
+  if (!images.length) {
+    return <div className={`grid place-items-center ${className}`}><div className="text-[10rem]">{emoji}</div></div>;
+  }
+
+  return (
+    <div className={`relative ${className}`}>
+      <div
+        ref={trackRef}
+        onScroll={onScroll}
+        className="flex h-full w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {images.map((src, i) => (
+          <div key={i} className="grid h-full w-full shrink-0 snap-center place-items-center">
+            <img src={src} alt={`${name} — image ${i + 1}`} width={768} height={768} className="h-full w-full object-contain" draggable={false} />
+          </div>
+        ))}
+      </div>
+      {images.length > 1 && (
+        <>
+          <button
+            onClick={() => go(Math.max(0, idx - 1))}
+            aria-label="Previous image"
+            className="absolute left-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-card/90 shadow-pop disabled:opacity-40"
+            disabled={idx === 0}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => go(Math.min(images.length - 1, idx + 1))}
+            aria-label="Next image"
+            className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-card/90 shadow-pop disabled:opacity-40"
+            disabled={idx === images.length - 1}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+          <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5">
+            {images.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => go(i)}
+                aria-label={`Go to image ${i + 1}`}
+                className={`h-1.5 rounded-full transition-all ${i === idx ? "w-4 bg-primary" : "w-1.5 bg-muted-foreground/40"}`}
+              />
+            ))}
+          </div>
+          <div className="absolute right-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-bold text-white">
+            {idx + 1}/{images.length}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 import { RecommendationRow } from "@/components/RecommendationRow";
 import { useFrequentlyBoughtTogether, useCustomerTracking } from "@/hooks/use-recommendations";
 
@@ -77,7 +147,7 @@ export const Route = createFileRoute("/product/$id")({
 function ProductPage() {
   const { id } = Route.useParams();
   const { rating: ratingSummary } = Route.useLoaderData();
-  const { products } = useCatalog();
+  const { products, loaded: catalogLoaded } = useCatalog();
   const p = products.find(x => x.id === id);
   const { add, items, setQty, count } = useCart();
   const { user } = useAuth();
@@ -90,10 +160,16 @@ function ProductPage() {
   const addAll = useMemo(() => together
     .map(r => allProducts.find(x => x.id === r.productId))
     .filter((x): x is NonNullable<typeof x> => Boolean(x && x.stock > 0)), [together, allProducts]);
-  if (!p) throw notFound();
+  if (!p) {
+    if (!catalogLoaded) {
+      return <div className="grid min-h-screen place-items-center bg-secondary/40 text-sm font-semibold text-muted-foreground">Loading product…</div>;
+    }
+    throw notFound();
+  }
   const inCart = items.find(i => i.productId === p.id);
   const wished = has(p.id);
   const lowStock = p.stock > 0 && p.stock <= 5;
+  const gallery = p.images?.length ? p.images : p.image ? [p.image] : [];
 
   const handleWishlist = () => {
     if (!user) {
@@ -121,12 +197,8 @@ function ProductPage() {
     <div className="min-h-screen bg-secondary/40 pb-28 lg:pb-10">
       {/* ---------- Hero image with floating controls (mobile & tablet only) ---------- */}
       <div className="relative bg-card lg:hidden">
-        <div className="mx-auto grid aspect-square w-full max-w-xl place-items-center overflow-hidden md:aspect-[4/3]">
-          {p.image ? (
-            <img src={p.image} alt={p.name} width={768} height={768} className="h-full w-full object-contain" />
-          ) : (
-            <div className="text-[10rem]">{p.emoji}</div>
-          )}
+        <div className="mx-auto aspect-square w-full max-w-xl overflow-hidden md:aspect-[4/3]">
+          <ProductGallery images={gallery} name={p.name} emoji={p.emoji} className="h-full w-full" />
         </div>
 
         <button
@@ -277,12 +349,8 @@ function ProductPage() {
       <div className="mx-auto hidden max-w-6xl gap-6 px-6 pt-6 lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
         {/* Left: image panel */}
         <div className="relative self-start overflow-hidden rounded-3xl bg-card shadow-pop">
-          <div className="grid aspect-square w-full place-items-center p-6">
-            {p.image ? (
-              <img src={p.image} alt={p.name} width={768} height={768} className="h-full w-full object-contain" />
-            ) : (
-              <div className="text-[12rem]">{p.emoji}</div>
-            )}
+          <div className="aspect-square w-full p-6">
+            <ProductGallery images={gallery} name={p.name} emoji={p.emoji} className="h-full w-full" />
           </div>
           <button
             onClick={() => window.history.back()}
