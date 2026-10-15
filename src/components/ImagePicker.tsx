@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Upload, X } from "lucide-react";
+import { ImagePlus, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
 // Downscale an uploaded image to keep dataURL size reasonable for the catalog.
