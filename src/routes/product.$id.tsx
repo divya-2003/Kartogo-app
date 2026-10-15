@@ -147,7 +147,7 @@ export const Route = createFileRoute("/product/$id")({
 function ProductPage() {
   const { id } = Route.useParams();
   const { rating: ratingSummary } = Route.useLoaderData();
-  const { products } = useCatalog();
+  const { products, loaded: catalogLoaded } = useCatalog();
   const p = products.find(x => x.id === id);
   const { add, items, setQty, count } = useCart();
   const { user } = useAuth();
@@ -160,7 +160,12 @@ function ProductPage() {
   const addAll = useMemo(() => together
     .map(r => allProducts.find(x => x.id === r.productId))
     .filter((x): x is NonNullable<typeof x> => Boolean(x && x.stock > 0)), [together, allProducts]);
-  if (!p) throw notFound();
+  if (!p) {
+    if (!catalogLoaded) {
+      return <div className="grid min-h-screen place-items-center bg-secondary/40 text-sm font-semibold text-muted-foreground">Loading product…</div>;
+    }
+    throw notFound();
+  }
   const inCart = items.find(i => i.productId === p.id);
   const wished = has(p.id);
   const lowStock = p.stock > 0 && p.stock <= 5;
