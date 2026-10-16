@@ -1,10 +1,10 @@
 # Roadmap
 
 ## Top navigation visual refresh
-- [ ] Add frosted header, section gradients and selection/press feedback
-- [ ] Add mobile snap-scrolling with full section labels
-- [ ] Refine live delivery indicator, location and account actions
-- [ ] Verify section selection and scrolling on mobile and desktop
+- [x] Add frosted header, section gradients and selection/press feedback
+- [x] Add mobile snap-scrolling with full section labels
+- [x] Refine live delivery indicator, location and account actions
+- [x] Verify section selection and scrolling on mobile and desktop
 
 ## Customer navigation fixes
 - [x] Show full top-section labels and remove shortcut category rows
