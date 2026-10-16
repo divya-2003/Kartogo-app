@@ -49,3 +49,11 @@
 - [x] Admin search across all pages + side menu
 - [x] Automatic "Allow notifications" prompt after login
 - [ ] Web push keys — waiting on user to update Firebase connection with "Include web push"
+
+## Oct 16 batch
+- [x] Replace old site address with kartogoapp.lovable.app (robots, sitemap, business schema)
+- [ ] Android build with google-services.json — blocked: must be built on user's computer (see ANDROID.md)
+- [ ] Real Ongole restaurants/menus, hospitals/clinics/labs — blocked: need real names, dishes, prices from user
+- [ ] Kitchen portal, rider map + turn-by-turn, multi-stop sequencing
+- [ ] Shop sub-pages, Rides confirmation page, referral earnings view
+- [ ] Publish + share — after above

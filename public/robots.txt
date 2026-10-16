@@ -13,4 +13,4 @@ Disallow: /login
 Disallow: /menu
 Disallow: /rate-order
 
-Sitemap: https://quick-niche-delight.lovable.app/sitemap.xml
+Sitemap: https://kartogoapp.lovable.app/sitemap.xml
