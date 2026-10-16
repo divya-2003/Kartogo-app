@@ -1257,6 +1257,24 @@ export type Database = {
           },
         ]
       }
+      kitchen_availability: {
+        Row: {
+          is_open: boolean
+          kitchen_id: string
+          updated_at: string
+        }
+        Insert: {
+          is_open?: boolean
+          kitchen_id: string
+          updated_at?: string
+        }
+        Update: {
+          is_open?: boolean
+          kitchen_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       market_replenish_requests: {
         Row: {
           created_at: string
