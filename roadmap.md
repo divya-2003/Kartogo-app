@@ -1,5 +1,12 @@
 # Roadmap
 
+## Multi-stop trips and customer fixes
+- [ ] Implement persisted pickup-before-drop trips with safe side-by-side store batching
+- [ ] Connect automatic dispatch and rider stop actions
+- [ ] Restore previous-page Back from Events details
+- [ ] Reuse Home address selection at checkout
+- [ ] Diagnose and repair push registration and delivery; verify available flows
+
 ## Customer navigation fixes
 - [x] Show full top-section labels and remove shortcut category rows
 - [x] Stop home-header blinking during slow scrolling
