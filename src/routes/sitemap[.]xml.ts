@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CATEGORIES, PRODUCTS } from "@/lib/data";
 
-const BASE_URL = "https://kartogoapp.lovable.app";
+const BASE_URL = "https://quick-niche-delight.lovable.app";
 
 export const Route = createFileRoute("/sitemap.xml")({
   server: {

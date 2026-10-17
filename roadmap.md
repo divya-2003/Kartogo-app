@@ -1,11 +1,5 @@
 # Roadmap
 
-## Top navigation visual refresh
-- [x] Add frosted header, section gradients and selection/press feedback
-- [x] Add mobile snap-scrolling with full section labels
-- [x] Refine live delivery indicator, location and account actions
-- [x] Verify section selection and scrolling on mobile and desktop
-
 ## Customer navigation fixes
 - [x] Show full top-section labels and remove shortcut category rows
 - [x] Stop home-header blinking during slow scrolling
@@ -49,11 +43,3 @@
 - [x] Admin search across all pages + side menu
 - [x] Automatic "Allow notifications" prompt after login
 - [ ] Web push keys — waiting on user to update Firebase connection with "Include web push"
-
-## Oct 16 batch
-- [x] Replace old site address with kartogoapp.lovable.app (robots, sitemap, business schema)
-- [ ] Android build with google-services.json — blocked: must be built on user's computer (see ANDROID.md)
-- [ ] Real Ongole restaurants/menus, hospitals/clinics/labs — blocked: need real names, dishes, prices from user
-- [ ] Kitchen portal, rider map + turn-by-turn, multi-stop sequencing
-- [ ] Shop sub-pages, Rides confirmation page, referral earnings view
-- [ ] Publish + share — after above

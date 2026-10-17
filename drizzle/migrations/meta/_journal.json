@@ -15,13 +15,6 @@
       "when": 1792034006718,
       "tag": "0001_catalog_item_images",
       "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1792171325568,
-      "tag": "0002_kitchen_availability",
-      "breakpoints": true
     }
   ]
 }

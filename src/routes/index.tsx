@@ -176,7 +176,7 @@ function Index() {
       <AutoLocationGate />
       <h1 className="sr-only">Kartogo — Ongole's 15-minute neighbourhood store</h1>
       {/* The top area scrolls naturally; only the search remains sticky. */}
-      <div className="home-top-glass">
+      <div className="bg-gradient-to-b from-saffron/20 to-background">
 
         <div className="mx-auto max-w-2xl px-4 pt-4 lg:max-w-7xl lg:px-8">
           {/* row: delivery time + wallet + profile */}
@@ -184,26 +184,27 @@ function Index() {
             <div className="min-w-0">
               {location && (
                 <>
-                  <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-leaf/20 bg-leaf/10 px-3 py-1.5 text-xs font-bold text-foreground sm:text-sm">
-                    <span className="nav-live-dot h-2 w-2 shrink-0 rounded-full bg-leaf" aria-hidden="true" />
-                    <span className="min-w-0">Delivery in {deliveryWindow(location.etaMinutes)}</span>
+                  <div className="flex items-center gap-1.5 font-display text-lg font-extrabold leading-tight tracking-tight text-foreground sm:text-xl">
+                    <Zap className="h-5 w-5 shrink-0 fill-saffron text-saffron" />
+                    <span className="min-w-0 truncate">Delivery in {deliveryWindow(location.etaMinutes)}</span>
+                  </div>
+                  <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-leaf/10 px-2 py-0.5 text-[11px] font-bold text-leaf">
+                    <CheckCircle2 className="h-3 w-3 shrink-0" /> Delivery available
                   </div>
                 </>
               )}
-              <div className="mt-2 w-full max-w-[220px] [&>button]:rounded-full [&>button]:bg-card/80 [&>button]:py-2 [&>button]:transition-colors">
+              <div className="mt-0.5 w-full max-w-[220px]">
                 <LocationPicker />
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              <Button asChild variant="outline" size="natural" className="flex h-10 items-center gap-1.5 rounded-full bg-card/80 px-3 text-sm font-bold text-primary shadow-sm motion-safe:transition-transform motion-safe:active:scale-95">
-                <Link to="/menu" aria-label="Kartogo Cash wallet" title="Kartogo Cash wallet"><Wallet className="h-4 w-4 shrink-0" /> {formatINR(balance)}</Link>
-              </Button>
-              <Button asChild variant="default" size="natural" className="flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full px-3 shadow-sm motion-safe:transition-transform motion-safe:active:scale-95">
-                <Link to="/menu" aria-label={user ? "Account" : "Login or register"} title={user ? "Account" : "Login / Register"}>
-                  <User2 className="h-5 w-5 shrink-0" />
-                  {!user && <span className="hidden text-xs font-extrabold sm:inline">Login / Register</span>}
-                </Link>
-              </Button>
+              <Link to="/menu" aria-label="Kartogo Cash wallet" className="flex items-center gap-1 rounded-xl bg-card px-3 py-2 text-sm font-bold shadow-pop">
+                <Wallet className="h-4 w-4 shrink-0 text-primary" /> {formatINR(balance)}
+              </Link>
+              <Link to="/menu" aria-label={user ? "Account" : "Login or register"} className={`flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-card px-3 shadow-pop ${user ? "w-10" : "min-w-0"}`}>
+                <User2 className="h-5 w-5 shrink-0" />
+                {!user && <span className="hidden text-xs font-extrabold sm:inline">Login / Register</span>}
+              </Link>
             </div>
           </div>
 
@@ -249,7 +250,7 @@ function Index() {
         </div>
       </div>
 
-      <div className="home-search-glass sticky top-0 z-30">
+      <div className="sticky top-0 z-30 bg-background shadow-sm">
         <div className="mx-auto max-w-2xl px-4 lg:max-w-7xl lg:px-8">
           {/* search — opens the full Trending / search page */}
           <Link to={(section === "rides" ? "/rides" : section === "food" ? "/food" : "/search") as never} search={(section === "rides" || section === "food" ? {} : { q: "", section }) as never} className="mt-3 block pb-4">

@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, UtensilsCrossed, HeartPulse, Car, Sparkles, Wrench, PartyPopper } from "lucide-react";
 
 export type SectionId = "shop" | "food" | "health" | "rides" | "beauty" | "home" | "events";
 
@@ -38,32 +37,30 @@ export const SECTIONS: { id: SectionId; label: string; icon: string; subs: Sub[]
   ] },
 ];
 
-const CARD = {
-  shop: { sub: "Groceries & essentials", icon: ShoppingBag },
-  food: { sub: "Meals, tiffins & bakery", icon: UtensilsCrossed },
-  health: { sub: "Clinics, doctors & labs", icon: HeartPulse },
-  rides: { sub: "Auto, cab & scheduled", icon: Car },
-  beauty: { sub: "Salon, parlour & spa", icon: Sparkles },
-  home: { sub: "Cleaning, AC & repairs", icon: Wrench },
-  events: { sub: "Venues, decor & photos", icon: PartyPopper },
+const CARD: Record<SectionId, { title: string; sub: string; cls: string; muted: string }> = {
+  shop: { title: "Shop", sub: "Groceries & daily essentials", cls: "bg-sec-shop text-sec-dark-fg hover:bg-sec-shop hover:text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
+  food: { title: "Food", sub: "Biryani, tiffins & meal combos", cls: "bg-sec-food text-sec-light-fg hover:bg-sec-food hover:text-sec-light-fg", muted: "text-sec-light-fg/75" },
+  health: { title: "Health", sub: "Clinics, doctors & lab tests", cls: "bg-sec-health text-sec-dark-fg hover:bg-sec-health hover:text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
+  rides: { title: "Rides", sub: "Bike, auto & car · upfront fares", cls: "bg-sec-rides text-sec-dark-fg hover:bg-sec-rides hover:text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
+  beauty: { title: "Beauty", sub: "Salon, parlour & spa", cls: "bg-sec-beauty text-sec-dark-fg hover:bg-sec-beauty hover:text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
+  home: { title: "Services", sub: "Cleaning, AC & repairs", cls: "bg-sec-home text-sec-dark-fg hover:bg-sec-home hover:text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
+  events: { title: "Events", sub: "Venues, decor & photos", cls: "bg-sec-events text-sec-dark-fg hover:bg-sec-events hover:text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
 };
 
-/** Native mobile snapping; the top area stays in normal document flow. */
+/** Coloured service cards that always fit the screen width (no sideways scrolling). */
 export function SectionBar({ value, onChange }: { value: SectionId; onChange: (v: SectionId) => void }) {
   return (
     <div className="mt-3">
-      <div className="section-strip flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 py-3 lg:grid lg:grid-cols-7 lg:gap-2.5" role="tablist" aria-label="Shopping and services">
+      <div className="grid grid-cols-7 gap-1 pb-2 pt-1 sm:gap-2.5" role="tablist">
         {SECTIONS.map(s => {
           const c = CARD[s.id];
-          const Icon = c.icon;
           const active = value === s.id;
           return (
             <Button variant="ghost" size="natural" key={s.id} type="button" role="tab" aria-selected={active} aria-label={s.label} onClick={() => onChange(s.id)}
-              data-section={s.id}
-              className="section-card relative flex min-h-40 w-36 shrink-0 snap-start flex-col items-start justify-start gap-2 rounded-lg border p-3 text-left lg:w-auto lg:min-w-0">
-              <span className="section-icon grid h-10 w-10 shrink-0 place-items-center rounded-lg"><Icon className="size-5" /></span>
-              <span className="w-full whitespace-normal font-display text-sm font-extrabold leading-5">{s.label}</span>
-              <span className="section-subtitle mt-auto w-full whitespace-normal text-[11px] font-medium leading-4">{c.sub}</span>
+              className={`flex min-h-20 min-w-0 flex-col items-center justify-start gap-1 rounded-2xl px-0.5 py-3 text-center shadow-pop transition-colors sm:min-h-36 sm:items-start sm:gap-2 sm:rounded-3xl sm:px-3 sm:py-4 sm:text-left ${c.cls} ${active ? "ring-2 ring-foreground/80 ring-offset-2 ring-offset-background" : "opacity-75 hover:opacity-100"}`}>
+              <span className="shrink-0 text-xl leading-none sm:text-2xl">{s.icon}</span>
+              <span className="w-full whitespace-normal break-words font-display text-[10px] font-extrabold leading-normal sm:text-base">{c.title}</span>
+              <span className={`hidden w-full whitespace-normal text-[11px] font-medium leading-relaxed sm:block ${c.muted}`}>{c.sub}</span>
             </Button>
           );
         })}
