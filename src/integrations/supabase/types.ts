@@ -690,6 +690,7 @@ export type Database = {
           reason: string | null
           responded_at: string | null
           status: Database["public"]["Enums"]["assignment_status"]
+          trip_id: string | null
           updated_at: string
         }
         Insert: {
@@ -708,6 +709,7 @@ export type Database = {
           reason?: string | null
           responded_at?: string | null
           status?: Database["public"]["Enums"]["assignment_status"]
+          trip_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -726,9 +728,18 @@ export type Database = {
           reason?: string | null
           responded_at?: string | null
           status?: Database["public"]["Enums"]["assignment_status"]
+          trip_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "delivery_assignments_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_trips"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       delivery_events: {
         Row: {
@@ -846,6 +857,36 @@ export type Database = {
           label?: string
           sort_order?: number
           start_time?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      delivery_trips: {
+        Row: {
+          created_at: string
+          driver_id: string
+          id: string
+          order_ids: string[]
+          status: string
+          stops: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          id?: string
+          order_ids: string[]
+          status?: string
+          stops?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          id?: string
+          order_ids?: string[]
+          status?: string
+          stops?: Json
           updated_at?: string
         }
         Relationships: []
@@ -2026,6 +2067,32 @@ export type Database = {
         }
         Relationships: []
       }
+      order_packing_confirmations: {
+        Row: {
+          created_at: string
+          order_id: string
+          supplier_id: string
+        }
+        Insert: {
+          created_at?: string
+          order_id: string
+          supplier_id: string
+        }
+        Update: {
+          created_at?: string
+          order_id?: string
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_packing_confirmations_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "app_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_status_log: {
         Row: {
           changed_at: string
@@ -2968,6 +3035,10 @@ export type Database = {
         }
         Returns: number
       }
+      claim_delivery_trip: {
+        Args: { p_driver: string; p_orders: string[]; p_stops: Json }
+        Returns: string
+      }
       commit_inventory: {
         Args: { p_actor?: string; p_order_id: string }
         Returns: undefined
@@ -2982,6 +3053,10 @@ export type Database = {
         Returns: number
       }
       expire_wallet_credits: { Args: { p_phone: string }; Returns: undefined }
+      finish_delivery_stop: {
+        Args: { p_driver: string; p_index: number; p_trip: string }
+        Returns: Json
+      }
       release_inventory: {
         Args: { p_actor?: string; p_order_id: string }
         Returns: undefined
