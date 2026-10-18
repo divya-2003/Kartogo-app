@@ -15,6 +15,13 @@
       "when": 1792034006718,
       "tag": "0001_catalog_item_images",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792316152680,
+      "tag": "0002_multi_stop_delivery_trips",
+      "breakpoints": true
     }
   ]
 }
