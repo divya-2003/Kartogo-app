@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { Header } from "@/components/Header";
+import { LocationPicker } from "@/components/LocationPicker";
+import { Button } from "@/components/ui/button";
 import { useAuth, useCart, useCatalog, useOrders, useLocation, useWallet, buildLocationQuery, type SavedLocation } from "@/lib/store";
 import { ingestOrderFn } from "@/lib/recommendations.functions";
 import { clearRecommendationCartProductIds, customerEventService, getRecommendationCartProductIds } from "@/lib/recommendations.tracking";
@@ -34,7 +36,7 @@ function slotAvailableToday(s: DeliverySlot, now = new Date()): boolean {
 
 export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
-  head: () => ({ meta: [{ title: "Checkout — Kartogo" }] }),
+  head: () => ({ meta: [{ title: "Checkout — Kartogo" }, { name: "description", content: "Choose your saved delivery address and payment for your Kartogo order." }, { property: "og:title", content: "Checkout — Kartogo" }, { property: "og:description", content: "Choose your delivery address and payment for your Kartogo order." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });
 
 // Promo rules live in one shared module so the storefront cards, this checkout
@@ -448,12 +450,7 @@ function CheckoutPage() {
                         <MapPin className="mx-auto h-6 w-6 text-primary" />
                         <p className="mt-2 text-sm font-semibold">No saved address found</p>
                         <p className="mt-1 text-xs text-muted-foreground">Add one address once, then select it for future orders.</p>
-                        <button
-                          onClick={() => { setName(user.name ?? ""); setShowForm(true); setShowPicker(true); }}
-                          className="mt-3 inline-flex items-center gap-1 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90"
-                        >
-                          <Plus className="h-4 w-4" /> Add new address
-                        </button>
+                        <LocationPicker variant="button" buttonLabel="Add new address" />
                       </div>
                     )}
                   </>

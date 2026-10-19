@@ -12,5 +12,7 @@ describe("bottom section back destinations", () => {
   it("preserves forward links and back from detail pages", () => {
     expect(backMustReturnHome("/print", "/login", "PUSH")).toBe(false);
     expect(backMustReturnHome("/product/123", "/search", "BACK")).toBe(false);
+    expect(backMustReturnHome("/event/123", "/explore/event-venues", "BACK")).toBe(false);
+    expect(backMustReturnHome("/explore/event-venues", "/search", "BACK")).toBe(false);
   });
 });
