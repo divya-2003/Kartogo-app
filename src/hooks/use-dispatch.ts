@@ -16,6 +16,7 @@ type Partner = Awaited<ReturnType<typeof getDriverDispatchFn>>["partner"];
 export function useDriverDispatch(token: string | null, enabled: boolean) {
   const [offer, setOffer] = useState<Offer>(null);
   const [partner, setPartner] = useState<Partner>(null);
+  const [trip, setTrip] = useState<Awaited<ReturnType<typeof getDriverDispatchFn>>["trip"]>(null);
   const inFlight = useRef(false);
 
   const refresh = useCallback(async () => {
@@ -25,6 +26,7 @@ export function useDriverDispatch(token: string | null, enabled: boolean) {
       const res = await getDriverDispatchFn({ data: { token } });
       setOffer(res.offer);
       setPartner(res.partner);
+      setTrip(res.trip);
     } catch {
       // Transient — the next tick retries.
     } finally {
@@ -48,7 +50,7 @@ export function useDriverDispatch(token: string | null, enabled: boolean) {
     };
   }, [token, enabled, refresh]);
 
-  return { offer, partner, refresh };
+  return { offer, partner, trip, refresh };
 }
 
 /** Countdown (seconds) to an ISO deadline; clamps at zero. */

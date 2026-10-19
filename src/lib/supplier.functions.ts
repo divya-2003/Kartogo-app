@@ -111,17 +111,14 @@ export const supplierMarkPackedFn = createServerFn({ method: "POST" })
       throw new Error("Only newly placed orders can be marked as packed");
     }
 
-    const { data: row, error } = await supabaseAdmin
-      .from("app_orders")
-      .update({ status: "packed", updated_at: new Date().toISOString() })
-      .eq("id", data.id)
-      .eq("status", "placed")
-      .select("*")
-      .maybeSingle();
-
-    if (error || !row) {
-      throw new Error("Status could not be updated. Please try again.");
-    }
+    const { error: confirmationError } = await supabaseAdmin.from("order_packing_confirmations").upsert({ order_id: data.id, supplier_id: session.supplierId });
+    if (confirmationError) throw new Error("Could not save packing confirmation");
+    const { SUPPLIERS } = await import("./suppliers");
+    const required = new Set(items.map(i => SUPPLIERS.find(s => s.categories.includes(PRODUCT_CATEGORY[i.productId] ?? ""))?.id).filter(Boolean));
+    const { data: confirmations } = await supabaseAdmin.from("order_packing_confirmations").select("supplier_id").eq("order_id", data.id);
+    if ([...required].some(id => !confirmations?.some(c => c.supplier_id === id))) return { ok: true as const, id: data.id, status: "placed" as SupplierOrder["status"] };
+    const { data: row, error } = await supabaseAdmin.from("app_orders").update({ status: "packed", updated_at: new Date().toISOString() }).eq("id", data.id).eq("status", "placed").select("*").maybeSingle();
+    if (error || !row) throw new Error("Status could not be updated. Please try again.");
 
     // Phase 3 — the order is ready, so dispatch it to the nearest available
     // rider. Dispatch problems must never block the supplier's own action.

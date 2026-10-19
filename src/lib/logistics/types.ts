@@ -149,7 +149,7 @@ export interface RouteEstimate {
   durationSeconds: number;
   /** Encoded Google polyline when the Directions API answered. */
   polyline: string | null;
-  source: "google_directions" | "estimate";
+  source: "google_directions" | "osrm" | "estimate";
 }
 
 export interface TrackingSnapshot {

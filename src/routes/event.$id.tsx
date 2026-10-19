@@ -96,7 +96,7 @@ function EventPage() {
 
   return (
     <div className="min-h-screen bg-background pb-28">
-      <PageTop title={l.name} />
+      <PageTop title={l.name} back={l.category_slug ? `/explore/${l.category_slug}` : "/categories"} />
       <div className="mx-auto max-w-2xl space-y-4 px-4 py-4 lg:max-w-4xl">
         <div className="relative overflow-hidden rounded-3xl border border-border">
           <Thumb images={l.images} icon={l.icon} className="aspect-[16/9] w-full text-7xl" />

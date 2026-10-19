@@ -11,17 +11,13 @@
 // distance, which is the right call for a startup launch.
 
 import {
-  ACCEPT_WINDOW_SECONDS,
-  logisticsCapabilities,
+
   type DeliveryEventType,
-  type DriverCandidate,
   type GeoPoint,
 } from "./types";
-import { ensureGeoIndex } from "./geo-index";
 import { haversineMeters, isValidPoint } from "./geo";
 import { quoteDriverPayout, type PayoutQuote } from "./pricing";
-import { buildBatches, MAX_BATCH_SIZE, type BatchCandidate } from "./batching";
-import { ensurePartner, listDispatchable, setStatus, getPartner } from "./partners.server";
+import { listDispatchable, setStatus, getPartner } from "./partners.server";
 
 async function db() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -75,28 +71,10 @@ export async function notifyCustomerSms(orderId: string, body: string) {
   }
 }
 
-/** Pickup point = the active partner supermarket (single dark-store phase). */
-export async function pickupPointFor(_orderId: string): Promise<GeoPoint | null> {
-  const supabaseAdmin = await db();
-  const { data } = await supabaseAdmin
-    .from("partner_markets")
-    .select("lat, lng")
-    .eq("is_active", true)
-    .not("lat", "is", null)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  const point = data ? { lat: Number(data.lat), lng: Number(data.lng) } : null;
-  return isValidPoint(point) ? point : null;
-}
-
-async function dropPointFor(orderId: string): Promise<GeoPoint | null> {
-  const supabaseAdmin = await db();
-  const { data: order } = await supabaseAdmin
-    .from("app_orders").select("address").eq("id", orderId).maybeSingle();
-  if (!order?.address) return null;
-  const { geocodeAddress } = await import("./directions.server");
-  return geocodeAddress(order.address);
+/** Resolve the actual reserved pickup store, never the first market. */
+export async function pickupPointFor(orderId: string): Promise<GeoPoint | null> {
+  const { orderPickups } = await import("./trips.server");
+  return (await orderPickups(orderId))[0]?.point ?? null;
 }
 
 type OfferOutcome =
@@ -111,99 +89,8 @@ export async function offerOrder(
   orderId: string,
   opts: { excludeDriverIds?: string[]; attempt?: number } = {},
 ): Promise<OfferOutcome> {
-  const supabaseAdmin = await db();
-
-  const { data: order } = await supabaseAdmin
-    .from("app_orders").select("id, status, delivery_boy_id").eq("id", orderId).maybeSingle();
-  if (!order || order.status === "cancelled" || order.status === "delivered") {
-    return { ok: false, reason: "order_closed" };
-  }
-  if (order.delivery_boy_id) return { ok: false, reason: "already_offered" };
-
-  // An offer already in flight? Leave it alone.
-  const { data: live } = await supabaseAdmin
-    .from("delivery_assignments")
-    .select("id, status, expires_at")
-    .eq("order_id", orderId)
-    .in("status", ["OFFERED", "ACCEPTED"])
-    .maybeSingle();
-  if (live && (live.status === "ACCEPTED" || new Date(live.expires_at).getTime() > Date.now())) {
-    return { ok: false, reason: "already_offered" };
-  }
-
-  // Everyone who already said no (or let the clock run out) on this order.
-  const { data: past } = await supabaseAdmin
-    .from("delivery_assignments")
-    .select("driver_id, attempt")
-    .eq("order_id", orderId);
-  const declined = new Set([
-    ...(opts.excludeDriverIds ?? []),
-    ...((past ?? []).map((p) => p.driver_id as string)),
-  ]);
-  const attempt = opts.attempt ?? (past?.length ?? 0) + 1;
-
-  const pickup = await pickupPointFor(orderId);
-  const partners = (await listDispatchable()).filter((p) => !declined.has(p.driverId));
-
-  let candidates: DriverCandidate[] = partners.map((p) => ({
-    driverId: p.driverId,
-    location: p.location ?? pickup ?? { lat: 0, lng: 0 },
-    distanceMeters: pickup && p.location ? haversineMeters(p.location, pickup) : Number.MAX_SAFE_INTEGER,
-    activeOrders: p.activeOrderId ? 1 : 0,
-    rating: p.rating,
-  }));
-
-  if (!candidates.length) {
-    await logEvent(orderId, "no_driver_available", { attempt });
-    return { ok: false, reason: "no_drivers" };
-  }
-
-  const origin = pickup ?? candidates[0]!.location;
-  const strategy = logisticsCapabilities.dispatch;
-  if (strategy) {
-    candidates = await strategy.rank({ orderId, pickup: origin, candidates });
-  } else {
-    // Phase 7 — grid geo index keeps the nearest-rider search sub-linear as
-    // the fleet grows; it degrades to a plain sort for small fleets.
-    ensureGeoIndex();
-    const index = logisticsCapabilities.geoIndex;
-    candidates = index
-      ? await index.nearest(origin, candidates, Math.min(candidates.length, 10))
-      : candidates.sort((a, b) => a.distanceMeters - b.distanceMeters);
-  }
-
-  const chosen = candidates[0]!;
-  const drop = await dropPointFor(orderId);
-  const expiresAt = new Date(Date.now() + ACCEPT_WINDOW_SECONDS * 1000).toISOString();
-
-  const { error } = await supabaseAdmin.from("delivery_assignments").insert({
-    order_id: orderId,
-    driver_id: chosen.driverId,
-    status: "OFFERED",
-    attempt,
-    distance_meters: Number.isFinite(chosen.distanceMeters) ? chosen.distanceMeters : null,
-    pickup_latitude: pickup?.lat ?? null,
-    pickup_longitude: pickup?.lng ?? null,
-    drop_latitude: drop?.lat ?? null,
-    drop_longitude: drop?.lng ?? null,
-    expires_at: expiresAt,
-  });
-  // Unique partial index — another dispatch cycle got there first.
-  if (error) return { ok: false, reason: "already_offered" };
-
-  const payout = await quoteOrderPayout(orderId, chosen.distanceMeters, drop);
-  await logEvent(
-    orderId,
-    "driver_offered",
-    { attempt, distanceMeters: chosen.distanceMeters, payout: payout.amount, surge: payout.reasons },
-    chosen.driverId,
-  );
-  void notifyDriverSms(
-    chosen.driverId,
-    `Kartogo: new delivery ${orderId} — you earn ₹${payout.amount}. Accept within ${ACCEPT_WINDOW_SECONDS}s.`,
-  );
-
-  return { ok: true, driverId: chosen.driverId, expiresAt, attempt, payout: payout.amount };
+  const { dispatchReadyTrip } = await import("./trips.server");
+  return dispatchReadyTrip(orderId);
 }
 
 // ---------------------------------------------------------------------------
@@ -255,118 +142,20 @@ export async function quoteOrderPayout(
 // Batching — pool orders leaving the same store along the same corridor.
 // ---------------------------------------------------------------------------
 
-/** Unassigned orders that would ride the same corridor as `orderId`. */
+/** Payout batch count comes from persisted assignments, not a changing waiting pool. */
 export async function batchMatesFor(orderId: string): Promise<string[]> {
-  try {
-    const supabaseAdmin = await db();
-    const pickup = await pickupPointFor(orderId);
-    if (!pickup) return [];
-
-    const { data: rows } = await supabaseAdmin
-      .from("app_orders")
-      .select("id, address, created_at, status, delivery_boy_id")
-      .in("status", ["placed", "packed"])
-      .is("delivery_boy_id", null)
-      .order("created_at", { ascending: true })
-      .limit(25);
-
-    const pool = (rows ?? []).filter((r) => r.id === orderId || r.id !== orderId);
-    if (!pool.some((r) => r.id === orderId)) return [];
-
-    const { geocodeAddress } = await import("./directions.server");
-    const candidates: BatchCandidate[] = [];
-    for (const r of pool) {
-      const point = await geocodeAddress(String(r.address ?? ""));
-      if (!isValidPoint(point)) continue;
-      candidates.push({
-        orderId: r.id as string,
-        marketId: null, // single dark-store phase: every order leaves the same market
-        drop: point,
-        createdAt: String(r.created_at ?? ""),
-      });
-    }
-
-    const batch = buildBatches(pickup, candidates).find((b) => b.orderIds.includes(orderId));
-    return (batch?.orderIds ?? []).filter((id) => id !== orderId).slice(0, MAX_BATCH_SIZE - 1);
-  } catch (e) {
-    console.error("batching failed", e);
-    return [];
-  }
-}
-
-/**
- * After a rider accepts, hand them the corridor-mates of that order so one run
- * covers several drops instead of dispatching a second rider down the same road.
- */
-async function attachBatchMates(orderId: string, driverId: string) {
-  const mates = await batchMatesFor(orderId);
-  if (!mates.length) return;
-  const supabaseAdmin = await db();
-  const pickup = await pickupPointFor(orderId);
-
-  for (const mateId of mates) {
-    const { data: locked } = await supabaseAdmin
-      .from("app_orders")
-      .update({ delivery_boy_id: driverId, updated_at: new Date().toISOString() })
-      .eq("id", mateId)
-      .is("delivery_boy_id", null)
-      .in("status", ["placed", "packed"])
-      .select("id")
-      .maybeSingle();
-    if (!locked) continue;
-
-    await supabaseAdmin.from("delivery_assignments").insert({
-      order_id: mateId,
-      driver_id: driverId,
-      status: "ACCEPTED",
-      attempt: 1,
-      pickup_latitude: pickup?.lat ?? null,
-      pickup_longitude: pickup?.lng ?? null,
-      expires_at: new Date(Date.now() + ACCEPT_WINDOW_SECONDS * 1000).toISOString(),
-      responded_at: new Date().toISOString(),
-      reason: `batched_with:${orderId}`,
-    });
-    await logEvent(mateId, "driver_accepted", { batchedWith: orderId }, driverId, `driver:${driverId}`);
-    void notifyCustomerSms(mateId, `Kartogo: a delivery partner is picking up your order ${mateId}.`);
-  }
+  const d = await db();
+  const { data: assignment } = await d.from("delivery_assignments").select("trip_id").eq("order_id", orderId).not("trip_id", "is", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (!assignment?.trip_id) return [];
+  const { data: trip } = await d.from("delivery_trips").select("order_ids").eq("id", assignment.trip_id).maybeSingle();
+  return (trip?.order_ids ?? []).filter(id => id !== orderId);
 }
 
 /** Phase 4 — rider accepts. Locks the order to them. */
 export async function acceptOffer(orderId: string, driverId: string) {
-  const supabaseAdmin = await db();
-  const { data: offer } = await supabaseAdmin
-    .from("delivery_assignments")
-    .select("*")
-    .eq("order_id", orderId)
-    .eq("driver_id", driverId)
-    .eq("status", "OFFERED")
-    .maybeSingle();
-  if (!offer) throw new Error("This delivery is no longer available");
-  if (new Date(offer.expires_at as string).getTime() < Date.now()) {
-    await expireOffer(orderId, driverId);
-    throw new Error("The acceptance window closed. It has gone to another partner.");
-  }
-
-  const { data: locked, error } = await supabaseAdmin
-    .from("app_orders")
-    .update({ delivery_boy_id: driverId, updated_at: new Date().toISOString() })
-    .eq("id", orderId)
-    .is("delivery_boy_id", null)
-    .select("id")
-    .maybeSingle();
-  if (error || !locked) throw new Error("This delivery was already taken");
-
-  await supabaseAdmin
-    .from("delivery_assignments")
-    .update({ status: "ACCEPTED", responded_at: new Date().toISOString() })
-    .eq("id", offer.id as string);
-
-  await ensurePartner(driverId);
-  await setStatus(driverId, "PICKING_ORDER", { orderId });
-  await logEvent(orderId, "driver_accepted", {}, driverId, `driver:${driverId}`);
-  void notifyCustomerSms(orderId, `Kartogo: a delivery partner is picking up your order ${orderId}.`);
-  // Multi-order run: sweep up corridor-mates leaving the same store.
-  await attachBatchMates(orderId, driverId);
+  const { dispatchReadyTrip } = await import("./trips.server");
+  const result = await dispatchReadyTrip(orderId, driverId);
+  if (!result.ok) throw new Error("This delivery is no longer available");
   return { ok: true as const };
 }
 
@@ -412,16 +201,20 @@ export async function sweepExpiredOffers(): Promise<number> {
   let redispatched = 0;
   for (const row of stale ?? []) {
     await expireOffer(row.order_id as string, row.driver_id as string);
-    await setStatus(row.driver_id as string, "AVAILABLE", { orderId: null });
+    const { activeTrip } = await import("./trips.server");
+    if (!await activeTrip(row.driver_id as string)) await setStatus(row.driver_id as string, "AVAILABLE", { orderId: null });
     const next = await offerOrder(row.order_id as string);
     if (next.ok) redispatched += 1;
   }
-  return redispatched;
+  const { dispatchWaitingTrips } = await import("./trips.server");
+  return redispatched + await dispatchWaitingTrips();
 }
 
 /** Phase 9 — free a rider and put the order back in the pool. */
 export async function releaseDriver(orderId: string, reason: string, redispatch = true) {
   const supabaseAdmin = await db();
+  const { data: bound } = await supabaseAdmin.from("delivery_assignments").select("trip_id").eq("order_id", orderId).eq("status", "ACCEPTED").not("trip_id", "is", null).maybeSingle();
+  if (bound?.trip_id) throw new Error("An active trip cannot be reassigned; cancel the order or complete its stops first");
   const { data: rows } = await supabaseAdmin
     .from("delivery_assignments")
     .select("driver_id")

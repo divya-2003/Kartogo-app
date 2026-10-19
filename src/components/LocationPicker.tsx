@@ -10,7 +10,7 @@ import { useLocation, buildLocationQuery, useAuth, ADDRESS_LABELS, addressZone, 
 
 export type LocationPickerVariant = "chip" | "button";
 
-export function LocationPicker({ variant = "chip", buttonLabel = "Change location" }: { variant?: LocationPickerVariant; buttonLabel?: string } = {}) {
+export function LocationPicker({ variant = "chip", buttonLabel = "Change location", onOpen }: { variant?: LocationPickerVariant; buttonLabel?: string; onOpen?: () => void } = {}) {
   const { location, savedAddresses, setLocation, removeSavedAddress, updateSavedAddress } = useLocation();
   const [mounted, setMounted] = useState(false);
 
@@ -41,6 +41,7 @@ export function LocationPicker({ variant = "chip", buttonLabel = "Change locatio
 
   return (
     <LocationPickerClient
+      onOpen={onOpen}
       variant={variant}
       buttonLabel={buttonLabel}
       location={location}
@@ -54,6 +55,7 @@ export function LocationPicker({ variant = "chip", buttonLabel = "Change locatio
 
 
 function LocationPickerClient({
+  onOpen,
   variant,
   buttonLabel,
   location,
@@ -62,6 +64,7 @@ function LocationPickerClient({
   removeSavedAddress,
   updateSavedAddress,
 }: {
+  onOpen?: () => void;
   variant: LocationPickerVariant;
   buttonLabel: string;
   location: SavedLocation | null;
@@ -294,14 +297,14 @@ function LocationPickerClient({
     <>
       {variant === "button" ? (
         <button
-          onClick={() => { setDenied(null); setOpen(true); }}
+          onClick={() => { onOpen?.(); setDenied(null); setOpen(true); }}
           className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3.5 font-display text-sm font-extrabold shadow-pop transition hover:bg-secondary"
         >
           <MapPin className="h-4 w-4 text-primary" /> {buttonLabel}
         </button>
       ) : (
         <button
-          onClick={() => { setDenied(null); setOpen(true); }}
+          onClick={() => { onOpen?.(); setDenied(null); setOpen(true); }}
           className="flex w-full items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-semibold hover:bg-secondary"
         >
           <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />

@@ -25,7 +25,16 @@ export async function getRoute(
   waypoint?: GeoPoint | null,
 ): Promise<RouteEstimate> {
   const key = process.env["GOOGLE_MAPS_API_KEY"];
-  if (!key) return fallback(origin, dest);
+  if (!key) {
+    try {
+      const points = [origin, ...(waypoint ? [waypoint] : []), dest];
+      const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${points.map(p => `${p.lng},${p.lat}`).join(";")}?overview=false`, { signal: AbortSignal.timeout(4000) });
+      const json = res.ok ? await res.json() as { code?: string; routes?: { distance: number; duration: number }[] } : null;
+      const route = json?.code === "Ok" ? json.routes?.[0] : null;
+      if (route) return { distanceMeters: route.distance, durationSeconds: route.duration, polyline: null, source: "osrm" };
+    } catch { /* Safe fallback; unknown road time must not authorize multi-store batching. */ }
+    return fallback(origin, dest);
+  }
 
   try {
     const params = new URLSearchParams({
@@ -71,7 +80,16 @@ export async function getRoute(
 /** Best-effort geocode of a free-text delivery address. Returns null quietly. */
 export async function geocodeAddress(address: string): Promise<GeoPoint | null> {
   const key = process.env["GOOGLE_MAPS_API_KEY"];
-  if (!key || !address.trim()) return null;
+  if (!address.trim()) return null;
+  if (!key) {
+    try {
+      const params = new URLSearchParams({ q: address, format: "json", limit: "1", countrycodes: "in" });
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, { headers: { "User-Agent": "Kartogo delivery routing", "Accept": "application/json" }, signal: AbortSignal.timeout(4000) });
+      const rows = res.ok ? await res.json() as { lat: string; lon: string }[] : [];
+      const first = rows[0];
+      return first ? { lat: Number(first.lat), lng: Number(first.lon) } : null;
+    } catch { return null; }
+  }
   try {
     const params = new URLSearchParams({ address, region: "in", key });
     const res = await fetchWithRetry(`https://maps.googleapis.com/maps/api/geocode/json?${params}`, undefined, { label: "google-geocode" });

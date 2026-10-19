@@ -98,6 +98,10 @@ function Index() {
   const categoriesQuery = useQuery({ queryKey: ["mp-cats"], queryFn: () => listMpCategoriesFn(), staleTime: 5 * 60_000 });
   const products = catalogProducts.filter(p => catalogProductInShop(p, (categoriesQuery.data?.categories ?? []) as MpCategory[]));
   const [section, setSection] = useState<SectionId>("shop");
+  useEffect(() => {
+    const saved = sessionStorage.getItem("qk_home_section");
+    if (["shop", "food", "health", "rides", "beauty", "home", "events"].includes(saved ?? "")) setSection(saved as SectionId);
+  }, []);
   const typedTerm = useTypewriterPlaceholder(SECTION_SEARCH[section] ?? HOME_SEARCH_TERMS);
   const { count, subtotal } = useCart();
   const { balance } = useWallet();
@@ -209,7 +213,7 @@ function Index() {
           </div>
 
 
-          <SectionBar value={section} onChange={setSection} />
+          <SectionBar value={section} onChange={next => { sessionStorage.setItem("qk_home_section", next); setSection(next); }} />
 
           {/* service options — Quick vs Standard, shown under Shop */}
           <div className={`mt-3 grid-cols-2 gap-2 ${section === "shop" ? "grid" : "hidden"}`}>
