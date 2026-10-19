@@ -43,18 +43,17 @@ export const Route = createFileRoute("/checkout")({
 // preview and the server-side order validation always agree on the same codes.
 
 function CheckoutPage() {
-  const { user, setName: setProfileName, customerToken } = useAuth();
+  const { user, customerToken } = useAuth();
   const { items, subtotal, clear } = useCart();
   const { products } = useCatalog();
   const { place } = useOrders();
-  const { location, savedAddresses, deliveryAddresses, addDeliveryAddress, removeDeliveryAddress, removeSavedAddress, updateSavedAddress } = useLocation();
+  const { location, savedAddresses, deliveryAddresses, removeDeliveryAddress, removeSavedAddress, updateSavedAddress } = useLocation();
   const { balance: walletBalance, refresh: refreshWallet } = useWallet();
   const nav = useNavigate();
 
   useEffect(() => { customerEventService.trackCheckoutStarted(); }, []);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [showForm, setShowForm] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const [payment, setPayment] = useState<"cash" | "upi" | "wallet">("cash");
   const [placing, setPlacing] = useState(false);
@@ -68,13 +67,6 @@ function CheckoutPage() {
   // Promo code state.
   const [promoInput, setPromoInput] = useState("");
   const [appliedCode, setAppliedCode] = useState<string | null>(null);
-
-  // New-address form state.
-  const [label, setLabel] = useState("Home");
-  const [name, setName] = useState("");
-  const [newDoor, setNewDoor] = useState("");
-  const [newApartment, setNewApartment] = useState("");
-  const [newLandmark, setNewLandmark] = useState("");
 
   // Scheduled delivery (Standard orders only).
   const isQuick = (location?.etaMinutes ?? 99) <= 13;
@@ -159,7 +151,6 @@ function CheckoutPage() {
     return [...currentOption, ...normalizedDelivery, ...savedLocationOptions];
   }, [location, deliveryAddresses, savedAddresses, userName]);
 
-  useEffect(() => { if (user?.name && !name) setName(user.name); }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Follow the location sheet: switching location switches the delivery address.
   useEffect(() => {
@@ -170,10 +161,8 @@ function CheckoutPage() {
   useEffect(() => {
     if (addressOptions.length === 0) {
       setSelectedId(null);
-      setShowForm(false);
     } else if (!selectedId || !addressOptions.some(a => a.id === selectedId)) {
       setSelectedId(addressOptions[0].id);
-      setShowForm(false);
     }
   }, [addressOptions, selectedId]);
 
@@ -290,30 +279,6 @@ function CheckoutPage() {
     );
   }
 
-  const saveNewAddress = () => {
-    if (!name.trim()) { toast.error("Please enter your name"); return; }
-    if (!newDoor.trim() || !newApartment.trim() || !newLandmark.trim()) {
-      toast.error("Please add your door number, apartment name and landmark");
-      return;
-    }
-    const trimmedName = name.trim();
-    // The name entered on the address is the customer's name — sync it to their
-    // profile so it updates everywhere in the app (account, orders, header).
-    if (trimmedName && trimmedName !== (user?.name ?? "").trim()) {
-      setProfileName(trimmedName);
-    }
-    const composed = `${newDoor.trim()}, ${newApartment.trim()}, Ongole (Near ${newLandmark.trim()})`;
-    const created = addDeliveryAddress({ label: label.trim() || "Home", name: trimmedName, address: composed });
-    setSelectedId(`delivery:${created.id}`);
-    setShowForm(false);
-    setShowPicker(false);
-    setLabel("Home");
-    setNewDoor("");
-    setNewApartment("");
-    setNewLandmark("");
-    toast.success("Address saved");
-  };
-
   const startEditLocation = (query: string) => {
     const addr = savedAddresses.find(a => a.query.toLowerCase() === query.toLowerCase());
     if (!addr) return;
@@ -420,7 +385,7 @@ function CheckoutPage() {
                       <h2 className="font-display text-lg font-bold">Delivery address</h2>
                       {addressOptions.length > 0 && (
                         <button
-                          onClick={() => { setShowForm(false); setShowPicker(true); }}
+                          onClick={() => { setShowPicker(true); }}
                           className="text-sm font-semibold text-primary underline-offset-2 hover:underline"
                         >
                           Change
@@ -518,14 +483,14 @@ function CheckoutPage() {
 
             {/* Address picker modal */}
             {showPicker && (
-              <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4" onClick={() => setShowPicker(false)}>
+              <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/50 p-0 sm:items-center sm:p-4" onClick={() => setShowPicker(false)}>
                 <div
                   className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-card p-5 shadow-xl sm:rounded-2xl"
                   onClick={e => e.stopPropagation()}
                 >
                   <div className="mb-4 flex items-center justify-between">
                     <h3 className="font-display text-lg font-bold">
-                      {editLocationId ? "Edit exact address" : showForm ? "Add a new address" : "Select delivery address"}
+                      {editLocationId ? "Edit exact address" : "Select delivery address"}
                     </h3>
                     <button onClick={() => setShowPicker(false)} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full hover:bg-secondary">
                       <X className="h-4 w-4" />
@@ -587,7 +552,7 @@ function CheckoutPage() {
                         )}
                       </div>
                     </div>
-                  ) : !showForm && (
+                  ) : (
                     <>
                       {addressOptions.length > 0 && (
                         <ul className="grid gap-2">
@@ -631,47 +596,11 @@ function CheckoutPage() {
                           })}
                         </ul>
                       )}
-                      <button
-                        onClick={() => { setName(user.name ?? ""); setShowForm(true); }}
-                        className="mt-3 inline-flex w-full items-center justify-center gap-1 rounded-lg border border-primary/40 px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/5"
-                      >
-                        <Plus className="h-4 w-4" /> Add new address
-                      </button>
+                      <LocationPicker variant="button" buttonLabel="Add new address" onOpen={() => setShowPicker(false)} />
                     </>
                   )}
 
-                  {/* New address form */}
-                  {showForm && (
-                    <div className="rounded-xl border border-border bg-background p-4">
-                      <div className="grid gap-3">
-                        <Field label="Label">
-                          <div className="flex flex-wrap gap-2">
-                            {["Home", "Work", "Friends", "Other"].map(l => (
-                              <button
-                                key={l}
-                                type="button"
-                                onClick={() => setLabel(l)}
-                                className={`rounded-lg border px-3 py-1.5 text-sm font-semibold ${label === l ? "border-primary bg-primary/10 text-primary" : "border-input"}`}
-                              >
-                                {l}
-                              </button>
-                            ))}
-                          </div>
-                        </Field>
-                        <Field label="Full name"><input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" /></Field>
-                        <Field label="Mobile"><input value={user.phone} disabled className="w-full rounded-lg border border-input bg-secondary px-3 py-2 text-muted-foreground" /></Field>
-                        <Field label="Door / Flat number"><input value={newDoor} onChange={e => setNewDoor(e.target.value)} placeholder="e.g. 12-3-45, Flat 201" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" /></Field>
-                        <Field label="Apartment / Building name"><input value={newApartment} onChange={e => setNewApartment(e.target.value)} placeholder="e.g. Sai Residency" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" /></Field>
-                        <Field label="Landmark"><input value={newLandmark} onChange={e => setNewLandmark(e.target.value)} placeholder="e.g. Opposite SBI ATM" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" /></Field>
-                        <div className="flex gap-2">
-                          {addressOptions.length > 0 && (
-                            <button onClick={() => setShowForm(false)} className="flex-1 rounded-xl border border-border py-2.5 font-bold hover:bg-secondary">Back</button>
-                          )}
-                          <button onClick={saveNewAddress} className="flex-1 rounded-xl bg-primary py-2.5 font-bold text-primary-foreground hover:bg-primary/90">Save address</button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+
                 </div>
               </div>
             )}
