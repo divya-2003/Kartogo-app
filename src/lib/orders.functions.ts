@@ -414,26 +414,18 @@ export const assignOrderFn = createServerFn({ method: "POST" })
     const { verifyAdminToken } = await import("./auth-tokens.server");
     if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
 
-    const { data: row, error } = await supabaseAdmin
-      .from("app_orders")
-      .update({ delivery_boy_id: data.deliveryBoyId || null, updated_at: new Date().toISOString() })
-      .eq("id", data.id)
-      .select("*")
-      .maybeSingle();
-
-    if (error || !row) {
-      console.error("Failed to assign delivery partner", error);
-      throw new Error("Delivery partner could not be assigned. Please try again.");
+    const { ensurePartner } = await import("./logistics/partners.server");
+    const { dispatchReadyTrip } = await import("./logistics/trips.server");
+    if (!data.deliveryBoyId) {
+      const { releaseDriver } = await import("./logistics/dispatch.server");
+      await releaseDriver(data.id, "admin_reassign", false);
+    } else {
+      await ensurePartner(data.deliveryBoyId);
+      const result = await dispatchReadyTrip(data.id, data.deliveryBoyId);
+      if (!result.ok) throw new Error("The order must be packed and the rider online with no active trip");
     }
-
-    try {
-      const { sendPushToCustomer } = await import("./push.server");
-      await sendPushToCustomer({
-        phone: String(row.customer_phone), type: "DRIVER_ASSIGNED", orderId: data.id,
-      });
-    } catch (e) {
-      console.error("driver assigned push failed", e);
-    }
+    const { data: row } = await supabaseAdmin.from("app_orders").select("*").eq("id", data.id).maybeSingle();
+    if (!row) throw new Error("Order not found");
     return row;
   });
 

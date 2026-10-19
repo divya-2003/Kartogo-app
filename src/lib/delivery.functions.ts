@@ -127,6 +127,9 @@ export const deliverySetStatusFn = createServerFn({ method: "POST" })
       throw new Error("This order is already closed");
     }
 
+    const { activeTrip } = await import("./logistics/trips.server");
+    const trip = await activeTrip(session.driverId);
+    if (trip?.orderIds.includes(data.id)) throw new Error("Use the pickup and delivery actions in Your trip to complete stops in order");
     const { data: row, error } = await supabaseAdmin
       .from("app_orders")
       .update({ status: data.status, updated_at: new Date().toISOString() })
@@ -209,47 +212,13 @@ export const claimOrderFn = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const session = await requireActiveDriver(data.token);
 
-    const { data: existing, error: readErr } = await supabaseAdmin
-      .from("app_orders")
-      .select("*")
-      .eq("id", data.id)
-      .maybeSingle();
-    if (readErr || !existing) throw new Error("Order not found");
-    if (existing.delivery_boy_id) throw new Error("This order was already taken by another partner");
-    if (existing.status !== "placed" && existing.status !== "packed") throw new Error("This order is no longer available");
-
-    const { data: row, error } = await supabaseAdmin
-      .from("app_orders")
-      .update({ delivery_boy_id: session.driverId, updated_at: new Date().toISOString() })
-      .eq("id", data.id)
-      .is("delivery_boy_id", null)
-      .select("*")
-      .maybeSingle();
-
-    if (error || !row) {
-      throw new Error("This order was already taken by another partner");
-    }
-
-    // Self-claim is a manual assignment — reflect it in the logistics layer.
-    try {
-      const { ensurePartner, setStatus } = await import("./logistics/partners.server");
-      const { logEvent } = await import("./logistics/dispatch.server");
-      await ensurePartner(session.driverId);
-      await setStatus(session.driverId, "ASSIGNED", { orderId: data.id });
-      await logEvent(data.id, "driver_accepted", { selfClaimed: true }, session.driverId, "driver");
-    } catch (e) {
-      console.error("logistics claim sync failed", e);
-    }
-
-    try {
-      const { sendPushToCustomer } = await import("./push.server");
-      await sendPushToCustomer({
-        phone: String(row.customer_phone), type: "DRIVER_ASSIGNED", orderId: data.id,
-      });
-    } catch (e) {
-      console.error("driver assigned push failed", e);
-    }
-
+    const { ensurePartner } = await import("./logistics/partners.server");
+    await ensurePartner(session.driverId);
+    const { dispatchReadyTrip } = await import("./logistics/trips.server");
+    const result = await dispatchReadyTrip(data.id, session.driverId);
+    if (!result.ok) throw new Error("Go online first; only packed, unassigned orders with confirmed pickup stores can be claimed");
+    const { data: row } = await supabaseAdmin.from("app_orders").select("*").eq("id", data.id).maybeSingle();
+    if (!row) throw new Error("Order not found");
     return maskOrderForDriver(row);
   });
 
