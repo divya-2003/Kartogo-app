@@ -7,6 +7,8 @@ import { useDriverLocation } from "@/hooks/use-driver-location";
 import { useCountdown, useDriverDispatch } from "@/hooks/use-dispatch";
 import { setDriverStatusFn, respondToOfferFn } from "@/lib/logistics.functions";
 import { ACCEPT_WINDOW_SECONDS, DRIVER_STATUS_LABEL, type DriverStatus } from "@/lib/logistics/types";
+import { finishTripStopFn } from "@/lib/logistics/trips.functions";
+import { directionsUrl } from "@/lib/logistics/geo";
 import { formatDistance } from "@/lib/logistics/geo";
 
 type Props = {
@@ -21,7 +23,7 @@ type Props = {
  */
 export function DriverDispatchPanel({ token, onAssigned }: Props) {
   const [busy, setBusy] = useState(false);
-  const { offer, partner, refresh } = useDriverDispatch(token, true);
+  const { offer, partner, trip, refresh } = useDriverDispatch(token, true);
   const status: DriverStatus = partner?.status ?? "OFFLINE";
   const online = status !== "OFFLINE";
   const gps = useDriverLocation({ token, enabled: online });
@@ -71,10 +73,10 @@ export function DriverDispatchPanel({ token, onAssigned }: Props) {
         <div className="ml-auto flex items-center gap-2">
           {online ? (
             <>
-              <Button size="sm" variant="outline" disabled={busy} onClick={() => changeStatus("BREAK")}>
+              <Button size="sm" variant="outline" disabled={busy || !!trip} onClick={() => changeStatus("BREAK")}>
                 <Coffee className="mr-1 h-4 w-4" /> Break
               </Button>
-              <Button size="sm" variant="destructive" disabled={busy} onClick={() => changeStatus("OFFLINE")}>
+              <Button size="sm" variant="destructive" disabled={busy || !!trip} onClick={() => changeStatus("OFFLINE")}>
                 Go offline
               </Button>
             </>
@@ -90,6 +92,20 @@ export function DriverDispatchPanel({ token, onAssigned }: Props) {
         <p className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">{gps.error}</p>
       )}
 
+      {trip && <div className="border-y border-border py-4" aria-label="Delivery trip stops">
+        <h2 className="font-display text-lg font-bold">Your trip · {trip.orderIds.length} orders</h2>
+        <ol className="mt-3 space-y-3">{trip.stops.map((stop, index) => {
+          const next = index === trip.stops.findIndex(s => !s.done);
+          return <li key={`${stop.orderId}-${index}`} className={`flex items-start gap-3 border-l-2 pl-3 ${next ? "border-primary" : "border-border"}`}>
+            <span className="text-sm font-bold text-muted-foreground">{index + 1}</span>
+            <div className="min-w-0 flex-1"><p className="text-sm font-bold">{stop.done ? "✓ " : ""}{stop.kind === "pickup" ? "Pickup" : "Deliver"} · {stop.label}</p><p className="break-words text-xs text-muted-foreground">{stop.address}</p><p className="text-xs text-muted-foreground">#{stop.orderId}</p>
+            {next && <div className="mt-2 flex flex-wrap gap-2"><Button size="sm" variant="outline" asChild><a href={directionsUrl(stop.point ?? stop.address)} target="_blank" rel="noreferrer">Navigate</a></Button><Button size="sm" disabled={busy} onClick={async () => {
+              setBusy(true);
+              try { await finishTripStopFn({ data: { token, tripId: trip.id, index } }); await refresh(); onAssigned?.(); toast.success(stop.kind === "pickup" ? "Pickup confirmed" : "Delivery confirmed"); } catch(e) { toast.error(e instanceof Error ? e.message : "Could not complete stop"); } finally { setBusy(false); }
+            }}>{stop.kind === "pickup" ? "Confirm pickup" : "Confirm delivery"}</Button></div>}
+            </div></li>;
+        })}</ol>
+      </div>}
       {offer && secondsLeft > 0 && (
         <div className="rounded-xl border-2 border-primary bg-primary/5 p-4">
           <div className="flex items-center justify-between">

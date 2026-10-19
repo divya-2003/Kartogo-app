@@ -59,6 +59,8 @@ export const setDriverStatusFn = createServerFn({ method: "POST" })
         .eq("driver_id", session.driverId);
     }
 
+    const { activeTrip } = await import("./logistics/trips.server");
+    if (await activeTrip(session.driverId)) throw new Error("Finish your delivery trip before changing duty status");
     // Going offline mid-delivery must not strand the order (Phase 9).
     if (data.status === "OFFLINE" || data.status === "BREAK") {
       const { getPartner } = await import("./logistics/partners.server");
@@ -102,6 +104,7 @@ export const getDriverDispatchFn = createServerFn({ method: "POST" })
   .inputValidator((data: { token: string }) => ({ token: str(data?.token) }))
   .handler(async ({ data }): Promise<{
     partner: DeliveryPartner | null;
+    trip: import("./logistics/trips").RiderTrip | null;
     offer:
       | (DeliveryAssignment & {
           orderTotal: number;
@@ -131,7 +134,9 @@ export const getDriverDispatchFn = createServerFn({ method: "POST" })
       .order("offered_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (!row) return { partner, offer: null };
+    const { activeTrip } = await import("./logistics/trips.server");
+    const trip = await activeTrip(session.driverId);
+    if (!row) return { partner, trip, offer: null };
 
     const { data: order } = await supabaseAdmin
       .from("app_orders").select("total, items, address").eq("id", row.order_id as string).maybeSingle();
@@ -147,6 +152,7 @@ export const getDriverDispatchFn = createServerFn({ method: "POST" })
 
     return {
       partner,
+      trip,
       offer: {
         id: row.id as string,
         orderId: row.order_id as string,
