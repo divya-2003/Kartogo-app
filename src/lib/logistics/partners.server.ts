@@ -208,6 +208,23 @@ async function applyGeofence(
 ): Promise<"ARRIVED_AT_STORE" | "ARRIVED_AT_CUSTOMER" | null> {
   if (!orderId) return null;
   const supabaseAdmin = await db();
+  const { activeTrip } = await import("./trips.server");
+  const trip = await activeTrip(driverId).catch(() => null);
+  const nextStop = trip?.stops.find(s => !s.done);
+  if (nextStop) {
+    if (!nextStop.point || !isValidPoint(nextStop.point) || haversineMeters(point, nextStop.point) > GEOFENCE_RADIUS_METERS) return null;
+    const tripNext = nextStop.kind === "pickup" ? "ARRIVED_AT_STORE" : "ARRIVED_AT_CUSTOMER";
+    if (status === tripNext) return null;
+    await setStatus(driverId, tripNext, { orderId: nextStop.orderId, actor: "geofence" });
+    if (tripNext === "ARRIVED_AT_CUSTOMER") {
+      const { data: order } = await supabaseAdmin.from("app_orders").select("customer_phone").eq("id", nextStop.orderId).maybeSingle();
+      if (order?.customer_phone) {
+        const { sendPushToCustomer } = await import("../push.server");
+        await sendPushToCustomer({ phone: String(order.customer_phone), type: "DRIVER_NEARBY", orderId: nextStop.orderId }).catch(() => {});
+      }
+    }
+    return tripNext;
+  }
   const { data: assignment } = await supabaseAdmin
     .from("delivery_assignments")
     .select("pickup_latitude, pickup_longitude, drop_latitude, drop_longitude")
