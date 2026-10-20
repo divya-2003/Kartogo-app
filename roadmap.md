@@ -1,11 +1,12 @@
 # Roadmap
 
 ## Multi-stop trips and customer fixes
-- [ ] Implement persisted pickup-before-drop trips with safe side-by-side store batching
-- [ ] Connect automatic dispatch and rider stop actions
-- [ ] Restore previous-page Back from Events details
-- [ ] Reuse Home address selection at checkout
-- [ ] Diagnose and repair push registration and delivery; verify available flows
+- [x] Implement persisted pickup-before-drop trips with safe side-by-side store batching
+- [x] Connect automatic dispatch and rider stop actions
+- [x] Restore previous-page Back from Events details
+- [x] Reuse Home address selection at checkout
+- [ ] Verify signed-in checkout and real rider trip end-to-end — needs an app customer/rider session and ready orders with known pickup stores
+- [ ] Complete push delivery verification — website Firebase settings are absent, no devices are registered, and connection update was declined
 
 ## Customer navigation fixes
 - [x] Show full top-section labels and remove shortcut category rows
@@ -36,8 +37,8 @@
 - [x] Orders & Bookings tabs, favorites, account menu, help & support, become a partner
 - [x] Search includes services/stores/providers
 - [x] Verify
-- [ ] Partner self-service portal for listings/staff/availability (admin manages bookings for now)
-- [ ] 30-min / same-day / next-day choice inside the grocery checkout (existing Quick/Standard + slots kept)
+- [x] Partner self-service portal for listings/staff/availability (admin manages bookings for now)
+- [x] 30-min / same-day / next-day choice inside the grocery checkout (existing Quick/Standard + slots kept)
 
 ## Oct 5 batch
 - [x] Partner bookings page (to confirm / ongoing / today / cancelled)
