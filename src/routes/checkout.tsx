@@ -596,7 +596,7 @@ function CheckoutPage() {
                           })}
                         </ul>
                       )}
-                      <LocationPicker variant="button" buttonLabel="Add new address" onOpen={() => setShowPicker(false)} />
+                      <LocationPicker variant="button" buttonLabel="Add new address" />
                     </>
                   )}
 

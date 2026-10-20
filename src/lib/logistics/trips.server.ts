@@ -20,14 +20,14 @@ export async function orderPickups(orderId: string): Promise<TripStop[]> {
   for (const line of lines) {
     const allocated = [...new Set((holds ?? []).filter(h => h.product_id === line.productId && h.status !== "released").map(h => h.market_id))];
     const owners = allocated.length ? allocated : [...new Set((stock ?? []).filter(s => s.product_id === line.productId).map(s => s.market_id))];
-    if (owners.length !== 1) return []; // Ambiguous store: never send the rider to an arbitrary market.
+    if (!owners.length || (!allocated.length && owners.length !== 1)) return []; // Split reservations are authoritative; legacy ownership must be unique.
     for (const id of owners) ids.add(id);
   }
   const stops: TripStop[] = [];
   for (const id of ids) {
     const market = markets?.find(m => m.id === id);
     if (!market) return [];
-    const point = { lat: Number(market.lat), lng: Number(market.lng) };
+    const point = market.lat != null && market.lng != null ? { lat: Number(market.lat), lng: Number(market.lng) } : null;
     stops.push({ kind: "pickup", orderId, marketId: id, label: market.name, address: market.address, point: isValidPoint(point) ? point : await geocodeAddress(market.address), done: false });
   }
   return stops;
