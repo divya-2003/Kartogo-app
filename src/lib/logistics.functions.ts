@@ -329,7 +329,7 @@ export const trackOrderFn = createServerFn({ method: "POST" })
       ? { lat: assignment.drop_latitude as number, lng: assignment.drop_longitude as number } : null;
 
     // Live position is only exposed once the rider actually has the order.
-    const showLive = stage === "picked_up" || stage === "on_the_way";
+    const showLive = stage === "on_the_way";
     const driverPoint = partner && showLive ? partner.location : null;
 
     let route: TrackingSnapshot["route"] = null;

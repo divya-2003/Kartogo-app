@@ -145,7 +145,7 @@ export async function quoteOrderPayout(
 /** Payout batch count comes from persisted assignments, not a changing waiting pool. */
 export async function batchMatesFor(orderId: string): Promise<string[]> {
   const d = await db();
-  const { data: assignment } = await d.from("delivery_assignments").select("trip_id").eq("order_id", orderId).not("trip_id", "is", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const { data: assignment } = await d.from("delivery_assignments").select("trip_id").eq("order_id", orderId).not("trip_id", "is", null).order("offered_at", { ascending: false }).limit(1).maybeSingle();
   if (!assignment?.trip_id) return [];
   const { data: trip } = await d.from("delivery_trips").select("order_ids").eq("id", assignment.trip_id).maybeSingle();
   return (trip?.order_ids ?? []).filter(id => id !== orderId);
