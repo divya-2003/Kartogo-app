@@ -101,7 +101,7 @@ function NotificationSettingsPage() {
       } else if (result.status === "unsupported") {
         toast.error("This device does not support push notifications");
       } else {
-        toast.error("Push notifications are not configured yet");
+        toast.error('Update the Firebase connection and select "Include web push" before enabling notifications.');
       }
     } catch {
       toast.error("Could not enable notifications on this device");
@@ -215,6 +215,7 @@ function NotificationSettingsPage() {
           )}
         </div>
 
+        {!pushConfigured() && <p className="mt-3 text-sm text-muted-foreground">Website notifications are missing their Firebase settings. Update the Firebase connection and select “Include web push”.</p>}
         <div className="mt-5 overflow-hidden rounded-2xl border border-border bg-card shadow-pop">
           {ROWS.map((r, i) => (
             <label

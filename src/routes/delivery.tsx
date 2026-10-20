@@ -24,7 +24,7 @@ export const Route = createFileRoute("/delivery")({
     if (!token || !driver) throw redirect({ to: "/login" });
   },
   component: DeliveryPortal,
-  head: () => ({ meta: [{ title: "Delivery Partner — Kartogo" }] }),
+  head: () => ({ meta: [{ title: "Delivery Partner — Kartogo" }, { name: "description", content: "Manage your Kartogo delivery trips, pickups and customer deliveries." }, { property: "og:title", content: "Delivery Partner — Kartogo" }, { property: "og:description", content: "Manage your Kartogo delivery trips, pickups and customer deliveries." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });
 
 type Driver = { id: string; name: string; phone: string };

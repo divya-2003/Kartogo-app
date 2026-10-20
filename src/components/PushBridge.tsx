@@ -37,12 +37,18 @@ export function PushBridge() {
     setAsk(false);
     const r = await enablePush().catch(() => ({ status: "unsupported" as const }));
     if (r.status === "registered" && customerToken) {
-      await registerPushTokenFn({ data: { token: customerToken, fcmToken: r.token, platform: platform(), deviceName: deviceName() } }).catch(() => {});
+      const saved = await registerPushTokenFn({ data: { token: customerToken, fcmToken: r.token, platform: platform(), deviceName: deviceName() } }).then(() => true).catch(() => false);
+      if (!saved) { toast.error("Could not register this device. Try again from Notifications."); return; }
       toast.success("Notifications turned on");
     } else if (r.status === "not-configured") {
-      toast.error("Notifications aren't set up for the website yet.");
+      toast.error('Update the Firebase connection and select "Include web push".');
     } else if (r.status === "denied") {
       localStorage.setItem("qk_push_later", String(Date.now()));
+      toast.info("Allow notifications in your browser's site settings.");
+    } else if (r.status === "open-in-new-tab") {
+      toast.info("Open the app in its own tab to allow notifications.");
+    } else if (r.status === "unsupported") {
+      toast.info("This device does not support website notifications.");
     }
   };
 

@@ -307,7 +307,6 @@ export const trackOrderFn = createServerFn({ method: "POST" })
     const stage: TrackingSnapshot["stage"] =
       status === "delivered" ? "delivered"
       : status === "out_for_delivery" ? "on_the_way"
-      : driverId && status === "packed" ? "picked_up"
       : driverId ? "driver_assigned"
       : "preparing";
 
