@@ -6,6 +6,7 @@ import { isQuickProduct } from "@/lib/delivery-tier";
 import { getProductRatingsFn } from "@/lib/reviews.functions";
 import { Heart, Star, ChevronLeft, ChevronRight, Search, Share2, Package, PackageCheck, Info, Timer, ShoppingCart, Minus, Plus } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ProductShareDialog } from "@/components/ProductShareDialog";
 
 /** Swipeable image gallery: scroll-snap strip with dots and arrows. */
 function ProductGallery({ images, name, emoji, className = "" }: { images: string[]; name: string; emoji: string; className?: string }) {
@@ -157,6 +158,7 @@ function ProductPage() {
   const { items: together } = useFrequentlyBoughtTogether(id ? [id] : [], 4);
   const { products: allProducts } = useCatalog();
   useEffect(() => { if (p) track.trackProductView(p.id, p.category); }, [p, track]);
+  const [shareOpen, setShareOpen] = useState(false);
   const addAll = useMemo(() => together
     .map(r => allProducts.find(x => x.id === r.productId))
     .filter((x): x is NonNullable<typeof x> => Boolean(x && x.stock > 0)), [together, allProducts]);
@@ -195,6 +197,7 @@ function ProductPage() {
 
   return (
     <div className="min-h-screen bg-secondary/40 pb-28 lg:pb-10">
+      <ProductShareDialog open={shareOpen} onOpenChange={setShareOpen} productId={p.id} productName={p.name} priceLabel={formatINR(p.price)} image={gallery[0] ?? null} />
       {/* ---------- Hero image with floating controls (mobile & tablet only) ---------- */}
       <div className="relative bg-card lg:hidden">
         <div className="mx-auto aspect-square w-full max-w-xl overflow-hidden md:aspect-[4/3]">
@@ -218,15 +221,7 @@ function ProductPage() {
             <Search className="h-5 w-5" />
           </Link>
           <button
-            onClick={() => {
-              const url = typeof window !== "undefined" ? window.location.href : "";
-              if (typeof navigator !== "undefined" && navigator.share) {
-                void navigator.share({ title: p.name, url }).catch(() => {});
-              } else {
-                void navigator.clipboard?.writeText(url);
-                toast.success("Link copied");
-              }
-            }}
+            onClick={() => setShareOpen(true)}
             aria-label="Share product"
             className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card shadow-pop"
           >
@@ -369,15 +364,7 @@ function ProductPage() {
               <Search className="h-5 w-5" />
             </Link>
             <button
-              onClick={() => {
-                const url = typeof window !== "undefined" ? window.location.href : "";
-                if (typeof navigator !== "undefined" && navigator.share) {
-                  void navigator.share({ title: p.name, url }).catch(() => {});
-                } else {
-                  void navigator.clipboard?.writeText(url);
-                  toast.success("Link copied");
-                }
-              }}
+              onClick={() => setShareOpen(true)}
               aria-label="Share product"
               className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card shadow-pop"
             >
