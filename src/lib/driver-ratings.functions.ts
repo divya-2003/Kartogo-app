@@ -93,3 +93,57 @@ export const getDriverRatingSummaryFn = createServerFn({ method: "POST" })
     const avg = count ? list.reduce((a, r) => a + r.rating, 0) / count : 0;
     return { count, average: Math.round(avg * 10) / 10, recent: list.slice(0, 10) };
   });
+
+export type DriverFeedbackEntry = {
+  id: string;
+  orderId: string;
+  driverId: string;
+  driverName: string;
+  customerName: string;
+  rating: number;
+  comment: string | null;
+  createdAt: number;
+};
+
+// Admin: every rating customers left for their delivery partner.
+export const listDriverFeedbackFn = createServerFn({ method: "POST" })
+  .inputValidator((d: { adminToken?: string }) => ({ adminToken: String(d?.adminToken ?? "") }))
+  .handler(async ({ data }): Promise<{ feedback: DriverFeedbackEntry[] }> => {
+    const { verifyAdminToken } = await import("./auth-tokens.server");
+    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("driver_ratings")
+      .select("id, order_id, driver_id, rating, comment, created_at")
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (error) {
+      console.error("Failed to load delivery feedback", error);
+      throw new Error("Could not load delivery feedback");
+    }
+    const list = rows ?? [];
+    const driverIds = [...new Set(list.map((r) => r.driver_id))];
+    const orderIds = [...new Set(list.map((r) => r.order_id))];
+    const [partners, orders] = await Promise.all([
+      driverIds.length
+        ? supabaseAdmin.from("delivery_partners").select("driver_id, name").in("driver_id", driverIds)
+        : Promise.resolve({ data: [] as { driver_id: string; name: string }[] }),
+      orderIds.length
+        ? supabaseAdmin.from("app_orders").select("id, customer_name").in("id", orderIds)
+        : Promise.resolve({ data: [] as { id: string; customer_name: string }[] }),
+    ]);
+    const nameByDriver = new Map((partners.data ?? []).map((p) => [p.driver_id, p.name]));
+    const customerByOrder = new Map((orders.data ?? []).map((o) => [o.id, o.customer_name]));
+    return {
+      feedback: list.map((r) => ({
+        id: r.id,
+        orderId: r.order_id,
+        driverId: r.driver_id,
+        driverName: nameByDriver.get(r.driver_id) ?? "Delivery partner",
+        customerName: customerByOrder.get(r.order_id) ?? "Customer",
+        rating: Number(r.rating),
+        comment: r.comment,
+        createdAt: new Date(r.created_at).getTime(),
+      })),
+    };
+  });
