@@ -160,7 +160,10 @@ export function PageTop({ title, back = "/", returnTo }: { title: string; back?:
   const nav = useNavigate();
   // Single-tap back: use the router's own history so one click always moves.
   const goBack = () => {
-    if (returnTo) void nav({ to: returnTo as never, replace: true });
+    if (returnTo) {
+      if (returnTo === "/") { try { sessionStorage.setItem("qk_customer_home", "1"); } catch { /* unavailable */ } }
+      void nav({ to: returnTo as never, replace: true });
+    }
     else if (router.history.canGoBack()) router.history.back();
     else void nav({ to: back as never });
   };

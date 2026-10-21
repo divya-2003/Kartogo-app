@@ -31,7 +31,7 @@ type Sort = "relevance" | "rating" | "price_low" | "price_high" | "distance";
 function ExplorePage() {
   const { slug } = Route.useParams();
   const [origin, setOrigin] = useState<string | null>(null);
-  useEffect(() => { try { const saved = sessionStorage.getItem(`qk_explore_origin:${slug}`); setOrigin(saved?.startsWith("/") && !saved.startsWith("//") ? saved : null); sessionStorage.removeItem(`qk_explore_origin:${slug}`); } catch { /* unavailable */ } }, [slug]);
+  useEffect(() => { try { const saved = sessionStorage.getItem(`qk_explore_origin:${slug}`); setOrigin(saved?.startsWith("/") && !saved.startsWith("//") ? saved : null); } catch { /* unavailable */ } }, [slug]);
   const { products } = useCatalog();
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["mp-category", slug],
