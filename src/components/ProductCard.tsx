@@ -6,6 +6,7 @@ import type { Product } from "@/lib/data";
 import { formatINR } from "@/lib/data";
 import { useCart, useAuth, useWishlist } from "@/lib/store";
 import { HighlightText } from "@/components/HighlightText";
+import { ProductShareDialog } from "@/components/ProductShareDialog";
 
 import { createStockAlertFn } from "@/lib/stock-alerts.functions";
 import { customerEventService } from "@/lib/recommendations.tracking";
@@ -29,6 +30,7 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
   const nav = useNavigate();
   
   const [notifying, setNotifying] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [notified, setNotified] = useState(false);
   const inCart = items.find(i => i.productId === p.id);
   const wished = has(p.id);
@@ -129,14 +131,9 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
           <Heart className={`h-4 w-4 ${wished ? "fill-primary text-primary" : "text-muted-foreground"}`} />
         </button>
         <button
-          onClick={async (e) => {
+          onClick={(e) => {
             e.preventDefault(); e.stopPropagation();
-            const url = `${window.location.origin}/product/${p.id}`;
-            const text = `${p.name} for ${formatINR(p.price)} on Kartogo`;
-            try {
-              if (navigator.share) await navigator.share({ title: p.name, text, url });
-              else { await navigator.clipboard.writeText(url); toast.success("Product link copied"); }
-            } catch { /* share cancelled */ }
+            setShareOpen(true);
           }}
           aria-label={`Share ${p.name}`}
           className="absolute right-2 top-11 grid h-8 w-8 place-items-center rounded-full bg-card/90 shadow-pop backdrop-blur transition hover:bg-card"
@@ -199,6 +196,14 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
 
 
       </div>
+      <ProductShareDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        productId={p.id}
+        productName={p.name}
+        priceLabel={formatINR(p.price)}
+        image={p.image}
+      />
     </div>
   );
 }
