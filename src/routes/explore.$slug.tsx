@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { listCategoryFn } from "@/lib/marketplace.functions";
 import { ListingCard, PartnerCard, SkeletonGrid, EmptyState, PageTop } from "@/components/marketplace/Cards";
@@ -30,6 +30,8 @@ type Sort = "relevance" | "rating" | "price_low" | "price_high" | "distance";
 
 function ExplorePage() {
   const { slug } = Route.useParams();
+  const [origin, setOrigin] = useState<string | null>(null);
+  useEffect(() => { try { const saved = sessionStorage.getItem(`qk_explore_origin:${slug}`); setOrigin(saved?.startsWith("/") && !saved.startsWith("//") ? saved : null); sessionStorage.removeItem(`qk_explore_origin:${slug}`); } catch { /* unavailable */ } }, [slug]);
   const { products } = useCatalog();
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["mp-category", slug],
@@ -88,7 +90,7 @@ function ExplorePage() {
 
   return (
     <div className="min-h-screen bg-background pb-28">
-      <PageTop title={cat?.name ?? "Explore"} back="/categories" />
+      <PageTop title={cat?.name ?? "Explore"} back="/categories" returnTo={origin} />
       <div className="mx-auto max-w-2xl space-y-4 px-4 py-4 lg:max-w-5xl">
         <div className="flex gap-2">
           <label className="flex flex-1 items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">

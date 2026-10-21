@@ -155,12 +155,13 @@ export function EmptyState({ title, body, children }: { title: string; body?: st
   );
 }
 
-export function PageTop({ title, back = "/" }: { title: string; back?: string }) {
+export function PageTop({ title, back = "/", returnTo }: { title: string; back?: string; returnTo?: string | null }) {
   const router = useRouter();
   const nav = useNavigate();
   // Single-tap back: use the router's own history so one click always moves.
   const goBack = () => {
-    if (router.history.canGoBack()) router.history.back();
+    if (returnTo) void nav({ to: returnTo as never, replace: true });
+    else if (router.history.canGoBack()) router.history.back();
     else void nav({ to: back as never });
   };
   return (

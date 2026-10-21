@@ -33,7 +33,7 @@ export function HomeMarketplace({ section = "shop", term = "" }: { section?: Exc
       </div>
       <div className={`mb-6 grid gap-3 ${section === "events" ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3 sm:grid-cols-4 lg:grid-cols-6"}`}>
         {categories.filter(c => !q || c.name.toLowerCase().includes(q)).map(c => (
-          <Link key={c.slug} to="/explore/$slug" params={{ slug: c.slug }} className="overflow-hidden rounded-xl border border-border bg-card">
+          <Link key={c.slug} to="/explore/$slug" params={{ slug: c.slug }} onClick={() => { try { sessionStorage.setItem(`qk_explore_origin:${c.slug}`, window.location.pathname + window.location.search); } catch { /* unavailable */ } }} className="overflow-hidden rounded-xl border border-border bg-card">
             {c.image_url ? <img src={c.image_url} alt={c.name} loading="lazy" className={`${section === "events" ? "aspect-[3/2]" : "aspect-square"} w-full object-cover`} /> : <span className="grid aspect-square place-items-center bg-secondary text-4xl">{c.icon}</span>}
             <span className="block px-2 py-3 text-center text-xs font-bold">{c.name}</span>
           </Link>
