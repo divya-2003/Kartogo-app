@@ -9,6 +9,7 @@ import { DRIVER_STATUS_LABEL, VEHICLE_LABEL, type LogisticsDashboard } from "@/l
 import { mapLink } from "@/lib/logistics/geo";
 
 // Live rider positions, dispatch queue and today's delivery performance.
+function Stat({ label, value, icon: Icon }: { label: string; value: string | number; icon: typeof Bike }) {
   return (
     <div className="rounded-xl border border-border bg-card p-3">
       <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
