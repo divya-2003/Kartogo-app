@@ -3,6 +3,12 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 const DAY = 86_400_000;
+// Sessions last a year and are silently renewed by the app (see
+// renewSessionTokens), so an active account is never signed out.
+const SESSION_LIFETIME = 365 * DAY;
+// A token whose signature is genuine can still be renewed this long after it
+// expired, so a phone that sat unused for months stays signed in too.
+const RENEW_GRACE = 365 * DAY;
 
 function adminSecret(): string {
   const s = process.env.ADMIN_SESSION_SECRET;
@@ -21,7 +27,7 @@ function sign(payload: Record<string, unknown>, secret: string): string {
   return `${body}.${sig}`;
 }
 
-function verify(token: string | undefined, secret: string): Record<string, unknown> | null {
+function verify(token: string | undefined, secret: string, graceMs = 0): Record<string, unknown> | null {
   if (!token || typeof token !== "string" || !token.includes(".")) return null;
   const [body, sig] = token.split(".");
   if (!body || !sig) return null;
@@ -31,7 +37,7 @@ function verify(token: string | undefined, secret: string): Record<string, unkno
   if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
   try {
     const data = JSON.parse(Buffer.from(body, "base64url").toString("utf8")) as Record<string, unknown>;
-    if (typeof data.exp === "number" && Date.now() > data.exp) return null;
+    if (typeof data.exp === "number" && Date.now() > data.exp + graceMs) return null;
     return data;
   } catch {
     return null;
@@ -40,7 +46,7 @@ function verify(token: string | undefined, secret: string): Record<string, unkno
 
 // ---- Customer (phone-bound) tokens ----
 export function issueCustomerToken(phone: string): string {
-  return sign({ phone, exp: Date.now() + 30 * DAY }, customerSecret());
+  return sign({ phone, exp: Date.now() + SESSION_LIFETIME }, customerSecret());
 }
 export function verifyCustomerToken(token?: string): { phone: string } | null {
   const data = verify(token, customerSecret());
@@ -49,7 +55,7 @@ export function verifyCustomerToken(token?: string): { phone: string } | null {
 
 // ---- Admin tokens ----
 export function issueAdminToken(userId?: string): string {
-  return sign({ admin: true, userId: userId ?? null, exp: Date.now() + 30 * DAY }, adminSecret());
+  return sign({ admin: true, userId: userId ?? null, exp: Date.now() + SESSION_LIFETIME }, adminSecret());
 }
 export function verifyAdminToken(token?: string): boolean {
   const data = verify(token, adminSecret());
@@ -87,7 +93,7 @@ function deliverySecret(): string {
 }
 
 export function issueDeliveryToken(driverId: string, phone: string, userId?: string): string {
-  return sign({ role: "delivery", driverId, phone, userId: userId ?? null, exp: Date.now() + 30 * DAY }, deliverySecret());
+  return sign({ role: "delivery", driverId, phone, userId: userId ?? null, exp: Date.now() + SESSION_LIFETIME }, deliverySecret());
 }
 
 export function verifyDeliveryToken(token?: string): { driverId: string; phone: string; userId: string | null } | null {
@@ -125,7 +131,7 @@ function supplierSecret(): string {
 }
 
 export function issueSupplierToken(supplierId: string, phone: string, userId?: string): string {
-  return sign({ role: "supplier", supplierId, phone, userId: userId ?? null, exp: Date.now() + 30 * DAY }, supplierSecret());
+  return sign({ role: "supplier", supplierId, phone, userId: userId ?? null, exp: Date.now() + SESSION_LIFETIME }, supplierSecret());
 }
 
 export function verifySupplierToken(token?: string): { supplierId: string; phone: string; userId: string | null } | null {
@@ -145,11 +151,48 @@ export const PRINTER_SERVICE = { id: "printer", name: "Kartogo Printer Service",
 export const isPrinterPhone = (phone: string) => phone === PRINTER_SERVICE.phone;
 
 export function issuePrinterToken(phone: string, userId?: string): string {
-  return sign({ role: "printer", phone, userId: userId ?? null, exp: Date.now() + 30 * DAY }, supplierSecret());
+  return sign({ role: "printer", phone, userId: userId ?? null, exp: Date.now() + SESSION_LIFETIME }, supplierSecret());
 }
 
 export function verifyPrinterToken(token?: string): { phone: string } | null {
   const data = verify(token, supplierSecret());
   if (data && data.role === "printer" && typeof data.phone === "string") return { phone: data.phone };
   return null;
+}
+
+// ---- Silent session renewal ----
+// Re-signs every genuine session token the device holds with a fresh expiry.
+// Only tokens whose HMAC signature verifies are renewed, and the renewed token
+// carries exactly the same identity — nothing the client sends is trusted.
+export type SessionTokens = {
+  customer?: string | null;
+  admin?: string | null;
+  delivery?: string | null;
+  supplier?: string | null;
+  printer?: string | null;
+};
+
+export function renewSessionTokens(input: SessionTokens): SessionTokens {
+  const out: SessionTokens = {};
+  const c = verify(input.customer ?? undefined, customerSecret(), RENEW_GRACE);
+  if (c && typeof c.phone === "string") out.customer = issueCustomerToken(c.phone);
+
+  const a = verify(input.admin ?? undefined, adminSecret(), RENEW_GRACE);
+  if (a && a.admin === true) out.admin = issueAdminToken(typeof a.userId === "string" ? a.userId : undefined);
+
+  const d = verify(input.delivery ?? undefined, deliverySecret(), RENEW_GRACE);
+  if (d && d.role === "delivery" && typeof d.driverId === "string" && typeof d.phone === "string") {
+    out.delivery = issueDeliveryToken(d.driverId, d.phone, typeof d.userId === "string" ? d.userId : undefined);
+  }
+
+  const sp = verify(input.supplier ?? undefined, supplierSecret(), RENEW_GRACE);
+  if (sp && sp.role === "supplier" && typeof sp.supplierId === "string" && typeof sp.phone === "string") {
+    out.supplier = issueSupplierToken(sp.supplierId, sp.phone, typeof sp.userId === "string" ? sp.userId : undefined);
+  }
+
+  const pr = verify(input.printer ?? undefined, supplierSecret(), RENEW_GRACE);
+  if (pr && pr.role === "printer" && typeof pr.phone === "string") {
+    out.printer = issuePrinterToken(pr.phone, typeof pr.userId === "string" ? pr.userId : undefined);
+  }
+  return out;
 }
