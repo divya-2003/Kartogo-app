@@ -96,6 +96,21 @@ function DeliveryPortal() {
     if (!t || !d) nav({ to: "/login" });
   }, [nav]);
 
+  // Pick up a silently renewed rider token.
+  useEffect(() => {
+    const onRenewed = (e: Event) => {
+      const fresh = (e as CustomEvent<{ delivery?: string }>).detail?.delivery;
+      if (fresh) setToken(fresh);
+    };
+    window.addEventListener(SESSION_RENEWED_EVENT, onRenewed);
+    return () => window.removeEventListener(SESSION_RENEWED_EVENT, onRenewed);
+  }, []);
+
+  // Re-sign the rider's session instead of signing them out.
+  const onExpired = useCallback(() => {
+    void renewSessions(true).then((r) => { if (r.delivery) setToken(r.delivery); });
+  }, []);
+
   const onLogout = () => {
     setToken(null);
     setDriver(null);
@@ -108,12 +123,7 @@ function DeliveryPortal() {
 
   if (!ready) return null;
   if (!token || !driver) return null;
-  const onExpired = async () => {
-    // Re-sign the rider's session instead of signing them out.
-    const fresh = (await renewSessions(true)).delivery;
-    if (fresh) setToken(fresh);
-  };
-  return <Dashboard token={token} driver={driver} onLogout={onLogout} onExpired={() => void onExpired()} />;
+  return <Dashboard token={token} driver={driver} onLogout={onLogout} onExpired={onExpired} />;
 }
 
 // ---------------- Dashboard ----------------
