@@ -47,3 +47,14 @@ export function permissionForAdminPath(path: string): AdminPermission {
   if (path.startsWith("/admin/sub-admins") || path.startsWith("/admin/portals")) return "sub_admins";
   return "account";
 }
+/** Every permission that opens a path. The merged Delivery page (team + live
+ * logistics) opens for staff holding either of its two permissions. */
+export function permissionsForAdminPath(path: string): AdminPermission[] {
+  if (path.startsWith("/admin/delivery") || path.startsWith("/admin/logistics")) return ["delivery", "logistics"];
+  return [permissionForAdminPath(path)];
+}
+
+export function canOpenAdminPath(access: { isSuperAdmin: boolean; permissions: readonly string[] }, path: string): boolean {
+  if (access.isSuperAdmin) return true;
+  return permissionsForAdminPath(path).some((p) => access.permissions.includes(p));
+}

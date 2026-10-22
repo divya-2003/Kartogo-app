@@ -51,3 +51,8 @@
 - [x] Admin search across all pages + side menu
 - [x] Automatic "Allow notifications" prompt after login
 - [ ] Web push keys — waiting on user to update Firebase connection with "Include web push"
+
+## Oct 21 batch
+- [x] Merge admin Delivery and Live logistics into one page
+- [x] Admin Feedback shows delivery partner feedback
+- [x] Product share window with a public link and WhatsApp/Telegram/Message/Facebook/X

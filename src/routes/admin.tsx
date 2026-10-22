@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, Link, useRouter, useRouterState, redirect, isR
 import { useEffect, useState } from "react";
 import { useOrders } from "@/lib/store";
 import { verifyAdminAccessFn, type AdminSessionAccess } from "@/lib/admin-access.functions";
-import { permissionForAdminPath, type AdminPermission } from "@/lib/admin-access.shared";
+import { canOpenAdminPath, type AdminPermission } from "@/lib/admin-access.shared";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Sparkles, LayoutDashboard, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Menu, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound, BellRing, UsersRound, ChevronLeft, Clock, ExternalLink, RefreshCw, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/admin")({
     // navigating inside the admin area never waits on a network round-trip.
     const now = Date.now();
     if (adminSessionCache.token === token && adminSessionCache.access && now - adminSessionCache.checkedAt < 10 * 60_000) {
-      const allowed = adminSessionCache.access.isSuperAdmin || adminSessionCache.access.permissions.includes(permissionForAdminPath(location.pathname));
+      const allowed = canOpenAdminPath(adminSessionCache.access, location.pathname);
       if (!allowed) throw redirect({ to: firstAdminPath(adminSessionCache.access.permissions) });
       return adminSessionCache.access;
     }
@@ -68,9 +68,8 @@ const NAV = [
   { to: "/admin/cancellations", label: "Cancellations", icon: PackageX, permission: "orders" },
   { to: "/admin/refund-requests", label: "Refund requests", icon: BadgeIndianRupee, permission: "refunds" },
   { to: "/admin/feedback", label: "Feedback", icon: Star, permission: "feedback" },
-  { to: "/admin/delivery", label: "Delivery", icon: Bike, permission: "delivery" },
+  { to: "/admin/delivery", label: "Delivery & live logistics", icon: Bike, permission: "delivery" },
   { to: "/admin/slots", label: "Delivery slots", icon: Clock, permission: "delivery" },
-  { to: "/admin/logistics", label: "Live logistics", icon: Bike, permission: "logistics" },
   { to: "/admin/print", label: "Print queue", icon: Printer, permission: "print" },
   { to: "/admin/partners", label: "Partner markets", icon: Store, permission: "partners" },
   { to: "/admin/combos", label: "Combo bundles", icon: Package, permission: "combos" },
@@ -92,7 +91,7 @@ const NAV = [
 ] as const;
 
 function firstAdminPath(permissions: AdminPermission[]) {
-  return NAV.find((item) => permissions.includes(item.permission))?.to ?? "/admin/account";
+  return NAV.find((item) => permissions.includes(item.permission) || canOpenAdminPath({ isSuperAdmin: false, permissions }, item.to))?.to ?? "/admin/account";
 }
 
 
@@ -135,7 +134,7 @@ function AdminLayout() {
         // deliberately keeps the session alive). Show the full menu rather than
         // crashing the whole admin shell — every page re-checks access anyway.
         if (!routeAccess || !Array.isArray(routeAccess.permissions)) return true;
-        return routeAccess.isSuperAdmin || routeAccess.permissions.includes(n.permission);
+        return routeAccess.permissions.includes(n.permission) || canOpenAdminPath(routeAccess, n.to);
       }).filter(n => !q.trim() || n.label.toLowerCase().includes(q.trim().toLowerCase())).map(n => {
         const active = isActive(n.to);
         const badge = n.to === "/admin/cancellations" && unseenCancellations > 0 ? unseenCancellations : null;
@@ -211,7 +210,7 @@ function AdminLayout() {
         </aside>
 
         <main className="min-w-0">
-          <AdminPageTools q={q} setQ={setQ} pages={NAV.filter(n => !routeAccess || !Array.isArray(routeAccess.permissions) || routeAccess.isSuperAdmin || routeAccess.permissions.includes(n.permission))} />
+          <AdminPageTools q={q} setQ={setQ} pages={NAV.filter(n => !routeAccess || !Array.isArray(routeAccess.permissions) || routeAccess.permissions.includes(n.permission) || canOpenAdminPath(routeAccess, n.to))} />
         </main>
       </div>
     </div>
