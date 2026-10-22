@@ -11,6 +11,7 @@ import { getDriverStatusFn } from "@/lib/drivers.functions";
 
 import { OrderChat } from "@/components/OrderChat";
 import { formatINR } from "@/lib/data";
+import { renewSessions, SESSION_RENEWED_EVENT } from "@/lib/session-keeper";
 
 
 
@@ -107,7 +108,12 @@ function DeliveryPortal() {
 
   if (!ready) return null;
   if (!token || !driver) return null;
-  return <Dashboard token={token} driver={driver} onLogout={onLogout} onExpired={onLogout} />;
+  const onExpired = async () => {
+    // Re-sign the rider's session instead of signing them out.
+    const fresh = (await renewSessions(true)).delivery;
+    if (fresh) setToken(fresh);
+  };
+  return <Dashboard token={token} driver={driver} onLogout={onLogout} onExpired={() => void onExpired()} />;
 }
 
 // ---------------- Dashboard ----------------
@@ -150,7 +156,7 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
       setReturns(pickups as unknown as OrderRow[]);
     } catch (err) {
       const msg = (err as Error).message;
-      if (/session has expired/i.test(msg)) { toast.error(msg); onExpired(); return; }
+      if (/session has expired/i.test(msg)) { onExpired(); return; }
       // Admin turned this rider off — block the portal but keep the session so
       // access comes straight back when they're re-activated.
       if (/turned off by the admin/i.test(msg)) { setBlocked(msg); return; }

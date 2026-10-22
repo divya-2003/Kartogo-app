@@ -4,6 +4,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { verifyPrinterTokenFn } from "@/lib/printer.functions";
 import { Printer, User2, Menu, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { renewSessions } from "@/lib/session-keeper";
 
 export const Route = createFileRoute("/printer")({
   beforeLoad: async () => {
@@ -14,11 +15,17 @@ export const Route = createFileRoute("/printer")({
     try { token = JSON.parse(localStorage.getItem("qk_printer_token") || "null"); } catch { token = null; }
     if (!token) throw redirect({ to: "/login" });
     try {
-      const { valid } = await verifyPrinterTokenFn({ data: { token } });
+      let { valid } = await verifyPrinterTokenFn({ data: { token } });
+      if (!valid) {
+        // An old session is silently re-signed before anyone is signed out.
+        const renewed = await renewSessions(true);
+        const fresh = renewed.printer;
+        if (fresh) valid = (await verifyPrinterTokenFn({ data: { token: fresh } })).valid;
+      }
       if (!valid) throw redirect({ to: "/login" });
     } catch (e) {
       if (isRedirect(e)) throw e;
-      throw redirect({ to: "/login" });
+      // Network or server hiccup: keep the session and let the portal load.
     }
   },
   component: PrinterLayout,
