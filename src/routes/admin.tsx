@@ -6,6 +6,7 @@ import { canOpenAdminPath, type AdminPermission } from "@/lib/admin-access.share
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Sparkles, LayoutDashboard, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Menu, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound, BellRing, UsersRound, ChevronLeft, Clock, ExternalLink, RefreshCw, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { renewSessions } from "@/lib/session-keeper";
 
 // Remembers the last successful admin-token verification for this tab so the
 // admin area doesn't re-hit the server on every single navigation.
@@ -29,7 +30,12 @@ export const Route = createFileRoute("/admin")({
     }
 
     try {
-      const access = await verifyAdminAccessFn({ data: { token, path: location.pathname } });
+      let access = await verifyAdminAccessFn({ data: { token, path: location.pathname } });
+      if (!access.valid) {
+        // Re-sign an old admin session before giving up on it.
+        const fresh = (await renewSessions(true)).admin;
+        if (fresh) access = await verifyAdminAccessFn({ data: { token: fresh, path: location.pathname } });
+      }
       // Only a definitive "invalid" logs the admin out. A network/server hiccup
       // must never bounce them to the login screen mid-work.
       if (!access.valid) {

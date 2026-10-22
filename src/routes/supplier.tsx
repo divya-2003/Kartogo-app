@@ -6,6 +6,7 @@ import { findSupplierById } from "@/lib/suppliers";
 import { SupplierContext, type SupplierInfo } from "@/lib/supplier-context";
 import { CalendarCheck, CalendarClock, Boxes, ClipboardList, User2, BarChart3, Sparkles, Menu, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { renewSessions } from "@/lib/session-keeper";
 
 
 export const Route = createFileRoute("/supplier")({
@@ -18,11 +19,17 @@ export const Route = createFileRoute("/supplier")({
     try { token = JSON.parse(localStorage.getItem("qk_supplier_token") || "null"); } catch { token = null; }
     if (!token) throw redirect({ to: "/login" });
     try {
-      const { valid } = await verifySupplierTokenFn({ data: { token } });
+      let { valid } = await verifySupplierTokenFn({ data: { token } });
+      if (!valid) {
+        // An old session is silently re-signed before anyone is signed out.
+        const renewed = await renewSessions(true);
+        const fresh = renewed.supplier;
+        if (fresh) valid = (await verifySupplierTokenFn({ data: { token: fresh } })).valid;
+      }
       if (!valid) throw redirect({ to: "/login" });
     } catch (e) {
       if (isRedirect(e)) throw e;
-      throw redirect({ to: "/login" });
+      // Network or server hiccup: keep the session and let the portal load.
     }
   },
   component: SupplierLayout,

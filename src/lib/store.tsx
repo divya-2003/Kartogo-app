@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { toast } from "sonner";
 import { PRODUCTS, DELIVERY_BOYS, type Product } from "./data";
 import { requestOtpFn, verifyOtpFn, adminLoginFn } from "./auth.functions";
+import { startSessionKeeper, SESSION_RENEWED_EVENT } from "./session-keeper";
 import { getWalletFn, addMoneyFn, getTopupsFn, recordFailedTopupFn, type WalletTxnRow, type TopupRow } from "./wallet.functions";
 import {
   listOrdersFn,
@@ -65,7 +66,7 @@ function write(key: string, value: unknown) {
     const secure = location.protocol === "https:" ? "; Secure" : "";
     document.cookie = value == null
       ? `${key}=; path=/; max-age=0; SameSite=Lax${secure}`
-      : `${key}=${encodeURIComponent(raw)}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax${secure}`;
+      : `${key}=${encodeURIComponent(raw)}; path=/; max-age=${60 * 60 * 24 * 400}; SameSite=Lax${secure}`;
   }
 }
 
@@ -258,6 +259,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAdminToken(read<string | null>("qk_admin_token", null));
     setAdminAudit(read<AdminAuditEntry[]>("qk_admin_audit", []));
     setReady(true);
+    // Keep every account on this device signed in: restore sessions the
+    // browser dropped and silently renew tokens before they could expire.
+    startSessionKeeper();
+    const onRenewed = (e: Event) => {
+      const fresh = (e as CustomEvent<{ customer?: string; admin?: string }>).detail ?? {};
+      if (fresh.customer) setCustomerToken(fresh.customer);
+      if (fresh.admin) setAdminToken(fresh.admin);
+    };
+    window.addEventListener(SESSION_RENEWED_EVENT, onRenewed);
+    return () => window.removeEventListener(SESSION_RENEWED_EVENT, onRenewed);
   }, []);
   // Guard every write on `ready`: on mount the initial null state must never be
   // flushed to storage before the restore effect above has run, otherwise a

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { BellRing, RefreshCw, RotateCw, Send, Smartphone } from "lucide-react";
+import { BellRing, RotateCw, Send, Smartphone } from "lucide-react";
 import { useAuth } from "@/lib/store";
 import { adminTestPushFn, notificationOverviewFn, retryNotificationFn } from "@/lib/push.functions";
 
@@ -71,14 +71,9 @@ function PushMonitorPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <BellRing className="h-5 w-5 text-primary" />
-          <h1 className="font-display text-xl font-bold">Push notifications</h1>
-        </div>
-        <button onClick={() => void load()} className="inline-flex items-center gap-2 rounded-xl border border-input px-3 py-2 text-sm font-semibold">
-          <RefreshCw className="h-4 w-4" /> Refresh
-        </button>
+      <div className="flex items-center gap-2">
+        <BellRing className="h-5 w-5 text-primary" />
+        <h1 className="font-display text-xl font-bold">Push notifications</h1>
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
