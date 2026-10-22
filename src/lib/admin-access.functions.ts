@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { ADMIN_FEATURES, permissionForAdminPath, type AdminPermission } from "./admin-access.shared";
+import { ADMIN_FEATURES, canOpenAdminPath, type AdminPermission } from "./admin-access.shared";
 import { canonicalPhone, normalizeIncomingPhone } from "./phone";
 
 const permissionValues = ADMIN_FEATURES.map((feature) => feature.key) as [AdminPermission, ...AdminPermission[]];
@@ -69,8 +69,7 @@ export const verifyAdminAccessFn = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ token: tokenSchema, path: z.string().max(160) }).parse(input))
   .handler(async ({ data }) => {
     const access = await resolveAccess(data.token);
-    const required = permissionForAdminPath(data.path);
-    return { ...access, allowed: access.valid && (access.isSuperAdmin || access.permissions.includes(required)) };
+    return { ...access, allowed: access.valid && canOpenAdminPath(access, data.path) };
   });
 
 export const listSubAdminsFn = createServerFn({ method: "POST" })
