@@ -1,16 +1,34 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouteContext } from "@tanstack/react-router";
+import { LiveLogisticsPanel } from "@/components/admin/LiveLogisticsPanel";
+import type { AdminSessionAccess } from "@/lib/admin-access.functions";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth, useDrivers, useOrders, type Order } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { Switch } from "@/components/ui/switch";
-import { Bike, Phone, CircleDot, Wallet, UserPlus, Clock, BellRing, Users, RefreshCw } from "lucide-react";
+import { Bike, Phone, CircleDot, Wallet, UserPlus, Clock, BellRing, Users, RefreshCw, Radar } from "lucide-react";
 import { addDeliveryPartnerFn, updateDeliveryPartnerFn } from "@/lib/drivers.functions";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/admin/delivery")({ component: DeliveryAdmin });
+type Section = "live" | "team" | "add" | "requests";
+const SECTION_KEYS: Section[] = ["live", "team", "add", "requests"];
+
+export const Route = createFileRoute("/admin/delivery")({
+  validateSearch: (s: Record<string, unknown>): { tab?: Section } =>
+    SECTION_KEYS.includes(s.tab as Section) ? { tab: s.tab as Section } : {},
+  component: DeliveryAdmin,
+  head: () => ({
+    meta: [
+      { title: "Delivery & live logistics | Kartogo admin" },
+      { name: "description", content: "Manage the Kartogo delivery team and watch live rider positions, waiting orders and today's delivery performance in one place." },
+      { property: "og:title", content: "Delivery & live logistics | Kartogo admin" },
+      { property: "og:description", content: "Delivery team, rider access and live logistics for Kartogo operations." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+});
 
 type Availability = "active" | "on_delivery" | "offline";
-type Section = "team" | "add" | "requests";
 
 // Flat payout a delivery partner earns for every order they deliver.
 const EARNING_PER_ORDER = 25;
@@ -26,7 +44,16 @@ function DeliveryAdmin() {
   const { adminToken } = useAuth();
   const { drivers, setAvailable, refresh } = useDrivers();
   const [filter, setFilter] = useState<"all" | Availability>("all");
-  const [section, setSection] = useState<Section>("team");
+  const access = useRouteContext({ from: "/admin" }) as AdminSessionAccess | undefined;
+  const perms = access && Array.isArray(access.permissions) ? access.permissions : null;
+  const canTeam = !perms || access?.isSuperAdmin || perms.includes("delivery");
+  const canLive = !perms || access?.isSuperAdmin || perms.includes("logistics");
+  const { tab } = Route.useSearch();
+  const navigate = useNavigate({ from: "/admin/delivery" });
+  const defaultSection: Section = canTeam ? "team" : "live";
+  const requested = tab ?? defaultSection;
+  const section: Section = requested === "live" ? (canLive ? "live" : defaultSection) : canTeam ? requested : "live";
+  const setSection = (next: Section) => { void navigate({ search: next === "team" ? {} : { tab: next }, replace: true }); };
   const [refreshing, setRefreshing] = useState(false);
   const [lastSync, setLastSync] = useState<number>(() => Date.now());
 
@@ -110,18 +137,19 @@ function DeliveryAdmin() {
       ? `Part time${d.shiftStart && d.shiftEnd ? ` · ${d.shiftStart}–${d.shiftEnd}` : ""}`
       : "Full time";
 
-  const SECTIONS: { key: Section; label: string; icon: typeof Users; badge?: number }[] = [
-    { key: "team", label: "Team", icon: Users },
-    { key: "add", label: "Add partner", icon: UserPlus },
-    { key: "requests", label: "Access requests", icon: BellRing, badge: pendingRequests.length },
-  ];
+  const SECTIONS = ([
+    { key: "team", label: "Team", icon: Users, show: canTeam },
+    { key: "live", label: "Live logistics", icon: Radar, show: canLive },
+    { key: "add", label: "Add partner", icon: UserPlus, show: canTeam },
+    { key: "requests", label: "Access requests", icon: BellRing, badge: pendingRequests.length, show: canTeam },
+  ] as { key: Section; label: string; icon: typeof Users; badge?: number; show: boolean }[]).filter(s => s.show);
 
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-        <h1 className="font-display text-3xl font-bold">Delivery team</h1>
-        <p className="text-sm text-muted-foreground">Toggle availability — only available riders can be assigned to orders and sign in to the delivery app. Blocking a rider never deletes their past orders or earnings.</p>
+        <h1 className="font-display text-3xl font-bold">Delivery & live logistics</h1>
+        <p className="text-sm text-muted-foreground">Manage your riders and watch live deliveries in one place. Only available riders can be assigned to orders and sign in to the delivery app; blocking a rider never deletes their past orders or earnings.</p>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">Live · synced {new Date(lastSync).toLocaleTimeString("en-IN")}</span>
@@ -151,6 +179,8 @@ function DeliveryAdmin() {
           </button>
         ))}
       </div>
+
+      {section === "live" && <LiveLogisticsPanel />}
 
       {section === "add" && (
         <AddPartnerForm

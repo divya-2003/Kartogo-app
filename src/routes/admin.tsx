@@ -91,7 +91,7 @@ const NAV = [
 ] as const;
 
 function firstAdminPath(permissions: AdminPermission[]) {
-  return NAV.find((item) => canOpenAdminPath({ isSuperAdmin: false, permissions }, item.to))?.to ?? "/admin/account";
+  return NAV.find((item) => permissions.includes(item.permission) || canOpenAdminPath({ isSuperAdmin: false, permissions }, item.to))?.to ?? "/admin/account";
 }
 
 
@@ -134,7 +134,7 @@ function AdminLayout() {
         // deliberately keeps the session alive). Show the full menu rather than
         // crashing the whole admin shell — every page re-checks access anyway.
         if (!routeAccess || !Array.isArray(routeAccess.permissions)) return true;
-        return canOpenAdminPath(routeAccess, n.to);
+        return routeAccess.permissions.includes(n.permission) || canOpenAdminPath(routeAccess, n.to);
       }).filter(n => !q.trim() || n.label.toLowerCase().includes(q.trim().toLowerCase())).map(n => {
         const active = isActive(n.to);
         const badge = n.to === "/admin/cancellations" && unseenCancellations > 0 ? unseenCancellations : null;
@@ -210,7 +210,7 @@ function AdminLayout() {
         </aside>
 
         <main className="min-w-0">
-          <AdminPageTools q={q} setQ={setQ} pages={NAV.filter(n => !routeAccess || !Array.isArray(routeAccess.permissions) || canOpenAdminPath(routeAccess, n.to))} />
+          <AdminPageTools q={q} setQ={setQ} pages={NAV.filter(n => !routeAccess || !Array.isArray(routeAccess.permissions) || routeAccess.permissions.includes(n.permission) || canOpenAdminPath(routeAccess, n.to))} />
         </main>
       </div>
     </div>
