@@ -73,3 +73,45 @@ describe("signed session tokens", () => {
     expect(m.verifyCustomerToken(`${body}.${sig}`)).toBeNull();
   });
 });
+
+describe("sessions stay signed in", () => {
+  const decode = (t: string) => JSON.parse(Buffer.from(t.split(".")[0], "base64url").toString("utf8"));
+
+  it("issues sessions that last a year", async () => {
+    const m = await import("./auth-tokens.server");
+    const exp = decode(m.issueCustomerToken("9110310034")).exp as number;
+    expect(exp - Date.now()).toBeGreaterThan(364 * 86_400_000);
+  });
+
+  it("renews every role with the same identity", async () => {
+    const m = await import("./auth-tokens.server");
+    const out = m.renewSessionTokens({
+      customer: m.issueCustomerToken("9110310034"),
+      admin: m.issueAdminToken("u1"),
+      delivery: m.issueDeliveryToken("d1", "9876500001"),
+      supplier: m.issueSupplierToken("s1", "9000000001"),
+      printer: m.issuePrinterToken("9999999996"),
+    });
+    expect(m.verifyCustomerToken(out.customer!)).toEqual({ phone: "9110310034" });
+    expect(m.readAdminToken(out.admin!)).toEqual({ userId: "u1" });
+    expect(m.verifyDeliveryToken(out.delivery!)?.driverId).toBe("d1");
+    expect(m.verifySupplierToken(out.supplier!)?.supplierId).toBe("s1");
+    expect(m.verifyPrinterToken(out.printer!)).toEqual({ phone: "9999999996" });
+  });
+
+  it("renews a genuine session that expired months ago", async () => {
+    const { createHmac } = await import("node:crypto");
+    const m = await import("./auth-tokens.server");
+    const body = Buffer.from(JSON.stringify({ phone: "9110310034", exp: Date.now() - 90 * 86_400_000 })).toString("base64url");
+    const sig = createHmac("sha256", "test-customer-secret").update(body).digest("base64url");
+    const old = `${body}.${sig}`;
+    expect(m.verifyCustomerToken(old)).toBeNull();
+    expect(m.verifyCustomerToken(m.renewSessionTokens({ customer: old }).customer!)).toEqual({ phone: "9110310034" });
+  });
+
+  it("never renews a forged session", async () => {
+    const m = await import("./auth-tokens.server");
+    const forged = Buffer.from(JSON.stringify({ phone: "9999999999", exp: Date.now() + 1000 })).toString("base64url");
+    expect(m.renewSessionTokens({ customer: `${forged}.bad`, admin: "garbage" })).toEqual({});
+  });
+});
