@@ -47,6 +47,27 @@ export function platform(): "android" | "ios" | "web" {
 }
 
 /**
+ * Registers the messaging service worker and waits until it is ACTIVE.
+ * Asking Firebase for a token while the worker is still installing fails with
+ * "Subscription failed - no active Service Worker", so no device ever registers.
+ */
+async function messagingWorker(): Promise<ServiceWorkerRegistration> {
+  const query = new URLSearchParams(firebaseConfig as Record<string, string>).toString();
+  const reg = await navigator.serviceWorker.register(`/firebase-messaging-sw.js?${query}`);
+  if (reg.active) return reg;
+  const worker = reg.installing ?? reg.waiting;
+  if (worker) {
+    await new Promise<void>((resolve) => {
+      const done = () => { if (worker.state === "activated") { worker.removeEventListener("statechange", done); resolve(); } };
+      worker.addEventListener("statechange", done);
+      done();
+      setTimeout(resolve, 10_000);
+    });
+  }
+  return reg;
+}
+
+/**
  * Asks for notification permission (Android 13+ POST_NOTIFICATIONS is surfaced
  * by the browser/WebView as this same prompt) and returns the FCM token.
  * Must be called from a user gesture.
@@ -62,8 +83,7 @@ export async function enablePush(): Promise<PushResult> {
     Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
   if (permission !== "granted") return { status: "denied" };
 
-  const query = new URLSearchParams(firebaseConfig as Record<string, string>).toString();
-  const serviceWorkerRegistration = await navigator.serviceWorker.register(`/firebase-messaging-sw.js?${query}`);
+  const serviceWorkerRegistration = await messagingWorker();
   messagingRef = getMessaging(app());
   const token = await getToken(messagingRef, { vapidKey, serviceWorkerRegistration });
   return token ? { status: "registered", token } : { status: "denied" };
@@ -76,8 +96,7 @@ export async function currentToken(): Promise<string | null> {
   if (Notification.permission !== "granted") return null;
   if (!(await isSupported().catch(() => false))) return null;
   try {
-    const query = new URLSearchParams(firebaseConfig as Record<string, string>).toString();
-    const serviceWorkerRegistration = await navigator.serviceWorker.register(`/firebase-messaging-sw.js?${query}`);
+    const serviceWorkerRegistration = await messagingWorker();
     messagingRef = getMessaging(app());
     return await getToken(messagingRef, { vapidKey, serviceWorkerRegistration });
   } catch {
