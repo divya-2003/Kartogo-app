@@ -56,3 +56,8 @@
 - [x] Merge admin Delivery and Live logistics into one page
 - [x] Admin Feedback shows delivery partner feedback
 - [x] Product share window with a public link and WhatsApp/Telegram/Message/Facebook/X
+
+## Oct 22 batch
+- [x] Remove the Refresh button from admin Push notifications
+- [x] Keep customer, seller, rider, printer and admin accounts signed in (year-long sessions, silent renewal, restore after storage wipe)
+- [ ] Push notifications reach devices — Firebase is not linked to this project and no device is registered; needs the user to link Firebase with web push settings
