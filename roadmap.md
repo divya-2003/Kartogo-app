@@ -6,7 +6,7 @@
 - [x] Restore previous-page Back from Events details
 - [x] Reuse Home address selection at checkout
 - [ ] Verify signed-in checkout and real rider trip end-to-end — needs an app customer/rider session and ready orders with known pickup stores
-- [ ] Complete push delivery verification — website Firebase settings are absent, no devices are registered, and connection update was declined
+- [x] Website Firebase settings linked (see Oct 22 batch)
 
 ## Customer navigation fixes
 - [x] Show full top-section labels and remove shortcut category rows
@@ -50,7 +50,7 @@
 - [x] Seller AI insights for services
 - [x] Admin search across all pages + side menu
 - [x] Automatic "Allow notifications" prompt after login
-- [ ] Web push keys — waiting on user to update Firebase connection with "Include web push"
+- [x] Web push keys linked
 
 ## Oct 21 batch
 - [x] Merge admin Delivery and Live logistics into one page
@@ -60,4 +60,5 @@
 ## Oct 22 batch
 - [x] Remove the Refresh button from admin Push notifications
 - [x] Keep customer, seller, rider, printer and admin accounts signed in (year-long sessions, silent renewal, restore after storage wipe)
-- [ ] Push notifications reach devices — Firebase is not linked to this project and no device is registered; needs the user to link Firebase with web push settings
+- [x] Link Firebase with web push settings and fix device registration waiting for the notification worker
+- [ ] Confirm a real phone receives a push — needs the user to turn on notifications on the published app or Android app
