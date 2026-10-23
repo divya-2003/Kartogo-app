@@ -29,6 +29,13 @@
       "when": 1792462647875,
       "tag": "0003_harden_trip_stops_and_cancellation",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792734625193,
+      "tag": "0004_partner_applications_and_shop_categories",
+      "breakpoints": true
     }
   ]
 }
