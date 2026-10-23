@@ -37,7 +37,7 @@ export function permissionForAdminPath(path: string): AdminPermission {
   if (path.startsWith("/admin/delivery")) return "delivery";
   if (path.startsWith("/admin/logistics")) return "logistics";
   if (path.startsWith("/admin/print")) return "print";
-  if (path.startsWith("/admin/partners")) return "partners";
+  if (path.startsWith("/admin/partners") || path.startsWith("/admin/partner-applications")) return "partners";
   if (path.startsWith("/admin/combos")) return "combos";
   if (path.startsWith("/admin/promos") || path.startsWith("/admin/surge")) return "promos";
   if (path.startsWith("/admin/unserviceable")) return "requests";
