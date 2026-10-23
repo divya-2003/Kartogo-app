@@ -2201,6 +2201,69 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_applications: {
+        Row: {
+          address: string
+          business_name: string
+          categories: string | null
+          city: string
+          created_at: string
+          email: string | null
+          fssai: string | null
+          gstin: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          notes: string | null
+          owner_name: string
+          pan: string | null
+          partner_type: string
+          phone: string
+          pincode: string
+          status: string
+        }
+        Insert: {
+          address: string
+          business_name: string
+          categories?: string | null
+          city: string
+          created_at?: string
+          email?: string | null
+          fssai?: string | null
+          gstin?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          notes?: string | null
+          owner_name: string
+          pan?: string | null
+          partner_type: string
+          phone: string
+          pincode: string
+          status?: string
+        }
+        Update: {
+          address?: string
+          business_name?: string
+          categories?: string | null
+          city?: string
+          created_at?: string
+          email?: string | null
+          fssai?: string | null
+          gstin?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          notes?: string | null
+          owner_name?: string
+          pan?: string | null
+          partner_type?: string
+          phone?: string
+          pincode?: string
+          status?: string
+        }
+        Relationships: []
+      }
       partner_markets: {
         Row: {
           accepting_orders: boolean

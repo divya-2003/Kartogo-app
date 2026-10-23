@@ -25,7 +25,8 @@ export type SubAdmin = {
   createdAt: string;
 };
 
-async function resolveAccess(token: string): Promise<AdminSessionAccess> {
+/** Server-verified admin identity + permissions for a signed admin token. */
+export async function resolveAccess(token: string): Promise<AdminSessionAccess> {
   const { readAdminToken } = await import("./auth-tokens.server");
   const session = readAdminToken(token);
   if (!session) return { valid: false, userId: null, isSuperAdmin: false, permissions: [] };
