@@ -62,3 +62,15 @@
 - [x] Keep customer, seller, rider, printer and admin accounts signed in (year-long sessions, silent renewal, restore after storage wipe)
 - [x] Link Firebase with web push settings and fix device registration waiting for the notification worker
 - [ ] Confirm a real phone receives a push — needs the user to turn on notifications on the published app or Android app
+
+## Oct 23 batch
+- [ ] Full-page login only when a guest taps Add to cart or Wishlist
+- [ ] Add Clothes category to Shop
+- [ ] Shop section categories as a compact icon row (like the reference)
+- [ ] Show Combos and Pharmacy in Shop
+- [ ] Remove the search bar inside the Food section
+- [ ] Hide the section top bar on sub-pages everywhere
+- [ ] Logout from Profile returns to the first-open Home page
+- [ ] Remove the Order tracking…Stock alerts cards from guest Profile
+- [ ] Seller account asks for basic + business details (location, GSTIN, FSSAI…); drop favourites/addresses mentions
+- [ ] Sub-admin usage analytics (incl. login/logout) replacing the admin login audit
