@@ -61,10 +61,10 @@ function roleRedirectTarget(): "/delivery" | "/admin" | "/supplier" | "/printer"
   const read = (key: string): string | null => {
     let raw: string | null = null;
     try { raw = localStorage.getItem(key); } catch { return null; }
-    if (!raw) return null;
+    if (!raw || raw === "null" || raw === "undefined" || raw === '""') return null;
     try {
       const parsed = JSON.parse(raw);
-      return typeof parsed === "string" && parsed ? parsed : raw;
+      return typeof parsed === "string" && parsed ? parsed : null;
     } catch { return raw; }
   };
   try {

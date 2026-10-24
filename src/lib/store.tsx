@@ -61,7 +61,9 @@ function read<T>(key: string, fallback: T): T {
 function write(key: string, value: unknown) {
   if (typeof window === "undefined") return;
   const raw = JSON.stringify(value);
-  try { localStorage.setItem(key, raw); } catch { /* noop */ }
+  // Signed out / empty: remove the key instead of storing the text "null", so
+  // nothing mistakes an empty slot for a saved admin or partner session.
+  try { if (value == null) localStorage.removeItem(key); else localStorage.setItem(key, raw); } catch { /* noop */ }
   if (SESSION_KEYS.has(key)) {
     const secure = location.protocol === "https:" ? "; Secure" : "";
     document.cookie = value == null

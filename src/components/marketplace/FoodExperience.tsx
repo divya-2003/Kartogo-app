@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Clock, Minus, Plus, Search, X, ShoppingBag } from "lucide-react";
+import { Clock, Minus, Plus, X, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageTop } from "@/components/marketplace/Cards";
 import { AddressField } from "@/components/marketplace/AddressField";
@@ -18,12 +18,12 @@ function VegMark({ veg }: { veg: boolean }) {
   return <span aria-label={veg ? "Veg" : "Non-veg"} className={`inline-flex h-4 w-4 items-center justify-center rounded-sm border-2 ${veg ? "border-leaf" : "border-destructive"}`}><span className={`h-1.5 w-1.5 rounded-full ${veg ? "bg-leaf" : "bg-destructive"}`} /></span>;
 }
 
-export function FoodExperience({ embedded = false, initialQ = "" }: { embedded?: boolean; initialQ?: string }) {
+export function FoodExperience({ embedded = false, initialQ = "", initialKitchen }: { embedded?: boolean; initialQ?: string; initialKitchen?: string }) {
   const { customerToken } = useAuth();
   const nav = useNavigate();
-  const [kitchen, setKitchen] = useState<Kitchen | null>(null);
+  const [kitchen, setKitchen] = useState<Kitchen | null>(() => KITCHENS.find(k => k.id === initialKitchen) ?? null);
   const [vegOnly, setVegOnly] = useState(false);
-  const [q, setQ] = useState(initialQ);
+  const [q] = useState(initialQ);
   const [lines, setLines] = useState<Line[]>([]);
   const [custom, setCustom] = useState<{ dish: Dish; addons: string[] } | null>(null);
   const [checkout, setCheckout] = useState(false);
@@ -50,6 +50,9 @@ export function FoodExperience({ embedded = false, initialQ = "" }: { embedded?:
     return ls.flatMap((l, i) => i !== idx ? [l] : l.qty > 1 ? [{ ...l, qty: l.qty - 1 }] : []);
   });
   const openKitchen = (k: Kitchen) => {
+    // From the Home tab, a restaurant opens as its own page so the Home
+    // section cards never sit on top of a sub-page.
+    if (embedded) { nav({ to: "/food", search: { kitchen: k.id } }); return; }
     if (lines.length && kitchen && kitchen.id !== k.id) { if (!confirm("Your basket has items from another kitchen. Clear it?")) return; setLines([]); }
     setKitchen(k); setCheckout(false);
   };
@@ -70,17 +73,12 @@ export function FoodExperience({ embedded = false, initialQ = "" }: { embedded?:
   return (
     <div className="min-h-screen bg-background pb-28">
       {!embedded && <PageTop title={kitchen ? kitchen.name : "Food"} />}
-      {embedded && kitchen && <div className="flex items-center justify-between gap-3 pt-5"><Button variant="outline" onClick={() => { setKitchen(null); setCheckout(false); }}>Restaurants</Button><h2 className="font-display text-lg font-bold">{kitchen.name}</h2></div>}
       <div className={embedded ? "py-5" : "mx-auto max-w-2xl px-4 py-4"}>
         {!kitchen ? (
           <>
             <div className="border-b border-sec-food/30 bg-sec-food/15 px-5 py-6 text-foreground">
               <div className="text-xs font-bold uppercase tracking-wide opacity-80">Hot meals, fast</div>
               <h1 className="font-display text-2xl font-extrabold">What are you craving?</h1>
-              <div className="mt-3 flex items-center gap-2 rounded-xl bg-card px-3 py-2 text-foreground">
-                <Search className="h-4 w-4 text-muted-foreground" />
-                <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search biryani, dosa, thali…" className="w-full bg-transparent text-sm outline-none" />
-              </div>
             </div>
             <div className="mt-4 flex gap-2">
               <Button size="natural" variant="ghost" onClick={() => setVegOnly(v => !v)} className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold ${vegOnly ? "border-leaf bg-leaf/10 text-leaf" : "border-border"}`}><VegMark veg /> Veg only</Button>

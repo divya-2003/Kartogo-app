@@ -1,4 +1,4 @@
-import { ClipboardList as MClipboard, Star as MStar, MapPin as MMapPin, CreditCard as MCard, Tag as MTag, Store as MStore, Printer as MPrinter, Settings as MSettings, Shield as MShield, FileText as MFile, Pencil as MPencil } from "lucide-react";
+import { ClipboardList as MClipboard, Star as  CreditCard as MCard, Tag as MTag, Store as MStore, Printer as MPrinter, Settings as MSettings, Shield as MShield, FileText as MFile, Pencil as MPencil } from "lucide-react";
 import { BottomNav } from "@/components/marketplace/BottomNav";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -83,16 +83,10 @@ function MenuPage() {
         <div className="mx-auto max-w-2xl px-5 py-10">
           <p className="text-sm font-bold uppercase text-primary">Your Kartogo</p>
           <h1 className="mt-2 font-display text-3xl font-extrabold">One account, easier everyday shopping.</h1>
-          <p className="mt-3 max-w-lg text-muted-foreground">Save addresses and favourites, track every order, manage Kartogo Cash, and get restock alerts.</p>
+          <p className="mt-3 max-w-lg text-muted-foreground">Track every order, manage Kartogo Cash, and get restock alerts.</p>
           <Link to="/login" search={{ redirect: "/menu" }} className="mt-7 inline-flex h-12 w-full items-center justify-center rounded-md bg-primary px-6 font-bold text-primary-foreground shadow-pop sm:w-auto">
             Login or register
           </Link>
-          <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <GuestBenefit icon={<ShoppingBag className="h-5 w-5" />} label="Order tracking" />
-            <GuestBenefit icon={<Heart className="h-5 w-5" />} label="Saved favourites" />
-            <GuestBenefit icon={<MapPin className="h-5 w-5" />} label="Saved addresses" />
-            <GuestBenefit icon={<Bell className="h-5 w-5" />} label="Stock alerts" />
-          </div>
         </div>
       </div>
     );
@@ -101,7 +95,9 @@ function MenuPage() {
   const handleLogout = () => {
     logout();
     toast.success("Signed out");
-    nav({ to: "/login" });
+    // Back to the same first page a new visitor sees: Home, Shop tab.
+    try { sessionStorage.setItem("qk_home_section", "shop"); sessionStorage.setItem("qk_customer_home", "1"); } catch { /* noop */ }
+    nav({ to: "/", replace: true });
   };
 
   const soon = (label: string) => toast.info(`${label} coming soon`);
@@ -250,8 +246,6 @@ function MenuPage() {
           </div>
 
           <Row to="/orders" icon={<MClipboard className="h-5 w-5" />} label="Orders & Bookings" />
-          <Row to="/favorites" icon={<MStar className="h-5 w-5" />} label="Favorites" sub="Stores, services & event providers" />
-          <Row to="/account" icon={<MMapPin className="h-5 w-5" />} label="Addresses" sub="Home, Work & other saved places" />
           <Row to="/wallet" icon={<MCard className="h-5 w-5" />} label="Payments" sub="Kartogo Cash & transactions" />
           <Row to="/" icon={<MTag className="h-5 w-5" />} label="Offers" sub="Coupons on the home page" />
           <Row to="/notifications" icon={<Bell className="h-5 w-5" />} label="Notifications" sub="Order, delivery & offer alerts" />
@@ -329,10 +323,6 @@ function MenuPage() {
       <BottomNav />
     </div>
   );
-}
-
-function GuestBenefit({ icon, label }: { icon: React.ReactNode; label: string }) {
-  return <div className="flex min-h-24 flex-col justify-between rounded-lg border border-border bg-card p-4 shadow-sm"><span className="text-primary">{icon}</span><span className="text-sm font-bold">{label}</span></div>;
 }
 
 function TopBar() {

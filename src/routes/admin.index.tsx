@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { PendingTopups } from "@/components/PendingTopups";
 import { StaffAccountCard } from "@/components/StaffAccountCard";
 import { AdminUsagePanel } from "@/components/admin/AdminUsagePanel";
-import { IndianRupee, ShoppingBag, AlertTriangle, Truck, ShieldCheck } from "lucide-react";
+import { IndianRupee, ShoppingBag, AlertTriangle, Truck } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({ component: Dashboard });
 
