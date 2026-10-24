@@ -64,13 +64,13 @@
 - [ ] Confirm a real phone receives a push — needs the user to turn on notifications on the published app or Android app
 
 ## Oct 23 batch
-- [ ] Full-page login only when a guest taps Add to cart or Wishlist
-- [ ] Add Clothes category to Shop
-- [ ] Shop section categories as a compact icon row (like the reference)
-- [ ] Show Combos and Pharmacy in Shop
-- [ ] Remove the search bar inside the Food section
-- [ ] Hide the section top bar on sub-pages everywhere
-- [ ] Logout from Profile returns to the first-open Home page
-- [ ] Remove the Order tracking…Stock alerts cards from guest Profile
-- [ ] Seller account asks for basic + business details (location, GSTIN, FSSAI…); drop favourites/addresses mentions
-- [ ] Sub-admin usage analytics (incl. login/logout) replacing the admin login audit
+- [x] Full-page login only when a guest taps Add to cart or Wishlist
+- [x] Add Clothes category to Shop
+- [x] Shop section categories as a compact icon row (like the reference)
+- [x] Show Combos and Pharmacy in Shop
+- [x] Remove the search bar inside the Food section
+- [x] Hide the section top bar on sub-pages everywhere
+- [x] Logout from Profile returns to the first-open Home page
+- [x] Remove the Order tracking…Stock alerts cards from guest Profile
+- [x] Seller account asks for basic + business details (location, GSTIN, FSSAI…); drop favourites/addresses mentions
+- [x] Sub-admin usage analytics (incl. login/logout) replacing the admin login audit

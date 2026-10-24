@@ -9,3 +9,6 @@
 - Load dedicated marketplace discovery with existing category-read functions so global home preview limits cannot hide a section's catalog.
 - Keep the home top area in normal document flow with a separate sticky search band; scroll-driven header height changes cause scroll anchoring feedback and blinking.
 - Use the router history blocker for customer bottom-section backward traversal, await POP restoration before replacing with Home, and preserve explicit customer-home intent so portal auto-redirects cannot override it; never insert dummy history entries or intercept forward/detail navigation.- Keep every role's session keys mirrored into long-lived cookies and silently re-signed through the session keeper; route guards must never sign anyone out on a network error, so accounts survive storage wipes and expiry.
+- Record admin login, logout and page-view events in the admin audit trail under the admin_session entity keyed by staff id, so usage analytics come from server-verified tokens only.
+- Store empty session slots by removing the storage key, never as the text "null", so portal auto-redirects cannot mistake an empty slot for a saved session.
+- Open Home-tab sub-pages (e.g. a restaurant) on their own route so the Home section cards never render above a sub-page.
