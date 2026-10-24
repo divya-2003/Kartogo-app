@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { listMpCategoriesFn } from "@/lib/marketplace.functions";
 import { catalogProductInShop } from "@/lib/home-sections";
 import type { MpCategory } from "@/lib/marketplace";
-import { HomeMarketplace } from "@/components/marketplace/HomeMarketplace";
+import { HomeMarketplace, ShopCategoryStrip } from "@/components/marketplace/HomeMarketplace";
 import { BottomNav } from "@/components/marketplace/BottomNav";
 import { SectionBar, type SectionId } from "@/components/marketplace/SectionBar";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -275,7 +275,7 @@ function Index() {
         {/* ---------- Category icon row (single scrollable strip, faded ends) ---------- */}
 
 
-        {service === "standard" && <HomeMarketplace section="shop" />}
+        {service === "standard" ? <HomeMarketplace section="shop" /> : <ShopCategoryStrip />}
 
         {/* ---------- Deal tiles grid ---------- */}
         <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
