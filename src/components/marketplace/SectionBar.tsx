@@ -9,6 +9,7 @@ export const SECTIONS: { id: SectionId; label: string; icon: string; subs: Sub[]
   { id: "shop", label: "Shop", icon: "🛒", subs: [
     ex("Grocery", "🥬", "grocery"), ex("FMCG", "🧴", "fmcg"), ex("Household", "🧹", "household"),
     ex("Electronics", "📱", "electronics"), ex("Furniture", "🛋️", "furniture"), ex("Beauty Products", "💄", "beauty-products"),
+    ex("Clothes", "👕", "clothes"), ex("Pharmacy", "💊", "pharmacy"), ex("Combos", "🎁", "combos"),
   ] },
   { id: "food", label: "Food", icon: "🍛", subs: [
     { label: "Restaurants", icon: "🍽️", to: "/food" }, { label: "Meals", icon: "🍱", to: "/food", search: { q: "meals" } },

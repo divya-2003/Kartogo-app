@@ -12,11 +12,14 @@ export const Route = createFileRoute("/food")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>): { q?: string } => ({ q: typeof s.q === "string" ? s.q.slice(0, 40) : undefined }),
+  validateSearch: (s: Record<string, unknown>): { q?: string; kitchen?: string } => ({
+    q: typeof s.q === "string" ? s.q.slice(0, 40) : undefined,
+    kitchen: typeof s.kitchen === "string" ? s.kitchen.slice(0, 40) : undefined,
+  }),
   component: FoodPage,
 });
 
 function FoodPage() {
   const search = Route.useSearch();
-  return <FoodExperience initialQ={search.q} />;
+  return <FoodExperience key={search.kitchen ?? "all"} initialQ={search.q} initialKitchen={search.kitchen} />;
 }

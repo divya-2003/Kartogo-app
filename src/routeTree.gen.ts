@@ -55,6 +55,7 @@ import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
 import { Route as AdminLogisticsRouteImport } from './routes/admin.logistics'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
+import { Route as AdminPartnerApplicationsRouteImport } from './routes/admin.partner-applications'
 import { Route as AdminPartnersRouteImport } from './routes/admin.partners'
 import { Route as AdminPortalsRouteImport } from './routes/admin.portals'
 import { Route as AdminPrintRouteImport } from './routes/admin.print'
@@ -327,6 +328,12 @@ const AdminOrdersRoute = AdminOrdersRouteImport.update({
   path: '/orders',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPartnerApplicationsRoute =
+  AdminPartnerApplicationsRouteImport.update({
+    id: '/partner-applications',
+    path: '/partner-applications',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminPartnersRoute = AdminPartnersRouteImport.update({
   id: '/partners',
   path: '/partners',
@@ -581,6 +588,7 @@ export interface FileRoutesByFullPath {
   '/admin/logistics': typeof AdminLogisticsRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRoute
+  '/admin/partner-applications': typeof AdminPartnerApplicationsRoute
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/portals': typeof AdminPortalsRoute
   '/admin/print': typeof AdminPrintRoute
@@ -667,6 +675,7 @@ export interface FileRoutesByTo {
   '/admin/logistics': typeof AdminLogisticsRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRoute
+  '/admin/partner-applications': typeof AdminPartnerApplicationsRoute
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/portals': typeof AdminPortalsRoute
   '/admin/print': typeof AdminPrintRoute
@@ -757,6 +766,7 @@ export interface FileRoutesById {
   '/admin/logistics': typeof AdminLogisticsRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRoute
+  '/admin/partner-applications': typeof AdminPartnerApplicationsRoute
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/portals': typeof AdminPortalsRoute
   '/admin/print': typeof AdminPrintRoute
@@ -848,6 +858,7 @@ export interface FileRouteTypes {
     | '/admin/logistics'
     | '/admin/notifications'
     | '/admin/orders'
+    | '/admin/partner-applications'
     | '/admin/partners'
     | '/admin/portals'
     | '/admin/print'
@@ -934,6 +945,7 @@ export interface FileRouteTypes {
     | '/admin/logistics'
     | '/admin/notifications'
     | '/admin/orders'
+    | '/admin/partner-applications'
     | '/admin/partners'
     | '/admin/portals'
     | '/admin/print'
@@ -1023,6 +1035,7 @@ export interface FileRouteTypes {
     | '/admin/logistics'
     | '/admin/notifications'
     | '/admin/orders'
+    | '/admin/partner-applications'
     | '/admin/partners'
     | '/admin/portals'
     | '/admin/print'
@@ -1439,6 +1452,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOrdersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/partner-applications': {
+      id: '/admin/partner-applications'
+      path: '/partner-applications'
+      fullPath: '/admin/partner-applications'
+      preLoaderRoute: typeof AdminPartnerApplicationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/partners': {
       id: '/admin/partners'
       path: '/partners'
@@ -1744,6 +1764,7 @@ interface AdminRouteChildren {
   AdminLogisticsRoute: typeof AdminLogisticsRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
+  AdminPartnerApplicationsRoute: typeof AdminPartnerApplicationsRoute
   AdminPartnersRoute: typeof AdminPartnersRoute
   AdminPortalsRoute: typeof AdminPortalsRoute
   AdminPrintRoute: typeof AdminPrintRoute
@@ -1780,6 +1801,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminLogisticsRoute: AdminLogisticsRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminOrdersRoute: AdminOrdersRoute,
+  AdminPartnerApplicationsRoute: AdminPartnerApplicationsRoute,
   AdminPartnersRoute: AdminPartnersRoute,
   AdminPortalsRoute: AdminPortalsRoute,
   AdminPrintRoute: AdminPrintRoute,

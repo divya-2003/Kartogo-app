@@ -238,7 +238,11 @@ export const adminLoginFn = createServerFn({ method: "POST" })
     if (data.phone && (!admin || admin.role !== "admin" || admin.status !== "active")) {
       return { ok: false as const, error: "This number is not an admin account" };
     }
-    return { ok: true as const, token: issueAdminToken(admin?.userId) };
+    const token = issueAdminToken(admin?.userId);
+    // Usage analytics: every admin sign-in is recorded against their staff id.
+    const { recordAdminSessionEvent } = await import("./admin-activity.functions");
+    await recordAdminSessionEvent(token, "login").catch(() => {});
+    return { ok: true as const, token };
   });
 
 // ---------------- Verify admin token (server-side gate) ----------------
