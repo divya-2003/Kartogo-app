@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Sparkles, LayoutDashboard, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Menu, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound, BellRing, UsersRound, ChevronLeft, Clock, ExternalLink, RefreshCw, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { renewSessions } from "@/lib/session-keeper";
+import { logAdminActivityFn } from "@/lib/admin-activity.functions";
 
 // Remembers the last successful admin-token verification for this tab so the
 // admin area doesn't re-hit the server on every single navigation.
@@ -78,6 +79,7 @@ const NAV = [
   { to: "/admin/slots", label: "Delivery slots", icon: Clock, permission: "delivery" },
   { to: "/admin/print", label: "Print queue", icon: Printer, permission: "print" },
   { to: "/admin/partners", label: "Partner markets", icon: Store, permission: "partners" },
+  { to: "/admin/partner-applications", label: "Partner applications", icon: Store, permission: "partners" },
   { to: "/admin/combos", label: "Combo bundles", icon: Package, permission: "combos" },
   
   { to: "/admin/promos", label: "Promo codes", icon: BadgeIndianRupee, permission: "promos" },
@@ -127,6 +129,15 @@ function AdminLayout() {
 
   // Auto-close the mobile sheet whenever the route changes.
   useEffect(() => { setMobileOpen(false); }, [path]);
+
+  // Usage analytics: record each admin page this session opens.
+  useEffect(() => {
+    let token: string | null = null;
+    try { token = JSON.parse(localStorage.getItem("qk_admin_token") || "null"); } catch { token = null; }
+    if (!token) return;
+    const t = window.setTimeout(() => { void logAdminActivityFn({ data: { token: token as string, event: "page_view", path } }).catch(() => {}); }, 800);
+    return () => window.clearTimeout(t);
+  }, [path]);
 
   const markCancellationsSeen = () => {
     localStorage.setItem("kartigo_cancel_seen_count", String(cancelledCount));
