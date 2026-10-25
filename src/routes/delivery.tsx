@@ -139,6 +139,7 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [tab, setTab] = useState<"available" | "active" | "returns" | "done">("available");
   const [view, setView] = useState<"orders" | "account">("orders");
+  useLeaveCustomerMode();
   const [chatOrderId, setChatOrderId] = useState<string | null>(null);
 
   const maskedCall = async (orderId: string) => {
