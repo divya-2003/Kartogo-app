@@ -55,7 +55,7 @@ function CartPage() {
 
   const removeLine = (id: string) => { remove(id); track.trackRemoveFromCart(id); };
   const moveToWishlist = (id: string) => {
-    if (!user) { nav({ to: "/login", search: { redirect: "/cart" } as never }); return; }
+    if (!user) { nav({ to: "/login", search: { redirect: "/cart" } }); return; }
     if (!inWishlist(id)) toggleWishlist(id);
     removeLine(id);
     toast.success("Moved to your wishlist");
