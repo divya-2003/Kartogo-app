@@ -74,3 +74,9 @@
 - [x] Remove the Order tracking…Stock alerts cards from guest Profile
 - [x] Seller account asks for basic + business details (location, GSTIN, FSSAI…); drop favourites/addresses mentions
 - [x] Sub-admin usage analytics (incl. login/logout) replacing the admin login audit
+
+## Oct 24 batch
+- [x] Seller and delivery portals: three-line menu holding the portal pages plus "Shop as a customer"; analysis shown first; Profile links back to the portal
+- [x] Unserviceable page fits one screen with "Go to standard delivery" under the request button
+- [x] Single scrollable cart (items, savings zone, price details) with a fixed total bar
+- [ ] Check the seller/delivery menus with a real partner login — needs a partner session

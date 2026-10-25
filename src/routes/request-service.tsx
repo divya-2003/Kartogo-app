@@ -104,12 +104,13 @@ function RequestServicePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[oklch(0.9_0.07_70)] to-background">
-      <div className="mx-auto max-w-lg px-4 py-6">
+    // Fixed to the screen height: everything fits on one screen, nothing scrolls.
+    <div className="h-dvh overflow-hidden bg-gradient-to-b from-[oklch(0.9_0.07_70)] to-background">
+      <div className="mx-auto flex h-full max-w-lg flex-col px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4">
         {/* header — title left, account details top right */}
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex shrink-0 items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="font-display text-3xl font-extrabold leading-tight tracking-tight">Unserviceable area</h1>
+            <h1 className="font-display text-2xl font-extrabold leading-tight tracking-tight sm:text-3xl">Unserviceable area</h1>
             <div className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
               <MapPin className="h-4 w-4 shrink-0 text-primary" />
               <span className="min-w-0 truncate">{areaLabel}</span>
@@ -124,24 +125,23 @@ function RequestServicePage() {
         </div>
 
         {/* change location right from the top — validated as it is picked */}
-        <div className="mt-4">
+        <div className="mt-3 shrink-0">
           <LocationPicker variant="button" buttonLabel="Change location" />
         </div>
 
-        <div className="mt-8 text-center">
-          <div className="font-display text-3xl font-extrabold uppercase leading-tight tracking-tight text-primary">
+        {/* middle area shrinks to whatever space is left */}
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-evenly py-2 text-center">
+          <div className="font-display text-[clamp(1.25rem,4.2dvh,1.875rem)] font-extrabold uppercase leading-tight tracking-tight text-primary">
             Coming soon<br />to your<br />neighbourhood
           </div>
-          <div className="mx-auto mt-8 grid h-40 w-40 place-items-center rounded-full bg-primary/10">
-            <Bike className="h-20 w-20 text-primary" />
+          <div className="grid aspect-square h-[clamp(4.5rem,17dvh,10rem)] place-items-center rounded-full bg-primary/10">
+            <Bike className="h-1/2 w-1/2 text-primary" />
           </div>
-
-          <p className="mx-auto mt-8 max-w-sm text-sm text-muted-foreground">
+          <p className="max-w-sm text-[clamp(0.75rem,1.9dvh,0.875rem)] text-muted-foreground">
             We're not serviceable at {pincode ? `pincode ${pincode}` : "your area"} yet. We currently deliver only in Ongole.
             We're expanding fast — tell us you're here and we'll ping you the moment Kartogo goes live in your area.
           </p>
-
-          <div className="mt-6 min-h-[24px] text-sm font-semibold">
+          <div className="min-h-[20px] text-sm font-semibold">
             {state === "sending" && (
               <span className="inline-flex items-center gap-2 text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" /> Sending your request…
@@ -153,35 +153,32 @@ function RequestServicePage() {
               </span>
             )}
             {state === "error" && (
-              <button
-                onClick={submit}
-                className="inline-flex items-center gap-2 text-destructive underline"
-              >
+              <button onClick={submit} className="inline-flex items-center gap-2 text-destructive underline">
                 Couldn't send — try again
               </button>
             )}
           </div>
         </div>
 
-        <div className="mt-8 pb-10">
-          {state === "done" ? (
-            <button
-              type="button"
-              onClick={goStandard}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90"
-            >
-              <PackageCheck className="h-5 w-5" /> Go to standard delivery
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={submit}
-              disabled={state === "sending"}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 disabled:opacity-60 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90"
-            >
-              <Send className="h-5 w-5" /> Request Kartogo quick in your area
-            </button>
-          )}
+        {/* Request first, standard delivery right below it */}
+        <div className="shrink-0 space-y-2.5">
+          <button
+            type="button"
+            onClick={submit}
+            disabled={state === "sending" || state === "done"}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+          >
+            {state === "done"
+              ? <><CheckCircle2 className="h-5 w-5" /> Requested for this area</>
+              : <><Send className="h-5 w-5" /> Request Kartogo quick in your area</>}
+          </button>
+          <button
+            type="button"
+            onClick={goStandard}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-primary bg-card py-3.5 font-display text-base font-extrabold text-primary hover:bg-primary/5"
+          >
+            <PackageCheck className="h-5 w-5" /> Go to standard delivery
+          </button>
         </div>
       </div>
     </div>

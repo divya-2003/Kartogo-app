@@ -119,6 +119,9 @@ function MenuPage() {
           <Link to="/account" aria-label="Edit profile" className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-bold shadow-pop"><MPencil className="h-4 w-4" />Edit</Link>
         </div>
 
+        {/* Partners shopping as a customer get a one-tap way back to their portal */}
+        <PortalReturnLink />
+
         {/* Quick action cards */}
         <div className="grid grid-cols-3 gap-3">
           <QuickCard to="/orders" icon={<ShoppingBag className="h-6 w-6" />} label="Your Orders" />
@@ -364,4 +367,26 @@ function Row({ to, onClick, icon, label, sub, last }: { to?: string; onClick?: (
   const cls = `flex w-full items-center gap-3 px-4 py-4 text-left hover:bg-secondary ${last ? "" : "border-b border-border"}`;
   if (to) return <Link to={to} className={cls}>{inner}</Link>;
   return <button onClick={onClick} className={cls}>{inner}</button>;
+}
+
+function PortalReturnLink() {
+  const [target, setTarget] = useState<{ to: "/supplier/sales" | "/delivery"; label: string } | null>(null);
+  useEffect(() => {
+    const has = (k: string) => {
+      try { const v = localStorage.getItem(k); return !!v && v !== "null" && v !== '""'; } catch { return false; }
+    };
+    if (has("qk_supplier_token")) setTarget({ to: "/supplier/sales", label: "Back to seller portal" });
+    else if (has("qk_delivery_token")) setTarget({ to: "/delivery", label: "Back to delivery portal" });
+  }, []);
+  if (!target) return null;
+  return (
+    <Link
+      to={target.to}
+      onClick={() => { try { sessionStorage.removeItem("qk_customer_home"); } catch { /* noop */ } }}
+      className="mb-3 flex w-full items-center justify-between rounded-2xl border border-primary/30 bg-primary/10 px-4 py-3 font-bold text-primary"
+    >
+      <span className="flex items-center gap-2"><MStore className="h-5 w-5" /> {target.label}</span>
+      <span aria-hidden>›</span>
+    </Link>
+  );
 }

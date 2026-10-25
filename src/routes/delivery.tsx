@@ -4,6 +4,7 @@ import { RiderJobsPanel } from "@/components/logistics/RiderJobsPanel";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { StaffAccountCard } from "@/components/StaffAccountCard";
+import { PartnerMenu, useLeaveCustomerMode } from "@/components/PartnerMenu";
 import { Bike, Phone, Package, Undo2, ShieldAlert, Truck, CheckCircle2, MapPin, LogOut, RefreshCw, IndianRupee, HandPlatter, User2, Wallet, ListChecks, Navigation, ChevronDown, MessageSquare } from "lucide-react";
 import { listDeliveryOrdersFn, deliverySetStatusFn, listAvailableOrdersFn, claimOrderFn, listReturnPickupsFn, markReturnPickedUpFn } from "@/lib/delivery.functions";
 import { initiateMaskedCallFn } from "@/lib/chat.functions";
@@ -138,6 +139,7 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [tab, setTab] = useState<"available" | "active" | "returns" | "done">("available");
   const [view, setView] = useState<"orders" | "account">("orders");
+  useLeaveCustomerMode();
   const [chatOrderId, setChatOrderId] = useState<string | null>(null);
 
   const maskedCall = async (orderId: string) => {
@@ -285,7 +287,19 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
       {/* Header */}
       <header className="sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary"><Bike className="h-5 w-5" /></div>
+          <PartnerMenu title={driver.name} closeKey={view}>
+            {(close) => (
+              <nav className="flex flex-col gap-1">
+                <div className="mb-1.5 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Delivery portal</div>
+                <button type="button" onClick={() => { setView("orders"); close(); }} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold ${view === "orders" ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}>
+                  <IndianRupee className="h-4 w-4" /> Earnings &amp; orders
+                </button>
+                <button type="button" onClick={() => { setView("account"); close(); }} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold ${view === "account" ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}>
+                  <User2 className="h-4 w-4" /> Account
+                </button>
+              </nav>
+            )}
+          </PartnerMenu>
           <div className="min-w-0">
             <div className="font-display text-base font-bold leading-tight">{driver.name}</div>
             <div className="text-xs text-muted-foreground">+91 {driver.phone}</div>
@@ -311,9 +325,10 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
           />
         ) : (
         <>
+        {/* Earnings analysis first */}
+        <DailySummary orders={orders} returns={returns} />
         {token && <DriverDispatchPanel token={token} onAssigned={() => { void load(); }} />}
         {token && <RiderJobsPanel token={token} />}
-        <DailySummary orders={orders} returns={returns} />
 
 
 

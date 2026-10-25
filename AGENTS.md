@@ -12,3 +12,4 @@
 - Record admin login, logout and page-view events in the admin audit trail under the admin_session entity keyed by staff id, so usage analytics come from server-verified tokens only.
 - Store empty session slots by removing the storage key, never as the text "null", so portal auto-redirects cannot mistake an empty slot for a saved session.
 - Open Home-tab sub-pages (e.g. a restaurant) on their own route so the Home section cards never render above a sub-page.
+- Partner portals (seller, delivery) keep their navigation inside the shared PartnerMenu three-line sheet, which also links to customer pages by setting the session customer-home flag; portal layouts clear that flag on mount so reopening Home still routes partners to their portal.
