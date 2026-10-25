@@ -36,22 +36,23 @@ export const Route = createFileRoute("/supplier")({
   head: () => ({ meta: [{ title: "Supplier Portal — Kartogo" }] }),
 });
 
+// Sales analysis comes first — it's the seller's landing page.
 const NAV = [
-  { to: "/supplier", label: "Inventory", short: "Stock", icon: Boxes },
-  { to: "/supplier/orders", label: "Orders", short: "Orders", icon: ClipboardList },
-  { to: "/supplier/bookings", label: "Bookings", short: "Bookings", icon: CalendarCheck },
-  { to: "/supplier/services", label: "My services", short: "Services", icon: CalendarClock },
-  { to: "/supplier/sales", label: "Sales", short: "Sales", icon: BarChart3 },
-  { to: "/supplier/ai", label: "AI insights", short: "AI", icon: Sparkles },
-  { to: "/supplier/account", label: "Account", short: "Account", icon: User2 },
+  { to: "/supplier/sales", label: "Sales analysis", icon: BarChart3 },
+  { to: "/supplier", label: "Inventory", icon: Boxes },
+  { to: "/supplier/orders", label: "Orders", icon: ClipboardList },
+  { to: "/supplier/bookings", label: "Bookings", icon: CalendarCheck },
+  { to: "/supplier/services", label: "My services", icon: CalendarClock },
+  { to: "/supplier/ai", label: "AI insights", icon: Sparkles },
+  { to: "/supplier/account", label: "Account", icon: User2 },
 ] as const;
 
 function SupplierLayout() {
   const router = useRouter();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const [info, setInfo] = useState<SupplierInfo | null>(null);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const isActive = (to: string) => (to === "/supplier" ? path === "/supplier" : path.startsWith(to));
+  useLeaveCustomerMode();
 
   useEffect(() => {
     try {
@@ -63,81 +64,49 @@ function SupplierLayout() {
     } catch { /* noop */ }
   }, []);
 
-  // Close the mobile sheet whenever the route changes.
-  useEffect(() => { setMobileOpen(false); }, [path]);
-
-  const NavList = ({ inSheet = false }: { inSheet?: boolean }) => (
-    <nav className="flex flex-col gap-1">
-      {NAV.map((n) => {
-        const active = isActive(n.to);
-        return (
-          <Link
-            key={n.to}
-            to={n.to}
-            onClick={() => { if (inSheet) setMobileOpen(false); }}
-            className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition ${active ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}
-          >
-            <n.icon className="h-4 w-4" /> {n.label}
-          </Link>
-        );
-      })}
-    </nav>
-  );
-
   return (
     <SupplierContext.Provider value={info}>
       <div className="min-h-screen bg-background">
-        {/* Mobile top bar with hamburger — mirrors the admin layout */}
-        <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-border bg-card/95 px-3 py-2 backdrop-blur md:hidden">
-          {path !== "/supplier" && (
-            <Button type="button" variant="outline" size="icon" aria-label="Go back" onClick={() => router.history.back()}>
-              <ChevronLeft />
-            </Button>
-          )}
-          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger asChild>
-              <button
-                aria-label={mobileOpen ? "Close supplier menu" : "Open supplier menu"}
-                className="grid h-10 w-10 place-items-center rounded-lg border border-border bg-card hover:bg-secondary"
-              >
-                <Menu className="h-5 w-5" />
-              </button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-72 p-0">
-              <SheetHeader className="border-b border-border p-4">
-                <SheetTitle className="text-left font-display text-base font-bold">
-                  {info?.name ?? "Supplier"}
-                </SheetTitle>
-              </SheetHeader>
-              <div className="max-h-[calc(100vh-5rem)] overflow-y-auto p-3">
-                <NavList inSheet />
-              </div>
-            </SheetContent>
-          </Sheet>
-          <span className="min-w-0 truncate font-display text-sm font-bold">{info?.name ?? "Supplier"}</span>
-          <Link
-            to="/supplier/account"
-            aria-label="Supplier account"
-            className="ml-auto grid h-9 w-9 place-items-center rounded-full border border-border bg-card hover:bg-secondary"
-          >
-            <User2 className="h-4 w-4" />
-          </Link>
+        {/* Top bar — the side menu lives inside the three-line button on every screen size */}
+        <div className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur">
+          <div className="mx-auto flex max-w-7xl items-center gap-2 px-3 py-2 md:px-6">
+            <PartnerMenu title={info?.name ?? "Supplier"} closeKey={path}>
+              {(close) => (
+                <nav className="flex flex-col gap-1">
+                  <div className="mb-1.5 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Seller portal</div>
+                  {NAV.map((n) => (
+                    <Link
+                      key={n.to}
+                      to={n.to}
+                      onClick={close}
+                      className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition ${isActive(n.to) ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}
+                    >
+                      <n.icon className="h-4 w-4" /> {n.label}
+                    </Link>
+                  ))}
+                </nav>
+              )}
+            </PartnerMenu>
+            {path !== "/supplier/sales" && (
+              <Button type="button" variant="outline" size="icon" aria-label="Go back" onClick={() => router.history.back()}>
+                <ChevronLeft />
+              </Button>
+            )}
+            <span className="min-w-0 truncate font-display text-sm font-bold md:text-base">{info?.name ?? "Supplier"}</span>
+            <Link
+              to="/supplier/account"
+              aria-label="Supplier account"
+              className="ml-auto grid h-9 w-9 place-items-center rounded-full border border-border bg-card hover:bg-secondary"
+            >
+              <User2 className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
 
-        <div className="mx-auto grid max-w-7xl gap-6 px-4 pb-6 pt-4 md:grid-cols-[220px_minmax(0,1fr)] md:px-6 md:py-6">
-          {/* Desktop sidebar */}
-          <aside className="hidden h-fit max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl border border-border bg-card p-3 md:sticky md:top-4 md:block">
-            <div className="mb-3 px-3 pt-1">
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Supplier</div>
-              <div className="mt-0.5 truncate text-sm font-bold">{info?.name ?? "…"}</div>
-            </div>
-            <NavList />
-          </aside>
-
+        <div className="mx-auto max-w-7xl px-4 pb-6 pt-4 md:px-6 md:py-6">
           <main className="min-w-0"><Outlet /></main>
         </div>
       </div>
     </SupplierContext.Provider>
   );
-
 }
