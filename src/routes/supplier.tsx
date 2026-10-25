@@ -1,12 +1,12 @@
 import { createFileRoute, Outlet, Link, useRouter, useRouterState, redirect, isRedirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { verifySupplierTokenFn } from "@/lib/supplier.functions";
 import { findSupplierById } from "@/lib/suppliers";
 import { SupplierContext, type SupplierInfo } from "@/lib/supplier-context";
-import { CalendarCheck, CalendarClock, Boxes, ClipboardList, User2, BarChart3, Sparkles, Menu, ChevronLeft } from "lucide-react";
+import { CalendarCheck, CalendarClock, Boxes, ClipboardList, User2, BarChart3, Sparkles, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { renewSessions } from "@/lib/session-keeper";
+import { PartnerMenu, useLeaveCustomerMode } from "@/components/PartnerMenu";
 
 
 export const Route = createFileRoute("/supplier")({
