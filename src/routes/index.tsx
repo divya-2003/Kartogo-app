@@ -51,7 +51,7 @@ export const Route = createFileRoute("/")({
 });
 
 /** Detects a saved admin/delivery/supplier session and returns where to send the user. */
-function roleRedirectTarget(): "/delivery" | "/admin" | "/supplier" | "/printer" | "/delivery-request" | null {
+function roleRedirectTarget(): "/delivery" | "/admin" | "/supplier/sales" | "/printer" | "/delivery-request" | null {
   if (typeof window === "undefined") return null;
   // Explicit customer bottom-navigation must not trigger portal auto-opening.
   try { if (sessionStorage.getItem("qk_customer_home") === "1") return null; } catch { /* storage unavailable */ }
@@ -73,7 +73,7 @@ function roleRedirectTarget(): "/delivery" | "/admin" | "/supplier" | "/printer"
     // on the customer home page.
     if (read("qk_delivery_pending_token")) return "/delivery-request";
     if (read("qk_admin_token")) return "/admin";
-    if (read("qk_supplier_token")) return "/supplier";
+    if (read("qk_supplier_token")) return "/supplier/sales";
     if (read("qk_printer_token")) return "/printer";
   } catch { /* noop */ }
   return null;
