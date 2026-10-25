@@ -212,13 +212,55 @@ export const claimOrderFn = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const session = await requireActiveDriver(data.token);
 
-    const { ensurePartner } = await import("./logistics/partners.server");
-    await ensurePartner(session.driverId);
-    const { dispatchReadyTrip } = await import("./logistics/trips.server");
-    const result = await dispatchReadyTrip(data.id, session.driverId);
-    if (!result.ok) throw new Error("Go online first; only packed, unassigned orders with confirmed pickup stores can be claimed");
-    const { data: row } = await supabaseAdmin.from("app_orders").select("*").eq("id", data.id).maybeSingle();
-    if (!row) throw new Error("Order not found");
+    const { data: existing, error: readErr } = await supabaseAdmin
+      .from("app_orders").select("*").eq("id", data.id).maybeSingle();
+    if (readErr || !existing) throw new Error("Order not found");
+    if (existing.delivery_boy_id) throw new Error("This order was already taken by another partner");
+    if (existing.status !== "placed" && existing.status !== "packed") throw new Error("This order is no longer available");
+
+    const { ensurePartner, setStatus } = await import("./logistics/partners.server");
+    const { activeTrip, dispatchReadyTrip } = await import("./logistics/trips.server");
+    const partner = await ensurePartner(session.driverId);
+    if (await activeTrip(session.driverId)) throw new Error("Finish the stops in your current trip before taking another order");
+
+    // Taking an order puts the rider on duty — no separate "Go online" step.
+    if (partner && (partner.status === "OFFLINE" || partner.status === "BREAK")) {
+      await setStatus(session.driverId, "AVAILABLE", { actor: "driver" });
+    }
+
+    // Packed orders with known pickup stores join a multi-stop trip so nearby
+    // ready orders ride along. Anything else is a direct single-order claim.
+    if (existing.status === "packed" && !partner?.activeOrderId) {
+      const result = await dispatchReadyTrip(data.id, session.driverId).catch(() => null);
+      if (result?.ok) {
+        const { data: row } = await supabaseAdmin.from("app_orders").select("*").eq("id", data.id).maybeSingle();
+        if (row) return maskOrderForDriver(row);
+      }
+    }
+
+    const { data: row, error } = await supabaseAdmin
+      .from("app_orders")
+      .update({ delivery_boy_id: session.driverId, updated_at: new Date().toISOString() })
+      .eq("id", data.id)
+      .is("delivery_boy_id", null)
+      .in("status", ["placed", "packed"])
+      .select("*")
+      .maybeSingle();
+    if (error || !row) throw new Error("This order was already taken by another partner");
+
+    try {
+      const { logEvent } = await import("./logistics/dispatch.server");
+      await setStatus(session.driverId, "ASSIGNED", { orderId: data.id, actor: "driver" });
+      await logEvent(data.id, "driver_accepted", { selfClaimed: true }, session.driverId, "driver");
+    } catch (e) {
+      console.error("logistics claim sync failed", e);
+    }
+    try {
+      const { sendPushToCustomer } = await import("./push.server");
+      await sendPushToCustomer({ phone: String(row.customer_phone), type: "DRIVER_ASSIGNED", orderId: data.id });
+    } catch (e) {
+      console.error("driver assigned push failed", e);
+    }
     return maskOrderForDriver(row);
   });
 
