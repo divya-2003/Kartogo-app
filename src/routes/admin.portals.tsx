@@ -48,7 +48,7 @@ function PortalsPage() {
       if (res.role === "supplier") {
         localStorage.setItem("qk_supplier_token", JSON.stringify(res.token));
         localStorage.setItem("qk_supplier", JSON.stringify({ id: res.profile.id, name: res.profile.name }));
-        nav({ to: "/supplier" });
+        nav({ to: "/supplier/sales" });
       } else if (res.role === "printer") {
         localStorage.setItem("qk_printer_token", JSON.stringify(res.token));
         localStorage.setItem("qk_printer", JSON.stringify(res.profile));
