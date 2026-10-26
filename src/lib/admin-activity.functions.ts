@@ -9,19 +9,9 @@ const ENTITY = "admin_session";
 const tokenSchema = z.string().min(1).max(800);
 
 /** Records one session event for the admin holding `token`. Best-effort. */
-export async function recordAdminSessionEvent(token: string, action: "login" | "logout" | "page_view", path?: string) {
-  const { readAdminToken } = await import("./auth-tokens.server");
-  const session = readAdminToken(token);
-  if (!session) return;
-  const { recordAudit } = await import("./audit.server");
-  await recordAudit({
-    actor: session.userId ?? "main-admin",
-    actorRole: "admin",
-    action: `admin.${action}`,
-    entityType: ENTITY,
-    entityId: session.userId ?? "main-admin",
-    details: path ? { path: path.slice(0, 160) } : {},
-  });
+async function recordAdminSessionEvent(token: string, action: "login" | "logout" | "page_view", path?: string) {
+  const { recordAdminSessionEvent: record } = await import("./admin-session.server");
+  await record(token, action, path);
 }
 
 export const logAdminActivityFn = createServerFn({ method: "POST" })
@@ -61,7 +51,7 @@ export type AdminUsage = {
 export const adminUsageAnalyticsFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tokenSchema, days: z.number().int().min(1).max(90).default(30) }).parse(d))
   .handler(async ({ data }): Promise<AdminUsage> => {
-    const { resolveAccess } = await import("./admin-access.functions");
+    const { resolveAccess } = await import("./admin-session.server");
     const access = await resolveAccess(data.token);
     if (!access.valid) throw new Error("Admin authorization required");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

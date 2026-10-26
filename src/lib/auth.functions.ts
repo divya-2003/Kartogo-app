@@ -240,7 +240,7 @@ export const adminLoginFn = createServerFn({ method: "POST" })
     }
     const token = issueAdminToken(admin?.userId);
     // Usage analytics: every admin sign-in is recorded against their staff id.
-    const { recordAdminSessionEvent } = await import("./admin-activity.functions");
+    const { recordAdminSessionEvent } = await import("./admin-session.server");
     await recordAdminSessionEvent(token, "login").catch(() => {});
     return { ok: true as const, token };
   });

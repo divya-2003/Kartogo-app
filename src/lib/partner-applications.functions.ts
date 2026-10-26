@@ -60,7 +60,7 @@ export const submitPartnerApplicationFn = createServerFn({ method: "POST" })
   });
 
 async function requirePartnersAdmin(token: string) {
-  const { resolveAccess } = await import("./admin-access.functions");
+  const { resolveAccess } = await import("./admin-session.server");
   const access = await resolveAccess(token);
   if (!access.valid || !(access.isSuperAdmin || access.permissions.includes("partners"))) throw new Error("Admin authorization required");
 }
