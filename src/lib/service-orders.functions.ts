@@ -66,8 +66,10 @@ export const createRideFn = createServerFn({ method: "POST" })
     if (km > 60) return { ok: false as const, error: "Rides are available within 60 km." };
     const q = quote(data.vehicle, km);
     const v = VEHICLES.find(x => x.id === data.vehicle)!;
+    // Unique 4-digit start code the customer reads out to the driver at pickup.
+    const otp = String(crypto.getRandomValues(new Uint32Array(1))[0] % 10000).padStart(4, "0");
     const ins = await insertOrder(session.phone, {
-      order_code: code("KR"), kind: "RIDE", title: `${v.label} ride`, amount: q.fare, status: "SEARCHING",
+      order_code: code("KR"), kind: "RIDE", title: `${v.label} ride`, amount: q.fare, status: "SEARCHING", ride_otp: otp,
       details: { vehicle: data.vehicle, pickup: data.pickup, drop: data.drop, km: Math.round(km * 10) / 10, minutes: q.minutes, payment: "Cash/UPI" },
     });
     if (!ins) return { ok: false as const, error: "Couldn't book the ride. Please try again." };
@@ -81,7 +83,12 @@ export const myServiceOrdersFn = createServerFn({ method: "POST" })
     if (!session) return [];
     const s = await db();
     const { data: rows } = await s.from("service_orders").select("*").eq("customer_phone", session.phone).order("created_at", { ascending: false }).limit(50);
-    return (rows ?? []) as Array<{ id: string; order_code: string; kind: "FOOD" | "RIDE"; title: string; amount: number; status: string; created_at: string; details: Record<string, any> }>;
+    // The start code is only useful until the ride starts; never return it afterwards.
+    return ((rows ?? []) as any[]).map(r => ({
+      ...r,
+      ride_otp: r.kind === "RIDE" && ["SEARCHING", "ACCEPTED", "ARRIVED"].includes(r.status) ? r.ride_otp ?? null : null,
+      otp_attempts: undefined,
+    })) as Array<{ id: string; order_code: string; kind: "FOOD" | "RIDE"; title: string; amount: number; status: string; created_at: string; details: Record<string, any>; ride_otp: string | null; driver_name?: string | null; driver_phone?: string | null }>;
   });
 
 export const cancelServiceOrderFn = createServerFn({ method: "POST" })

@@ -318,6 +318,7 @@ export type Database = {
           deleted_by: string | null
           description: string
           emoji: string
+          expiry_date: string | null
           id: string
           image: string | null
           images: string[]
@@ -326,6 +327,8 @@ export type Database = {
           mrp: number | null
           name: string
           price: number
+          seller_id: string | null
+          seller_name: string | null
           source: string
           stock: number
           unit: string
@@ -338,6 +341,7 @@ export type Database = {
           deleted_by?: string | null
           description?: string
           emoji?: string
+          expiry_date?: string | null
           id: string
           image?: string | null
           images?: string[]
@@ -346,6 +350,8 @@ export type Database = {
           mrp?: number | null
           name: string
           price?: number
+          seller_id?: string | null
+          seller_name?: string | null
           source?: string
           stock?: number
           unit?: string
@@ -358,6 +364,7 @@ export type Database = {
           deleted_by?: string | null
           description?: string
           emoji?: string
+          expiry_date?: string | null
           id?: string
           image?: string | null
           images?: string[]
@@ -366,6 +373,8 @@ export type Database = {
           mrp?: number | null
           name?: string
           price?: number
+          seller_id?: string | null
+          seller_name?: string | null
           source?: string
           stock?: number
           unit?: string
@@ -2795,6 +2804,9 @@ export type Database = {
           id: string
           kind: string
           order_code: string
+          otp_attempts: number
+          otp_verified_at: string | null
+          ride_otp: string | null
           status: string
           status_history: Json
           title: string
@@ -2816,6 +2828,9 @@ export type Database = {
           id?: string
           kind: string
           order_code: string
+          otp_attempts?: number
+          otp_verified_at?: string | null
+          ride_otp?: string | null
           status?: string
           status_history?: Json
           title: string
@@ -2837,6 +2852,9 @@ export type Database = {
           id?: string
           kind?: string
           order_code?: string
+          otp_attempts?: number
+          otp_verified_at?: string | null
+          ride_otp?: string | null
           status?: string
           status_history?: Json
           title?: string
