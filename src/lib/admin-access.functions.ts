@@ -7,14 +7,7 @@ const permissionValues = ADMIN_FEATURES.map((feature) => feature.key) as [AdminP
 const permissionSchema = z.enum(permissionValues);
 const tokenSchema = z.string().min(1).max(800);
 
-type AccessRow = { user_id: string; is_super_admin: boolean; permissions: string[] };
-
-export type AdminSessionAccess = {
-  valid: boolean;
-  userId: string | null;
-  isSuperAdmin: boolean;
-  permissions: AdminPermission[];
-};
+export type { AdminSessionAccess } from "./admin-session.server";
 
 export type SubAdmin = {
   userId: string;
@@ -25,39 +18,9 @@ export type SubAdmin = {
   createdAt: string;
 };
 
-/** Server-verified admin identity + permissions for a signed admin token. */
-export async function resolveAccess(token: string): Promise<AdminSessionAccess> {
-  const { readAdminToken } = await import("./auth-tokens.server");
-  const session = readAdminToken(token);
-  if (!session) return { valid: false, userId: null, isSuperAdmin: false, permissions: [] };
-
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  if (!session.userId) {
-    return { valid: true, userId: null, isSuperAdmin: true, permissions: [] };
-  }
-  const { data: staff } = await supabaseAdmin
-    .from("staff_accounts")
-    .select("user_id, status, role")
-    .eq("user_id", session.userId)
-    .maybeSingle();
-  if (!staff || staff.role !== "admin" || staff.status !== "active") {
-    return { valid: false, userId: session.userId, isSuperAdmin: false, permissions: [] };
-  }
-  const { data } = await supabaseAdmin
-    .from("admin_access")
-    .select("user_id, is_super_admin, permissions")
-    .eq("user_id", session.userId)
-    .maybeSingle();
-  const access = data as AccessRow | null;
-  if (!access) return { valid: false, userId: session.userId, isSuperAdmin: false, permissions: [] };
-  return {
-    valid: true,
-    userId: session.userId,
-    isSuperAdmin: access.is_super_admin,
-    permissions: (access.permissions ?? []).filter((permission): permission is AdminPermission =>
-      permissionValues.includes(permission as AdminPermission),
-    ),
-  };
+async function resolveAccess(token: string) {
+  const { resolveAccess: resolve } = await import("./admin-session.server");
+  return resolve(token);
 }
 
 async function requireSuperAdmin(token: string) {

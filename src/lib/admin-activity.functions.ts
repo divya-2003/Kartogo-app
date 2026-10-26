@@ -9,19 +9,9 @@ const ENTITY = "admin_session";
 const tokenSchema = z.string().min(1).max(800);
 
 /** Records one session event for the admin holding `token`. Best-effort. */
-export async function recordAdminSessionEvent(token: string, action: "login" | "logout" | "page_view", path?: string) {
-  const { readAdminToken } = await import("./auth-tokens.server");
-  const session = readAdminToken(token);
-  if (!session) return;
-  const { recordAudit } = await import("./audit.server");
-  await recordAudit({
-    actor: session.userId ?? "main-admin",
-    actorRole: "admin",
-    action: `admin.${action}`,
-    entityType: ENTITY,
-    entityId: session.userId ?? "main-admin",
-    details: path ? { path: path.slice(0, 160) } : {},
-  });
+async function recordAdminSessionEvent(token: string, action: "login" | "logout" | "page_view", path?: string) {
+  const { recordAdminSessionEvent: record } = await import("./admin-session.server");
+  await record(token, action, path);
 }
 
 export const logAdminActivityFn = createServerFn({ method: "POST" })
