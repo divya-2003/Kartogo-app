@@ -109,6 +109,11 @@ const ACTIVE_TITLE: Record<Exclude<OrderStatus, "delivered" | "cancelled">, stri
   out_for_delivery: "Out for delivery",
 };
 
+type TimelineEntry =
+  | { kind: "order"; at: number; order: Order }
+  | { kind: "booking"; at: number; booking: Booking }
+  | { kind: "service"; at: number; service: ServiceOrder };
+
 function OrdersPage() {
   const { user, customerToken } = useAuth();
   const { orders, refresh, cancel, requestRefund } = useOrders();
