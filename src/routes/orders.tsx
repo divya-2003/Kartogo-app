@@ -1,5 +1,6 @@
 import { BottomNav } from "@/components/marketplace/BottomNav";
-import { OrdersTabs, BookingsList, ServiceOrdersList } from "@/components/marketplace/BookingsList";
+import { OrdersTabs, BookingsList, ServiceOrdersList, BookingCard, ServiceOrderCard, useMyBookings, useMyServiceOrders, type ServiceOrder } from "@/components/marketplace/BookingsList";
+import type { Booking } from "@/lib/marketplace";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import {
@@ -280,9 +281,26 @@ function OrdersPage() {
   }, [hasActiveOrders, refresh, userPhone]);
 
   const mine = useMemo(
-    () => orders.filter((o) => o.customerPhone === userPhone),
+    () =>
+      orders
+        .filter((o) => o.customerPhone === userPhone)
+        .sort((a, b) => b.createdAt - a.createdAt),
     [orders, userPhone],
   );
+
+  // Orders, bookings, food and rides in one list — newest first by the time
+  // the customer made them.
+  const { rows: myBookings } = useMyBookings();
+  const { rows: myServiceOrders } = useMyServiceOrders();
+  const timeline = useMemo(() => {
+    const ts = (v: string | number | null | undefined) => (v ? new Date(v).getTime() || 0 : 0);
+    const entries: TimelineEntry[] = [
+      ...mine.map((order) => ({ kind: "order" as const, at: ts(order.createdAt), order })),
+      ...myBookings.map((booking) => ({ kind: "booking" as const, at: ts(booking.created_at), booking })),
+      ...myServiceOrders.map((service) => ({ kind: "service" as const, at: ts(service.created_at), service })),
+    ];
+    return entries.sort((a, b) => b.at - a.at);
+  }, [mine, myBookings, myServiceOrders]);
 
   // Ask for delivery-partner feedback as soon as a newly delivered order is
   // observed. Existing server-side ratings prevent repeat prompts across devices.
@@ -468,12 +486,10 @@ function OrdersPage() {
           <h1 className="font-display text-2xl font-bold md:text-3xl">Orders & Bookings</h1>
         </div>
         <OrdersTabs tab={tab} />
-        {tab !== "orders" && <ServiceOrdersList />}
-        {tab !== "orders" && <BookingsList compact={tab === "all"} />}
+        {tab === "bookings" && (<><ServiceOrdersList /><BookingsList /></>)}
         {tab !== "bookings" && (<>
-        {tab === "all" && <h2 className="mb-2 mt-4 font-display text-lg font-bold">Orders</h2>}
 
-        {mine.length === 0 ? (
+        {(tab === "all" ? timeline.length === 0 : mine.length === 0) ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
             <div className="font-semibold">No orders yet</div>
             <Link
@@ -485,7 +501,10 @@ function OrdersPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {mine.map((o) => {
+            {(tab === "all" ? timeline : timeline.filter((e) => e.kind === "order")).map((entry) => {
+              if (entry.kind === "booking") return <BookingCard key={`b-${entry.booking.id}`} b={entry.booking} />;
+              if (entry.kind === "service") return <ServiceOrderCard key={`s-${entry.service.id}`} o={entry.service} />;
+              const o = entry.order;
               const cancelled = o.status === "cancelled";
               const delivered = o.status === "delivered";
               const active = !cancelled && !delivered;
