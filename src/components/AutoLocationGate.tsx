@@ -7,6 +7,7 @@ import { LocationPicker } from "@/components/LocationPicker";
 import { locateByCoords } from "@/lib/serviceability.functions";
 import { createUnserviceableRequestFn } from "@/lib/unserviceable.functions";
 import { useAuth, useLocation } from "@/lib/store";
+import { askNotificationPermission } from "@/lib/notification-permission";
 
 const SESSION_KEY = "qk_autoloc_done";
 
@@ -33,12 +34,17 @@ export function AutoLocationGate() {
     let alive = true;
     let settled = false;
     try { if (sessionStorage.getItem(SESSION_KEY)) return; } catch { /* ignore */ }
-    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      void askNotificationPermission();
+      return;
+    }
 
     const handle = async (pos: GeolocationPosition) => {
       if (settled) return;
       settled = true;
       try { sessionStorage.setItem(SESSION_KEY, "1"); } catch { /* ignore */ }
+      // Location answered — ask for notifications right away.
+      void askNotificationPermission();
       const { latitude: lat, longitude: lng } = pos.coords;
       try {
         const res = await locate({ data: { lat, lng } });
@@ -85,6 +91,7 @@ export function AutoLocationGate() {
         if (settled) return;
         settled = true;
         try { sessionStorage.setItem(SESSION_KEY, "1"); } catch { /* ignore */ }
+        void askNotificationPermission();
       },
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 300000 },
     );

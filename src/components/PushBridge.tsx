@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { BellRing } from "lucide-react";
 import { useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/store";
-import { enablePush, currentToken, deviceName, onForegroundMessage, platform } from "@/lib/firebase-push";
+import { currentToken, deviceName, onForegroundMessage, platform } from "@/lib/firebase-push";
 import { registerPushTokenFn } from "@/lib/push.functions";
 import { isNativeApp, startNativePush } from "@/lib/native-push";
+import { PERMISSION_EVENT } from "@/lib/notification-permission";
 
 /**
  * Keeps the customer's FCM registration token in sync with Supabase, shows
@@ -16,41 +16,15 @@ export function PushBridge() {
   const { customerToken } = useAuth();
   const router = useRouter();
   const lastShown = useRef<string>("");
-  const [ask, setAsk] = useState(false);
+  const [permissionTick, setPermissionTick] = useState(0);
 
-  // Ask for notification access right after login, the same way we ask for
-  // location: a clear card whose button triggers the browser's own prompt
-  // (browsers block the prompt unless it comes from a tap).
+  // Notification access is requested right after the location prompt (see
+  // askNotificationPermission). When it is granted, register this device.
   useEffect(() => {
-    if (!customerToken) { setAsk(false); return; }
-    void (async () => {
-      if (await isNativeApp()) return;
-      if (typeof Notification === "undefined" || Notification.permission !== "default") return;
-      if (window.top !== window.self) return; // preview frame can't show the prompt
-      const later = Number(localStorage.getItem("qk_push_later") || 0);
-      if (Date.now() - later < 3 * 864e5) return;
-      setAsk(true);
-    })();
-  }, [customerToken]);
-
-  const allow = async () => {
-    setAsk(false);
-    const r = await enablePush().catch(() => ({ status: "unsupported" as const }));
-    if (r.status === "registered" && customerToken) {
-      const saved = await registerPushTokenFn({ data: { token: customerToken, fcmToken: r.token, platform: platform(), deviceName: deviceName() } }).then(() => true).catch(() => false);
-      if (!saved) { toast.error("Could not register this device. Try again from Notifications."); return; }
-      toast.success("Notifications turned on");
-    } else if (r.status === "not-configured") {
-      toast.error('Update the Firebase connection and select "Include web push".');
-    } else if (r.status === "denied") {
-      localStorage.setItem("qk_push_later", String(Date.now()));
-      toast.info("Allow notifications in your browser's site settings.");
-    } else if (r.status === "open-in-new-tab") {
-      toast.info("Open the app in its own tab to allow notifications.");
-    } else if (r.status === "unsupported") {
-      toast.info("This device does not support website notifications.");
-    }
-  };
+    const bump = () => setPermissionTick((n) => n + 1);
+    window.addEventListener(PERMISSION_EVENT, bump);
+    return () => window.removeEventListener(PERMISSION_EVENT, bump);
+  }, []);
 
   // 0) Android app: ask for the notification permission, register the phone's
   // FCM token and handle taps natively. No-ops in a normal browser.
@@ -92,7 +66,7 @@ export function PushBridge() {
       }
     })();
     return () => { cancelled = true; };
-  }, [customerToken]);
+  }, [customerToken, permissionTick]);
 
   // 2) Foreground messages -> in-app toast (the SW handles background/closed).
   useEffect(() => {
@@ -110,7 +84,7 @@ export function PushBridge() {
       else unsubscribe = fn;
     });
     return () => { cancelled = true; unsubscribe?.(); };
-  }, [router]);
+  }, [router, permissionTick]);
 
   // 3) Notification taps coming back from the service worker.
   useEffect(() => {
@@ -125,18 +99,5 @@ export function PushBridge() {
     return () => navigator.serviceWorker.removeEventListener("message", onMessageEvent);
   }, [router]);
 
-  if (!ask) return null;
-  return (
-    <div className="fixed inset-0 z-[90] grid place-items-end bg-foreground/40 p-4 sm:place-items-center" role="dialog" aria-modal="true">
-      <div className="w-full max-w-sm rounded-3xl bg-card p-6 text-center shadow-pop">
-        <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-primary/10 text-primary"><BellRing className="h-7 w-7" /></div>
-        <h2 className="mt-3 font-display text-xl font-extrabold">Turn on notifications</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Get live updates when your order is confirmed, your rider is nearby and it's delivered.</p>
-        <div className="mt-5 flex gap-2">
-          <button onClick={() => { localStorage.setItem("qk_push_later", String(Date.now())); setAsk(false); }} className="h-11 flex-1 rounded-xl border border-border font-bold">Not now</button>
-          <button onClick={() => void allow()} className="h-11 flex-1 rounded-xl bg-primary font-bold text-primary-foreground">Allow</button>
-        </div>
-      </div>
-    </div>
-  );
+  return null;
 }

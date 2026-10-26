@@ -13,3 +13,6 @@
 - Store empty session slots by removing the storage key, never as the text "null", so portal auto-redirects cannot mistake an empty slot for a saved session.
 - Open Home-tab sub-pages (e.g. a restaurant) on their own route so the Home section cards never render above a sub-page.
 - Partner portals (seller, delivery) keep their navigation inside the shared PartnerMenu three-line sheet, which also links to customer pages by setting the session customer-home flag; portal layouts clear that flag on mount so reopening Home still routes partners to their portal.
+- Rider self-claim ("I'm taking this order") puts the rider on duty and falls back to a direct single-order assignment when the order cannot join a trip, so claiming never depends on packing or store data.
+- Ask notification permission directly after the first-open location prompt (no in-app card); PushBridge listens for the grant event to register the device.
+- The customer Orders "All" tab is one list of product orders, bookings, food and rides sorted newest-first by creation time.
