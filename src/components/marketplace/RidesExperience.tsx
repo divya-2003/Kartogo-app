@@ -99,7 +99,7 @@ export function RidesExperience({ embedded = false, search = {} }: { embedded?: 
     : search.type === "station" ? PLACES[0] : null);
   const [vehicle, setVehicle] = useState<Vehicle>(search.type === "cab" ? "car" : search.type === "bike" ? "bike" : "auto");
   const [busy, setBusy] = useState(false);
-  const [ride, setRide] = useState<{ id: string; code: string; stage: "searching" | "found"; status?: string; driver?: string; driverPhone?: string } | null>(null);
+  const [ride, setRide] = useState<{ id: string; code: string; stage: "searching" | "found"; status?: string; driver?: string; driverPhone?: string; otp?: string | null; amount?: number } | null>(null);
   const [nearby, setNearby] = useState<Record<Vehicle, number>>({ bike: 0, auto: 0, car: 0 });
 
   // Auto-fill pickup from current location on first load.
@@ -112,15 +112,37 @@ export function RidesExperience({ embedded = false, search = {} }: { embedded?: 
     setNearby({ bike: 3 + Math.floor(Math.random() * 5), auto: 2 + Math.floor(Math.random() * 4), car: 1 + Math.floor(Math.random() * 3) });
   }, []);
 
+  const fromRow = (r: any) => ({
+    id: r.id, code: r.order_code, status: r.status, stage: (r.status === "SEARCHING" ? "searching" : "found") as "searching" | "found",
+    driver: r.driver_name ?? undefined, driverPhone: r.driver_phone ?? undefined, otp: r.ride_otp ?? null, amount: Number(r.amount),
+  });
+
+  // Reopen a ride that is still in progress (e.g. after a reload).
+  useEffect(() => {
+    if (!customerToken || search.drop) return;
+    let alive = true;
+    myServiceOrdersFn({ data: { token: customerToken } }).then(rows => {
+      const r = rows.find(x => x.kind === "RIDE" && ["SEARCHING", "ACCEPTED", "ARRIVED", "IN_TRIP", "AT_DROP"].includes(x.status)) as any;
+      if (!alive || !r) return;
+      setRide(cur => cur ?? fromRow(r));
+      const d = r.details ?? {};
+      if (d.pickup) setPickup(d.pickup);
+      if (d.drop) setDrop(d.drop);
+      if (d.vehicle) setVehicle(d.vehicle);
+    }).catch(() => {});
+    return () => { alive = false; };
+  }, [customerToken]);
+
   // Follow the real ride status as the driver updates it.
   useEffect(() => {
     if (!ride || !customerToken) return;
     const poll = async () => {
       const rows = await myServiceOrdersFn({ data: { token: customerToken } }).catch(() => []);
       const r = rows.find(x => x.id === ride.id) as any;
-      if (r) setRide(cur => cur && { ...cur, status: r.status, stage: r.status === "SEARCHING" ? "searching" : "found", driver: r.driver_name ?? undefined, driverPhone: r.driver_phone ?? undefined });
+      if (r) setRide(cur => cur && { ...cur, ...fromRow(r) });
     };
-    const t = setInterval(poll, 8000);
+    void poll();
+    const t = setInterval(poll, 6000);
     return () => clearInterval(t);
   }, [ride?.id, customerToken]);
 
