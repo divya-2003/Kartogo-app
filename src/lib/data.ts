@@ -49,6 +49,11 @@ export type Product = {
   tags?: string[];
   /** Max units a single customer can buy per order. undefined/0 = no limit. */
   maxPerOrder?: number;
+  /** Best-before / expiry date (YYYY-MM-DD) entered by the seller. */
+  expiryDate?: string;
+  /** Seller that listed the item (set when a seller saves it). */
+  sellerId?: string;
+  sellerName?: string;
 };
 
 export const CATEGORIES: Category[] = [
