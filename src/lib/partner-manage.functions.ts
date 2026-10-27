@@ -68,6 +68,7 @@ const listingSchema = z.object({
   price: z.number().min(0).max(10_000_000),
   duration_min: z.number().int().min(15).max(24 * 60).nullable(),
   is_active: z.boolean(),
+  images: z.array(z.string().trim().min(1).max(2_000_000)).max(8).optional(),
 });
 
 export const saveListingFn = createServerFn({ method: "POST" })
