@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { toast } from "sonner";
 import type { CATEGORIES } from "@/lib/data";
 import type { Product } from "@/lib/data";
-import { ImagePicker } from "@/components/ImagePicker";
+import { MultiImagePicker } from "@/components/ImagePicker";
 
 /**
  * Shared "new / edit item" dialog used by both the supplier inventory and the
@@ -16,13 +16,28 @@ export function ItemEditor({
   categories,
   onSave,
   onClose,
+  requireDetails = false,
 }: {
   product: Product;
   categories: typeof CATEGORIES;
   onSave: (p: Product) => void;
   onClose: () => void;
+  /** Sellers must give a description, at least one photo and an expiry date (or mark it as non-expiring). */
+  requireDetails?: boolean;
 }) {
   const [p, setP] = useState<Product>(product);
+  const [noExpiry, setNoExpiry] = useState(!!product.id && !!product.name && !product.expiryDate);
+  const today = new Date().toISOString().slice(0, 10);
+  const save = () => {
+    if (!p.name.trim() || !p.unit.trim()) { toast.error("Name & unit required"); return; }
+    if (requireDetails) {
+      if (p.description.trim().length < 10) { toast.error("Add a product description (at least 10 characters)"); return; }
+      if (!(p.images?.length || p.image)) { toast.error("Add at least one product photo"); return; }
+      if (!noExpiry && !p.expiryDate) { toast.error("Add the expiry date, or tick \"Doesn't expire\""); return; }
+    }
+    if (p.expiryDate && !noExpiry && p.expiryDate < today) { toast.error("Expiry date is already past"); return; }
+    onSave({ ...p, expiryDate: noExpiry ? undefined : p.expiryDate });
+  };
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={onClose}>
       <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border bg-card p-5 shadow-pop" onClick={(e) => e.stopPropagation()}>
@@ -61,12 +76,25 @@ export function ItemEditor({
               className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
             />
           </label>
-          <ImagePicker value={p.image} onChange={(v) => setP({ ...p, image: v })} />
-          <textarea value={p.description} onChange={(e) => setP({ ...p, description: e.target.value })} rows={3} placeholder="Description" className="rounded-lg border border-input bg-background px-3 py-2 outline-none" />
+          <MultiImagePicker
+            value={p.images ?? (p.image ? [p.image] : [])}
+            onChange={(imgs) => setP({ ...p, images: imgs, image: imgs[0] })}
+          />
+          <label className="block">
+            <div className="mb-1 text-xs font-semibold text-muted-foreground">Description{requireDetails ? " *" : ""}</div>
+            <textarea value={p.description} onChange={(e) => setP({ ...p, description: e.target.value })} rows={3} maxLength={2000} placeholder="What it is, ingredients or material, how to use, pack contents…" className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
+          </label>
+          <div>
+            <div className="mb-1 text-xs font-semibold text-muted-foreground">Expiry / best before{requireDetails ? " *" : ""}</div>
+            <div className="flex items-center gap-3">
+              <input type="date" min={today} disabled={noExpiry} value={noExpiry ? "" : p.expiryDate ?? ""} onChange={(e) => setP({ ...p, expiryDate: e.target.value || undefined })} aria-label="Expiry date" className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring disabled:opacity-50" />
+              <label className="flex shrink-0 items-center gap-2 text-sm"><input type="checkbox" checked={noExpiry} onChange={(e) => setNoExpiry(e.target.checked)} /> Doesn't expire</label>
+            </div>
+          </div>
         </div>
         <div className="mt-5 flex justify-end gap-2">
           <button onClick={onClose} className="rounded-lg border border-border px-4 py-2 text-sm font-semibold">Cancel</button>
-          <button onClick={() => { if (!p.name || !p.unit) { toast.error("Name & unit required"); return; } onSave(p); }} className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">Save</button>
+          <button onClick={save} className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">Save</button>
         </div>
       </div>
     </div>
