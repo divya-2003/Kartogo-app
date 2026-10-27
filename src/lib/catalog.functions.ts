@@ -19,6 +19,9 @@ export type CatalogItemRow = {
   description: string;
   source: string;
   max_per_order: number | null;
+  expiry_date: string | null;
+  seller_id: string | null;
+  seller_name: string | null;
 };
 
 const str = (v: unknown, max = 500): string => String(v ?? "").trim().slice(0, max);
@@ -27,7 +30,7 @@ const num = (v: unknown): number => {
   return Number.isFinite(n) ? n : 0;
 };
 
-type Who = { source: "supplier" | "admin"; categories: string[] | null };
+type Who = { source: "supplier" | "admin"; categories: string[] | null; sellerId?: string; sellerName?: string };
 
 async function authorize(supplierToken: string, adminToken: string): Promise<Who | null> {
   if (adminToken) {
@@ -40,7 +43,7 @@ async function authorize(supplierToken: string, adminToken: string): Promise<Who
     if (s) {
       const { findSupplierById } = await import("./suppliers");
       const sup = findSupplierById(s.supplierId);
-      return { source: "supplier", categories: sup?.categories ?? [] };
+      return { source: "supplier", categories: sup?.categories ?? [], sellerId: sup?.id, sellerName: sup?.name };
     }
   }
   return null;
@@ -118,7 +121,7 @@ export const listCatalogItemsFn = createServerFn({ method: "GET" }).handler(asyn
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("catalog_items")
-    .select("id, name, category, price, mrp, unit, stock, emoji, image, images, description, source, max_per_order")
+    .select("id, name, category, price, mrp, unit, stock, emoji, image, images, description, source, max_per_order, expiry_date, seller_id, seller_name")
     .eq("is_deleted", false)
     .order("created_at", { ascending: true });
   if (error) {
@@ -143,7 +146,7 @@ export const upsertCatalogItemFn = createServerFn({ method: "POST" })
     supplierToken?: string; adminToken?: string;
     id?: string; name?: string; category?: string; price?: number; mrp?: number;
     unit?: string; stock?: number; emoji?: string; image?: string; images?: string[]; description?: string;
-    maxPerOrder?: number | null;
+    maxPerOrder?: number | null; expiryDate?: string | null;
   }) => ({
     supplierToken: data?.supplierToken ? String(data.supplierToken) : "",
     adminToken: data?.adminToken ? String(data.adminToken) : "",
@@ -161,6 +164,7 @@ export const upsertCatalogItemFn = createServerFn({ method: "POST" })
       : [],
     description: str(data?.description, 2000),
     maxPerOrder: data?.maxPerOrder == null || num(data?.maxPerOrder) <= 0 ? null : Math.floor(num(data?.maxPerOrder)),
+    expiryDate: typeof data?.expiryDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(data.expiryDate) ? data.expiryDate : null,
   }))
   .handler(async ({ data }) => {
     const who = await authorize(data.supplierToken, data.adminToken);
@@ -182,6 +186,9 @@ export const upsertCatalogItemFn = createServerFn({ method: "POST" })
       images: data.images,
       description: data.description,
       max_per_order: data.maxPerOrder,
+      expiry_date: data.expiryDate,
+      // Sellers stamp themselves as the seller; admin edits keep the existing seller.
+      ...(who.source === "supplier" ? { seller_id: who.sellerId ?? null, seller_name: who.sellerName ?? null } : {}),
       source: who.source,
       is_deleted: false,
       deleted_at: null,

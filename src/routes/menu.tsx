@@ -24,7 +24,48 @@ import {
   Check,
   Trash2,
   Bell,
+  BellRing,
+  Languages,
+  HelpCircle,
+  X,
 } from "lucide-react";
+
+const LANGS = [
+  { code: "en", label: "English", native: "English", ready: true },
+  { code: "te", label: "Telugu", native: "తెలుగు", ready: false },
+  { code: "hi", label: "Hindi", native: "हिन्दी", ready: false },
+  { code: "ta", label: "Tamil", native: "தமிழ்", ready: false },
+];
+
+function GuestGroup({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="bg-card md:rounded-2xl md:shadow-pop">
+      <h2 className="px-4 pb-1 pt-4 font-display text-lg font-extrabold">{title}</h2>
+      <div>{children}</div>
+    </section>
+  );
+}
+
+function LanguageSheet({ value, onPick, onClose }: { value: string; onPick: (code: string) => void; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 md:items-center" onClick={onClose}>
+      <div role="dialog" aria-label="Select language" className="w-full max-w-md rounded-t-3xl bg-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] md:rounded-3xl" onClick={e => e.stopPropagation()}>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-display text-lg font-extrabold">Select Language</h2>
+          <button onClick={onClose} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full hover:bg-secondary"><X className="h-4 w-4" /></button>
+        </div>
+        <div className="space-y-2">
+          {LANGS.map(l => (
+            <button key={l.code} onClick={() => onPick(l.code)} className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left ${value === l.code ? "border-primary bg-primary/5" : "border-border"}`}>
+              <span><span className="font-semibold">{l.label}</span> <span className="text-sm text-muted-foreground">{l.native}</span></span>
+              {value === l.code ? <Check className="h-5 w-5 text-primary" /> : !l.ready ? <span className="text-xs font-bold text-muted-foreground">Coming soon</span> : null}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/menu")({
   component: MenuPage,
@@ -46,6 +87,16 @@ function MenuPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [amount, setAmount] = useState("");
   const [showAddr, setShowAddr] = useState(false);
+  const [showLang, setShowLang] = useState(false);
+  const [lang, setLang] = useState("en");
+  useEffect(() => { try { setLang(localStorage.getItem("qk_language") || "en"); } catch { /* noop */ } }, []);
+  const pickLang = (code: string) => {
+    const l = LANGS.find(x => x.code === code);
+    if (!l?.ready) { toast.info(`${l?.label ?? "This language"} is coming soon`); return; }
+    setLang(code);
+    try { localStorage.setItem("qk_language", code); } catch { /* noop */ }
+    setShowLang(false);
+  };
 
   // Refer & earn — both friends get Kartogo Cash after a first order of ₹200+.
   const [showRefer, setShowRefer] = useState(false);
@@ -78,16 +129,36 @@ function MenuPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-secondary/40 pb-24">
         <TopBar />
-        <div className="mx-auto max-w-2xl px-5 py-10">
-          <p className="text-sm font-bold uppercase text-primary">Your Kartogo</p>
-          <h1 className="mt-2 font-display text-3xl font-extrabold">One account, easier everyday shopping.</h1>
-          <p className="mt-3 max-w-lg text-muted-foreground">Track every order, manage Kartogo Cash, and get restock alerts.</p>
-          <Link to="/login" search={{ redirect: "/menu" }} className="mt-7 inline-flex h-12 w-full items-center justify-center rounded-md bg-primary px-6 font-bold text-primary-foreground shadow-pop sm:w-auto">
-            Login or register
-          </Link>
+        <div className="mx-auto max-w-2xl space-y-3 md:px-6 md:py-4">
+          <section className="flex items-center justify-between gap-4 bg-card px-5 py-5 md:rounded-2xl md:shadow-pop">
+            <div className="min-w-0">
+              <h2 className="font-display text-xl font-extrabold">Account</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Log in to get exclusive offers</p>
+            </div>
+            <Link to="/login" search={{ redirect: "/menu" }} className="inline-flex h-11 shrink-0 items-center justify-center rounded-md bg-primary px-6 font-bold text-primary-foreground shadow-pop">
+              Log In
+            </Link>
+          </section>
+
+          <GuestGroup title="Account Settings">
+            <Row onClick={() => setShowLang(true)} icon={<Languages className="h-5 w-5" />} label="Select Language" sub={LANGS.find(l => l.code === lang)?.label} />
+            <Row to="/notifications" icon={<BellRing className="h-5 w-5" />} label="Notification Settings" />
+            <Row to="/help" icon={<Headphones className="h-5 w-5" />} label="Help Center" last />
+          </GuestGroup>
+
+          <GuestGroup title="Earn with Kartogo">
+            <Row to="/become-partner" icon={<MStore className="h-5 w-5" />} label="Sell on Kartogo" last />
+          </GuestGroup>
+
+          <GuestGroup title="Feedback & Information">
+            <Row to="/terms" icon={<MFile className="h-5 w-5" />} label="Terms, Policies and Licenses" />
+            <Row to="/support" icon={<HelpCircle className="h-5 w-5" />} label="Browse FAQs" last />
+          </GuestGroup>
         </div>
+        {showLang && <LanguageSheet value={lang} onPick={pickLang} onClose={() => setShowLang(false)} />}
+        <BottomNav />
       </div>
     );
   }

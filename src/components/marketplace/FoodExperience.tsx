@@ -124,8 +124,16 @@ export function FoodExperience({ embedded = false, initialQ = "", initialKitchen
           </div>
         ) : (
           <div className="space-y-3">
+            <figure className="relative overflow-hidden rounded-3xl border border-border bg-secondary shadow-pop">
+              <img src={kitchen.image} alt={`${kitchen.name} food`} className="aspect-[16/9] w-full object-cover md:aspect-[21/9]" />
+              <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-foreground/80 to-transparent px-4 pb-3 pt-10 text-background">
+                <div className="font-display text-xl font-extrabold">{kitchen.name}</div>
+                <div className="text-sm opacity-90">{kitchen.cuisine}</div>
+              </figcaption>
+              {kitchen.tag && <span className="absolute left-3 top-3 rounded-md bg-accent px-2 py-1 text-[11px] font-extrabold text-accent-foreground">{kitchen.tag}</span>}
+            </figure>
             <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-3 text-sm">
-              <span className="text-muted-foreground">{kitchen.cuisine}</span>
+              <span className="text-muted-foreground">{kitchen.pureVeg ? "Pure veg kitchen" : "Veg & non-veg"}</span>
               <span className="flex items-center gap-1 font-bold"><Clock className="h-4 w-4" />{kitchen.eta} min</span>
             </div>
             {kitchen.dishes.filter(d => !vegOnly || d.veg).map(d => {

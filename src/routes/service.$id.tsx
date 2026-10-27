@@ -62,7 +62,7 @@ function ServicePage() {
           </section>
         )}
         <Link to="/store/$id" params={{ id: l.partner.slug }} className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
-          <div><div className="text-xs text-muted-foreground">Provider</div><div className="font-bold">{l.partner.name}</div></div>
+          <div className="min-w-0"><div className="text-xs text-muted-foreground">Provider details</div><div className="font-bold">{l.partner.name}</div>{(l.partner.address || l.partner.service_area) && <div className="truncate text-xs text-muted-foreground">{l.partner.address ?? l.partner.service_area}</div>}<div className="text-xs font-semibold text-leaf">Kartogo verified partner</div></div>
           <span className="text-sm font-bold text-primary">View profile</span>
         </Link>
         <section>

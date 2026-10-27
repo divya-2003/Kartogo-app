@@ -201,6 +201,7 @@ function SupplierInventory() {
           product={editing}
           categories={myCategories}
           onClose={() => setEditing(null)}
+          requireDetails
           onSave={(p) => { upsert(p); setEditing(null); toast.success("Item saved"); }}
         />
       )}

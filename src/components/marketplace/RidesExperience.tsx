@@ -16,6 +16,11 @@ const TOWN_CENTRE = { lat: 15.5057, lng: 80.0499 };
 
 type Place = { label: string; lat: number; lng: number };
 
+const RIDE_HEADLINE: Record<string, string> = {
+  ACCEPTED: "Driver is on the way", ARRIVED: "Your driver has arrived", IN_TRIP: "On the way to drop",
+  AT_DROP: "You've reached your destination", COMPLETED: "Ride completed", CANCELLED: "Ride cancelled",
+};
+
 // Popular Ongole spots for quick selection.
 const PLACES: Place[] = [
   { label: "Ongole Railway Station", lat: 15.5057, lng: 80.0499 },
@@ -99,7 +104,7 @@ export function RidesExperience({ embedded = false, search = {} }: { embedded?: 
     : search.type === "station" ? PLACES[0] : null);
   const [vehicle, setVehicle] = useState<Vehicle>(search.type === "cab" ? "car" : search.type === "bike" ? "bike" : "auto");
   const [busy, setBusy] = useState(false);
-  const [ride, setRide] = useState<{ id: string; code: string; stage: "searching" | "found"; status?: string; driver?: string; driverPhone?: string } | null>(null);
+  const [ride, setRide] = useState<{ id: string; code: string; stage: "searching" | "found"; status?: string; driver?: string; driverPhone?: string; otp?: string | null; amount?: number } | null>(null);
   const [nearby, setNearby] = useState<Record<Vehicle, number>>({ bike: 0, auto: 0, car: 0 });
 
   // Auto-fill pickup from current location on first load.
@@ -112,15 +117,37 @@ export function RidesExperience({ embedded = false, search = {} }: { embedded?: 
     setNearby({ bike: 3 + Math.floor(Math.random() * 5), auto: 2 + Math.floor(Math.random() * 4), car: 1 + Math.floor(Math.random() * 3) });
   }, []);
 
+  const fromRow = (r: any) => ({
+    id: r.id, code: r.order_code, status: r.status, stage: (r.status === "SEARCHING" ? "searching" : "found") as "searching" | "found",
+    driver: r.driver_name ?? undefined, driverPhone: r.driver_phone ?? undefined, otp: r.ride_otp ?? null, amount: Number(r.amount),
+  });
+
+  // Reopen a ride that is still in progress (e.g. after a reload).
+  useEffect(() => {
+    if (!customerToken || search.drop) return;
+    let alive = true;
+    myServiceOrdersFn({ data: { token: customerToken } }).then(rows => {
+      const r = rows.find(x => x.kind === "RIDE" && ["SEARCHING", "ACCEPTED", "ARRIVED", "IN_TRIP", "AT_DROP"].includes(x.status)) as any;
+      if (!alive || !r) return;
+      setRide(cur => cur ?? fromRow(r));
+      const d = r.details ?? {};
+      if (d.pickup) setPickup(d.pickup);
+      if (d.drop) setDrop(d.drop);
+      if (d.vehicle) setVehicle(d.vehicle);
+    }).catch(() => {});
+    return () => { alive = false; };
+  }, [customerToken]);
+
   // Follow the real ride status as the driver updates it.
   useEffect(() => {
     if (!ride || !customerToken) return;
     const poll = async () => {
       const rows = await myServiceOrdersFn({ data: { token: customerToken } }).catch(() => []);
       const r = rows.find(x => x.id === ride.id) as any;
-      if (r) setRide(cur => cur && { ...cur, status: r.status, stage: r.status === "SEARCHING" ? "searching" : "found", driver: r.driver_name ?? undefined, driverPhone: r.driver_phone ?? undefined });
+      if (r) setRide(cur => cur && { ...cur, ...fromRow(r) });
     };
-    const t = setInterval(poll, 8000);
+    void poll();
+    const t = setInterval(poll, 6000);
     return () => clearInterval(t);
   }, [ride?.id, customerToken]);
 
@@ -162,18 +189,36 @@ export function RidesExperience({ embedded = false, search = {} }: { embedded?: 
           ) : (
             <>
               <div className="text-6xl">{v.icon}</div>
-              <h2 className="font-display text-xl font-extrabold">{ride.status === "ARRIVED" ? "Your driver has arrived" : ride.status === "IN_TRIP" ? "On the way to drop" : ride.status === "COMPLETED" ? "Ride completed" : ride.status === "CANCELLED" ? "Ride cancelled" : "Driver is on the way"}</h2>
+              <h2 className="font-display text-xl font-extrabold">{RIDE_HEADLINE[ride.status ?? ""] ?? "Driver is on the way"}</h2>
               {ride.driver && <p className="text-sm font-semibold">{ride.driver}{ride.driverPhone ? ` · ${ride.driverPhone}` : ""}</p>}
               <p className="text-sm text-muted-foreground">Booking #{ride.code}</p>
             </>
           )}
+          {ride.otp && (ride.status === "SEARCHING" || ride.status === "ACCEPTED" || ride.status === "ARRIVED") && (
+            <div className="rounded-2xl border-2 border-primary bg-primary/5 p-4">
+              <div className="text-xs font-bold uppercase text-primary">Your ride code</div>
+              <div className="mt-1 font-display text-4xl font-extrabold tracking-[0.4em]">{ride.otp}</div>
+              <p className="mt-1 text-xs text-muted-foreground">Share this code with your driver at pickup to start the ride. Don't share it before you're in the vehicle.</p>
+            </div>
+          )}
+          {(ride.status === "AT_DROP" || ride.status === "COMPLETED") && (
+            <div className="rounded-2xl bg-leaf/15 p-4">
+              <div className="text-xs font-bold uppercase text-leaf">{ride.status === "AT_DROP" ? "Pay your driver" : "Paid"}</div>
+              <div className="mt-1 font-display text-4xl font-extrabold">{formatINR(ride.amount ?? quote(vehicle, km ?? 1).fare)}</div>
+              <p className="mt-1 text-xs text-muted-foreground">{ride.status === "AT_DROP" ? "Pay by cash or UPI." : "Thanks for riding with us."}</p>
+            </div>
+          )}
           <div className="rounded-2xl border border-border bg-card p-4 text-left text-sm">
             <div className="flex gap-2"><span className="mt-1 h-2.5 w-2.5 rounded-full bg-leaf" />{pickup?.label}</div>
             <div className="mt-2 flex gap-2"><span className="mt-1 h-2.5 w-2.5 rounded-sm bg-destructive" />{drop?.label}</div>
-            <div className="mt-3 flex justify-between border-t border-border pt-2 font-bold"><span>Fare</span><span>{formatINR(quote(vehicle, km ?? 1).fare)}</span></div>
+            <div className="mt-3 flex justify-between border-t border-border pt-2 font-bold"><span>Fare</span><span>{formatINR(ride.amount ?? quote(vehicle, km ?? 1).fare)}</span></div>
           </div>
           <div className="flex gap-2">
-            <Button size="natural" variant="ghost" onClick={cancel} className="h-auto whitespace-normal h-12 flex-1 rounded-xl border border-destructive font-bold text-destructive">Cancel ride</Button>
+            {(ride.status === "COMPLETED" || ride.status === "CANCELLED") ? (
+              <Button size="natural" variant="ghost" onClick={() => setRide(null)} className="h-12 flex-1 rounded-xl border border-border font-bold">Book another ride</Button>
+            ) : (!ride.status || ride.status === "SEARCHING") ? (
+              <Button size="natural" variant="ghost" onClick={cancel} className="h-auto whitespace-normal h-12 flex-1 rounded-xl border border-destructive font-bold text-destructive">Cancel ride</Button>
+            ) : null}
             <Button size="natural" variant="ghost" onClick={() => nav({ to: "/orders", search: { tab: "bookings" } })} className="h-12 flex-1 rounded-xl bg-primary font-bold text-primary-foreground">My Orders</Button>
           </div>
         </div>

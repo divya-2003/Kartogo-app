@@ -1,14 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { NEXT_STATUS, checkRideOtp } from "./ride-otp";
 
 // Food deliveries and rides handled by real delivery partners.
 // FOOD: PLACED -> ACCEPTED -> PICKED_UP -> DELIVERED
-// RIDE: SEARCHING -> ACCEPTED -> ARRIVED -> IN_TRIP -> COMPLETED
+// RIDE: SEARCHING -> ACCEPTED -> ARRIVED -> (customer start code) IN_TRIP -> AT_DROP (collect fare) -> COMPLETED
 
-export const NEXT_STATUS: Record<string, Record<string, string>> = {
-  FOOD: { ACCEPTED: "PICKED_UP", PICKED_UP: "DELIVERED" },
-  RIDE: { ACCEPTED: "ARRIVED", ARRIVED: "IN_TRIP", IN_TRIP: "COMPLETED" },
-};
+export { NEXT_STATUS };
 
 async function db() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -23,7 +21,7 @@ async function driverSession(token: string) {
   return s;
 }
 const OPEN = ["PLACED", "SEARCHING"];
-const ACTIVE = ["ACCEPTED", "PICKED_UP", "ARRIVED", "IN_TRIP"];
+const ACTIVE = ["ACCEPTED", "PICKED_UP", "ARRIVED", "IN_TRIP", "AT_DROP"];
 
 function maskPhone(p?: string | null) { return p ? `••••••${String(p).slice(-4)}` : null; }
 
@@ -43,7 +41,11 @@ export const listRiderJobsFn = createServerFn({ method: "POST" })
       d.from("service_orders").select("*").in("status", OPEN).is("driver_id", null).order("created_at", { ascending: false }).limit(30),
       d.from("service_orders").select("*").eq("driver_id", s.driverId).order("created_at", { ascending: false }).limit(40),
     ]);
-    const clean = (r: any) => ({ ...r, customer_phone: maskPhone(r.customer_phone) });
+    // The start code belongs to the customer; drivers must ask for it.
+    const clean = (r: any) => {
+      const { ride_otp: _otp, ...rest } = r;
+      return { ...rest, customer_phone: maskPhone(r.customer_phone), needs_otp: r.kind === "RIDE" && !!_otp && !r.otp_verified_at };
+    };
     return { open: (open ?? []).map(clean), mine: (mine ?? []).map(clean) } as { open: any[]; mine: any[] };
   });
 
@@ -67,7 +69,7 @@ export const acceptRiderJobFn = createServerFn({ method: "POST" })
   });
 
 export const advanceRiderJobFn = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => z.object({ token: z.string().min(10), id: z.string().uuid() }).parse(d))
+  .inputValidator((d: unknown) => z.object({ token: z.string().min(10), id: z.string().uuid(), otp: z.string().max(8).optional() }).parse(d))
   .handler(async ({ data }) => {
     const s = await driverSession(data.token);
     const d = await db();
@@ -75,12 +77,31 @@ export const advanceRiderJobFn = createServerFn({ method: "POST" })
     if (!cur) return { ok: false as const, error: "Job not found." };
     const next = NEXT_STATUS[cur.kind]?.[cur.status];
     if (!next) return { ok: false as const, error: "Nothing more to update." };
+    const now = new Date().toISOString();
+    const extra: Record<string, unknown> = {};
+    // Starting a ride needs the customer's 4-digit code.
+    if (cur.kind === "RIDE" && next === "IN_TRIP") {
+      const check = checkRideOtp(cur.ride_otp, data.otp, Number(cur.otp_attempts ?? 0));
+      if (!check.ok) {
+        if (check.reason === "wrong") {
+          await d.from("service_orders").update({ otp_attempts: Number(cur.otp_attempts ?? 0) + 1 }).eq("id", data.id);
+          return { ok: false as const, error: `Wrong code. ${check.attemptsLeft} ${check.attemptsLeft === 1 ? "try" : "tries"} left.` };
+        }
+        if (check.reason === "locked") return { ok: false as const, error: "Too many wrong codes. Please contact Kartogo support." };
+        return { ok: false as const, error: "Ask the customer for their 4-digit ride code." };
+      }
+      extra.otp_verified_at = now;
+    }
     const hist = Array.isArray(cur.status_history) ? cur.status_history : [];
-    await d.from("service_orders").update({ status: next, status_history: [...hist, { status: next, at: new Date().toISOString() }] })
-      .eq("id", data.id).eq("status", cur.status);
+    const { data: upd } = await d.from("service_orders").update({ status: next, ...extra, status_history: [...hist, { status: next, at: now }] })
+      .eq("id", data.id).eq("status", cur.status).select("id").maybeSingle();
+    if (!upd) return { ok: false as const, error: "This job was updated elsewhere. Refreshing…" };
+    const fare = `₹${Math.round(Number(cur.amount))}`;
     const msg: Record<string, string> = {
       PICKED_UP: "Your food is picked up and on the way.", DELIVERED: "Your food order was delivered. Enjoy!",
-      ARRIVED: "Your driver has arrived at the pickup point.", IN_TRIP: "Your ride has started.", COMPLETED: "Ride completed. Thanks for riding with Kartogo!",
+      ARRIVED: "Your driver has arrived at the pickup point. Share your ride code to start.", IN_TRIP: "Your ride has started.",
+      AT_DROP: `You've reached your destination. Please pay ${fare} to your driver.`,
+      COMPLETED: "Ride completed. Thanks for riding with Kartogo!",
     };
     await notify(cur.customer_phone, `#${cur.order_code} update`, msg[next] ?? next);
     return { ok: true as const, status: next };

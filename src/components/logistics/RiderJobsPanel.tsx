@@ -6,11 +6,27 @@ import { listRiderJobsFn, acceptRiderJobFn, advanceRiderJobFn, updateRiderLocati
 
 const LABEL: Record<string, string> = {
   PLACED: "New", SEARCHING: "New request", ACCEPTED: "Accepted", PICKED_UP: "Picked up", ARRIVED: "At pickup",
-  IN_TRIP: "On trip", DELIVERED: "Delivered", COMPLETED: "Completed", CANCELLED: "Cancelled",
+  IN_TRIP: "On trip", AT_DROP: "At destination", DELIVERED: "Delivered", COMPLETED: "Completed", CANCELLED: "Cancelled",
 };
 const ACTION: Record<string, string> = {
-  PICKED_UP: "Mark picked up", DELIVERED: "Mark delivered", ARRIVED: "I've arrived at pickup", IN_TRIP: "Start ride", COMPLETED: "Complete ride",
+  PICKED_UP: "Mark picked up", DELIVERED: "Mark delivered", ARRIVED: "I've arrived at pickup", IN_TRIP: "Verify code & start ride",
+  AT_DROP: "Reached destination", COMPLETED: "Payment collected · Complete ride",
 };
+
+/** Customer's 4-digit ride code, typed by the driver at pickup. */
+function OtpInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <label className="mt-3 block rounded-lg border border-border bg-background p-3">
+      <span className="block text-xs font-bold text-muted-foreground">Ask the customer for their 4-digit ride code</span>
+      <input
+        inputMode="numeric" autoComplete="one-time-code" maxLength={4} value={value}
+        onChange={e => onChange(e.target.value.replace(/\D/g, "").slice(0, 4))}
+        placeholder="• • • •" aria-label="Ride code"
+        className="mt-2 w-full rounded-md border border-input bg-card px-3 py-2 text-center font-display text-2xl font-extrabold tracking-[0.6em] outline-none focus:ring-2 focus:ring-ring"
+      />
+    </label>
+  );
+}
 
 function JobDetails({ o }: { o: any }) {
   const d = o.details ?? {};
@@ -34,6 +50,7 @@ function JobDetails({ o }: { o: any }) {
 export function RiderJobsPanel({ token }: { token: string }) {
   const [jobs, setJobs] = useState<{ open: any[]; mine: any[] }>({ open: [], mine: [] });
   const [busy, setBusy] = useState<string | null>(null);
+  const [otp, setOtp] = useState<Record<string, string>>({});
   const load = useCallback(async () => {
     try { setJobs(await listRiderJobsFn({ data: { token } })); } catch { /* ignore */ }
   }, [token]);
@@ -67,17 +84,27 @@ export function RiderJobsPanel({ token }: { token: string }) {
       {active.map(o => {
         const next = NEXT_STATUS[o.kind][o.status];
         const d = o.details ?? {};
-        const dest = o.kind === "RIDE" ? (o.status === "IN_TRIP" ? d.drop : d.pickup) : null;
+        const dest = o.kind === "RIDE" ? (o.status === "IN_TRIP" || o.status === "AT_DROP" ? d.drop : d.pickup) : null;
+        const askOtp = o.kind === "RIDE" && next === "IN_TRIP" && o.needs_otp;
+        const code = otp[o.id] ?? "";
         return (
           <article key={o.id} className="rounded-xl border-2 border-primary bg-primary/5 p-3">
             <div className="flex items-center justify-between text-xs font-bold"><span>{o.kind === "RIDE" ? "🛺 Ride" : "🍛 Food"} · #{o.order_code}</span><span className="rounded-full bg-primary px-2 py-0.5 text-primary-foreground">{LABEL[o.status]}</span></div>
             <div className="mt-1 font-semibold">{o.title} · {o.customer_name ?? "Customer"}</div>
             <JobDetails o={o} />
+            {o.status === "AT_DROP" && (
+              <div className="mt-3 rounded-lg bg-leaf/15 p-3 text-center">
+                <div className="text-xs font-bold uppercase text-leaf">Collect from customer</div>
+                <div className="font-display text-3xl font-extrabold">{formatINR(Number(o.amount))}</div>
+                <div className="text-xs text-muted-foreground">Cash or UPI</div>
+              </div>
+            )}
+            {askOtp && <OtpInput value={code} onChange={v => setOtp(m => ({ ...m, [o.id]: v }))} />}
             <div className="mt-3 flex gap-2">
-              {dest?.lat != null && (
+              {dest?.lat != null && o.status !== "AT_DROP" && (
                 <a target="_blank" rel="noreferrer" href={`https://www.google.com/maps/dir/?api=1&destination=${dest.lat},${dest.lng}`} className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-border px-3 py-2 text-sm font-bold"><Navigation className="h-4 w-4" />Navigate</a>
               )}
-              <button disabled={busy === o.id} onClick={() => run(o.id, () => advanceRiderJobFn({ data: { token, id: o.id } }))} className="flex flex-1 items-center justify-center rounded-lg bg-primary px-3 py-2 text-sm font-bold text-primary-foreground disabled:opacity-50">
+              <button disabled={busy === o.id || (askOtp && code.length !== 4)} onClick={() => run(o.id, () => advanceRiderJobFn({ data: { token, id: o.id, otp: askOtp ? code : undefined } }))} className="flex flex-1 items-center justify-center rounded-lg bg-primary px-3 py-2 text-sm font-bold text-primary-foreground disabled:opacity-50">
                 {busy === o.id ? <Loader2 className="h-4 w-4 animate-spin" /> : ACTION[next]}
               </button>
             </div>

@@ -7,6 +7,7 @@ import { getProductRatingsFn } from "@/lib/reviews.functions";
 import { Heart, Star, ChevronLeft, ChevronRight, Search, Share2, Package, PackageCheck, Info, Timer, ShoppingCart, Minus, Plus } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ProductShareDialog } from "@/components/ProductShareDialog";
+import { SellerCard, ExpiryLine } from "@/components/SellerCard";
 
 /** Swipeable image gallery: scroll-snap strip with dots and arrows. */
 function ProductGallery({ images, name, emoji, className = "" }: { images: string[]; name: string; emoji: string; className?: string }) {
@@ -322,6 +323,7 @@ function ProductPage() {
           {!!p.maxPerOrder && (
             <div className="mt-2 text-sm font-semibold text-muted-foreground">Max {p.maxPerOrder} per order</div>
           )}
+          <ExpiryLine date={p.expiryDate} />
           {p.stock <= 0 && <div className="mt-2 text-sm font-bold text-destructive">Out of stock</div>}
           {lowStock && <div className="mt-2 inline-flex rounded-lg bg-saffron/20 px-2.5 py-1 text-sm font-extrabold text-foreground">Only {p.stock} left — order soon</div>}
           <nav className="mt-3 text-xs text-muted-foreground">
@@ -330,6 +332,8 @@ function ProductPage() {
             <span className="text-foreground">{p.name}</span>
           </nav>
         </div>
+
+        <SellerCard productId={p.id} className="mt-3" />
 
         {/* ---------- Frequently bought together (kept, moved below details) ---------- */}
         {addAll.length > 0 && (
@@ -493,6 +497,7 @@ function ProductPage() {
             {!!p.maxPerOrder && (
               <div className="mt-2 text-sm font-semibold text-muted-foreground">Max {p.maxPerOrder} per order</div>
             )}
+            <ExpiryLine date={p.expiryDate} />
             {p.stock <= 0 && <div className="mt-2 text-sm font-bold text-destructive">Out of stock</div>}
             {lowStock && <div className="mt-2 inline-flex rounded-lg bg-saffron/20 px-2.5 py-1 text-sm font-extrabold text-foreground">Only {p.stock} left — order soon</div>}
             <nav className="mt-3 text-xs text-muted-foreground">
@@ -501,6 +506,7 @@ function ProductPage() {
               <span className="text-foreground">{p.name}</span>
             </nav>
           </div>
+          <SellerCard productId={p.id} className="mt-4 border border-border shadow-none" />
         </div>
 
         {/* FBT full width on desktop */}

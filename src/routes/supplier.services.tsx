@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MultiImagePicker } from "@/components/ImagePicker";
 import { myPartnersFn, saveListingFn, saveStaffFn, updatePartnerAvailabilityFn } from "@/lib/partner-manage.functions";
 
 export const Route = createFileRoute("/supplier/services")({
@@ -108,18 +109,22 @@ function PartnerCard({ p, reload }: { p: any; reload: () => void }) {
 function ListingsBlock({ p, reload }: { p: any; reload: () => void }) {
   const [edit, setEdit] = useState<any | null>(null);
   const save = async () => {
+    if (String(edit.name ?? "").trim().length < 2) return void toast.error("Add the service name");
+    if (String(edit.description ?? "").trim().length < 10) return void toast.error("Add a description (at least 10 characters)");
+    if (!(edit.images ?? []).length) return void toast.error("Add at least one photo");
     const r = await saveListingFn({ data: { token: getToken()!, partnerId: p.id, id: edit.id, listing: {
       name: edit.name ?? "", description: edit.description ?? "", price: Number(edit.price ?? edit.starting_price ?? 0),
       duration_min: edit.duration_min ? Number(edit.duration_min) : null, is_active: edit.is_active ?? true,
+      images: edit.images ?? [],
     } } });
     if (r.ok) { toast.success("Listing saved"); setEdit(null); reload(); } else toast.error(r.error ?? "Failed");
   };
   return (
     <div className="space-y-3 rounded-xl border border-border p-4">
-      <div className="flex items-center justify-between"><h3 className="font-semibold">Listings</h3><Button size="sm" variant="outline" onClick={() => setEdit({ is_active: true })}>Add listing</Button></div>
+      <div className="flex items-center justify-between"><h3 className="font-semibold">Listings</h3><Button size="sm" variant="outline" onClick={() => setEdit({ is_active: true, images: [] })}>Add listing</Button></div>
       {p.listings.map((l: any) => (
         <div key={l.id} className="flex items-center gap-3 border-t border-border pt-2 text-sm">
-          <div className="min-w-0 flex-1"><div className="truncate font-semibold">{l.name}</div><div className="text-xs text-muted-foreground">₹{l.price ?? l.starting_price ?? 0}{l.duration_min ? ` · ${l.duration_min} min` : ""}{l.is_active ? "" : " · Hidden"}</div></div>
+          {l.images?.[0] ? <img src={l.images[0]} alt="" className="h-10 w-10 shrink-0 rounded-md object-cover" /> : <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-secondary text-lg">{l.icon ?? "🛎️"}</span>}<div className="min-w-0 flex-1"><div className="truncate font-semibold">{l.name}</div><div className="text-xs text-muted-foreground">₹{l.price ?? l.starting_price ?? 0}{l.duration_min ? ` · ${l.duration_min} min` : ""}{l.is_active ? "" : " · Hidden"}</div></div>
           <Button size="sm" variant="ghost" onClick={() => setEdit({ ...l })}>Edit</Button>
         </div>
       ))}
@@ -129,7 +134,8 @@ function ListingsBlock({ p, reload }: { p: any; reload: () => void }) {
           <Input placeholder="Price ₹" type="number" value={edit.price ?? edit.starting_price ?? ""} onChange={e => setEdit({ ...edit, price: e.target.value })} />
           <Input placeholder="Duration (min)" type="number" value={edit.duration_min ?? ""} onChange={e => setEdit({ ...edit, duration_min: e.target.value })} />
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={edit.is_active ?? true} onChange={e => setEdit({ ...edit, is_active: e.target.checked })} /> Visible to customers</label>
-          <Input className="sm:col-span-2" placeholder="Description" value={edit.description ?? ""} onChange={e => setEdit({ ...edit, description: e.target.value })} />
+          <textarea className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring sm:col-span-2" rows={3} maxLength={1000} placeholder="Description * — what's included, who it's for, how long it takes" value={edit.description ?? ""} onChange={e => setEdit({ ...edit, description: e.target.value })} />
+          <div className="sm:col-span-2"><MultiImagePicker value={edit.images ?? []} onChange={imgs => setEdit({ ...edit, images: imgs })} /></div>
           <div className="flex gap-2 sm:col-span-2"><Button size="sm" onClick={save}>Save</Button><Button size="sm" variant="ghost" onClick={() => setEdit(null)}>Cancel</Button></div>
         </div>
       )}

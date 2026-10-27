@@ -11,9 +11,9 @@ export const Route = createFileRoute("/admin/food-rides")({
 
 const LABEL: Record<string, string> = {
   PLACED: "Waiting for rider", SEARCHING: "Finding driver", ACCEPTED: "Partner assigned", PICKED_UP: "Picked up",
-  ARRIVED: "Driver at pickup", IN_TRIP: "On trip", DELIVERED: "Delivered", COMPLETED: "Completed", CANCELLED: "Cancelled",
+  ARRIVED: "Driver at pickup", IN_TRIP: "On trip", AT_DROP: "Collecting fare", DELIVERED: "Delivered", COMPLETED: "Completed", CANCELLED: "Cancelled",
 };
-const ACTIVE = ["PLACED", "SEARCHING", "ACCEPTED", "PICKED_UP", "ARRIVED", "IN_TRIP"];
+const ACTIVE = ["PLACED", "SEARCHING", "ACCEPTED", "PICKED_UP", "ARRIVED", "IN_TRIP", "AT_DROP"];
 const token = () => { try { return JSON.parse(localStorage.getItem("qk_admin_token") || "null") ?? ""; } catch { return ""; } };
 
 function AdminFoodRides() {
