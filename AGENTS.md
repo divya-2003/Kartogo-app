@@ -17,3 +17,4 @@
 - Ask notification permission directly after the first-open location prompt (no in-app card); PushBridge listens for the grant event to register the device.
 - The customer Orders "All" tab is one list of product orders, bookings, food and rides sorted newest-first by creation time.
 - Shared server helpers called from several server functions live in *.server.ts files, never as plain exports of *.functions.ts files, because those exports (and their server-only imports) are kept in the browser bundle and break the build.
+- Ride start codes are generated and checked only on the server; driver job lists strip the code so riders must get it from the customer, and the fare is collected in a separate at-destination step before completion.

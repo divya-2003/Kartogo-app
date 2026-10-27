@@ -80,3 +80,11 @@
 - [x] Unserviceable page fits one screen with "Go to standard delivery" under the request button
 - [x] Single scrollable cart (items, savings zone, price details) with a fixed total bar
 - [ ] Check the seller/delivery menus with a real partner login — needs a partner session
+
+## Oct 26 batch
+- [x] Sellers must add description, photos and expiry date for products; description and photos for services
+- [x] Seller details on customer product pages; provider details on service pages
+- [x] Photo space on each restaurant page
+- [x] Ride start code (customer → driver at pickup) and fare-collection step at destination, shown to both sides
+- [x] Guest Profile page: Account Settings, Earn with Kartogo, Feedback & Information
+- [ ] Test a real ride end-to-end with a rider and customer account — needs both sessions
