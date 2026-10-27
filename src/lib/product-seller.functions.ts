@@ -32,7 +32,6 @@ export const getProductSellerFn = createServerFn({ method: "GET" })
       .from("inventory_items")
       .select("current_stock, reserved_stock, partner_markets(name, address, is_active)")
       .eq("product_id", data.productId)
-      .eq("is_deleted", false)
       .limit(10);
     const stores = ((inv ?? []) as any[])
       .filter(i => i.partner_markets?.is_active && Number(i.current_stock) - Number(i.reserved_stock) > 0)
