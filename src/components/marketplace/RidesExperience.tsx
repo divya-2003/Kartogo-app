@@ -16,6 +16,11 @@ const TOWN_CENTRE = { lat: 15.5057, lng: 80.0499 };
 
 type Place = { label: string; lat: number; lng: number };
 
+const RIDE_HEADLINE: Record<string, string> = {
+  ACCEPTED: "Driver is on the way", ARRIVED: "Your driver has arrived", IN_TRIP: "On the way to drop",
+  AT_DROP: "You've reached your destination", COMPLETED: "Ride completed", CANCELLED: "Ride cancelled",
+};
+
 // Popular Ongole spots for quick selection.
 const PLACES: Place[] = [
   { label: "Ongole Railway Station", lat: 15.5057, lng: 80.0499 },
@@ -184,18 +189,36 @@ export function RidesExperience({ embedded = false, search = {} }: { embedded?: 
           ) : (
             <>
               <div className="text-6xl">{v.icon}</div>
-              <h2 className="font-display text-xl font-extrabold">{ride.status === "ARRIVED" ? "Your driver has arrived" : ride.status === "IN_TRIP" ? "On the way to drop" : ride.status === "COMPLETED" ? "Ride completed" : ride.status === "CANCELLED" ? "Ride cancelled" : "Driver is on the way"}</h2>
+              <h2 className="font-display text-xl font-extrabold">{RIDE_HEADLINE[ride.status ?? ""] ?? "Driver is on the way"}</h2>
               {ride.driver && <p className="text-sm font-semibold">{ride.driver}{ride.driverPhone ? ` · ${ride.driverPhone}` : ""}</p>}
               <p className="text-sm text-muted-foreground">Booking #{ride.code}</p>
             </>
           )}
+          {ride.otp && (ride.status === "SEARCHING" || ride.status === "ACCEPTED" || ride.status === "ARRIVED") && (
+            <div className="rounded-2xl border-2 border-primary bg-primary/5 p-4">
+              <div className="text-xs font-bold uppercase text-primary">Your ride code</div>
+              <div className="mt-1 font-display text-4xl font-extrabold tracking-[0.4em]">{ride.otp}</div>
+              <p className="mt-1 text-xs text-muted-foreground">Share this code with your driver at pickup to start the ride. Don't share it before you're in the vehicle.</p>
+            </div>
+          )}
+          {(ride.status === "AT_DROP" || ride.status === "COMPLETED") && (
+            <div className="rounded-2xl bg-leaf/15 p-4">
+              <div className="text-xs font-bold uppercase text-leaf">{ride.status === "AT_DROP" ? "Pay your driver" : "Paid"}</div>
+              <div className="mt-1 font-display text-4xl font-extrabold">{formatINR(ride.amount ?? quote(vehicle, km ?? 1).fare)}</div>
+              <p className="mt-1 text-xs text-muted-foreground">{ride.status === "AT_DROP" ? "Pay by cash or UPI." : "Thanks for riding with us."}</p>
+            </div>
+          )}
           <div className="rounded-2xl border border-border bg-card p-4 text-left text-sm">
             <div className="flex gap-2"><span className="mt-1 h-2.5 w-2.5 rounded-full bg-leaf" />{pickup?.label}</div>
             <div className="mt-2 flex gap-2"><span className="mt-1 h-2.5 w-2.5 rounded-sm bg-destructive" />{drop?.label}</div>
-            <div className="mt-3 flex justify-between border-t border-border pt-2 font-bold"><span>Fare</span><span>{formatINR(quote(vehicle, km ?? 1).fare)}</span></div>
+            <div className="mt-3 flex justify-between border-t border-border pt-2 font-bold"><span>Fare</span><span>{formatINR(ride.amount ?? quote(vehicle, km ?? 1).fare)}</span></div>
           </div>
           <div className="flex gap-2">
-            <Button size="natural" variant="ghost" onClick={cancel} className="h-auto whitespace-normal h-12 flex-1 rounded-xl border border-destructive font-bold text-destructive">Cancel ride</Button>
+            {(ride.status === "COMPLETED" || ride.status === "CANCELLED") ? (
+              <Button size="natural" variant="ghost" onClick={() => setRide(null)} className="h-12 flex-1 rounded-xl border border-border font-bold">Book another ride</Button>
+            ) : (!ride.status || ride.status === "SEARCHING") ? (
+              <Button size="natural" variant="ghost" onClick={cancel} className="h-auto whitespace-normal h-12 flex-1 rounded-xl border border-destructive font-bold text-destructive">Cancel ride</Button>
+            ) : null}
             <Button size="natural" variant="ghost" onClick={() => nav({ to: "/orders", search: { tab: "bookings" } })} className="h-12 flex-1 rounded-xl bg-primary font-bold text-primary-foreground">My Orders</Button>
           </div>
         </div>
