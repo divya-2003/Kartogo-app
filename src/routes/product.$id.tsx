@@ -506,6 +506,7 @@ function ProductPage() {
               <span className="text-foreground">{p.name}</span>
             </nav>
           </div>
+          <SellerCard productId={p.id} className="mt-4 border border-border shadow-none" />
         </div>
 
         {/* FBT full width on desktop */}
