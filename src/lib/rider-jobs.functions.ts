@@ -1,14 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { NEXT_STATUS, checkRideOtp } from "./ride-otp";
 
 // Food deliveries and rides handled by real delivery partners.
 // FOOD: PLACED -> ACCEPTED -> PICKED_UP -> DELIVERED
-// RIDE: SEARCHING -> ACCEPTED -> ARRIVED -> IN_TRIP -> COMPLETED
+// RIDE: SEARCHING -> ACCEPTED -> ARRIVED -> (customer start code) IN_TRIP -> AT_DROP (collect fare) -> COMPLETED
 
-export const NEXT_STATUS: Record<string, Record<string, string>> = {
-  FOOD: { ACCEPTED: "PICKED_UP", PICKED_UP: "DELIVERED" },
-  RIDE: { ACCEPTED: "ARRIVED", ARRIVED: "IN_TRIP", IN_TRIP: "COMPLETED" },
-};
+export { NEXT_STATUS };
 
 async function db() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -23,7 +21,7 @@ async function driverSession(token: string) {
   return s;
 }
 const OPEN = ["PLACED", "SEARCHING"];
-const ACTIVE = ["ACCEPTED", "PICKED_UP", "ARRIVED", "IN_TRIP"];
+const ACTIVE = ["ACCEPTED", "PICKED_UP", "ARRIVED", "IN_TRIP", "AT_DROP"];
 
 function maskPhone(p?: string | null) { return p ? `••••••${String(p).slice(-4)}` : null; }
 
@@ -43,7 +41,11 @@ export const listRiderJobsFn = createServerFn({ method: "POST" })
       d.from("service_orders").select("*").in("status", OPEN).is("driver_id", null).order("created_at", { ascending: false }).limit(30),
       d.from("service_orders").select("*").eq("driver_id", s.driverId).order("created_at", { ascending: false }).limit(40),
     ]);
-    const clean = (r: any) => ({ ...r, customer_phone: maskPhone(r.customer_phone) });
+    // The start code belongs to the customer; drivers must ask for it.
+    const clean = (r: any) => {
+      const { ride_otp: _otp, ...rest } = r;
+      return { ...rest, customer_phone: maskPhone(r.customer_phone), needs_otp: r.kind === "RIDE" && !!_otp && !r.otp_verified_at };
+    };
     return { open: (open ?? []).map(clean), mine: (mine ?? []).map(clean) } as { open: any[]; mine: any[] };
   });
 
