@@ -75,7 +75,7 @@ export function BookingsList() {
   );
 }
 
-const SO_LABEL: Record<string, string> = { PLACED: "Order placed", SEARCHING: "Finding driver", ACCEPTED: "Partner assigned", PICKED_UP: "On the way", ARRIVED: "Driver arrived", IN_TRIP: "On trip", CANCELLED: "Cancelled", DELIVERED: "Delivered", COMPLETED: "Completed" };
+const SO_LABEL: Record<string, string> = { PLACED: "Order placed", SEARCHING: "Finding driver", ACCEPTED: "Partner assigned", PICKED_UP: "On the way", ARRIVED: "Driver arrived", IN_TRIP: "On trip", AT_DROP: "Pay driver", CANCELLED: "Cancelled", DELIVERED: "Delivered", COMPLETED: "Completed" };
 
 export function ServiceOrderCard({ o }: { o: ServiceOrder }) {
   const { customerToken } = useAuth();
@@ -96,6 +96,8 @@ export function ServiceOrderCard({ o }: { o: ServiceOrder }) {
               : `${o.details.pickup?.label} → ${o.details.drop?.label}`}
           </div>
           {o.created_at && <div className="mt-0.5 text-[11px] text-muted-foreground">{placedAtLabel(o.created_at)}</div>}
+          {o.kind === "RIDE" && o.ride_otp && <div className="mt-1 inline-flex items-center gap-2 rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">Ride code <span className="tracking-[0.3em]">{o.ride_otp}</span></div>}
+          {o.kind === "RIDE" && o.status === "AT_DROP" && <div className="mt-1 text-xs font-bold text-leaf">Pay {formatINR(Number(o.amount))} to your driver</div>}
           {(o as any).driver_name && <div className="mt-1 text-xs font-semibold text-leaf">🛵 {(o as any).driver_name}{(o as any).driver_phone ? ` · ${(o as any).driver_phone}` : ""}</div>}
         </div>
         <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${TONE[o.status] ?? "bg-primary/10 text-primary"}`}>{SO_LABEL[o.status] ?? o.status}</span>
