@@ -137,8 +137,8 @@ function Index() {
   const byId = new Map(tierProducts.map(p => [p.id, p]));
   const railShown = new Set<string>();
   if (dealProduct) railShown.add(dealProduct.id);
-  const pickRail = (items: typeof bundle.personalized) => {
-    const out: typeof items = [];
+  const pickRail = <T extends { productId: string }>(items: T[]) => {
+    const out: T[] = [];
     for (const r of items) {
       const p = byId.get(r.productId);
       if (!p || p.stock <= 0 || railShown.has(r.productId)) continue;
