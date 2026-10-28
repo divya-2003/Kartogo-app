@@ -1,4 +1,5 @@
 import { ClipboardList as MClipboard, CreditCard as MCard, Tag as MTag, Store as MStore, Printer as MPrinter, Settings as MSettings, Shield as MShield, FileText as MFile, Pencil as MPencil } from "lucide-react";
+import { enterCustomerMode, leaveCustomerMode } from "@/lib/portal-mode";
 import { BottomNav } from "@/components/marketplace/BottomNav";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -167,7 +168,8 @@ function MenuPage() {
     logout();
     toast.success("Signed out");
     // Back to the same first page a new visitor sees: Home, Shop tab.
-    try { sessionStorage.setItem("qk_home_section", "shop"); sessionStorage.setItem("qk_customer_home", "1"); } catch { /* noop */ }
+    try { sessionStorage.setItem("qk_home_section", "shop"); } catch { /* noop */ }
+    enterCustomerMode();
     nav({ to: "/", replace: true });
   };
 
@@ -453,7 +455,7 @@ function PortalReturnLink() {
   return (
     <Link
       to={target.to}
-      onClick={() => { try { sessionStorage.removeItem("qk_customer_home"); } catch { /* noop */ } }}
+      onClick={() => leaveCustomerMode()}
       className="mb-3 flex w-full items-center justify-between rounded-2xl border border-primary/30 bg-primary/10 px-4 py-3 font-bold text-primary"
     >
       <span className="flex items-center gap-2"><MStore className="h-5 w-5" /> {target.label}</span>

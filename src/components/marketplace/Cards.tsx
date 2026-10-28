@@ -1,4 +1,5 @@
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { enterCustomerMode } from "@/lib/portal-mode";
 import { Star, MapPin, Clock, Heart, Home as HomeIcon, Package, Truck, Wrench } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -161,7 +162,7 @@ export function PageTop({ title, back = "/", returnTo }: { title: string; back?:
   // Single-tap back: use the router's own history so one click always moves.
   const goBack = () => {
     if (returnTo) {
-      if (returnTo === "/") { try { sessionStorage.setItem("qk_customer_home", "1"); } catch { /* unavailable */ } }
+      if (returnTo === "/") enterCustomerMode();
       void nav({ to: returnTo as never, replace: true });
     }
     else if (router.history.canGoBack()) router.history.back();
