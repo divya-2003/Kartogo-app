@@ -95,22 +95,15 @@ function Index() {
   // them to their own portal instead of the customer home page.
   const [roleTarget] = useState(roleRedirectTarget);
 
-  // Service tier depends on where the customer is: Quick only in designated
-  // quick-service areas, Standard everywhere else we serve.
+  // Quick (30-minute) delivery only exists in designated quick-service areas.
+  // Shop is one page: every product is listed once, and customers inside a
+  // Quick area see a Quick tag on the items that can arrive fast.
   const quickAvailable = !!location?.serviceable && isQuickArea(location.query || location.area);
-  const [service, setService] = useState<"quick" | "standard">("standard");
   useEffect(() => {
-    // A customer sent here from the unserviceable screen explicitly asked for
-    // Standard — honour that over the auto-detected tier.
-    let forced: string | null = null;
-    try { forced = localStorage.getItem("qk_service_tier"); } catch { /* ignore */ }
-    if (forced === "standard") {
-      setService("standard");
-      try { localStorage.removeItem("qk_service_tier"); } catch { /* ignore */ }
-      return;
-    }
-    setService(quickAvailable ? "quick" : "standard");
-  }, [quickAvailable]);
+    // Legacy "Go to standard" choice from the unserviceable screen — Shop no
+    // longer splits by tier, so just clear it.
+    try { localStorage.removeItem("qk_service_tier"); } catch { /* ignore */ }
+  }, []);
 
   useEffect(() => {
     if (roleTarget) nav({ to: roleTarget, replace: true });
@@ -126,14 +119,17 @@ function Index() {
   }
 
 
-  // Quick only lists 30-minute stock; Standard lists everything and flags the
-  // items that also ship quick.
-  const tierProducts = service === "quick" ? products.filter(isQuickProduct) : products;
-  const showQuickFlag = service === "standard";
+  // One de-duplicated list of every Shop product (same id or same name counts as one).
+  const seenProduct = new Set<string>();
+  const tierProducts = products.filter(p => {
+    const key = p.name.trim().toLowerCase();
+    if (seenProduct.has(p.id) || seenProduct.has(key)) return false;
+    seenProduct.add(p.id); seenProduct.add(key);
+    return true;
+  });
+  const showQuickFlag = quickAvailable;
   const bestsellerIds = new Set(tierProducts.slice(0, 10).map(p => p.id));
-  const combos = tierProducts.filter(p => p.category === "combos").slice(0, 10);
-  const local = tierProducts.filter(p => ["pickles", "local-snacks", "tiffin-batter", "spice-powders"].includes(p.category)).slice(0, 8);
-  const dealProduct = tierProducts.find(p => p.mrp && p.mrp > p.price) ?? tierProducts[0] ?? products[0];
+  const dealProduct = tierProducts.find(p => p.mrp && p.mrp > p.price) ?? tierProducts[0];
 
 
   // "Reorder" merges replenishment + buy-again into one rail (no duplicates).
