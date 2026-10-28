@@ -48,20 +48,24 @@ const CARD: Record<SectionId, { title: string; sub: string; cls: string; muted: 
   events: { title: "Events", sub: "Venues, decor & photos", cls: "bg-sec-events text-sec-dark-fg hover:bg-sec-events hover:text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
 };
 
-/** Coloured service cards that always fit the screen width (no sideways scrolling). */
+/**
+ * Coloured service cards that always fit the screen width (no sideways scrolling).
+ * Phones and tablets get wide, landscape cards in two rows (4 + 3) so no card is
+ * squeezed into a tall pill; laptops show all seven side by side.
+ */
 export function SectionBar({ value, onChange }: { value: SectionId; onChange: (v: SectionId) => void }) {
   return (
     <div className="mt-3">
-      <div className="grid grid-cols-7 gap-1 pb-2 pt-1 sm:gap-2.5" role="tablist">
-        {SECTIONS.map(s => {
+      <div className="grid grid-cols-12 gap-1.5 pb-2 pt-1 sm:gap-2 lg:grid-cols-7 lg:gap-2.5" role="tablist">
+        {SECTIONS.map((s, i) => {
           const c = CARD[s.id];
           const active = value === s.id;
           return (
             <Button variant="ghost" size="natural" key={s.id} type="button" role="tab" aria-selected={active} aria-label={s.label} onClick={() => onChange(s.id)}
-              className={`flex min-h-20 min-w-0 flex-col items-center justify-start gap-1 rounded-2xl px-0.5 py-3 text-center shadow-pop transition-colors sm:min-h-36 sm:items-start sm:gap-2 sm:rounded-3xl sm:px-3 sm:py-4 sm:text-left ${c.cls} ${active ? "ring-2 ring-foreground/80 ring-offset-2 ring-offset-background" : "opacity-75 hover:opacity-100"}`}>
-              <span className="shrink-0 text-xl leading-none sm:text-2xl">{s.icon}</span>
-              <span className="w-full whitespace-normal break-words font-display text-[10px] font-extrabold leading-normal sm:text-base">{c.title}</span>
-              <span className={`hidden w-full whitespace-normal text-[11px] font-medium leading-relaxed sm:block ${c.muted}`}>{c.sub}</span>
+              className={`${i < 4 ? "col-span-3" : "col-span-4"} flex h-12 min-w-0 flex-row items-center justify-center gap-1.5 rounded-xl px-1.5 text-left shadow-pop transition-colors sm:h-14 sm:gap-2 sm:rounded-2xl sm:px-3 lg:col-span-1 lg:h-auto lg:min-h-28 lg:flex-col lg:items-start lg:justify-start lg:gap-2 lg:rounded-3xl lg:px-3 lg:py-4 ${c.cls} ${active ? "ring-2 ring-foreground/80 ring-offset-2 ring-offset-background" : "opacity-75 hover:opacity-100"}`}>
+              <span className="shrink-0 text-lg leading-none sm:text-xl lg:text-2xl">{s.icon}</span>
+              <span className="min-w-0 truncate font-display text-[11px] font-extrabold leading-tight sm:text-sm lg:w-full lg:whitespace-normal lg:text-base">{c.title}</span>
+              <span className={`hidden w-full whitespace-normal text-[11px] font-medium leading-relaxed lg:block ${c.muted}`}>{c.sub}</span>
             </Button>
           );
         })}
