@@ -177,55 +177,34 @@ function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Mobile top bar with hamburger */}
-      <div className="sticky top-0 z-30 flex items-center gap-2 border-b border-border bg-card/95 px-3 py-2 backdrop-blur md:hidden">
-        {path !== "/admin" && (
-          <Button type="button" variant="outline" size="icon" aria-label="Go back" onClick={() => router.history.back()}>
-            <ChevronLeft />
-          </Button>
-        )}
-        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetTrigger asChild>
-            <button
-              aria-label={mobileOpen ? "Close admin menu" : "Open admin menu"}
-              className="grid h-10 w-10 place-items-center rounded-lg border border-border bg-card hover:bg-secondary"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-72 p-0">
-            <SheetHeader className="border-b border-border p-4">
-              <SheetTitle className="text-left font-display text-base font-bold">Admin menu</SheetTitle>
-            </SheetHeader>
-            <div className="max-h-[calc(100vh-5rem)] overflow-y-auto p-3">
-              <NavList inSheet />
-            </div>
-          </SheetContent>
-        </Sheet>
-        <span className="font-display text-sm font-bold">Admin</span>
-        <div className="ml-auto flex items-center gap-2">
-          {unseenCancellations > 0 && (
-            <span className="rounded-full bg-destructive px-2 py-0.5 text-[10px] font-bold text-destructive-foreground">
-              {unseenCancellations} new cancel
-            </span>
+      {/* Top bar — same layout as the seller portal; the side menu lives inside the three-line button on every screen size */}
+      <div className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center gap-2 px-3 py-2 md:px-6">
+          <PartnerMenu title="Admin" closeKey={path}>
+            {(close) => (
+              <div className="flex flex-col gap-1">
+                <div className="mb-1.5 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Admin portal</div>
+                <NavList onNavigate={close} />
+              </div>
+            )}
+          </PartnerMenu>
+          {path !== "/admin" && (
+            <Button type="button" variant="outline" size="icon" aria-label="Go back" onClick={() => router.history.back()}>
+              <ChevronLeft />
+            </Button>
           )}
+          <span className="min-w-0 truncate font-display text-sm font-bold md:text-base">Admin</span>
           <Link
             to="/admin/account"
             aria-label="Admin account"
-            className="grid h-9 w-9 place-items-center rounded-full border border-border bg-card hover:bg-secondary"
+            className="ml-auto grid h-9 w-9 place-items-center rounded-full border border-border bg-card hover:bg-secondary"
           >
             <UserRound className="h-4 w-4" />
           </Link>
         </div>
       </div>
 
-
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 pb-6 pt-4 md:grid-cols-[220px_minmax(0,1fr)] md:px-6 md:py-6">
-        {/* Desktop sidebar */}
-         <aside className="hidden h-fit max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl border border-border bg-card p-3 md:sticky md:top-4 md:block">
-          <NavList />
-        </aside>
-
+      <div className="mx-auto max-w-7xl px-4 pb-6 pt-4 md:px-6 md:py-6">
         <main className="min-w-0">
           <AdminPageTools q={q} setQ={setQ} pages={NAV.filter(n => !routeAccess || !Array.isArray(routeAccess.permissions) || routeAccess.permissions.includes(n.permission) || canOpenAdminPath(routeAccess, n.to))} />
         </main>
