@@ -272,54 +272,21 @@ function Index() {
 
 
         {/* ---------- Personalised recommendations (real behaviour, never mock) ---------- */}
-        {/* One consolidated reorder rail instead of two overlapping ones */}
-        <RecommendationRow
-          title="Reorder"
-          subtitle="Your regulars and past favourites, ready to add again."
-          items={reorderItems.filter(r => tierProducts.some(p => p.id === r.productId))}
-        />
+        {rails.map(r => (
+          <RecommendationRow key={r.title} title={r.title} subtitle={r.subtitle} items={r.items} quickBadgeFor={p => showQuickFlag && isQuickProduct(p)} />
+        ))}
 
-        <RecommendationRow
-          title="Recommended for you"
-          subtitle="Picked from what you browse and buy."
-          items={bundle.personalized.filter(r => tierProducts.some(p => p.id === r.productId))}
-        />
-        <RecommendationRow
-          title="Frequently bought together"
-          subtitle="Shoppers usually add these alongside your picks."
-          items={bundle.frequentlyBoughtTogether.filter(r => tierProducts.some(p => p.id === r.productId))}
-        />
-        <RecommendationRow
-          title="Popular near you"
-          subtitle="Trending with Ongole shoppers this week."
-          items={bundle.popular.filter(r => tierProducts.some(p => p.id === r.productId))}
-        />
-
-        {/* ---------- Combo bundles ---------- */}
-        {combos.length > 0 && (
+        {/* ---------- Every Shop product, listed exactly once ---------- */}
+        {remainingProducts.length > 0 && (
           <div className="mt-6">
-            <div className="flex items-end justify-between gap-3">
-              <div>
-                <h2 className="font-display text-xl font-extrabold">Combo bundles</h2>
-                <p className="text-sm text-muted-foreground">Curated packs at one bundled price.</p>
-              </div>
-              <Link to="/category/$slug" params={{ slug: "combos" }} className="shrink-0 text-sm font-bold text-primary">See all</Link>
-            </div>
+            <h2 className="font-display text-xl font-extrabold">{railShown.size ? "More to explore" : "All products"}</h2>
+            <p className="text-sm text-muted-foreground">
+              {showQuickFlag ? "Quick items arrive in minutes; the rest come by Standard delivery today." : "Delivered by Standard delivery today."}
+            </p>
             <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
-              {combos.map(p => <ProductCard key={p.id} p={p} quickBadge={showQuickFlag && isQuickProduct(p)} />)}
+              {remainingProducts.map(p => <ProductCard key={p.id} p={p} bestseller={bestsellerIds.has(p.id)} quickBadge={showQuickFlag && isQuickProduct(p)} />)}
             </div>
           </div>
-        )}
-
-        {/* ---------- From Ongole homes ---------- */}
-        {local.length > 0 && (
-        <div className="mt-6">
-          <h2 className="font-display text-xl font-extrabold">From Ongole homes</h2>
-          <p className="text-sm text-muted-foreground">Pickles, podis & tiffin batter from local makers.</p>
-          <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
-            {local.map(p => <ProductCard key={p.id} p={p} bestseller={bestsellerIds.has(p.id)} quickBadge={showQuickFlag && isQuickProduct(p)} />)}
-          </div>
-        </div>
         )}
 
         <Link to="/print" className="mt-5 flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-pop"><Printer className="h-5 w-5 text-primary" /><span className="flex-1 text-sm font-bold">Kartogo Print Store</span></Link>
