@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { useOrders } from "@/lib/store";
 import { verifyAdminAccessFn, type AdminSessionAccess } from "@/lib/admin-access.functions";
 import { canOpenAdminPath, type AdminPermission } from "@/lib/admin-access.shared";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Sparkles, LayoutDashboard, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Menu, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound, BellRing, UsersRound, ChevronLeft, Clock, ExternalLink, RefreshCw, Search, X } from "lucide-react";
+import { PartnerMenu, useLeaveCustomerMode } from "@/components/PartnerMenu";
+import { Sparkles, LayoutDashboard, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound, BellRing, UsersRound, ChevronLeft, Clock, ExternalLink, RefreshCw, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { renewSessions } from "@/lib/session-keeper";
 import { logAdminActivityFn } from "@/lib/admin-activity.functions";
@@ -109,7 +109,6 @@ function AdminLayout() {
   const path = useRouterState({ select: s => s.location.pathname });
   const { orders } = useOrders();
   const [cancelSeenCount, setCancelSeenCount] = useState(0);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [q, setQ] = useState("");
   const cancelledCount = orders.filter(o => o.status === "cancelled").length;
   const isActive = (to: string) => (to === "/admin" ? path === "/admin" : path.startsWith(to));
@@ -127,8 +126,7 @@ function AdminLayout() {
     }
   }, [path, cancelledCount]);
 
-  // Auto-close the mobile sheet whenever the route changes.
-  useEffect(() => { setMobileOpen(false); }, [path]);
+  useLeaveCustomerMode();
 
   // Usage analytics: record each admin page this session opens.
   useEffect(() => {
@@ -144,7 +142,7 @@ function AdminLayout() {
     setCancelSeenCount(cancelledCount);
   };
 
-  const NavList = ({ inSheet = false }: { inSheet?: boolean }) => (
+  const NavList = ({ onNavigate }: { onNavigate?: () => void }) => (
     <nav className="flex flex-col gap-1">
       {NAV.filter((n) => {
         // The route context can be missing (SSR, or a verification hiccup that
@@ -161,7 +159,7 @@ function AdminLayout() {
             to={n.to}
             onClick={() => {
               if (n.to === "/admin/cancellations") markCancellationsSeen();
-              if (inSheet) setMobileOpen(false);
+              onNavigate?.();
             }}
             className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition ${active ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}
           >
