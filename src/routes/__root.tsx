@@ -14,6 +14,7 @@ import { PushBridge } from "@/components/PushBridge";
 import { IdleReturnHome } from "@/components/IdleReturnHome";
 import { BottomSectionBack } from "@/components/BottomSectionBack";
 import { CartProvider, AuthProvider, CatalogProvider, OrdersProvider, LocationProvider, WalletProvider, WishlistProvider, DriversProvider } from "@/lib/store";
+import { portalHomeTarget, isPortalPath, leaveCustomerMode } from "@/lib/portal-mode";
 
 import appCss from "../styles.css?url";
 
@@ -109,13 +110,26 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RouteMemory() {
   const router = useRouter();
   useEffect(() => {
-    // App reload that landed on "/" (e.g. Android app reopening its start URL):
-    // go back to the page the customer was on.
     try {
       const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
-      const last = sessionStorage.getItem("qk_last_path");
-      if (nav?.type === "reload" && last && last !== "/" && window.location.pathname === "/") {
-        void router.navigate({ to: last, replace: true });
+      const path = window.location.pathname;
+      const portal = portalHomeTarget();
+      if (portal) {
+        // Partners/admins reopening or reloading the app always land on their
+        // own portal — never on a customer page from an earlier visit. Links
+        // they open on purpose (a shared product, a notification) still open.
+        const reopened = path === "/" || nav?.type === "reload" || nav?.type === "back_forward";
+        if (reopened && !isPortalPath(path) && path !== "/login") {
+          leaveCustomerMode();
+          void router.navigate({ to: portal, replace: true });
+        }
+      } else {
+        // App reload that landed on "/" (e.g. Android app reopening its start URL):
+        // go back to the page the customer was on.
+        const last = sessionStorage.getItem("qk_last_path");
+        if (nav?.type === "reload" && last && last !== "/" && path === "/") {
+          void router.navigate({ to: last, replace: true });
+        }
       }
     } catch { /* noop */ }
     return router.subscribe("onResolved", ({ toLocation }) => {
