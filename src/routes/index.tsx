@@ -295,7 +295,7 @@ function Index() {
         {/* ---------- Every Shop product, listed exactly once ---------- */}
         {remainingProducts.length > 0 && (
           <div className="mt-6">
-            <h2 className="font-display text-xl font-extrabold">{railShown.size ? "More to explore" : "All products"}</h2>
+            <h2 className="font-display text-xl font-extrabold">{rails.some(r => r.items.length) ? "More to explore" : "All products"}</h2>
             <p className="text-sm text-muted-foreground">
               {showQuickFlag ? "Quick items arrive in minutes; the rest come by Standard delivery today." : "Delivered by Standard delivery today."}
             </p>
