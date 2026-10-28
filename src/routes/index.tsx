@@ -189,42 +189,11 @@ function Index() {
 
           <SectionBar value={section} onChange={next => { sessionStorage.setItem("qk_home_section", next); setSection(next); }} />
 
-          {/* service options — Quick vs Standard, shown under Shop */}
-          <div className={`mt-3 grid-cols-2 gap-2 ${section === "shop" ? "grid" : "hidden"}`}>
-            <Button variant="ghost"
-              type="button"
-              onClick={() => {
-                if (quickAvailable) setService("quick");
-                else nav({ to: "/request-service", search: { area: location?.area ?? location?.query ?? undefined } });
-              }}
-              className={`flex min-w-0 items-center gap-2 rounded-2xl border px-3 py-2.5 text-left transition ${
-                service === "quick" && quickAvailable ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"
-              }`}
-            >
-              <Zap className={`h-4 w-4 shrink-0 ${service === "quick" && quickAvailable ? "" : "text-saffron"}`} />
-              <span className="min-w-0">
-                <span className="block font-display text-sm font-extrabold leading-tight">Quick</span>
-                <span className={`block truncate text-[11px] font-semibold ${service === "quick" && quickAvailable ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-                  {quickAvailable ? deliveryWindow(location?.etaMinutes) : "Not in your area"}
-                </span>
-              </span>
-            </Button>
-            <Button variant="ghost"
-              type="button"
-              onClick={() => setService("standard")}
-              className={`flex min-w-0 items-center gap-2 rounded-2xl border px-3 py-2.5 text-left transition ${
-                service === "standard" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"
-              }`}
-            >
-              <PackageCheck className="h-4 w-4 shrink-0" />
-              <span className="min-w-0">
-                <span className="block font-display text-sm font-extrabold leading-tight">Standard</span>
-                <span className={`block truncate text-[11px] font-semibold ${service === "standard" ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-                  Same day, all areas
-                </span>
-              </span>
-            </Button>
-          </div>
+          {section === "shop" && quickAvailable && (
+            <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-saffron/15 px-3 py-1 text-xs font-bold text-foreground">
+              <Zap className="h-3.5 w-3.5 shrink-0 fill-saffron text-saffron" /> Quick delivery available — look for the Quick tag
+            </div>
+          )}
         </div>
       </div>
 
@@ -246,10 +215,8 @@ function Index() {
 
       <div className="mx-auto max-w-2xl px-4 pb-56 lg:max-w-7xl lg:px-8">
         {section === "food" ? <FoodExperience embedded /> : section === "rides" ? <RidesExperience embedded /> : section !== "shop" ? <HomeMarketplace section={section} /> : <>
-        {/* ---------- Category icon row (single scrollable strip, faded ends) ---------- */}
-
-
-        {service === "standard" ? <HomeMarketplace section="shop" /> : <ShopCategoryStrip />}
+        {/* ---------- Categories + store listings (catalog duplicates hidden) ---------- */}
+        <HomeMarketplace section="shop" hideNames={tierProducts.map(p => p.name)} />
 
         {/* ---------- Deal tiles grid ---------- */}
         <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
