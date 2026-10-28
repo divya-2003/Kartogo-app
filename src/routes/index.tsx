@@ -51,32 +51,10 @@ export const Route = createFileRoute("/")({
 });
 
 /** Detects a saved admin/delivery/supplier session and returns where to send the user. */
-function roleRedirectTarget(): "/delivery" | "/admin" | "/supplier/sales" | "/printer" | "/delivery-request" | null {
-  if (typeof window === "undefined") return null;
-  // Explicit customer bottom-navigation must not trigger portal auto-opening.
-  try { if (sessionStorage.getItem("qk_customer_home") === "1") return null; } catch { /* storage unavailable */ }
-  // Tokens are written by different flows — some raw, some JSON-encoded. Read
-  // both shapes so a portal session is never missed (which would drop a
-  // supplier/rider/admin onto the customer home page).
-  const read = (key: string): string | null => {
-    let raw: string | null = null;
-    try { raw = localStorage.getItem(key); } catch { return null; }
-    if (!raw || raw === "null" || raw === "undefined" || raw === '""') return null;
-    try {
-      const parsed = JSON.parse(raw);
-      return typeof parsed === "string" && parsed ? parsed : null;
-    } catch { return raw; }
-  };
-  try {
-    if (read("qk_delivery_token")) return "/delivery";
-    // A paused rider waiting for approval belongs on the waiting screen, never
-    // on the customer home page.
-    if (read("qk_delivery_pending_token")) return "/delivery-request";
-    if (read("qk_admin_token")) return "/admin";
-    if (read("qk_supplier_token")) return "/supplier/sales";
-    if (read("qk_printer_token")) return "/printer";
-  } catch { /* noop */ }
-  return null;
+function roleRedirectTarget() {
+  // Only an explicit "shop as a customer" choice made during this app run keeps
+  // a partner on the customer home; reopening the app always opens the portal.
+  return homeRedirectTarget();
 }
 
 
