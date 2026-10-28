@@ -2,17 +2,17 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { Menu, Home, LayoutGrid, ShoppingBag, Package, Heart } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { enterCustomerMode as markCustomerMode, leaveCustomerMode } from "@/lib/portal-mode";
 
-/** Marks this tab as "shopping as a customer" so Home doesn't bounce back to the portal. */
+/** Marks this app run as "shopping as a customer" so Home doesn't bounce back to the portal. */
 export function enterCustomerMode() {
-  try { sessionStorage.setItem("qk_customer_home", "1"); sessionStorage.setItem("qk_home_section", "shop"); } catch { /* unavailable */ }
+  markCustomerMode();
+  try { sessionStorage.setItem("qk_home_section", "shop"); } catch { /* unavailable */ }
 }
 
 /** Clears customer mode when a partner returns to their own portal. */
 export function useLeaveCustomerMode() {
-  useEffect(() => {
-    try { sessionStorage.removeItem("qk_customer_home"); } catch { /* unavailable */ }
-  }, []);
+  useEffect(() => { leaveCustomerMode(); }, []);
 }
 
 const CUSTOMER_LINKS = [

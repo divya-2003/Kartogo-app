@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { enterCustomerMode } from "@/lib/portal-mode";
 import { useRouter } from "@tanstack/react-router";
 import { backMustReturnHome } from "@/lib/customer-navigation";
 
@@ -12,7 +13,7 @@ export function BottomSectionBack() {
       blockerFn: ({ currentLocation, nextLocation, action }) => {
         if (backMustReturnHome(currentLocation.pathname, "/login", action) ||
             (nextLocation.pathname === "/" && backMustReturnHome(currentLocation.pathname, "/login", "BACK"))) {
-          try { sessionStorage.setItem("qk_customer_home", "1"); } catch { /* storage unavailable */ }
+          enterCustomerMode();
         }
         if (!backMustReturnHome(currentLocation.pathname, nextLocation.pathname, action)) return false;
         returnHome = true;

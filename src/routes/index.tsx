@@ -1,16 +1,16 @@
 import { FoodExperience } from "@/components/marketplace/FoodExperience";
 import { RidesExperience } from "@/components/marketplace/RidesExperience";
-import { Button } from "@/components/ui/button";
+import { homeRedirectTarget } from "@/lib/portal-mode";
 import { useQuery } from "@tanstack/react-query";
 import { listMpCategoriesFn } from "@/lib/marketplace.functions";
 import { catalogProductInShop } from "@/lib/home-sections";
 import type { MpCategory } from "@/lib/marketplace";
-import { HomeMarketplace, ShopCategoryStrip } from "@/components/marketplace/HomeMarketplace";
+import { HomeMarketplace } from "@/components/marketplace/HomeMarketplace";
 import { BottomNav } from "@/components/marketplace/BottomNav";
 import { SectionBar, type SectionId } from "@/components/marketplace/SectionBar";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Zap, PackageCheck, Search, Wallet, User2, Home, LayoutGrid, ShoppingBag, TrendingUp, Ticket, CheckCircle2, Printer } from "lucide-react";
+import { Zap, Search, Wallet, User2, Home, LayoutGrid, ShoppingBag, TrendingUp, Ticket, CheckCircle2, Printer } from "lucide-react";
 import { deliveryWindow, isQuickArea } from "@/lib/serviceability";
 import { LocationPicker } from "@/components/LocationPicker";
 import { AutoLocationGate } from "@/components/AutoLocationGate";
@@ -51,32 +51,10 @@ export const Route = createFileRoute("/")({
 });
 
 /** Detects a saved admin/delivery/supplier session and returns where to send the user. */
-function roleRedirectTarget(): "/delivery" | "/admin" | "/supplier/sales" | "/printer" | "/delivery-request" | null {
-  if (typeof window === "undefined") return null;
-  // Explicit customer bottom-navigation must not trigger portal auto-opening.
-  try { if (sessionStorage.getItem("qk_customer_home") === "1") return null; } catch { /* storage unavailable */ }
-  // Tokens are written by different flows — some raw, some JSON-encoded. Read
-  // both shapes so a portal session is never missed (which would drop a
-  // supplier/rider/admin onto the customer home page).
-  const read = (key: string): string | null => {
-    let raw: string | null = null;
-    try { raw = localStorage.getItem(key); } catch { return null; }
-    if (!raw || raw === "null" || raw === "undefined" || raw === '""') return null;
-    try {
-      const parsed = JSON.parse(raw);
-      return typeof parsed === "string" && parsed ? parsed : null;
-    } catch { return raw; }
-  };
-  try {
-    if (read("qk_delivery_token")) return "/delivery";
-    // A paused rider waiting for approval belongs on the waiting screen, never
-    // on the customer home page.
-    if (read("qk_delivery_pending_token")) return "/delivery-request";
-    if (read("qk_admin_token")) return "/admin";
-    if (read("qk_supplier_token")) return "/supplier/sales";
-    if (read("qk_printer_token")) return "/printer";
-  } catch { /* noop */ }
-  return null;
+function roleRedirectTarget() {
+  // Only an explicit "shop as a customer" choice made during this app run keeps
+  // a partner on the customer home; reopening the app always opens the portal.
+  return homeRedirectTarget();
 }
 
 
@@ -117,22 +95,15 @@ function Index() {
   // them to their own portal instead of the customer home page.
   const [roleTarget] = useState(roleRedirectTarget);
 
-  // Service tier depends on where the customer is: Quick only in designated
-  // quick-service areas, Standard everywhere else we serve.
+  // Quick (30-minute) delivery only exists in designated quick-service areas.
+  // Shop is one page: every product is listed once, and customers inside a
+  // Quick area see a Quick tag on the items that can arrive fast.
   const quickAvailable = !!location?.serviceable && isQuickArea(location.query || location.area);
-  const [service, setService] = useState<"quick" | "standard">("standard");
   useEffect(() => {
-    // A customer sent here from the unserviceable screen explicitly asked for
-    // Standard — honour that over the auto-detected tier.
-    let forced: string | null = null;
-    try { forced = localStorage.getItem("qk_service_tier"); } catch { /* ignore */ }
-    if (forced === "standard") {
-      setService("standard");
-      try { localStorage.removeItem("qk_service_tier"); } catch { /* ignore */ }
-      return;
-    }
-    setService(quickAvailable ? "quick" : "standard");
-  }, [quickAvailable]);
+    // Legacy "Go to standard" choice from the unserviceable screen — Shop no
+    // longer splits by tier, so just clear it.
+    try { localStorage.removeItem("qk_service_tier"); } catch { /* ignore */ }
+  }, []);
 
   useEffect(() => {
     if (roleTarget) nav({ to: roleTarget, replace: true });
@@ -148,23 +119,42 @@ function Index() {
   }
 
 
-  // Quick only lists 30-minute stock; Standard lists everything and flags the
-  // items that also ship quick.
-  const tierProducts = service === "quick" ? products.filter(isQuickProduct) : products;
-  const showQuickFlag = service === "standard";
-  const bestsellerIds = new Set(tierProducts.slice(0, 10).map(p => p.id));
-  const combos = tierProducts.filter(p => p.category === "combos").slice(0, 10);
-  const local = tierProducts.filter(p => ["pickles", "local-snacks", "tiffin-batter", "spice-powders"].includes(p.category)).slice(0, 8);
-  const dealProduct = tierProducts.find(p => p.mrp && p.mrp > p.price) ?? tierProducts[0] ?? products[0];
-
-
-  // "Reorder" merges replenishment + buy-again into one rail (no duplicates).
-  const seenReorder = new Set<string>();
-  const reorderItems = [...bundle.replenishment, ...bundle.buyAgain].filter(r => {
-    if (seenReorder.has(r.productId)) return false;
-    seenReorder.add(r.productId);
+  // One de-duplicated list of every Shop product (same id or same name counts as one).
+  const seenProduct = new Set<string>();
+  const tierProducts = products.filter(p => {
+    const key = p.name.trim().toLowerCase();
+    if (seenProduct.has(p.id) || seenProduct.has(key)) return false;
+    seenProduct.add(p.id); seenProduct.add(key);
     return true;
   });
+  const showQuickFlag = quickAvailable;
+  const bestsellerIds = new Set(tierProducts.slice(0, 10).map(p => p.id));
+  const dealProduct = tierProducts.find(p => p.mrp && p.mrp > p.price) ?? tierProducts[0];
+
+
+  // Recommendation rails, then the full product list — a product shows up in
+  // only one place on the page (Deal Zone, one rail, or the product list).
+  const byId = new Map(tierProducts.map(p => [p.id, p]));
+  const railShown = new Set<string>();
+  if (dealProduct) railShown.add(dealProduct.id);
+  const pickRail = <T extends { productId: string }>(items: T[]) => {
+    const out: T[] = [];
+    for (const r of items) {
+      const p = byId.get(r.productId);
+      if (!p || p.stock <= 0 || railShown.has(r.productId)) continue;
+      railShown.add(r.productId);
+      out.push(r);
+      if (out.length >= 8) break;
+    }
+    return out;
+  };
+  const rails = [
+    { title: "Reorder", subtitle: "Your regulars and past favourites, ready to add again.", items: pickRail([...bundle.replenishment, ...bundle.buyAgain]) },
+    { title: "Recommended for you", subtitle: "Picked from what you browse and buy.", items: pickRail(bundle.personalized) },
+    { title: "Frequently bought together", subtitle: "Shoppers usually add these alongside your picks.", items: pickRail(bundle.frequentlyBoughtTogether) },
+    { title: "Popular near you", subtitle: "Trending with Ongole shoppers this week.", items: pickRail(bundle.popular) },
+  ];
+  const remainingProducts = tierProducts.filter(p => !railShown.has(p.id));
 
 
   // Category "Deal Zone" tiles, modelled on the reference grid.
@@ -215,42 +205,11 @@ function Index() {
 
           <SectionBar value={section} onChange={next => { sessionStorage.setItem("qk_home_section", next); setSection(next); }} />
 
-          {/* service options — Quick vs Standard, shown under Shop */}
-          <div className={`mt-3 grid-cols-2 gap-2 ${section === "shop" ? "grid" : "hidden"}`}>
-            <Button variant="ghost"
-              type="button"
-              onClick={() => {
-                if (quickAvailable) setService("quick");
-                else nav({ to: "/request-service", search: { area: location?.area ?? location?.query ?? undefined } });
-              }}
-              className={`flex min-w-0 items-center gap-2 rounded-2xl border px-3 py-2.5 text-left transition ${
-                service === "quick" && quickAvailable ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"
-              }`}
-            >
-              <Zap className={`h-4 w-4 shrink-0 ${service === "quick" && quickAvailable ? "" : "text-saffron"}`} />
-              <span className="min-w-0">
-                <span className="block font-display text-sm font-extrabold leading-tight">Quick</span>
-                <span className={`block truncate text-[11px] font-semibold ${service === "quick" && quickAvailable ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-                  {quickAvailable ? deliveryWindow(location?.etaMinutes) : "Not in your area"}
-                </span>
-              </span>
-            </Button>
-            <Button variant="ghost"
-              type="button"
-              onClick={() => setService("standard")}
-              className={`flex min-w-0 items-center gap-2 rounded-2xl border px-3 py-2.5 text-left transition ${
-                service === "standard" ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"
-              }`}
-            >
-              <PackageCheck className="h-4 w-4 shrink-0" />
-              <span className="min-w-0">
-                <span className="block font-display text-sm font-extrabold leading-tight">Standard</span>
-                <span className={`block truncate text-[11px] font-semibold ${service === "standard" ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-                  Same day, all areas
-                </span>
-              </span>
-            </Button>
-          </div>
+          {section === "shop" && quickAvailable && (
+            <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-saffron/15 px-3 py-1 text-xs font-bold text-foreground">
+              <Zap className="h-3.5 w-3.5 shrink-0 fill-saffron text-saffron" /> Quick delivery available — look for the Quick tag
+            </div>
+          )}
         </div>
       </div>
 
@@ -272,10 +231,8 @@ function Index() {
 
       <div className="mx-auto max-w-2xl px-4 pb-56 lg:max-w-7xl lg:px-8">
         {section === "food" ? <FoodExperience embedded /> : section === "rides" ? <RidesExperience embedded /> : section !== "shop" ? <HomeMarketplace section={section} /> : <>
-        {/* ---------- Category icon row (single scrollable strip, faded ends) ---------- */}
-
-
-        {service === "standard" ? <HomeMarketplace section="shop" /> : <ShopCategoryStrip />}
+        {/* ---------- Categories + store listings (catalog duplicates hidden) ---------- */}
+        <HomeMarketplace section="shop" hideNames={tierProducts.map(p => p.name)} />
 
         {/* ---------- Deal tiles grid ---------- */}
         <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -331,54 +288,21 @@ function Index() {
 
 
         {/* ---------- Personalised recommendations (real behaviour, never mock) ---------- */}
-        {/* One consolidated reorder rail instead of two overlapping ones */}
-        <RecommendationRow
-          title="Reorder"
-          subtitle="Your regulars and past favourites, ready to add again."
-          items={reorderItems.filter(r => tierProducts.some(p => p.id === r.productId))}
-        />
+        {rails.map(r => (
+          <RecommendationRow key={r.title} title={r.title} subtitle={r.subtitle} items={r.items} quickBadgeFor={p => showQuickFlag && isQuickProduct(p)} />
+        ))}
 
-        <RecommendationRow
-          title="Recommended for you"
-          subtitle="Picked from what you browse and buy."
-          items={bundle.personalized.filter(r => tierProducts.some(p => p.id === r.productId))}
-        />
-        <RecommendationRow
-          title="Frequently bought together"
-          subtitle="Shoppers usually add these alongside your picks."
-          items={bundle.frequentlyBoughtTogether.filter(r => tierProducts.some(p => p.id === r.productId))}
-        />
-        <RecommendationRow
-          title="Popular near you"
-          subtitle="Trending with Ongole shoppers this week."
-          items={bundle.popular.filter(r => tierProducts.some(p => p.id === r.productId))}
-        />
-
-        {/* ---------- Combo bundles ---------- */}
-        {combos.length > 0 && (
+        {/* ---------- Every Shop product, listed exactly once ---------- */}
+        {remainingProducts.length > 0 && (
           <div className="mt-6">
-            <div className="flex items-end justify-between gap-3">
-              <div>
-                <h2 className="font-display text-xl font-extrabold">Combo bundles</h2>
-                <p className="text-sm text-muted-foreground">Curated packs at one bundled price.</p>
-              </div>
-              <Link to="/category/$slug" params={{ slug: "combos" }} className="shrink-0 text-sm font-bold text-primary">See all</Link>
-            </div>
+            <h2 className="font-display text-xl font-extrabold">{rails.some(r => r.items.length) ? "More to explore" : "All products"}</h2>
+            <p className="text-sm text-muted-foreground">
+              {showQuickFlag ? "Quick items arrive in minutes; the rest come by Standard delivery today." : "Delivered by Standard delivery today."}
+            </p>
             <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
-              {combos.map(p => <ProductCard key={p.id} p={p} quickBadge={showQuickFlag && isQuickProduct(p)} />)}
+              {remainingProducts.map(p => <ProductCard key={p.id} p={p} bestseller={bestsellerIds.has(p.id)} quickBadge={showQuickFlag && isQuickProduct(p)} />)}
             </div>
           </div>
-        )}
-
-        {/* ---------- From Ongole homes ---------- */}
-        {local.length > 0 && (
-        <div className="mt-6">
-          <h2 className="font-display text-xl font-extrabold">From Ongole homes</h2>
-          <p className="text-sm text-muted-foreground">Pickles, podis & tiffin batter from local makers.</p>
-          <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
-            {local.map(p => <ProductCard key={p.id} p={p} bestseller={bestsellerIds.has(p.id)} quickBadge={showQuickFlag && isQuickProduct(p)} />)}
-          </div>
-        </div>
         )}
 
         <Link to="/print" className="mt-5 flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-pop"><Printer className="h-5 w-5 text-primary" /><span className="flex-1 text-sm font-bold">Kartogo Print Store</span></Link>

@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { enterCustomerMode } from "@/lib/portal-mode";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Boxes, Bike, ShoppingBag, ExternalLink, Printer } from "lucide-react";
@@ -36,6 +37,7 @@ function PortalsPage() {
 
   const openCustomer = (to: "/" | "/categories") => {
     clearPortalSessions();
+    enterCustomerMode();
     nav({ to });
   };
 

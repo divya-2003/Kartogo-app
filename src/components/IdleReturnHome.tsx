@@ -1,13 +1,14 @@
 import { useEffect } from "react";
 import { useRouter } from "@tanstack/react-router";
+import { isPortalPath, leaveCustomerMode, portalHomeTarget } from "@/lib/portal-mode";
 
 const KEY = "qk_last_active";
 const IDLE_MS = 10 * 60_000;
-const PORTALS = ["/admin", "/supplier", "/delivery", "/printer"];
 
 /**
  * Customers who leave the app for 10 minutes start fresh on the home page;
- * otherwise back navigation retraces the exact steps they took.
+ * partners/admins who were browsing customer pages go back to their own portal.
+ * Otherwise back navigation retraces the exact steps they took.
  */
 export function IdleReturnHome() {
   const router = useRouter();
@@ -16,8 +17,14 @@ export function IdleReturnHome() {
     const check = () => {
       const last = Number(localStorage.getItem(KEY) || 0);
       const path = window.location.pathname;
-      if (last && Date.now() - last > IDLE_MS && path !== "/" && !PORTALS.some(p => path.startsWith(p))) {
-        void router.navigate({ to: "/", replace: true });
+      if (last && Date.now() - last > IDLE_MS && !isPortalPath(path)) {
+        const portal = portalHomeTarget();
+        if (portal) {
+          leaveCustomerMode();
+          void router.navigate({ to: portal, replace: true });
+        } else if (path !== "/") {
+          void router.navigate({ to: "/", replace: true });
+        }
       }
       touch();
     };
