@@ -132,13 +132,29 @@ function Index() {
   const dealProduct = tierProducts.find(p => p.mrp && p.mrp > p.price) ?? tierProducts[0];
 
 
-  // "Reorder" merges replenishment + buy-again into one rail (no duplicates).
-  const seenReorder = new Set<string>();
-  const reorderItems = [...bundle.replenishment, ...bundle.buyAgain].filter(r => {
-    if (seenReorder.has(r.productId)) return false;
-    seenReorder.add(r.productId);
-    return true;
-  });
+  // Recommendation rails, then the full product list — a product shows up in
+  // only one place on the page (Deal Zone, one rail, or the product list).
+  const byId = new Map(tierProducts.map(p => [p.id, p]));
+  const railShown = new Set<string>();
+  if (dealProduct) railShown.add(dealProduct.id);
+  const pickRail = (items: typeof bundle.personalized) => {
+    const out: typeof items = [];
+    for (const r of items) {
+      const p = byId.get(r.productId);
+      if (!p || p.stock <= 0 || railShown.has(r.productId)) continue;
+      railShown.add(r.productId);
+      out.push(r);
+      if (out.length >= 8) break;
+    }
+    return out;
+  };
+  const rails = [
+    { title: "Reorder", subtitle: "Your regulars and past favourites, ready to add again.", items: pickRail([...bundle.replenishment, ...bundle.buyAgain]) },
+    { title: "Recommended for you", subtitle: "Picked from what you browse and buy.", items: pickRail(bundle.personalized) },
+    { title: "Frequently bought together", subtitle: "Shoppers usually add these alongside your picks.", items: pickRail(bundle.frequentlyBoughtTogether) },
+    { title: "Popular near you", subtitle: "Trending with Ongole shoppers this week.", items: pickRail(bundle.popular) },
+  ];
+  const remainingProducts = tierProducts.filter(p => !railShown.has(p.id));
 
 
   // Category "Deal Zone" tiles, modelled on the reference grid.
