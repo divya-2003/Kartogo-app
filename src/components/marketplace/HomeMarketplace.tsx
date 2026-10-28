@@ -17,32 +17,36 @@ const TINTS = ["bg-saffron/15", "bg-leaf/15", "bg-primary/10"];
 
 const rememberOrigin = (slug: string) => { try { sessionStorage.setItem(`qk_explore_origin:${slug}`, window.location.pathname + window.location.search); } catch { /* unavailable */ } };
 
-/** Compact, single-row Shop category strip (icon tile + label), scrolls sideways. */
+/**
+ * Shop category bar. It never scrolls sideways: every category fits the
+ * available width, wrapping onto a second row only when the screen is narrow.
+ */
 export function ShopCategoryStrip({ term = "" }: { term?: string }) {
   const cats = useQuery({ queryKey: ["mp-cats"], queryFn: () => listMpCategoriesFn(), staleTime: 5 * 60_000 });
   const q = term.trim().toLowerCase();
   const categories = sectionCategories((cats.data?.categories ?? []) as MpCategory[], "shop").filter(c => !q || c.name.toLowerCase().includes(q));
-  if (cats.isLoading) return <div className="mt-4 flex gap-4 overflow-hidden">{Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-[88px] w-[72px] shrink-0 animate-pulse rounded-2xl bg-secondary" />)}</div>;
+  if (cats.isLoading) return <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(60px,1fr))] gap-2">{Array.from({ length: 9 }).map((_, i) => <div key={i} className="h-[76px] animate-pulse rounded-2xl bg-secondary" />)}</div>;
   return (
-    <nav aria-label="Shop categories" className="-mx-4 mt-4 flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:gap-5 lg:mx-0 lg:px-0 [&::-webkit-scrollbar]:hidden">
+    <nav aria-label="Shop categories" className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(60px,1fr))] gap-x-1.5 gap-y-3 sm:grid-cols-[repeat(auto-fit,minmax(72px,1fr))] sm:gap-x-3">
       {categories.map((c, i) => (
-        <Link key={c.slug} to="/explore/$slug" params={{ slug: c.slug }} onClick={() => rememberOrigin(c.slug)} className="flex w-[72px] shrink-0 flex-col items-center gap-1.5 text-center sm:w-20">
-          <span className={`grid h-16 w-16 place-items-center rounded-2xl text-3xl sm:h-[70px] sm:w-[70px] ${TINTS[i % TINTS.length]}`}>{c.icon}</span>
-          <span className="w-full text-[11px] font-semibold leading-tight text-foreground sm:text-xs">{c.name}</span>
+        <Link key={c.slug} to="/explore/$slug" params={{ slug: c.slug }} onClick={() => rememberOrigin(c.slug)} className="flex min-w-0 flex-col items-center gap-1 text-center">
+          <span className={`grid aspect-square w-full max-w-16 place-items-center rounded-2xl text-2xl sm:max-w-[70px] sm:text-3xl ${TINTS[i % TINTS.length]}`}>{c.icon}</span>
+          <span className="w-full break-words text-[10px] font-semibold leading-tight text-foreground sm:text-xs">{c.name}</span>
         </Link>
       ))}
     </nav>
   );
 }
 
-export function HomeMarketplace({ section = "shop", term = "" }: { section?: Exclude<HomeSection, "food" | "rides">; term?: string }) {
+export function HomeMarketplace({ section = "shop", term = "", hideNames }: { section?: Exclude<HomeSection, "food" | "rides">; term?: string; /** Names already listed elsewhere on the page — hidden here to avoid duplicates. */ hideNames?: string[] }) {
   const cats = useQuery({ queryKey: ["mp-cats"], queryFn: () => listMpCategoriesFn(), staleTime: 5 * 60_000 });
   const categories = sectionCategories((cats.data?.categories ?? []) as MpCategory[], section);
   const results = useQueries({ queries: categories.map(c => ({ queryKey: ["mp-category", c.slug], queryFn: () => listCategoryFn({ data: { slug: c.slug } }), staleTime: 60_000 })) });
   const listings = Array.from(new Map(results.flatMap(r => (r.data?.listings ?? []) as MpListing[]).map(l => [l.id, l])).values());
   const partners = Array.from(new Map(results.flatMap(r => (r.data?.partners ?? []) as MpPartner[]).map(p => [p.id, p])).values());
   const q = term.trim().toLowerCase();
-  const shown = listings.map(l => ({ ...l, images: l.images?.length ? l.images : [categories.find(c => c.slug === l.category_slug)?.image_url].filter((url): url is string => Boolean(url)) })).filter(l => !q || `${l.name} ${l.description ?? ""} ${l.partner?.name ?? ""}`.toLowerCase().includes(q));
+  const hidden = new Set((hideNames ?? []).map(n => n.trim().toLowerCase()));
+  const shown = listings.filter(l => !hidden.has(l.name.trim().toLowerCase())).map(l => ({ ...l, images: l.images?.length ? l.images : [categories.find(c => c.slug === l.category_slug)?.image_url].filter((url): url is string => Boolean(url)) })).filter(l => !q || `${l.name} ${l.description ?? ""} ${l.partner?.name ?? ""}`.toLowerCase().includes(q));
   const stores = partners.filter(p => !q || `${p.name} ${p.description ?? ""}`.toLowerCase().includes(q));
   const d = DESIGN[section];
   const loading = cats.isLoading || results.some(r => r.isLoading);
