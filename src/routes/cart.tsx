@@ -156,7 +156,7 @@ function CartPage() {
             {/* Savings zone */}
             <section className="space-y-3 rounded-2xl bg-primary/5 p-4">
               <div className="font-display text-lg font-extrabold">Savings zone</div>
-              <div className="rounded-xl border border-border bg-card p-4">
+              {user && <div className="rounded-xl border border-border bg-card p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div className="text-sm font-semibold text-muted-foreground">Pay using Kartogo Cash</div>
                   <Link to="/wallet" className="text-sm font-bold text-primary">View</Link>
@@ -168,7 +168,7 @@ function CartPage() {
                     <div className="text-xs text-muted-foreground">Use it at checkout</div>
                   </div>
                 </div>
-              </div>
+              </div>}
               <div className="rounded-xl border border-border bg-card p-4">
                 <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground"><Ticket className="h-4 w-4" /> Coupons</div>
                 <div className="mt-2 space-y-2">
@@ -190,7 +190,7 @@ function CartPage() {
             </section>
 
             {/* Price details */}
-            <section>
+            <section id="cart-price-details" className="scroll-mt-4">
               <div className="mb-2 font-display text-lg font-extrabold">Price details</div>
               <div className="space-y-3 rounded-2xl border border-border bg-card p-4 text-sm">
                 <Row label="MRP (incl. of all taxes)" value={formatINR(mrpTotal)} />
@@ -244,10 +244,17 @@ function CartPage() {
                   <div className="min-w-0">
                     {mrpTotal > total && <div className="text-sm text-muted-foreground line-through">{formatINR(mrpTotal)}</div>}
                     <div className="font-display text-2xl font-extrabold leading-tight">{formatINR(total)}</div>
+                    <button onClick={() => document.getElementById("cart-price-details")?.scrollIntoView({ behavior: "smooth", block: "start" })} className="text-sm font-bold text-primary">View details</button>
                   </div>
-                  <button onClick={() => nav({ to: "/checkout" })} className="ml-auto flex-1 rounded-2xl bg-primary py-3.5 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90 sm:max-w-xs">
-                    Proceed to buy
-                  </button>
+                  {user ? (
+                    <button onClick={() => nav({ to: "/checkout" })} className="ml-auto flex-1 rounded-2xl bg-primary py-3.5 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90 sm:max-w-xs">
+                      Proceed to buy
+                    </button>
+                  ) : (
+                    <button onClick={() => nav({ to: "/login", search: { redirect: "/cart" } })} className="ml-auto flex-1 rounded-2xl bg-foreground py-3.5 font-display text-base font-extrabold text-background hover:bg-foreground/90 sm:max-w-xs">
+                      Login / Sign up
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
