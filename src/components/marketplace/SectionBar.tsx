@@ -38,34 +38,35 @@ export const SECTIONS: { id: SectionId; label: string; icon: string; subs: Sub[]
   ] },
 ];
 
-const CARD: Record<SectionId, { title: string; sub: string; cls: string; muted: string }> = {
-  shop: { title: "Shop", sub: "Groceries & daily essentials", cls: "bg-sec-shop text-sec-dark-fg hover:bg-sec-shop hover:text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
-  food: { title: "Food", sub: "Biryani, tiffins & meal combos", cls: "bg-sec-food text-sec-light-fg hover:bg-sec-food hover:text-sec-light-fg", muted: "text-sec-light-fg/75" },
-  health: { title: "Health", sub: "Clinics, doctors & lab tests", cls: "bg-sec-health text-sec-dark-fg hover:bg-sec-health hover:text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
-  rides: { title: "Rides", sub: "Bike, auto & car · upfront fares", cls: "bg-sec-rides text-sec-dark-fg hover:bg-sec-rides hover:text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
-  beauty: { title: "Beauty", sub: "Salon, parlour & spa", cls: "bg-sec-beauty text-sec-dark-fg hover:bg-sec-beauty hover:text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
-  home: { title: "Services", sub: "Cleaning, AC & repairs", cls: "bg-sec-home text-sec-dark-fg hover:bg-sec-home hover:text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
-  events: { title: "Events", sub: "Venues, decor & photos", cls: "bg-sec-events text-sec-dark-fg hover:bg-sec-events hover:text-sec-dark-fg", muted: "text-sec-dark-fg/80" },
+const CARD: Record<SectionId, { title: string; cls: string }> = {
+  shop: { title: "Shop", cls: "bg-sec-shop text-sec-dark-fg hover:bg-sec-shop hover:text-sec-dark-fg" },
+  food: { title: "Food", cls: "bg-sec-food text-sec-light-fg hover:bg-sec-food hover:text-sec-light-fg" },
+  health: { title: "Health", cls: "bg-sec-health text-sec-dark-fg hover:bg-sec-health hover:text-sec-dark-fg" },
+  rides: { title: "Rides", cls: "bg-sec-rides text-sec-dark-fg hover:bg-sec-rides hover:text-sec-dark-fg" },
+  beauty: { title: "Beauty", cls: "bg-sec-beauty text-sec-dark-fg hover:bg-sec-beauty hover:text-sec-dark-fg" },
+  home: { title: "Services", cls: "bg-sec-home text-sec-dark-fg hover:bg-sec-home hover:text-sec-dark-fg" },
+  events: { title: "Events", cls: "bg-sec-events text-sec-dark-fg hover:bg-sec-events hover:text-sec-dark-fg" },
 };
 
 /**
- * Coloured service cards that always fit the screen width (no sideways scrolling).
- * Phones and tablets get wide, landscape cards in two rows (4 + 3) so no card is
- * squeezed into a tall pill; laptops show all seven side by side.
+ * Seven rounded, coloured pills in ONE line that never scrolls sideways.
+ * Each pill grows with its label so longer names ("Services") get more room.
+ * Phones stack the icon above the label inside the pill so everything fits;
+ * from tablet width up the icon sits beside the label.
  */
 export function SectionBar({ value, onChange }: { value: SectionId; onChange: (v: SectionId) => void }) {
   return (
     <div className="mt-3">
-      <div className="grid grid-cols-12 gap-1.5 pb-2 pt-1 sm:gap-2 lg:grid-cols-7 lg:gap-2.5" role="tablist">
-        {SECTIONS.map((s, i) => {
+      <div className="flex w-full gap-1 pb-2 pt-1 sm:gap-2 lg:gap-3" role="tablist">
+        {SECTIONS.map(s => {
           const c = CARD[s.id];
           const active = value === s.id;
           return (
             <Button variant="ghost" size="natural" key={s.id} type="button" role="tab" aria-selected={active} aria-label={s.label} onClick={() => onChange(s.id)}
-              className={`${i < 4 ? "col-span-3" : "col-span-4"} flex h-12 min-w-0 flex-row items-center justify-center gap-1.5 rounded-xl px-1.5 text-left shadow-pop transition-colors sm:h-14 sm:gap-2 sm:rounded-2xl sm:px-3 lg:col-span-1 lg:h-auto lg:min-h-28 lg:flex-col lg:items-start lg:justify-start lg:gap-2 lg:rounded-3xl lg:px-3 lg:py-4 ${c.cls} ${active ? "ring-2 ring-foreground/80 ring-offset-2 ring-offset-background" : "opacity-75 hover:opacity-100"}`}>
-              <span className="shrink-0 text-lg leading-none sm:text-xl lg:text-2xl">{s.icon}</span>
-              <span className="min-w-0 truncate font-display text-[11px] font-extrabold leading-tight sm:text-sm lg:w-full lg:whitespace-normal lg:text-base">{c.title}</span>
-              <span className={`hidden w-full whitespace-normal text-[11px] font-medium leading-relaxed lg:block ${c.muted}`}>{c.sub}</span>
+              className={`flex h-12 min-w-0 flex-auto basis-0 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 shadow-pop transition-colors sm:h-12 sm:flex-row sm:gap-1.5 sm:rounded-full sm:px-3 lg:h-14 lg:gap-2 ${c.cls} ${active ? "ring-2 ring-foreground/80 ring-offset-2 ring-offset-background" : "opacity-80 hover:opacity-100"}`}
+              style={{ flexGrow: c.title.length + 3 }}>
+              <span className="shrink-0 text-base leading-none sm:text-lg lg:text-2xl">{s.icon}</span>
+              <span className="max-w-full truncate font-display text-[10px] font-extrabold leading-tight sm:text-sm lg:text-base">{c.title}</span>
             </Button>
           );
         })}
