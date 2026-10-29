@@ -63,9 +63,9 @@ export function SectionBar({ value, onChange }: { value: SectionId; onChange: (v
           const active = value === s.id;
           return (
             <Button variant="ghost" size="natural" key={s.id} type="button" role="tab" aria-selected={active} aria-label={s.label} onClick={() => onChange(s.id)}
-              className={`flex h-12 min-w-0 flex-auto basis-0 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 shadow-pop transition-colors sm:h-12 sm:flex-row sm:gap-1.5 sm:rounded-full sm:px-3 lg:h-14 lg:gap-2 ${c.cls} ${active ? "ring-2 ring-foreground/80 ring-offset-2 ring-offset-background" : "opacity-80 hover:opacity-100"}`}
+              className={`flex h-10 min-w-0 flex-auto basis-0 flex-col items-center justify-center gap-px rounded-xl px-1 shadow-pop transition-colors sm:h-12 sm:flex-row sm:gap-1.5 sm:rounded-full sm:px-3 lg:h-14 lg:gap-2 ${c.cls} ${active ? "ring-2 ring-foreground/80 ring-offset-2 ring-offset-background" : "opacity-80 hover:opacity-100"}`}
               style={{ flexGrow: c.title.length + 3 }}>
-              <span className="shrink-0 text-base leading-none sm:text-lg lg:text-2xl">{s.icon}</span>
+              <span className="shrink-0 text-sm leading-none sm:text-lg lg:text-2xl">{s.icon}</span>
               <span className="max-w-full truncate font-display text-[10px] font-extrabold leading-tight sm:text-sm lg:text-base">{c.title}</span>
             </Button>
           );

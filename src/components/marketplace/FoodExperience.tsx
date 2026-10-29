@@ -143,7 +143,7 @@ export function FoodExperience({ embedded = false, initialQ = "", initialKitchen
             <div className="sticky top-[61px] z-20 -mx-1 bg-background px-1 py-1">
               <label className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 shadow-pop">
                 <Search className="h-5 w-5 shrink-0 text-muted-foreground" />
-                <input type="search" value={dishQ} onChange={e => setDishQ(e.target.value)} placeholder={`Search in ${kitchen.name}`} aria-label={`Search dishes in ${kitchen.name}`}
+                <input type="text" inputMode="search" enterKeyHint="search" value={dishQ} onChange={e => setDishQ(e.target.value)} placeholder={`Search in ${kitchen.name}`} aria-label={`Search dishes in ${kitchen.name}`}
                   className="w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
                 {dishQ && <button type="button" aria-label="Clear search" onClick={() => setDishQ("")} className="shrink-0 text-muted-foreground"><X className="h-4 w-4" /></button>}
               </label>
