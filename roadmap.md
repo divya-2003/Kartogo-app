@@ -88,3 +88,11 @@
 - [x] Ride start code (customer → driver at pickup) and fare-collection step at destination, shown to both sides
 - [x] Guest Profile page: Account Settings, Earn with Kartogo, Feedback & Information
 - [ ] Test a real ride end-to-end with a rider and customer account — needs both sessions
+
+## Oct 28 batch
+- [x] Partners/sellers/admins always reopen on their own portal
+- [x] Shop: no Quick/Standard buttons; one list, each product once, Quick tag in Quick areas
+- [x] Mobile section cards are wide horizontal cards
+- [x] Shop category bar fits all categories without sideways scrolling
+- [x] Admin top bar matches the seller portal
+- [ ] Check admin and seller top bars while signed in — needs a real admin/seller session
