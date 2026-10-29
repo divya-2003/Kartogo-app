@@ -10,7 +10,7 @@ import { BottomNav } from "@/components/marketplace/BottomNav";
 import { SectionBar, type SectionId } from "@/components/marketplace/SectionBar";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Zap, Search, Wallet, User2, Home, LayoutGrid, ShoppingBag, TrendingUp, Ticket, CheckCircle2, Printer } from "lucide-react";
+import { Zap, Search, Wallet, User2, Heart, ShoppingBag, Ticket, CheckCircle2, Printer } from "lucide-react";
 import { deliveryWindow, isQuickArea } from "@/lib/serviceability";
 import { LocationPicker } from "@/components/LocationPicker";
 import { AutoLocationGate } from "@/components/AutoLocationGate";
@@ -262,7 +262,7 @@ function Index() {
 
       {user && searchBand}
 
-      <div className="mx-auto max-w-2xl px-4 pb-56 lg:max-w-7xl lg:px-8">
+      <div className={`mx-auto max-w-2xl px-4 pb-56 lg:max-w-7xl lg:px-8 ${user ? "" : "pt-2"}`}>
         {section === "food" ? <FoodExperience embedded /> : section === "rides" ? <RidesExperience embedded /> : section !== "shop" ? <HomeMarketplace section={section} /> : <>
         {/* ---------- Categories + store listings (catalog duplicates hidden) ---------- */}
         <HomeMarketplace section="shop" hideNames={tierProducts.map(p => p.name)} />

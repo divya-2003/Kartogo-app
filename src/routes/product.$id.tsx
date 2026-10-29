@@ -184,12 +184,8 @@ function ProductPage() {
     toast.success(wished ? "Removed from wishlist" : "Added to wishlist");
   };
 
+  // Guests can fill the cart; login is asked from the cart's "Login / Sign up" button.
   const handleAdd = () => {
-    if (!user) {
-      toast.info("Please login to add items to your cart");
-      nav({ to: "/login", search: { redirect: `/product/${p.id}` } });
-      return;
-    }
     add(p.id);
     track.trackAddToCart(p.id);
   };
