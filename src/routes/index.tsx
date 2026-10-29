@@ -10,7 +10,7 @@ import { BottomNav } from "@/components/marketplace/BottomNav";
 import { SectionBar, type SectionId } from "@/components/marketplace/SectionBar";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Zap, Search, Wallet, User2, Home, LayoutGrid, ShoppingBag, TrendingUp, Ticket, CheckCircle2, Printer } from "lucide-react";
+import { Zap, Search, Wallet, User2, Heart, ShoppingBag, Ticket, CheckCircle2, Printer } from "lucide-react";
 import { deliveryWindow, isQuickArea } from "@/lib/serviceability";
 import { LocationPicker } from "@/components/LocationPicker";
 import { AutoLocationGate } from "@/components/AutoLocationGate";
@@ -165,45 +165,92 @@ function Index() {
     { slug: "pooja", title: "Pooja Items", note: "Starting @ ₹35", emoji: "🪔", tint: "bg-saffron/25" },
   ];
 
+  // Search band. Signed-out shoppers get a store-style row like the reference:
+  // search, wishlist and bag side by side, plus a small account button.
+  const searchBand = (
+    <div className="sticky top-0 z-30 bg-background shadow-sm">
+      <div className="mx-auto max-w-2xl px-4 lg:max-w-7xl lg:px-8">
+        <div className={`flex items-center gap-2 pb-4 ${user ? "pt-3" : "pt-4"}`}>
+          {/* search — opens the full Trending / search page */}
+          <Link to={(section === "rides" ? "/rides" : section === "food" ? "/food" : "/search") as never} search={(section === "rides" || section === "food" ? {} : { q: "", section }) as never} className="block min-w-0 flex-1">
+            <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 shadow-pop">
+              <Search className="h-5 w-5 shrink-0 text-muted-foreground" />
+              <span className="w-full truncate text-left text-sm text-muted-foreground">
+                {section === "rides" ? "Where do you want to go?" : `Search for "${typedTerm}"`}
+              </span>
+            </div>
+          </Link>
+          {!user && (
+            <div className="flex shrink-0 items-center gap-1">
+              <Link to="/login" search={{ redirect: "/wishlist" }} aria-label="Wishlist" className="grid h-11 w-10 place-items-center rounded-xl text-foreground hover:bg-secondary">
+                <Heart className="h-6 w-6" />
+              </Link>
+              <Link to="/cart" aria-label={`Cart, ${count} item${count === 1 ? "" : "s"}`} className="relative grid h-11 w-10 place-items-center rounded-xl text-foreground hover:bg-secondary">
+                <ShoppingBag className="h-6 w-6" />
+                {count > 0 && <span className="absolute right-0.5 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] font-extrabold text-destructive-foreground">{count}</span>}
+              </Link>
+              <Link to="/menu" aria-label="Login or register" className="grid h-11 w-10 place-items-center rounded-xl text-foreground hover:bg-secondary">
+                <User2 className="h-6 w-6" />
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <AutoLocationGate />
       <h1 className="sr-only">Kartogo — Ongole's 15-minute neighbourhood store</h1>
+      {!user && searchBand}
       {/* The top area scrolls naturally; only the search remains sticky. */}
       <div className="bg-gradient-to-b from-saffron/20 to-background">
 
-        <div className="mx-auto max-w-2xl px-4 pt-4 lg:max-w-7xl lg:px-8">
-          {/* row: delivery time + wallet + profile */}
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-            <div className="min-w-0">
-              {location && (
-                <>
-                  <div className="flex items-center gap-1.5 font-display text-lg font-extrabold leading-tight tracking-tight text-foreground sm:text-xl">
-                    <Zap className="h-5 w-5 shrink-0 fill-saffron text-saffron" />
-                    <span className="min-w-0 truncate">Delivery in {deliveryWindow(location.etaMinutes)}</span>
-                  </div>
-                  <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-leaf/10 px-2 py-0.5 text-[11px] font-bold text-leaf">
-                    <CheckCircle2 className="h-3 w-3 shrink-0" /> Delivery available
-                  </div>
-                </>
-              )}
-              <div className="mt-0.5 w-full max-w-[220px]">
-                <LocationPicker />
+        <div className={`mx-auto max-w-2xl px-4 lg:max-w-7xl lg:px-8 ${user ? "pt-4" : "pt-0"}`}>
+          {user ? (
+            /* row: delivery time + wallet + profile */
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+              <div className="min-w-0">
+                {location && (
+                  <>
+                    <div className="flex items-center gap-1.5 font-display text-lg font-extrabold leading-tight tracking-tight text-foreground sm:text-xl">
+                      <Zap className="h-5 w-5 shrink-0 fill-saffron text-saffron" />
+                      <span className="min-w-0 truncate">Delivery in {deliveryWindow(location.etaMinutes)}</span>
+                    </div>
+                    <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-leaf/10 px-2 py-0.5 text-[11px] font-bold text-leaf">
+                      <CheckCircle2 className="h-3 w-3 shrink-0" /> Delivery available
+                    </div>
+                  </>
+                )}
+                <div className="mt-0.5 w-full max-w-[220px]">
+                  <LocationPicker />
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <Link to="/menu" aria-label="Kartogo Cash wallet" className="flex items-center gap-1 rounded-xl bg-card px-3 py-2 text-sm font-bold shadow-pop">
+                  <Wallet className="h-4 w-4 shrink-0 text-primary" /> {formatINR(balance)}
+                </Link>
+                <Link to="/menu" aria-label="Account" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-card shadow-pop">
+                  <User2 className="h-5 w-5 shrink-0" />
+                </Link>
               </div>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <Link to="/menu" aria-label="Kartogo Cash wallet" className="flex items-center gap-1 rounded-xl bg-card px-3 py-2 text-sm font-bold shadow-pop">
-                <Wallet className="h-4 w-4 shrink-0 text-primary" /> {formatINR(balance)}
-              </Link>
-              <Link to="/menu" aria-label={user ? "Account" : "Login or register"} className={`flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-card px-3 shadow-pop ${user ? "w-10" : "min-w-0"}`}>
-                <User2 className="h-5 w-5 shrink-0" />
-                {!user && <span className="hidden text-xs font-extrabold sm:inline">Login / Register</span>}
-              </Link>
-            </div>
-          </div>
-
+          ) : null}
 
           <SectionBar value={section} onChange={next => { sessionStorage.setItem("qk_home_section", next); setSection(next); }} />
+
+          {!user && (
+            /* slim delivery line under the sections for signed-out shoppers */
+            <div className="mt-1 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+              <div className="min-w-0 max-w-[260px]"><LocationPicker /></div>
+              {location && (
+                <span className="flex shrink-0 items-center gap-1 text-xs font-extrabold text-foreground">
+                  <Zap className="h-3.5 w-3.5 shrink-0 fill-saffron text-saffron" /> {deliveryWindow(location.etaMinutes)}
+                </span>
+              )}
+            </div>
+          )}
 
           {section === "shop" && quickAvailable && (
             <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-saffron/15 px-3 py-1 text-xs font-bold text-foreground">
@@ -213,23 +260,9 @@ function Index() {
         </div>
       </div>
 
-      <div className="sticky top-0 z-30 bg-background shadow-sm">
-        <div className="mx-auto max-w-2xl px-4 lg:max-w-7xl lg:px-8">
-          {/* search — opens the full Trending / search page */}
-          <Link to={(section === "rides" ? "/rides" : section === "food" ? "/food" : "/search") as never} search={(section === "rides" || section === "food" ? {} : { q: "", section }) as never} className="mt-3 block pb-4">
-            <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 shadow-pop">
-              <Search className="h-5 w-5 text-muted-foreground" />
-              <span className="w-full truncate text-left text-sm text-muted-foreground">
-                {section === "rides" ? "Where do you want to go?" : `Search for "${typedTerm}"`}
-              </span>
+      {user && searchBand}
 
-            </div>
-          </Link>
-
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-2xl px-4 pb-56 lg:max-w-7xl lg:px-8">
+      <div className={`mx-auto max-w-2xl px-4 pb-56 lg:max-w-7xl lg:px-8 ${user ? "" : "pt-2"}`}>
         {section === "food" ? <FoodExperience embedded /> : section === "rides" ? <RidesExperience embedded /> : section !== "shop" ? <HomeMarketplace section={section} /> : <>
         {/* ---------- Categories + store listings (catalog duplicates hidden) ---------- */}
         <HomeMarketplace section="shop" hideNames={tierProducts.map(p => p.name)} />

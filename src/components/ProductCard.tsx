@@ -50,12 +50,8 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
     toast.success(wished ? "Removed from wishlist" : "Added to wishlist");
   };
 
+  // Guests can fill the cart; login is asked from the cart's "Login / Sign up" button.
   const handleAdd = () => {
-    if (!user) {
-      toast.info("Please login to add items to your cart");
-      nav({ to: "/login", search: { redirect: "/" } });
-      return;
-    }
     add(p.id);
     customerEventService.trackAddToCart(p.id);
     if (recommendationType) customerEventService.trackRecommendationAddedToCart(p.id, recommendationType);

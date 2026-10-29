@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Clock, Minus, Plus, X, ShoppingBag } from "lucide-react";
+import { Clock, Minus, Plus, X, ShoppingBag, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageTop } from "@/components/marketplace/Cards";
 import { AddressField } from "@/components/marketplace/AddressField";
@@ -29,6 +29,9 @@ export function FoodExperience({ embedded = false, initialQ = "", initialKitchen
   const [checkout, setCheckout] = useState(false);
   const [address, setAddress] = useState<{ line: string; landmark?: string }>({ line: "" });
   const [busy, setBusy] = useState(false);
+  const [dishQ, setDishQ] = useState("");
+  const dishTerm = dishQ.trim().toLowerCase();
+  const visibleDishes = (kitchen?.dishes ?? []).filter(d => (!vegOnly || d.veg) && (!dishTerm || `${d.name} ${d.desc ?? ""}`.toLowerCase().includes(dishTerm)));
   const onAddr = useCallback((v: { line: string; landmark?: string }) => setAddress(v), []);
 
   const kitchens = useMemo(() => KITCHENS.filter(k =>
@@ -38,8 +41,8 @@ export function FoodExperience({ embedded = false, initialQ = "", initialKitchen
   const count = lines.reduce((s, l) => s + l.qty, 0);
   const subtotal = lines.reduce((s, l) => s + dishUnitPrice(l.dish, l.addons) * l.qty, 0);
 
+  // Guests can build a basket; login is asked when they go to checkout.
   const add = (dish: Dish, addons: string[]) => {
-    if (!customerToken) { toast("Please login to order"); nav({ to: "/login", search: { redirect: "/food" } }); return; }
     const key = dish.id + ":" + [...addons].sort().join(",");
     setLines(ls => ls.find(l => l.key === key) ? ls.map(l => l.key === key ? { ...l, qty: Math.min(10, l.qty + 1) } : l) : [...ls, { key, dish, qty: 1, addons }]);
   };
@@ -54,7 +57,7 @@ export function FoodExperience({ embedded = false, initialQ = "", initialKitchen
     // section cards never sit on top of a sub-page.
     if (embedded) { nav({ to: "/food", search: { kitchen: k.id } }); return; }
     if (lines.length && kitchen && kitchen.id !== k.id) { if (!confirm("Your basket has items from another kitchen. Clear it?")) return; setLines([]); }
-    setKitchen(k); setCheckout(false);
+    setKitchen(k); setCheckout(false); setDishQ("");
   };
 
   const place = async () => {
@@ -136,7 +139,17 @@ export function FoodExperience({ embedded = false, initialQ = "", initialKitchen
               <span className="text-muted-foreground">{kitchen.pureVeg ? "Pure veg kitchen" : "Veg & non-veg"}</span>
               <span className="flex items-center gap-1 font-bold"><Clock className="h-4 w-4" />{kitchen.eta} min</span>
             </div>
-            {kitchen.dishes.filter(d => !vegOnly || d.veg).map(d => {
+            {/* Search this restaurant's menu */}
+            <div className="sticky top-[61px] z-20 -mx-1 bg-background px-1 py-1">
+              <label className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 shadow-pop">
+                <Search className="h-5 w-5 shrink-0 text-muted-foreground" />
+                <input type="text" inputMode="search" enterKeyHint="search" value={dishQ} onChange={e => setDishQ(e.target.value)} placeholder={`Search in ${kitchen.name}`} aria-label={`Search dishes in ${kitchen.name}`}
+                  className="w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
+                {dishQ && <button type="button" aria-label="Clear search" onClick={() => setDishQ("")} className="shrink-0 text-muted-foreground"><X className="h-4 w-4" /></button>}
+              </label>
+            </div>
+            {visibleDishes.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">No dishes match "{dishQ}".</p>}
+            {visibleDishes.map(d => {
               const n = qtyOf(d.id);
               return (
                 <article key={d.id} className="flex gap-3 rounded-2xl border border-border bg-card p-4">
@@ -185,9 +198,12 @@ export function FoodExperience({ embedded = false, initialQ = "", initialKitchen
         <div className={`fixed inset-x-0 ${embedded ? "bottom-[72px]" : "bottom-0"} z-40 border-t border-border bg-card/95 p-3 backdrop-blur`}>
           <div className="mx-auto flex max-w-2xl gap-2">
             {checkout && <Button size="natural" variant="ghost" onClick={() => setCheckout(false)} className="h-12 flex-1 rounded-xl border border-border font-bold">Edit</Button>}
-            <Button size="natural" variant="ghost" disabled={busy} onClick={() => checkout ? place() : setCheckout(true)} className="flex h-12 flex-[2] items-center justify-between rounded-xl bg-primary px-4 font-bold text-primary-foreground disabled:opacity-50">
+            <Button size="natural" variant="ghost" disabled={busy} onClick={() => {
+              if (!customerToken) { toast("Please login to order"); nav({ to: "/login", search: { redirect: kitchen ? `/food?kitchen=${kitchen.id}` : "/food" } }); return; }
+              if (checkout) void place(); else setCheckout(true);
+            }} className="flex h-12 flex-[2] items-center justify-between rounded-xl bg-primary px-4 font-bold text-primary-foreground disabled:opacity-50">
               <span className="flex items-center gap-2"><ShoppingBag className="h-4 w-4" />{count} item{count > 1 ? "s" : ""} · {formatINR(subtotal + (checkout ? FOOD_DELIVERY_FEE : 0))}</span>
-              <span>{busy ? "Placing…" : checkout ? "Place order" : "Checkout"}</span>
+              <span>{busy ? "Placing…" : !customerToken ? "Login / Sign up" : checkout ? "Place order" : "Checkout"}</span>
             </Button>
           </div>
         </div>
