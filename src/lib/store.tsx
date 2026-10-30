@@ -319,7 +319,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     adminAudit,
     sendOtp: async (phone) => {
       const res = await requestOtpFn({ data: { phone } });
-      return { demo: Boolean(res.demo), demoCode: "demoCode" in res ? res.demoCode : undefined };
+      // The server never returns the code; it only arrives by SMS.
+      return { demo: Boolean(res.demo), demoCode: undefined };
     },
     verifyOtp: async (phone, otp) => {
       const res = await verifyOtpFn({ data: { phone, code: otp } });
