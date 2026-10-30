@@ -1061,8 +1061,8 @@ export const ADDRESS_LABELS = ["Home", "Work", "Friends"] as const;
  * ETA; everything else is Standard. Saved profiles carry this so checkout can
  * show the right service the moment an address is picked.
  */
-export function addressZone(loc: Pick<SavedLocation, "serviceable" | "etaMinutes">): "quick" | "standard" {
-  return loc.serviceable && (loc.etaMinutes ?? 99) <= 13 ? "quick" : "standard";
+export function addressZone(loc: Pick<SavedLocation, "serviceable" | "etaMinutes"> & Partial<Pick<SavedLocation, "query" | "area">>): "quick" | "standard" {
+  return locationHasQuick(loc) ? "quick" : "standard";
 }
 
 function regexEscape(s: string): string {
