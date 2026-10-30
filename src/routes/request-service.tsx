@@ -44,7 +44,7 @@ function rememberRequested(key: string) {
 function RequestServicePage() {
   const { pincode, area } = useSearch({ from: "/request-service" });
   const nav = useNavigate();
-  const { user } = useAuth();
+  const { user, customerToken } = useAuth();
   const { location } = useLocation();
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
 
@@ -74,7 +74,7 @@ function RequestServicePage() {
     const send = async (coords: { lat: number; lng: number } | null) => {
       try {
         await createUnserviceableRequestFn({ data: {
-          phone: user?.phone ?? null,
+          token: customerToken ?? null,
           pincode: pincode ?? null,
           areaText: area?.trim() || location?.query || null,
           lat: coords?.lat ?? null,

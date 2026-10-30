@@ -72,6 +72,29 @@ async function assertCanTouch(actor: Actor, productId: string) {
   }
 }
 
+/**
+ * A supplier owns a purchase order only when it has line items and every one
+ * of them is a product inside the supplier's categories.
+ */
+async function supplierOwnedPurchaseOrders(actor: Actor, poIds: string[]): Promise<Set<string>> {
+  const owned = new Set<string>();
+  if (actor.kind !== "supplier" || poIds.length === 0) return owned;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const [{ data: lines }, cats] = await Promise.all([
+    supabaseAdmin.from("purchase_order_items").select("purchase_order_id, product_id").in("purchase_order_id", poIds),
+    productCategories(),
+  ]);
+  const mine = new Set(actor.categories ?? []);
+  const verdict = new Map<string, boolean>();
+  for (const l of lines ?? []) {
+    const id = l.purchase_order_id as string;
+    const ok = mine.has(cats[l.product_id as string] ?? "");
+    verdict.set(id, (verdict.get(id) ?? true) && ok);
+  }
+  for (const [id, ok] of verdict) if (ok) owned.add(id);
+  return owned;
+}
+
 // ---------------------------------------------------------------- inventory
 export const listInventoryFn = createServerFn({ method: "POST" })
   .inputValidator((d: { adminToken?: string; supplierToken?: string; marketId?: string; search?: string }) => ({
@@ -337,6 +360,9 @@ export const setPurchaseOrderStatusFn = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: po } = await supabaseAdmin.from("purchase_orders").select("*").eq("id", data.id).maybeSingle();
     if (!po) throw new Error("Purchase order not found");
+    if (actor.kind === "supplier" && !(await supplierOwnedPurchaseOrders(actor, [data.id])).has(data.id)) {
+      throw new Error("This purchase order isn't for your products");
+    }
 
     const { error } = await supabaseAdmin.from("purchase_orders").update({
       status: data.status,
@@ -398,10 +424,26 @@ export const listInventoryNotificationsFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const actor = await authorize(data.adminToken, data.supplierToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (actor.kind === "admin") {
+      const { data: rows } = await supabaseAdmin.from("inventory_notifications").select("*")
+        .eq("audience", "admin")
+        .order("created_at", { ascending: false }).limit(50);
+      return { notifications: rows ?? [] };
+    }
+    // Suppliers only see notices about their own products or purchase orders.
     const { data: rows } = await supabaseAdmin.from("inventory_notifications").select("*")
-      .eq("audience", actor.kind === "admin" ? "admin" : "supplier")
-      .order("created_at", { ascending: false }).limit(50);
-    return { notifications: rows ?? [] };
+      .eq("audience", "supplier")
+      .order("created_at", { ascending: false }).limit(300);
+    const cats = await productCategories();
+    const mine = new Set(actor.categories ?? []);
+    const poIds = [...new Set((rows ?? []).map((r) => r.purchase_order_id as string | null).filter((v): v is string => !!v))];
+    const ownedPos = await supplierOwnedPurchaseOrders(actor, poIds);
+    const notifications = (rows ?? []).filter((r) => {
+      if (r.purchase_order_id) return ownedPos.has(r.purchase_order_id as string);
+      if (r.product_id) return mine.has(cats[r.product_id as string] ?? "");
+      return false;
+    }).slice(0, 50);
+    return { notifications };
   });
 
 export const markInventoryNotificationsReadFn = createServerFn({ method: "POST" })

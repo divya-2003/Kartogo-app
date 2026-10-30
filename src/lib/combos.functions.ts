@@ -40,9 +40,14 @@ export const listActiveCombosFn = createServerFn({ method: "GET" }).handler(asyn
   return (data as Row[]).map(toCombo);
 });
 
+// Admins (still active on the staff roster) manage every combo; a supplier
+// only ever sees and changes the combos it created itself.
 async function requireAdminOrSupplier(adminToken?: string, supplierToken?: string) {
-  const { verifyAdminToken, verifySupplierToken } = await import("./auth-tokens.server");
-  if (adminToken && verifyAdminToken(adminToken)) return { role: "admin" as const, id: "admin" };
+  const { verifySupplierToken } = await import("./auth-tokens.server");
+  if (adminToken) {
+    const { resolveAccess } = await import("./admin-session.server");
+    if ((await resolveAccess(adminToken)).valid) return { role: "admin" as const, id: "admin" };
+  }
   if (supplierToken) {
     const s = verifySupplierToken(supplierToken);
     if (s) return { role: "supplier" as const, id: s.supplierId };
@@ -57,10 +62,11 @@ export const listAllCombosFn = createServerFn({ method: "POST" })
     supplierToken: d?.supplierToken ? String(d.supplierToken) : undefined,
   }))
   .handler(async ({ data }) => {
-    await requireAdminOrSupplier(data.adminToken, data.supplierToken);
+    const actor = await requireAdminOrSupplier(data.adminToken, data.supplierToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows, error } = await supabaseAdmin
-      .from("combos").select("*").order("created_at", { ascending: false });
+    let query = supabaseAdmin.from("combos").select("*");
+    if (actor.role === "supplier") query = query.eq("created_by", actor.id);
+    const { data: rows, error } = await query.order("created_at", { ascending: false });
     if (error) throw new Error("Could not load combos");
     return (rows as Row[]).map(toCombo);
   });
@@ -123,18 +129,18 @@ export const upsertComboFn = createServerFn({ method: "POST" })
       items: data.items,
       category: data.category?.trim() || null,
       is_active: data.isActive ?? true,
-      created_by: actor.id,
     };
     if (data.id) {
-      const { data: row, error } = await supabaseAdmin.from("combos")
-        .update(payload).eq("id", data.id).select("*").maybeSingle();
+      let update = supabaseAdmin.from("combos").update(payload).eq("id", data.id);
+      if (actor.role === "supplier") update = update.eq("created_by", actor.id);
+      const { data: row, error } = await update.select("*").maybeSingle();
       if (error || !row) throw new Error("Could not save combo");
       const combo = toCombo(row as Row);
       await syncComboToCatalog(combo);
       return combo;
     }
     const { data: row, error } = await supabaseAdmin.from("combos")
-      .insert(payload).select("*").maybeSingle();
+      .insert({ ...payload, created_by: actor.id }).select("*").maybeSingle();
     if (error || !row) throw new Error("Could not create combo");
     const combo = toCombo(row as Row);
     await syncComboToCatalog(combo);
@@ -148,10 +154,13 @@ export const deleteComboFn = createServerFn({ method: "POST" })
     id: z.string().uuid().parse(d?.id),
   }))
   .handler(async ({ data }) => {
-    await requireAdminOrSupplier(data.adminToken, data.supplierToken);
+    const actor = await requireAdminOrSupplier(data.adminToken, data.supplierToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("combos").delete().eq("id", data.id);
+    let del = supabaseAdmin.from("combos").delete().eq("id", data.id);
+    if (actor.role === "supplier") del = del.eq("created_by", actor.id);
+    const { data: removed, error } = await del.select("id");
     if (error) throw new Error("Could not delete combo");
+    if (!removed?.length) throw new Error("Combo not found");
     await supabaseAdmin.from("catalog_items").delete().eq("id", data.id);
     return { ok: true };
   });

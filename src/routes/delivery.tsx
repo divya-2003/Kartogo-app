@@ -190,7 +190,7 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
     let alive = true;
     const check = async () => {
       try {
-        const s = await getDriverStatusFn({ data: { phone: driver.phone } });
+        const s = await getDriverStatusFn({ data: { token } });
         if (!alive || !s.found || !s.active) return;
         try { localStorage.setItem("qk_delivery_active", "1"); } catch { /* noop */ }
         setBlocked(null);
@@ -201,7 +201,7 @@ function Dashboard({ token, driver, onLogout, onExpired }: {
     void check();
     const t = setInterval(() => { void check(); }, 8000);
     return () => { alive = false; clearInterval(t); };
-  }, [blocked, driver.phone, load]);
+  }, [blocked, token, load]);
 
 
 

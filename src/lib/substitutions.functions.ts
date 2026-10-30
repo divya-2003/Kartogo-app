@@ -29,6 +29,26 @@ export const suggestSubstitutionFn = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { toSubstitution } = await import("./substitutions.server");
+    const { findSupplierById } = await import("./suppliers");
+    const { PRODUCT_CATEGORY } = await import("./server-catalog.server");
+
+    // The supplier may only propose a replacement for one of THEIR items in an
+    // order that is still being prepared. The original item's name, quantity
+    // and price come from the stored order, never from the request.
+    const supplier = findSupplierById(session.supplierId);
+    if (!supplier) throw new Error("Supplier authorization required");
+    const { data: order } = await supabaseAdmin
+      .from("app_orders")
+      .select("id, status, items")
+      .eq("id", data.orderId)
+      .maybeSingle();
+    if (!order) throw new Error("Order not found");
+    if (!["placed", "packed"].includes(order.status)) throw new Error("This order can no longer be changed");
+    type OrderItem = { productId: string; name: string; qty: number; price: number };
+    const item = ((order.items ?? []) as OrderItem[]).find((i) => i.productId === data.productId);
+    if (!item || !supplier.categories.includes(PRODUCT_CATEGORY[item.productId] ?? "")) {
+      throw new Error("This item isn't one of your products in this order");
+    }
 
     const { data: existing } = await supabaseAdmin
       .from("order_substitutions")
@@ -44,9 +64,9 @@ export const suggestSubstitutionFn = createServerFn({ method: "POST" })
       .insert({
         order_id: data.orderId,
         product_id: data.productId,
-        product_name: data.productName,
-        quantity: data.quantity,
-        original_price: data.originalPrice,
+        product_name: String(item.name ?? data.productName).slice(0, 160),
+        quantity: Math.max(1, Math.min(50, Math.floor(Number(item.qty) || data.quantity))),
+        original_price: Number(item.price) || 0,
         replacement_product_id: data.replacementProductId ?? null,
         replacement_name: data.replacementName,
         replacement_price: data.replacementPrice,

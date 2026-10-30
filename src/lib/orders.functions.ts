@@ -34,9 +34,12 @@ export const listOrdersFn = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { verifyAdminToken, verifyCustomerToken } = await import("./auth-tokens.server");
+    const { verifyCustomerToken } = await import("./auth-tokens.server");
+    const { resolveAccess } = await import("./admin-session.server");
 
-    if (verifyAdminToken(data.adminToken)) {
+    // The admin token must belong to a staff member who is STILL an active
+    // admin — a deactivated sub-admin's old token no longer lists orders.
+    if (data.adminToken && (await resolveAccess(data.adminToken)).valid) {
       const { data: rows, error } = await supabaseAdmin
         .from("app_orders")
         .select("*")
@@ -257,6 +260,7 @@ export const placeOrderFn = createServerFn({ method: "POST" })
           .from("app_orders")
           .select("*")
           .eq("client_request_id", data.clientRequestId)
+          .eq("customer_phone", session.phone)
           .maybeSingle();
         if (twin) return twin;
       }
@@ -329,8 +333,8 @@ export const setOrderStatusFn = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    const { resolveAccess } = await import("./admin-session.server");
+    if (!(await resolveAccess(data.adminToken)).valid) throw new Error("Admin authorization required");
 
     // Reject an impossible move before touching the database. The Postgres
     // trigger enforces the same rules as the final authority.

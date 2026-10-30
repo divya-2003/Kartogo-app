@@ -1,23 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { canonicalPhone, canonicalToE164, normalizeIncomingPhone } from "./phone";
 
-// ---------------- Demo OTP mode ----------------
-// Demo mode is ONLY for private/staging builds where real SMS is unavailable
-// (e.g. Twilio still on trial). It is gated behind a server-side environment
-// flag that is guaranteed to be false/absent in production, so the public,
-// deployed app always requires a real per-request random code delivered by
-// SMS. Even when demo mode is on, the code is randomly generated per request —
-// there is never a fixed, publicly-known code.
-//
-// To enable demo mode in a private environment, set the server secret
-// DEMO_OTP_MODE="true". Leave it unset in production.
-function isDemoOtpMode(): boolean {
-  // Server-only flag. Must be explicitly set to "true" in a private/staging
-  // environment; it is unset in production, so production always delivers the
-  // code by SMS and never returns it in an API response.
-  return process.env.DEMO_OTP_MODE === "true";
-}
-
 // ---------------- Request an OTP ----------------
 // Generates a random 6-digit code, stores only its hash with a short expiry,
 // and delivers it by SMS. The code is NEVER returned to the client.
@@ -42,8 +25,7 @@ export const requestOtpFn = createServerFn({ method: "POST" })
     if ((count ?? 0) >= 5) throw new Error("Too many OTP requests. Please try again later.");
 
     // Always generate a real, random per-request 6-digit code. There is never a
-    // fixed or predictable code, in any mode.
-    const demoMode = isDemoOtpMode();
+    // fixed or predictable code.
     const code = String(randomInt(100000, 1000000));
     const codeHash = createHash("sha256").update(`${phone}:${code}`).digest("hex");
     const expiresAt = new Date(Date.now() + 5 * 60_000).toISOString();
@@ -61,26 +43,15 @@ export const requestOtpFn = createServerFn({ method: "POST" })
       throw new Error("Could not generate a verification code. Please try again.");
     }
 
-    // Demo mode (private/staging only): skip the real SMS (Twilio trial can't
-    // reach unverified numbers) and return the freshly generated random code so
-    // the UI can show it. This branch is unreachable in production because
-    // DEMO_OTP_MODE is unset there.
-    if (demoMode) {
-      return { ok: true as const, demo: true as const, demoCode: code };
-    }
-
+    // The code only ever leaves the server by SMS to the phone being verified.
+    // It is never returned in this response — not even when SMS delivery fails —
+    // because anyone can ask for a code for anyone else's number.
     try {
       await sendSms(canonicalToE164(phone) ?? `+91${phone}`, `Your Kartogo verification code is ${code}. It expires in 5 minutes.`);
     } catch (err) {
-      // Twilio trial accounts can only text verified numbers, and the connector
-      // may not be configured yet. Rather than blocking login, fall back to
-      // showing the freshly generated code in the UI (demo delivery).
-      // Until the paid SMS plan is live, ANY delivery failure (trial-account
-      // restrictions, unsupported country, missing connector) falls back to
-      // showing the freshly generated random code in the UI — identically for
-      // Indian and international numbers.
-      console.warn("SMS delivery failed, falling back to on-screen code", err);
-      return { ok: true as const, demo: true as const, demoCode: code };
+      console.error("SMS delivery failed", err);
+      await supabaseAdmin.from("otp_codes").update({ consumed: true }).eq("phone", phone).eq("consumed", false);
+      throw new Error("We couldn't send the verification SMS to this number. Please try again in a few minutes.");
     }
     return { ok: true as const, demo: false as const };
 

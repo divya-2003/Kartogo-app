@@ -43,6 +43,13 @@
       "when": 1793019800324,
       "tag": "0005_product_expiry_seller_ride_otp",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793361500853,
+      "tag": "0006_drop_open_marketplace_read_policies",
+      "breakpoints": true
     }
   ]
 }
