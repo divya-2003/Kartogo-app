@@ -159,13 +159,22 @@ export const updateDeliveryPartnerFn = createServerFn({ method: "POST" })
   });
 
 // Rider: "Request delivery page access". Available to a registered partner whose
-// portal access is currently paused — it just raises a flag for the admin.
+// portal access is currently paused — it just raises a flag for the admin. The
+// caller must hold the signed token issued when they passed OTP, so nobody can
+// raise a request (or read roster details) for someone else's number.
+async function driverFromSignedToken(token: string) {
+  const { verifyPendingDriverToken, verifyDeliveryToken } = await import("./auth-tokens.server");
+  const session = verifyPendingDriverToken(token) ?? verifyDeliveryToken(token);
+  if (!session) return null;
+  const { findRosterDriverById } = await import("./driver-roster.server");
+  return findRosterDriverById(session.driverId);
+}
+
 export const requestDriverAccessFn = createServerFn({ method: "POST" })
-  .inputValidator((data: { phone: string }) => ({ phone: String(data?.phone ?? "").replace(/\D/g, "") }))
+  .inputValidator((data: { token: string }) => ({ token: String(data?.token ?? "").slice(0, 2000) }))
   .handler(async ({ data }) => {
-    const { findRosterDriverByPhone } = await import("./driver-roster.server");
-    const driver = await findRosterDriverByPhone(data.phone);
-    if (!driver) throw new Error("This number isn't registered as a delivery partner");
+    const driver = await driverFromSignedToken(data.token);
+    if (!driver) throw new Error("Please verify your phone number again to send a request");
     if (driver.active) return { ok: true as const, alreadyActive: true, name: driver.name };
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -187,12 +196,11 @@ export const requestDriverAccessFn = createServerFn({ method: "POST" })
     return { ok: true as const, alreadyActive: false, name: driver.name };
   });
 
-// Public: look up a registered partner by phone (name + access state only).
+// The signed-in (or paused, OTP-verified) partner's own name + access state.
 export const getDriverStatusFn = createServerFn({ method: "POST" })
-  .inputValidator((data: { phone: string }) => ({ phone: String(data?.phone ?? "").replace(/\D/g, "") }))
+  .inputValidator((data: { token: string }) => ({ token: String(data?.token ?? "").slice(0, 2000) }))
   .handler(async ({ data }) => {
-    const { findRosterDriverByPhone } = await import("./driver-roster.server");
-    const driver = await findRosterDriverByPhone(data.phone);
+    const driver = await driverFromSignedToken(data.token);
     if (!driver) return { found: false as const };
     return {
       found: true as const,
