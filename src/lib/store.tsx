@@ -15,6 +15,7 @@ import {
   resolveRefundRequestFn,
 } from "./orders.functions";
 import { addWishlistFn, removeWishlistFn, mergeWishlistFn } from "./wishlist.functions";
+import { locationHasQuick } from "./delivery-tier";
 import { listDriverAvailabilityFn, setDriverAvailabilityFn } from "./drivers.functions";
 import { getCustomerProfileFn, saveCustomerProfileFn, saveCustomerAddressesFn } from "./customer.functions";
 import {
