@@ -2,6 +2,7 @@
 // Quick stock is the fast-moving shelf kept in the dark store; the rest is
 // packed same day by partner markets and goes out on Standard.
 import type { Product } from "@/lib/data";
+import { isQuickArea } from "@/lib/serviceability";
 
 export const QUICK_CATEGORIES = new Set([
   "snacks",
@@ -34,3 +35,13 @@ export const TIER_LABEL: Record<DeliveryTier, string> = {
   quick: "Quick delivery",
   standard: "Standard delivery",
 };
+
+/**
+ * Whether a saved delivery location gets Quick (30-minute) delivery: it must be
+ * serviceable and either have a short ETA or sit in a named Quick locality.
+ * Shared by Home, product grids and saved-address badges so they never disagree.
+ */
+export function locationHasQuick(loc?: { serviceable?: boolean; etaMinutes?: number; query?: string; area?: string } | null): boolean {
+  if (!loc?.serviceable) return false;
+  return (loc.etaMinutes ?? 99) <= 13 || isQuickArea(loc.query || loc.area);
+}
