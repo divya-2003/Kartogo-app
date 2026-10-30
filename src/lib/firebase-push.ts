@@ -1,8 +1,8 @@
 // Browser-side Firebase Cloud Messaging setup for Kartogo.
 // Only public web-push config lives here — the service account stays server-side.
 
-import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
-import { getMessaging, getToken, isSupported, onMessage, type Messaging } from "firebase/messaging";
+import { initializeApp, getApps, type FirebaseApp } from "@firebase/app";
+import { getMessaging, getToken, isSupported, onMessage, type Messaging } from "@firebase/messaging";
 
 const appId = import.meta.env.VITE_LOVABLE_CONNECTOR_FIREBASE_MESSAGING_APP_ID as string | undefined;
 const vapidKey = import.meta.env.VITE_LOVABLE_CONNECTOR_FIREBASE_MESSAGING_VAPID_KEY as string | undefined;
