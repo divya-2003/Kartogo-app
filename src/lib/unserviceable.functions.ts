@@ -26,7 +26,8 @@ const toReq = (r: Row): UnserviceableRequest => ({
 });
 
 const createSchema = z.object({
-  phone: z.string().max(20).optional().nullable(),
+  /** Signed customer token; the phone on the request comes only from it. */
+  token: z.string().max(2000).optional().nullable(),
   pincode: z.string().max(10).optional().nullable(),
   areaText: z.string().max(400).optional().nullable(),
   lat: z.number().min(-90).max(90).optional().nullable(),
@@ -38,14 +39,18 @@ export const createUnserviceableRequestFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => createSchema.parse(data))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { verifyCustomerToken } = await import("./auth-tokens.server");
+    // Guests file anonymous requests; a signed-in shopper's phone is taken from
+    // their verified session, never from the request body.
+    const phone = verifyCustomerToken(data.token ?? undefined)?.phone ?? null;
 
     // One request per login: if this phone already raised a request, refresh it
     // instead of creating a duplicate row for the admin to sift through.
-    if (data.phone) {
+    if (phone) {
       const { data: existing } = await supabaseAdmin
         .from("unserviceable_requests")
         .select("*")
-        .eq("phone", data.phone)
+        .eq("phone", phone)
         .order("created_at", { ascending: false })
         .limit(1);
       const prev = existing?.[0] as Row | undefined;
@@ -69,7 +74,7 @@ export const createUnserviceableRequestFn = createServerFn({ method: "POST" })
     const { data: row, error } = await supabaseAdmin
       .from("unserviceable_requests")
       .insert({
-        phone: data.phone || null,
+        phone,
         pincode: data.pincode || null,
         area_text: data.areaText || null,
         lat: data.lat ?? null,

@@ -75,7 +75,7 @@ function LocationPickerClient({
 }) {
   const check = useServerFn(checkServiceability);
   const locate = useServerFn(locateByCoords);
-  const { user } = useAuth();
+  const { user, customerToken } = useAuth();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -195,7 +195,7 @@ function LocationPickerClient({
     try {
       await createUnserviceableRequestFn({
         data: {
-          phone: user?.phone ?? null,
+          token: customerToken ?? null,
           pincode: denied.pincode,
           areaText: denied.area || "Unknown area",
           lat: denied.lat ?? null,

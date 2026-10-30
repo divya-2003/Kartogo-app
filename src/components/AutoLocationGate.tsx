@@ -21,7 +21,7 @@ type Denied = { address: string; pincode: string | null; reason: string; lat: nu
  */
 export function AutoLocationGate() {
   const { setLocation, location } = useLocation();
-  const { user } = useAuth();
+  const { user, customerToken } = useAuth();
   const locate = useServerFn(locateByCoords);
   const [denied, setDenied] = useState<Denied | null>(null);
   const [requesting, setRequesting] = useState(false);
@@ -106,7 +106,7 @@ export function AutoLocationGate() {
     try {
       await createUnserviceableRequestFn({
         data: {
-          phone: user?.phone ?? null,
+          token: customerToken ?? null,
           pincode: denied.pincode,
           areaText: denied.address,
           lat: denied.lat,
