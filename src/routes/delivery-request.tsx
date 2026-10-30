@@ -19,6 +19,15 @@ export const Route = createFileRoute("/delivery-request")({
 
 type Status = Awaited<ReturnType<typeof getDriverStatusFn>>;
 
+/** The signed token this partner received after OTP (paused or active). */
+function signedDriverToken(): string | null {
+  try {
+    return localStorage.getItem("qk_delivery_pending_token") || localStorage.getItem("qk_delivery_token") || null;
+  } catch {
+    return null;
+  }
+}
+
 function DeliveryRequestPage() {
   const { phone } = Route.useSearch();
   const [status, setStatus] = useState<Status | null>(null);
@@ -52,11 +61,12 @@ function DeliveryRequestPage() {
   }, [nav]);
 
   useEffect(() => {
-    if (!phone) return;
+    const token = signedDriverToken();
+    if (!token) return;
     let alive = true;
     void (async () => {
       try {
-        const s = await getDriverStatusFn({ data: { phone } });
+        const s = await getDriverStatusFn({ data: { token } });
         if (!alive) return;
         setStatus(s);
         if (s.found && s.requested) setRequested(true);
@@ -66,10 +76,11 @@ function DeliveryRequestPage() {
   }, [phone]);
 
   const send = async () => {
-    if (!phone) return;
+    const token = signedDriverToken();
+    if (!token) { toast.error("Please verify your phone number again to send a request"); return; }
     setSending(true);
     try {
-      const res = await requestDriverAccessFn({ data: { phone } });
+      const res = await requestDriverAccessFn({ data: { token } });
       if (res.alreadyActive) {
         toast.success("Your access is already active — please log in again.");
       } else {
@@ -115,7 +126,7 @@ function DeliveryRequestPage() {
             <button
               type="button"
               onClick={() => void send()}
-              disabled={sending || !phone}
+              disabled={sending}
               className="rounded-2xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-pop hover:bg-primary/90 disabled:opacity-60"
             >
               {sending ? "Sending..." : "Request delivery page access"}
