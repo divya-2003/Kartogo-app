@@ -1,6 +1,11 @@
 // Tiny shared CSV utilities for admin report exports.
+// Cells starting with these characters are run as formulas by Excel / Sheets
+// (CSV injection). Plain numbers such as -12.5 are left untouched.
+const FORMULA_START = /^[=+\-@\t\r]/;
+
 export function csvEscape(v: unknown): string {
-  const s = v == null ? "" : String(v);
+  let s = v == null ? "" : String(v);
+  if (typeof v !== "number" && FORMULA_START.test(s) && !/^-?\d+(\.\d+)?$/.test(s)) s = `'${s}`;
   if (/[",\r\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
   return s;
 }
