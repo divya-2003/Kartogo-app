@@ -1,10 +1,12 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Plus, Minus, Heart, BellRing, Zap, Share2 } from "lucide-react";
 import { useState } from "react";
+import { SwipePhotos } from "@/components/SwipePhotos";
 import { toast } from "sonner";
 import type { Product } from "@/lib/data";
 import { formatINR } from "@/lib/data";
-import { useCart, useAuth, useWishlist } from "@/lib/store";
+import { useCart, useAuth, useWishlist, useLocation } from "@/lib/store";
+import { isQuickProduct, locationHasQuick } from "@/lib/delivery-tier";
 import { HighlightText } from "@/components/HighlightText";
 import { ProductShareDialog } from "@/components/ProductShareDialog";
 
@@ -20,7 +22,7 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
   onProductOpen?: (productId: string) => void;
   /** Search query whose matching characters should be emphasised in the title. */
   highlight?: string;
-  /** Shows the green "Quick" flag when this item also ships on 30-minute delivery. */
+  /** Forces the green "Quick" flag on/off. By default it shows for Quick items when the delivery location has Quick. */
   quickBadge?: boolean;
 }) {
 
@@ -36,6 +38,11 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
   const wished = has(p.id);
   const out = p.stock <= 0;
   const lowStock = p.stock > 0 && p.stock <= 5;
+  const { location } = useLocation();
+  const showQuick = quickBadge ?? (locationHasQuick(location) && isQuickProduct(p));
+
+  // Every photo of the product, cover first — swiped right inside the card.
+  const photos = Array.from(new Set([p.image, ...(p.images ?? [])].filter((u): u is string => !!u)));
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -86,7 +93,9 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:shadow-pop">
       <Link onClick={() => onProductOpen?.(p.id)} to="/product/$id" params={{ id: p.id }} className="relative grid aspect-square place-items-center overflow-hidden bg-cream bg-grain">
-        {p.image ? (
+        {photos.length > 1 ? (
+          <SwipePhotos photos={photos} alt={p.name} className="h-full w-full" />
+        ) : p.image ? (
           <img src={p.image} alt={p.name} loading="lazy" width={768} height={768} className="h-full w-full object-cover transition group-hover:scale-105" />
         ) : (
           <div className="text-6xl transition group-hover:scale-110">{p.emoji}</div>
@@ -111,9 +120,9 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
           </div>
         )}
         {out && <span className="absolute right-11 top-2 rounded-md bg-destructive px-2 py-0.5 text-[11px] font-bold text-destructive-foreground">Out</span>}
-        {lowStock && <span className="absolute bottom-2 left-2 rounded-md bg-saffron px-2 py-1 text-[11px] font-extrabold text-foreground shadow-pop">Only {p.stock} left</span>}
-        {quickBadge && (
-          <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-md bg-leaf px-2 py-1 text-[11px] font-extrabold text-primary-foreground shadow-pop">
+        {lowStock && <span className={`absolute ${photos.length > 1 ? "bottom-4" : "bottom-2"} left-2 rounded-md bg-saffron px-2 py-1 text-[11px] font-extrabold text-foreground shadow-pop`}>Only {p.stock} left</span>}
+        {showQuick && (
+          <span className={`absolute ${photos.length > 1 ? "bottom-4" : "bottom-2"} right-2 inline-flex items-center gap-1 rounded-md bg-leaf px-2 py-1 text-[11px] font-extrabold text-primary-foreground shadow-pop`}>
             <Zap className="h-3 w-3 fill-current" /> Quick
           </span>
         )}
