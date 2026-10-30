@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { enterCustomerMode } from "@/lib/portal-mode";
-import { Star, MapPin, Clock, Heart, Home as HomeIcon, Package, Truck, Wrench } from "lucide-react";
+import { Star, MapPin, Clock, Heart, Home as HomeIcon, Package, Truck, Wrench, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { formatINR } from "@/lib/data";
@@ -102,16 +102,23 @@ export function ListingCard({ l, compact = false }: { l: MpListing; compact?: bo
         </div>
         {!compact && l.attributes?.delivery && <div className="inline-flex items-center gap-1 text-[11px] font-semibold text-leaf"><Truck className="h-3 w-3" />{l.attributes.delivery}</div>}
         <div className="mt-auto flex items-end justify-between gap-2 pt-1">
-          <div>
+          <div className="min-w-0">
             {price.amount != null ? (
               <>
                 {price.from && <div className="text-[10px] font-semibold text-muted-foreground">Starting</div>}
-                <span className="font-display text-lg font-extrabold">{formatINR(price.amount)}</span>
-                {l.mrp && <span className="ml-1 text-xs text-muted-foreground line-through">{formatINR(Number(l.mrp))}</span>}
+                <div className="font-display text-base font-extrabold leading-tight">{formatINR(price.amount)}</div>
+                {l.mrp && <div className="text-xs text-muted-foreground line-through">{formatINR(Number(l.mrp))}</div>}
               </>
             ) : <span className="text-sm font-bold text-muted-foreground">Price on quote</span>}
           </div>
-          {!compact && <span className="rounded-lg bg-primary px-2.5 py-1.5 text-xs font-bold text-primary-foreground">{ctaFor(l)}</span>}
+          {!compact && (l.transaction_type === "PRODUCT_ORDER" ? (
+            /* Same outlined ADD button as grocery product cards; opens the item to pick a delivery date. */
+            <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg border border-primary px-3 py-1.5 text-xs font-bold text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
+              <Plus className="h-3 w-3" /> ADD
+            </span>
+          ) : (
+            <span className="shrink-0 whitespace-nowrap rounded-lg bg-primary px-2.5 py-1.5 text-xs font-bold text-primary-foreground">{ctaFor(l)}</span>
+          ))}
         </div>
       </div>
     </Link>
