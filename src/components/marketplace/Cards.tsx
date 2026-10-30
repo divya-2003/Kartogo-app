@@ -1,5 +1,6 @@
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { enterCustomerMode } from "@/lib/portal-mode";
+import { SwipePhotos } from "@/components/SwipePhotos";
 import { Star, MapPin, Clock, Heart, Home as HomeIcon, Package, Truck, Wrench, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -85,7 +86,7 @@ export function ListingCard({ l, compact = false }: { l: MpListing; compact?: bo
   return (
     <Link to={route} params={{ id: l.id }} className={`group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-pop transition hover:-translate-y-0.5 ${compact ? "w-44 shrink-0" : ""}`}>
       <div className="relative">
-        <Thumb images={l.images} icon={l.icon} className="aspect-[4/3] w-full" />
+        {(l.images?.length ?? 0) > 1 ? <SwipePhotos photos={l.images!} alt={l.name} className="aspect-[4/3] w-full" /> : <Thumb images={l.images} icon={l.icon} className="aspect-[4/3] w-full" />}
         <FavButton type="listing" id={l.id} className="absolute right-2 top-2" />
         {l.listing_type === "PACKAGE" && <span className="absolute left-2 top-2 rounded-md bg-primary px-2 py-0.5 text-[10px] font-extrabold text-primary-foreground">Package</span>}
         {l.transaction_type === "HOME_SERVICE_BOOKING" && <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-md bg-saffron px-2 py-0.5 text-[10px] font-extrabold text-foreground"><HomeIcon className="h-3 w-3" />Home Service</span>}
@@ -117,7 +118,7 @@ export function ListingCard({ l, compact = false }: { l: MpListing; compact?: bo
               <Plus className="h-3 w-3" /> ADD
             </span>
           ) : (
-            <span className="shrink-0 whitespace-nowrap rounded-lg bg-primary px-2.5 py-1.5 text-xs font-bold text-primary-foreground">{ctaFor(l)}</span>
+            <span className="rounded-lg bg-primary px-2.5 py-1.5 text-xs font-bold text-primary-foreground">{ctaFor(l)}</span>
           ))}
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Plus, Minus, Heart, BellRing, Zap, Share2, ChevronLeft, ChevronRight } from "lucide-react";
-import { useRef, useState } from "react";
+import { Plus, Minus, Heart, BellRing, Zap, Share2 } from "lucide-react";
+import { useState } from "react";
+import { SwipePhotos } from "@/components/SwipePhotos";
 import { toast } from "sonner";
 import type { Product } from "@/lib/data";
 import { formatINR } from "@/lib/data";
@@ -42,17 +43,6 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
 
   // Every photo of the product, cover first — swiped right inside the card.
   const photos = Array.from(new Set([p.image, ...(p.images ?? [])].filter((u): u is string => !!u)));
-  const slider = useRef<HTMLDivElement>(null);
-  const [slide, setSlide] = useState(0);
-  const onSlide = () => {
-    const el = slider.current;
-    if (el && el.clientWidth) setSlide(Math.round(el.scrollLeft / el.clientWidth));
-  };
-  const goTo = (e: React.MouseEvent, i: number) => {
-    e.preventDefault(); e.stopPropagation();
-    const el = slider.current;
-    if (el) el.scrollTo({ left: Math.max(0, Math.min(photos.length - 1, i)) * el.clientWidth, behavior: "smooth" });
-  };
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -104,30 +94,7 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:shadow-pop">
       <Link onClick={() => onProductOpen?.(p.id)} to="/product/$id" params={{ id: p.id }} className="relative grid aspect-square place-items-center overflow-hidden bg-cream bg-grain">
         {photos.length > 1 ? (
-          <>
-            <div ref={slider} onScroll={onSlide} aria-label={`${p.name} photos`}
-              className="flex h-full w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {photos.map((src, i) => (
-                <img key={src} src={src} alt={i === 0 ? p.name : `${p.name} photo ${i + 1}`} loading="lazy" draggable={false} width={768} height={768}
-                  className="h-full w-full shrink-0 snap-center object-cover" />
-              ))}
-            </div>
-            <div className="pointer-events-none absolute inset-x-0 bottom-1.5 flex justify-center gap-1">
-              {photos.map((_, i) => <span key={i} className={`h-1.5 rounded-full transition-all ${i === slide ? "w-3 bg-foreground/80" : "w-1.5 bg-foreground/30"}`} />)}
-            </div>
-            {slide > 0 && (
-              <button type="button" aria-label="Previous photo" onClick={e => goTo(e, slide - 1)}
-                className="absolute left-1.5 top-1/2 hidden h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-card/90 shadow-pop pointer-fine:group-hover:grid">
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-            )}
-            {slide < photos.length - 1 && (
-              <button type="button" aria-label="Next photo" onClick={e => goTo(e, slide + 1)}
-                className="absolute right-1.5 top-1/2 hidden h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-card/90 shadow-pop pointer-fine:group-hover:grid">
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            )}
-          </>
+          <SwipePhotos photos={photos} alt={p.name} className="h-full w-full" />
         ) : p.image ? (
           <img src={p.image} alt={p.name} loading="lazy" width={768} height={768} className="h-full w-full object-cover transition group-hover:scale-105" />
         ) : (
