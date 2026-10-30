@@ -11,18 +11,18 @@ import { SectionBar, type SectionId } from "@/components/marketplace/SectionBar"
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Zap, Search, Wallet, User2, Heart, ShoppingBag, Ticket, CheckCircle2, Printer } from "lucide-react";
-import { deliveryWindow, isQuickArea } from "@/lib/serviceability";
+import { deliveryWindow } from "@/lib/serviceability";
 import { LocationPicker } from "@/components/LocationPicker";
 import { AutoLocationGate } from "@/components/AutoLocationGate";
 import { ProductCard } from "@/components/ProductCard";
 import { RecommendationRow } from "@/components/RecommendationRow";
 import { useRecommendationBundle, useCustomerTracking } from "@/hooks/use-recommendations";
 import { formatINR } from "@/lib/data";
-import { useCatalog, useAuth, useLocation, useCart, useWallet } from "@/lib/store";
+import { useCatalog, useAuth, useLocation, useCart, useWallet, useWishlist } from "@/lib/store";
 import { COUPONS as PROMO_COUPONS } from "@/lib/promo";
 import { toast } from "sonner";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter";
-import { isQuickProduct } from "@/lib/delivery-tier";
+import { isQuickProduct, locationHasQuick } from "@/lib/delivery-tier";
 
 
 const HOME_SEARCH_TERMS = ["milk", "haircut", "avakaya", "AC service", "sofa", "birthday decoration", "paneer"];
@@ -83,6 +83,7 @@ function Index() {
   const typedTerm = useTypewriterPlaceholder(SECTION_SEARCH[section] ?? HOME_SEARCH_TERMS);
   const { count, subtotal } = useCart();
   const { balance } = useWallet();
+  const { count: wishCount } = useWishlist();
   const { bundle } = useRecommendationBundle(8);
   const track = useCustomerTracking();
 
@@ -98,7 +99,7 @@ function Index() {
   // Quick (30-minute) delivery only exists in designated quick-service areas.
   // Shop is one page: every product is listed once, and customers inside a
   // Quick area see a Quick tag on the items that can arrive fast.
-  const quickAvailable = !!location?.serviceable && isQuickArea(location.query || location.area);
+  const quickAvailable = locationHasQuick(location);
   useEffect(() => {
     // Legacy "Go to standard" choice from the unserviceable screen — Shop no
     // longer splits by tier, so just clear it.
@@ -230,6 +231,10 @@ function Index() {
               <div className="flex shrink-0 items-center gap-2">
                 <Link to="/menu" aria-label="Kartogo Cash wallet" className="flex items-center gap-1 rounded-xl bg-card px-3 py-2 text-sm font-bold shadow-pop">
                   <Wallet className="h-4 w-4 shrink-0 text-primary" /> {formatINR(balance)}
+                </Link>
+                <Link to="/wishlist" aria-label={`Wishlist${wishCount ? `, ${wishCount} saved` : ""}`} className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-card shadow-pop">
+                  <Heart className="h-5 w-5 shrink-0 text-primary" />
+                  {wishCount > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] font-extrabold text-destructive-foreground">{wishCount > 99 ? "99+" : wishCount}</span>}
                 </Link>
                 <Link to="/menu" aria-label="Account" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-card shadow-pop">
                   <User2 className="h-5 w-5 shrink-0" />

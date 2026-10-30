@@ -117,13 +117,13 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
             </div>
             {slide > 0 && (
               <button type="button" aria-label="Previous photo" onClick={e => goTo(e, slide - 1)}
-                className="absolute left-1.5 top-1/2 hidden h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-card/90 shadow-pop group-hover:grid">
+                className="absolute left-1.5 top-1/2 hidden h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-card/90 shadow-pop pointer-fine:group-hover:grid">
                 <ChevronLeft className="h-4 w-4" />
               </button>
             )}
             {slide < photos.length - 1 && (
               <button type="button" aria-label="Next photo" onClick={e => goTo(e, slide + 1)}
-                className="absolute right-1.5 top-1/2 hidden h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-card/90 shadow-pop group-hover:grid">
+                className="absolute right-1.5 top-1/2 hidden h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-card/90 shadow-pop pointer-fine:group-hover:grid">
                 <ChevronRight className="h-4 w-4" />
               </button>
             )}
@@ -153,9 +153,9 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
           </div>
         )}
         {out && <span className="absolute right-11 top-2 rounded-md bg-destructive px-2 py-0.5 text-[11px] font-bold text-destructive-foreground">Out</span>}
-        {lowStock && <span className="absolute bottom-4 left-2 rounded-md bg-saffron px-2 py-1 text-[11px] font-extrabold text-foreground shadow-pop">Only {p.stock} left</span>}
+        {lowStock && <span className={`absolute ${photos.length > 1 ? "bottom-4" : "bottom-2"} left-2 rounded-md bg-saffron px-2 py-1 text-[11px] font-extrabold text-foreground shadow-pop`}>Only {p.stock} left</span>}
         {showQuick && (
-          <span className="absolute bottom-4 right-2 inline-flex items-center gap-1 rounded-md bg-leaf px-2 py-1 text-[11px] font-extrabold text-primary-foreground shadow-pop">
+          <span className={`absolute ${photos.length > 1 ? "bottom-4" : "bottom-2"} right-2 inline-flex items-center gap-1 rounded-md bg-leaf px-2 py-1 text-[11px] font-extrabold text-primary-foreground shadow-pop`}>
             <Zap className="h-3 w-3 fill-current" /> Quick
           </span>
         )}
