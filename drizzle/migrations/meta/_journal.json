@@ -50,6 +50,13 @@
       "when": 1793361500853,
       "tag": "0006_drop_open_marketplace_read_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793421214342,
+      "tag": "0007_create_delivery_zones",
+      "breakpoints": true
     }
   ]
 }
