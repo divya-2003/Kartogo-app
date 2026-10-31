@@ -900,6 +900,51 @@ export type Database = {
         }
         Relationships: []
       }
+      delivery_zones: {
+        Row: {
+          created_at: string
+          eta_minutes: number
+          id: string
+          is_active: boolean
+          keyword: string | null
+          lat: number | null
+          lng: number | null
+          name: string
+          pincode: string | null
+          quick_enabled: boolean
+          radius_km: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          eta_minutes?: number
+          id?: string
+          is_active?: boolean
+          keyword?: string | null
+          lat?: number | null
+          lng?: number | null
+          name: string
+          pincode?: string | null
+          quick_enabled?: boolean
+          radius_km?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          eta_minutes?: number
+          id?: string
+          is_active?: boolean
+          keyword?: string | null
+          lat?: number | null
+          lng?: number | null
+          name?: string
+          pincode?: string | null
+          quick_enabled?: boolean
+          radius_km?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       driver_access_events: {
         Row: {
           active: boolean
