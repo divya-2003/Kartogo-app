@@ -31,7 +31,8 @@ import {
 
 
 // ---------------- Cart ----------------
-export type CartItem = { productId: string; qty: number };
+/** `unselected` marks a line the customer unticked in the cart; it stays in the cart but is left out of checkout. */
+export type CartItem = { productId: string; qty: number; unselected?: boolean };
 
 type CartCtx = {
   items: CartItem[];
@@ -41,6 +42,14 @@ type CartCtx = {
   clear: () => void;
   count: number;
   subtotal: number;
+  /** Tick / untick a cart line for checkout. */
+  toggleSelected: (id: string) => void;
+  setAllSelected: (selected: boolean) => void;
+  /** Only the ticked lines — what checkout buys. */
+  checkoutItems: CartItem[];
+  checkoutSubtotal: number;
+  /** Removes only the ticked lines after they are ordered; unticked ones stay in the cart. */
+  clearCheckedOut: () => void;
 };
 
 const CartContext = createContext<CartCtx | null>(null);
@@ -104,7 +113,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setItems(prev => {
         const ex = prev.find(i => i.productId === id);
         return ex
-          ? prev.map(i => i.productId === id ? { ...i, qty: clamp(id, i.qty + qty) } : i)
+          ? prev.map(i => i.productId === id ? { ...i, qty: clamp(id, i.qty + qty), unselected: false } : i)
           : [...prev, { productId: id, qty: clamp(id, qty) }];
       });
     const remove: CartCtx["remove"] = (id) => setItems(prev => prev.filter(i => i.productId !== id));
@@ -112,11 +121,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setItems(prev => qty <= 0 ? prev.filter(i => i.productId !== id) : prev.map(i => i.productId === id ? { ...i, qty: clamp(id, qty) } : i));
     const clear = () => setItems([]);
     const count = items.reduce((s, i) => s + i.qty, 0);
-    const subtotal = items.reduce((s, i) => {
+    const sum = (list: CartItem[]) => list.reduce((s, i) => {
       const p = products.find(p => p.id === i.productId);
       return s + (p ? p.price * i.qty : 0);
     }, 0);
-    return { items, add, remove, setQty, clear, count, subtotal };
+    const subtotal = sum(items);
+    const checkoutItems = items.filter(i => !i.unselected);
+    const checkoutSubtotal = sum(checkoutItems);
+    const toggleSelected: CartCtx["toggleSelected"] = (id) =>
+      setItems(prev => prev.map(i => i.productId === id ? { ...i, unselected: !i.unselected } : i));
+    const setAllSelected: CartCtx["setAllSelected"] = (selected) =>
+      setItems(prev => prev.map(i => ({ ...i, unselected: !selected })));
+    const clearCheckedOut = () => setItems(prev => prev.filter(i => i.unselected));
+    return { items, add, remove, setQty, clear, count, subtotal, toggleSelected, setAllSelected, checkoutItems, checkoutSubtotal, clearCheckedOut };
   }, [items, products]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

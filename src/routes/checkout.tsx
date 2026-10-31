@@ -45,7 +45,8 @@ export const Route = createFileRoute("/checkout")({
 
 function CheckoutPage() {
   const { user, customerToken } = useAuth();
-  const { items, subtotal, clear } = useCart();
+  // Only the products ticked in the cart are bought; unticked ones stay in the cart.
+  const { checkoutItems: items, checkoutSubtotal: subtotal, clearCheckedOut: clear } = useCart();
   const { products } = useCatalog();
   const { place } = useOrders();
   const { location, savedAddresses, deliveryAddresses, removeDeliveryAddress, removeSavedAddress, updateSavedAddress } = useLocation();
