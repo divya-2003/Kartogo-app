@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { Header } from "@/components/Header";
+import { locationHasQuick } from "@/lib/delivery-tier";
 import { LocationPicker } from "@/components/LocationPicker";
 import { Button } from "@/components/ui/button";
 import { useAuth, useCart, useCatalog, useOrders, useLocation, useWallet, buildLocationQuery, type SavedLocation } from "@/lib/store";
@@ -44,7 +45,8 @@ export const Route = createFileRoute("/checkout")({
 
 function CheckoutPage() {
   const { user, customerToken } = useAuth();
-  const { items, subtotal, clear } = useCart();
+  // Only the products ticked in the cart are bought; unticked ones stay in the cart.
+  const { checkoutItems: items, checkoutSubtotal: subtotal, clearCheckedOut: clear } = useCart();
   const { products } = useCatalog();
   const { place } = useOrders();
   const { location, savedAddresses, deliveryAddresses, removeDeliveryAddress, removeSavedAddress, updateSavedAddress } = useLocation();
@@ -69,7 +71,7 @@ function CheckoutPage() {
   const [appliedCode, setAppliedCode] = useState<string | null>(null);
 
   // Scheduled delivery (Standard orders only).
-  const isQuick = (location?.etaMinutes ?? 99) <= 13;
+  const isQuick = locationHasQuick(location);
   const [slots, setSlots] = useState<DeliverySlot[]>([]);
   const [slotId, setSlotId] = useState<string | null>(null);
   const [slotDate, setSlotDate] = useState<string | null>(null);

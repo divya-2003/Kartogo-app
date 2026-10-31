@@ -41,7 +41,9 @@ export const TIER_LABEL: Record<DeliveryTier, string> = {
  * serviceable and either have a short ETA or sit in a named Quick locality.
  * Shared by Home, product grids and saved-address badges so they never disagree.
  */
-export function locationHasQuick(loc?: { serviceable?: boolean; etaMinutes?: number; query?: string; area?: string } | null): boolean {
+export function locationHasQuick(loc?: { serviceable?: boolean; etaMinutes?: number; query?: string; area?: string; quick?: boolean } | null): boolean {
   if (!loc?.serviceable) return false;
+  // The admin's per-area Quick switch decides whenever it is known.
+  if (typeof loc.quick === "boolean") return loc.quick;
   return (loc.etaMinutes ?? 99) <= 13 || isQuickArea(loc.query || loc.area);
 }

@@ -30,6 +30,7 @@ export function LocationGate() {
           area: result.area ?? query.trim(),
           serviceable: true,
           etaMinutes: result.etaMinutes ?? undefined,
+          quick: result.quick,
         });
         toast.success(result.reason);
       } else {

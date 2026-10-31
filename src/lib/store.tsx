@@ -16,6 +16,7 @@ import {
 } from "./orders.functions";
 import { addWishlistFn, removeWishlistFn, mergeWishlistFn } from "./wishlist.functions";
 import { locationHasQuick } from "./delivery-tier";
+import { checkManyServiceabilityFn } from "./serviceability.functions";
 import { listDriverAvailabilityFn, setDriverAvailabilityFn } from "./drivers.functions";
 import { getCustomerProfileFn, saveCustomerProfileFn, saveCustomerAddressesFn } from "./customer.functions";
 import {
@@ -30,7 +31,8 @@ import {
 
 
 // ---------------- Cart ----------------
-export type CartItem = { productId: string; qty: number };
+/** `unselected` marks a line the customer unticked in the cart; it stays in the cart but is left out of checkout. */
+export type CartItem = { productId: string; qty: number; unselected?: boolean };
 
 type CartCtx = {
   items: CartItem[];
@@ -40,6 +42,14 @@ type CartCtx = {
   clear: () => void;
   count: number;
   subtotal: number;
+  /** Tick / untick a cart line for checkout. */
+  toggleSelected: (id: string) => void;
+  setAllSelected: (selected: boolean) => void;
+  /** Only the ticked lines — what checkout buys. */
+  checkoutItems: CartItem[];
+  checkoutSubtotal: number;
+  /** Removes only the ticked lines after they are ordered; unticked ones stay in the cart. */
+  clearCheckedOut: () => void;
 };
 
 const CartContext = createContext<CartCtx | null>(null);
@@ -103,7 +113,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setItems(prev => {
         const ex = prev.find(i => i.productId === id);
         return ex
-          ? prev.map(i => i.productId === id ? { ...i, qty: clamp(id, i.qty + qty) } : i)
+          ? prev.map(i => i.productId === id ? { ...i, qty: clamp(id, i.qty + qty), unselected: false } : i)
           : [...prev, { productId: id, qty: clamp(id, qty) }];
       });
     const remove: CartCtx["remove"] = (id) => setItems(prev => prev.filter(i => i.productId !== id));
@@ -111,11 +121,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setItems(prev => qty <= 0 ? prev.filter(i => i.productId !== id) : prev.map(i => i.productId === id ? { ...i, qty: clamp(id, qty) } : i));
     const clear = () => setItems([]);
     const count = items.reduce((s, i) => s + i.qty, 0);
-    const subtotal = items.reduce((s, i) => {
+    const sum = (list: CartItem[]) => list.reduce((s, i) => {
       const p = products.find(p => p.id === i.productId);
       return s + (p ? p.price * i.qty : 0);
     }, 0);
-    return { items, add, remove, setQty, clear, count, subtotal };
+    const subtotal = sum(items);
+    const checkoutItems = items.filter(i => !i.unselected);
+    const checkoutSubtotal = sum(checkoutItems);
+    const toggleSelected: CartCtx["toggleSelected"] = (id) =>
+      setItems(prev => prev.map(i => i.productId === id ? { ...i, unselected: !i.unselected } : i));
+    const setAllSelected: CartCtx["setAllSelected"] = (selected) =>
+      setItems(prev => prev.map(i => ({ ...i, unselected: !selected })));
+    const clearCheckedOut = () => setItems(prev => prev.filter(i => i.unselected));
+    return { items, add, remove, setQty, clear, count, subtotal, toggleSelected, setAllSelected, checkoutItems, checkoutSubtotal, clearCheckedOut };
   }, [items, products]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
@@ -1045,6 +1063,11 @@ export type SavedLocation = {
   serviceable?: boolean;
   /** Expected door delivery time in minutes. */
   etaMinutes?: number;
+  /** Quick delivery offered here, as set by the admin for this area. */
+  quick?: boolean;
+  /** GPS point when the location was detected on the map. */
+  lat?: number;
+  lng?: number;
   /** Exact address details captured after the area is confirmed. */
   doorNumber?: string;
   apartment?: string;
@@ -1063,7 +1086,7 @@ export const ADDRESS_LABELS = ["Home", "Work", "Friends"] as const;
  * ETA; everything else is Standard. Saved profiles carry this so checkout can
  * show the right service the moment an address is picked.
  */
-export function addressZone(loc: Pick<SavedLocation, "serviceable" | "etaMinutes"> & Partial<Pick<SavedLocation, "query" | "area">>): "quick" | "standard" {
+export function addressZone(loc: Pick<SavedLocation, "serviceable" | "etaMinutes"> & Partial<Pick<SavedLocation, "query" | "area" | "quick">>): "quick" | "standard" {
   return locationHasQuick(loc) ? "quick" : "standard";
 }
 
@@ -1190,6 +1213,44 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     })();
     return () => { cancelled = true; };
   }, [customerToken, user?.phone]);
+
+  // Admins can change Quick delivery and delivery times per area at any time,
+  // so re-check the current and saved locations once per app open.
+  const zonesRefreshedRef = useRef(false);
+  useEffect(() => {
+    if (!ready || zonesRefreshedRef.current) return;
+    const list = [location, ...savedAddresses].filter((l): l is SavedLocation => !!l && l.serviceable !== false);
+    if (list.length === 0) return;
+    zonesRefreshedRef.current = true;
+    (async () => {
+      try {
+        const results = await checkManyServiceabilityFn({
+          data: { items: list.slice(0, 9).map(l => ({ location: (l.baseQuery || l.area || l.query).slice(0, 200), lat: l.lat, lng: l.lng })) },
+        });
+        const patch = (l: SavedLocation, r: (typeof results)[number] | undefined): SavedLocation => {
+          if (!r) return l;
+          return r.serviceable
+            ? { ...l, serviceable: true, quick: r.quick, etaMinutes: r.etaMinutes ?? l.etaMinutes }
+            : { ...l, quick: false };
+        };
+        let i = 0;
+        if (location && location.serviceable !== false) {
+          const next = patch(location, results[i++]);
+          setLoc(next);
+          write("qk_location", next);
+        }
+        setSaved(prev => {
+          const next = prev.map(a => {
+            if (a.serviceable === false) return a;
+            const idx = list.findIndex(l => l === a);
+            return idx >= 0 ? patch(a, results[idx]) : a;
+          });
+          write("qk_addresses", next);
+          return next;
+        });
+      } catch { /* offline — keep what we have */ }
+    })();
+  }, [ready, location, savedAddresses]);
 
   // Persist any later address changes to the server (once the initial sync is done).
   useEffect(() => {

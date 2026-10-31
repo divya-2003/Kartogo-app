@@ -136,6 +136,10 @@ export const adminCancelServiceOrderFn = createServerFn({ method: "POST" })
     const { verifyAdminToken } = await import("./auth-tokens.server");
     if (!verifyAdminToken(data.token)) return { ok: false };
     const d = await db();
-    await d.from("service_orders").update({ status: "CANCELLED" }).eq("id", data.id).not("status", "in", "(DELIVERED,COMPLETED)");
+    const { data: row } = await d.from("service_orders").update({ status: "CANCELLED" }).eq("id", data.id).not("status", "in", "(DELIVERED,COMPLETED,CANCELLED)").select("id,kind,order_code,customer_phone").maybeSingle();
+    if (row?.customer_phone) {
+      const { safePush } = await import("./push.server");
+      await safePush({ phone: String(row.customer_phone), type: "SERVICE_ORDER_CANCELLED", orderId: row.id, path: "/orders", title: row.kind === "RIDE" ? "Ride Cancelled" : "Food Order Cancelled", body: `${row.kind === "RIDE" ? "Your ride" : "Your food order"} (${row.order_code}) was cancelled by Kartogo.` });
+    }
     return { ok: true };
   });

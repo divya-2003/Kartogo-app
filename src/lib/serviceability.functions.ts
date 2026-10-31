@@ -1,19 +1,26 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { evaluateServiceability } from "./serviceability";
+import { applyDeliveryZones } from "./delivery-zones";
 
 const inputSchema = z.object({
   location: z.string().min(1).max(200),
+  lat: z.number().min(-90).max(90).optional(),
+  lng: z.number().min(-180).max(180).optional(),
 });
 
 /**
  * Backend serviceability check. The user types their location freely; the
- * server decides whether it falls inside the dark store's delivery zone.
+ * server decides whether it falls inside the delivery zone, then applies the
+ * admin's per-area Quick switch and delivery time.
  */
 export const checkServiceability = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => inputSchema.parse(data))
   .handler(async ({ data }) => {
-    return evaluateServiceability(data.location);
+    const { loadDeliveryZones } = await import("./delivery-zones.server");
+    const zones = await loadDeliveryZones();
+    const coords = data.lat != null && data.lng != null ? { lat: data.lat, lng: data.lng } : null;
+    return applyDeliveryZones(evaluateServiceability(data.location), zones, data.location, coords);
   });
 
 const coordsSchema = z.object({
@@ -23,11 +30,16 @@ const coordsSchema = z.object({
 
 /**
  * Reverse-geocodes the user's GPS coordinates into a readable address using
- * OpenStreetMap's Nominatim service, then runs the same serviceability rules.
+ * OpenStreetMap's Nominatim service, then runs the same serviceability rules
+ * plus the admin's map-point delivery areas.
  */
 export const locateByCoords = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => coordsSchema.parse(data))
   .handler(async ({ data }) => {
+    const { loadDeliveryZones } = await import("./delivery-zones.server");
+    const zones = await loadDeliveryZones();
+    const coords = { lat: data.lat, lng: data.lng };
+    let address = "";
     try {
       const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${data.lat}&lon=${data.lng}&zoom=16&addressdetails=1`;
       const res = await fetch(url, {
@@ -36,27 +48,40 @@ export const locateByCoords = createServerFn({ method: "POST" })
           "Accept-Language": "en",
         },
       });
-      if (!res.ok) {
-        return { address: null, ...evaluateServiceability("") };
+      if (res.ok) {
+        const json = (await res.json()) as {
+          display_name?: string;
+          address?: Record<string, string>;
+        };
+        const a = json.address ?? {};
+        const parts = [
+          a.suburb,
+          a.neighbourhood,
+          a.village,
+          a.town,
+          a.city,
+          a.county,
+          a.state,
+          a.postcode,
+        ].filter(Boolean);
+        address = parts.join(", ") || json.display_name || "";
       }
-      const json = (await res.json()) as {
-        display_name?: string;
-        address?: Record<string, string>;
-      };
-      const a = json.address ?? {};
-      const parts = [
-        a.suburb,
-        a.neighbourhood,
-        a.village,
-        a.town,
-        a.city,
-        a.county,
-        a.state,
-        a.postcode,
-      ].filter(Boolean);
-      const address = parts.join(", ") || json.display_name || "";
-      return { address, ...evaluateServiceability(address) };
     } catch {
-      return { address: null, ...evaluateServiceability("") };
+      address = "";
     }
+    const result = applyDeliveryZones(evaluateServiceability(address), zones, address, coords);
+    return { address: address || null, ...result, lat: data.lat, lng: data.lng };
+  });
+
+/** Re-checks several saved locations at once so admin area changes reach every saved address. */
+export const checkManyServiceabilityFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => z.object({ items: z.array(inputSchema).max(12) }).parse(data))
+  .handler(async ({ data }) => {
+    const { loadDeliveryZones } = await import("./delivery-zones.server");
+    const zones = await loadDeliveryZones();
+    return data.items.map(it => {
+      const coords = it.lat != null && it.lng != null ? { lat: it.lat, lng: it.lng } : null;
+      const r = applyDeliveryZones(evaluateServiceability(it.location), zones, it.location, coords);
+      return { serviceable: r.serviceable, quick: r.quick, etaMinutes: r.etaMinutes };
+    });
   });

@@ -199,6 +199,7 @@ export const createBookingFn = createServerFn({ method: "POST" })
       return { ok: false as const, error: "Couldn't place the booking. Please try again." };
     }
     await s.from("mp_booking_status_history").insert({ booking_id: ins.id, status: "BOOKING_REQUESTED", note: "Booking placed by customer" });
+    await (await import("./booking-push.server")).pushBookingEvent(ins.id as string, "placed", { phone: session.phone, partnerId: l.partner_id as string, listingName: l.name as string, code: ins.booking_code as string });
     return { ok: true as const, id: ins.id as string, code: ins.booking_code as string };
   });
 
@@ -238,6 +239,7 @@ export const cancelBookingFn = createServerFn({ method: "POST" })
       return { ok: false, error: "This booking can no longer be cancelled." };
     await s.from("mp_bookings").update({ status: "CANCELLED", updated_at: new Date().toISOString() }).eq("id", b.id);
     await s.from("mp_booking_status_history").insert({ booking_id: b.id, status: "CANCELLED", note: "Cancelled by customer" });
+    await (await import("./booking-push.server")).pushBookingEvent(b.id, "cancelled_by_customer");
     return { ok: true };
   });
 
@@ -268,6 +270,8 @@ export const adminUpdateBookingFn = createServerFn({ method: "POST" })
     if (data.quoteNote) patch.quote_note = data.quoteNote;
     await s.from("mp_bookings").update(patch).eq("id", data.id);
     await s.from("mp_booking_status_history").insert({ booking_id: data.id, status: data.status, note: data.quoteNote ?? "Updated by Kartogo" });
+    if (data.status === "CANCELLED") await (await import("./booking-push.server")).pushBookingEvent(data.id, "cancelled");
+    else if (data.status === "PROVIDER_CONFIRMED") await (await import("./booking-push.server")).pushBookingEvent(data.id, "confirmed");
     return { ok: true };
   });
 

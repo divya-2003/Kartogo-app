@@ -88,7 +88,7 @@ function LocationPickerClient({
   // Second step: capture the exact address (door no, apartment, landmark) for a
   // confirmed serviceable area before we save the location.
   const [pending, setPending] = useState<
-    { query: string; area: string; etaMinutes?: number } | null
+    { query: string; area: string; etaMinutes?: number; quick?: boolean; lat?: number; lng?: number } | null
   >(null);
   const [doorNumber, setDoorNumber] = useState("");
   const [apartment, setApartment] = useState("");
@@ -120,7 +120,7 @@ function LocationPickerClient({
   // Selecting/confirming an area saves the location immediately. We no longer
   // ask for the exact address (door no., apartment, landmark) here — those are
   // collected mandatorily at checkout.
-  const startDetails = (p: { query: string; area: string; etaMinutes?: number }) => {
+  const startDetails = (p: { query: string; area: string; etaMinutes?: number; quick?: boolean; lat?: number; lng?: number }) => {
     // Second step: confirm the exact address so deliveries land at the right
     // door instead of just the right locality.
     setPending(p);
@@ -137,6 +137,9 @@ function LocationPickerClient({
       query: addr.baseQuery ?? addr.query,
       area: addr.area,
       etaMinutes: addr.etaMinutes,
+      quick: addr.quick,
+      lat: addr.lat,
+      lng: addr.lng,
     });
     setEditingQuery(addr.query);
     setDoorNumber(addr.doorNumber ?? "");
@@ -176,6 +179,9 @@ function LocationPickerClient({
       area: pending.area,
       serviceable: true,
       etaMinutes: pending.etaMinutes,
+      quick: pending.quick,
+      lat: pending.lat,
+      lng: pending.lng,
       doorNumber: doorNumber.trim(),
       apartment: apartment.trim() || undefined,
       landmark: landmark.trim() || undefined,
@@ -227,6 +233,7 @@ function LocationPickerClient({
           query: query.trim(),
           area: result.area ?? query.trim(),
           etaMinutes: result.etaMinutes ?? undefined,
+          quick: result.quick,
         });
       } else {
         setDenied({ reason: result.reason, pincode: result.pincode ?? null, area: query.trim() });
@@ -257,6 +264,9 @@ function LocationPickerClient({
               query: result.address ?? label,
               area: label,
               etaMinutes: result.etaMinutes ?? undefined,
+              quick: result.quick,
+              lat: result.lat,
+              lng: result.lng,
             });
           } else {
             // Detected via GPS: skip the "not serviceable" card and take the

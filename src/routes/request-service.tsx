@@ -5,7 +5,7 @@ import { Loader2, CheckCircle2, MapPin, Bike, Send, User2, PackageCheck } from "
 import { createUnserviceableRequestFn } from "@/lib/unserviceable.functions";
 import { LocationPicker } from "@/components/LocationPicker";
 import { useAuth, useLocation } from "@/lib/store";
-import { isQuickArea } from "@/lib/serviceability";
+import { locationHasQuick } from "@/lib/delivery-tier";
 
 const searchSchema = z.object({
   pincode: z.string().optional(),
@@ -63,11 +63,11 @@ function RequestServicePage() {
   // The customer can change their location right here. The picker validates the
   // new place, so the moment it turns out to be a Quick area we send them there.
   useEffect(() => {
-    if (location?.serviceable && isQuickArea(location.query || location.area)) {
+    if (locationHasQuick(location)) {
       try { localStorage.removeItem("qk_service_tier"); } catch { /* ignore */ }
       nav({ to: "/", replace: true });
     }
-  }, [location?.serviceable, location?.query, location?.area, nav]);
+  }, [location, nav]);
 
   const submit = useCallback(() => {
     setState("sending");
