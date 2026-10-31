@@ -56,6 +56,9 @@ export function AutoLocationGate() {
             area,
             serviceable: true,
             etaMinutes: res.etaMinutes ?? undefined,
+            quick: res.quick,
+            lat,
+            lng,
             baseQuery: res.address || area,
           });
         } else {
