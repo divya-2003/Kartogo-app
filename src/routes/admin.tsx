@@ -4,7 +4,7 @@ import { useOrders } from "@/lib/store";
 import { verifyAdminAccessFn, type AdminSessionAccess } from "@/lib/admin-access.functions";
 import { canOpenAdminPath, type AdminPermission } from "@/lib/admin-access.shared";
 import { PartnerMenu, useLeaveCustomerMode } from "@/components/PartnerMenu";
-import { Sparkles, LayoutDashboard, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound, BellRing, UsersRound, ChevronLeft, Clock, ExternalLink, RefreshCw, Search, X } from "lucide-react";
+import { Sparkles, LayoutDashboard, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound, BellRing, MapPin, UsersRound, ChevronLeft, Clock, ExternalLink, RefreshCw, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { renewSessions } from "@/lib/session-keeper";
 import { logAdminActivityFn } from "@/lib/admin-activity.functions";
@@ -77,6 +77,7 @@ const NAV = [
   { to: "/admin/feedback", label: "Feedback", icon: Star, permission: "feedback" },
   { to: "/admin/delivery", label: "Delivery & live logistics", icon: Bike, permission: "delivery" },
   { to: "/admin/slots", label: "Delivery slots", icon: Clock, permission: "delivery" },
+  { to: "/admin/delivery-zones", label: "Quick areas & times", icon: MapPin, permission: "delivery" },
   { to: "/admin/print", label: "Print queue", icon: Printer, permission: "print" },
   { to: "/admin/partners", label: "Partner markets", icon: Store, permission: "partners" },
   { to: "/admin/partner-applications", label: "Partner applications", icon: Store, permission: "partners" },
