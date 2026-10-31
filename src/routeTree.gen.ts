@@ -49,6 +49,7 @@ import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
 import { Route as AdminCancellationsRouteImport } from './routes/admin.cancellations'
 import { Route as AdminCombosRouteImport } from './routes/admin.combos'
 import { Route as AdminDeliveryRouteImport } from './routes/admin.delivery'
+import { Route as AdminDeliveryZonesRouteImport } from './routes/admin.delivery-zones'
 import { Route as AdminFeedbackRouteImport } from './routes/admin.feedback'
 import { Route as AdminFoodRidesRouteImport } from './routes/admin.food-rides'
 import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
@@ -296,6 +297,11 @@ const AdminCombosRoute = AdminCombosRouteImport.update({
 const AdminDeliveryRoute = AdminDeliveryRouteImport.update({
   id: '/delivery',
   path: '/delivery',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDeliveryZonesRoute = AdminDeliveryZonesRouteImport.update({
+  id: '/delivery-zones',
+  path: '/delivery-zones',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminFeedbackRoute = AdminFeedbackRouteImport.update({
@@ -582,6 +588,7 @@ export interface FileRoutesByFullPath {
   '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/combos': typeof AdminCombosRoute
   '/admin/delivery': typeof AdminDeliveryRoute
+  '/admin/delivery-zones': typeof AdminDeliveryZonesRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/food-rides': typeof AdminFoodRidesRoute
   '/admin/inventory': typeof AdminInventoryRoute
@@ -669,6 +676,7 @@ export interface FileRoutesByTo {
   '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/combos': typeof AdminCombosRoute
   '/admin/delivery': typeof AdminDeliveryRoute
+  '/admin/delivery-zones': typeof AdminDeliveryZonesRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/food-rides': typeof AdminFoodRidesRoute
   '/admin/inventory': typeof AdminInventoryRoute
@@ -760,6 +768,7 @@ export interface FileRoutesById {
   '/admin/cancellations': typeof AdminCancellationsRoute
   '/admin/combos': typeof AdminCombosRoute
   '/admin/delivery': typeof AdminDeliveryRoute
+  '/admin/delivery-zones': typeof AdminDeliveryZonesRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/food-rides': typeof AdminFoodRidesRoute
   '/admin/inventory': typeof AdminInventoryRoute
@@ -852,6 +861,7 @@ export interface FileRouteTypes {
     | '/admin/cancellations'
     | '/admin/combos'
     | '/admin/delivery'
+    | '/admin/delivery-zones'
     | '/admin/feedback'
     | '/admin/food-rides'
     | '/admin/inventory'
@@ -939,6 +949,7 @@ export interface FileRouteTypes {
     | '/admin/cancellations'
     | '/admin/combos'
     | '/admin/delivery'
+    | '/admin/delivery-zones'
     | '/admin/feedback'
     | '/admin/food-rides'
     | '/admin/inventory'
@@ -1029,6 +1040,7 @@ export interface FileRouteTypes {
     | '/admin/cancellations'
     | '/admin/combos'
     | '/admin/delivery'
+    | '/admin/delivery-zones'
     | '/admin/feedback'
     | '/admin/food-rides'
     | '/admin/inventory'
@@ -1410,6 +1422,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDeliveryRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/delivery-zones': {
+      id: '/admin/delivery-zones'
+      path: '/delivery-zones'
+      fullPath: '/admin/delivery-zones'
+      preLoaderRoute: typeof AdminDeliveryZonesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/feedback': {
       id: '/admin/feedback'
       path: '/feedback'
@@ -1758,6 +1777,7 @@ interface AdminRouteChildren {
   AdminCancellationsRoute: typeof AdminCancellationsRoute
   AdminCombosRoute: typeof AdminCombosRoute
   AdminDeliveryRoute: typeof AdminDeliveryRoute
+  AdminDeliveryZonesRoute: typeof AdminDeliveryZonesRoute
   AdminFeedbackRoute: typeof AdminFeedbackRoute
   AdminFoodRidesRoute: typeof AdminFoodRidesRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
@@ -1795,6 +1815,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCancellationsRoute: AdminCancellationsRoute,
   AdminCombosRoute: AdminCombosRoute,
   AdminDeliveryRoute: AdminDeliveryRoute,
+  AdminDeliveryZonesRoute: AdminDeliveryZonesRoute,
   AdminFeedbackRoute: AdminFeedbackRoute,
   AdminFoodRidesRoute: AdminFoodRidesRoute,
   AdminInventoryRoute: AdminInventoryRoute,
