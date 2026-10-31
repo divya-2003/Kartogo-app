@@ -23,6 +23,14 @@ export const NOTIFICATION_TYPES = [
   "TEST",
   "PROMOTION",
   "BACK_IN_STOCK",
+  "BOOKING_PLACED",
+  "BOOKING_CONFIRMED",
+  "BOOKING_CANCELLED",
+  "PARTNER_NEW_BOOKING",
+  "PARTNER_BOOKING_CANCELLED",
+  "FOOD_ORDER_PLACED",
+  "RIDE_BOOKED",
+  "SERVICE_ORDER_CANCELLED",
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
@@ -39,6 +47,14 @@ export const MESSAGES: Record<NotificationType, { title: string; body: string }>
   TEST: { title: "Kartogo test notification 🔔", body: "Push notifications are working on this device." },
   PROMOTION: { title: "Kartogo offer", body: "A new offer is waiting for you." },
   BACK_IN_STOCK: { title: "Back in stock", body: "An item you wanted is available again." },
+  BOOKING_PLACED: { title: "Booking Received 📅", body: "Your Kartogo booking has been placed. We'll update you once it's confirmed." },
+  BOOKING_CONFIRMED: { title: "Booking Confirmed ✅", body: "Your Kartogo booking has been confirmed." },
+  BOOKING_CANCELLED: { title: "Booking Cancelled", body: "Your Kartogo booking has been cancelled." },
+  PARTNER_NEW_BOOKING: { title: "New booking 📅", body: "A customer just booked with you. Open your bookings to confirm it." },
+  PARTNER_BOOKING_CANCELLED: { title: "Booking cancelled", body: "A customer cancelled their booking with you." },
+  FOOD_ORDER_PLACED: { title: "Food Order Placed 🍲", body: "Your food order has been placed with the kitchen." },
+  RIDE_BOOKED: { title: "Ride Booked 🛺", body: "We're finding a driver for your ride." },
+  SERVICE_ORDER_CANCELLED: { title: "Cancelled", body: "Your Kartogo order has been cancelled." },
 };
 
 /** Which preference switch gates each notification type. */
@@ -53,13 +69,26 @@ const PREF_OF: Record<NotificationType, "order_updates" | "delivery_updates" | "
   TEST: "important_updates",
   PROMOTION: "promotional_offers",
   BACK_IN_STOCK: "important_updates",
+  BOOKING_PLACED: "order_updates",
+  BOOKING_CONFIRMED: "order_updates",
+  BOOKING_CANCELLED: "order_updates",
+  PARTNER_NEW_BOOKING: "important_updates",
+  PARTNER_BOOKING_CANCELLED: "important_updates",
+  FOOD_ORDER_PLACED: "order_updates",
+  RIDE_BOOKED: "order_updates",
+  SERVICE_ORDER_CANCELLED: "order_updates",
 };
 
 /** Deep link target for a notification tap. */
 export function deepLinkFor(type: NotificationType, orderId?: string | null, productId?: string | null): string {
   if (type === "BACK_IN_STOCK" && productId) return `/product/${encodeURIComponent(productId)}`;
+  if (type === "PARTNER_NEW_BOOKING" || type === "PARTNER_BOOKING_CANCELLED") return "/supplier/bookings";
   if (!orderId) return "/orders";
   switch (type) {
+    case "BOOKING_PLACED":
+    case "BOOKING_CONFIRMED":
+    case "BOOKING_CANCELLED":
+      return `/booking/${orderId}`;
     case "DRIVER_ASSIGNED":
     case "ORDER_PICKED_UP":
     case "DRIVER_NEARBY":
@@ -128,6 +157,8 @@ export type PushInput = {
   body?: string;
   /** Skip the per-customer preference check (test pushes from admin). */
   force?: boolean;
+  /** Where a tap opens, when it differs from the default for the type. */
+  path?: string;
 };
 
 export type PushOutcome = { sent: number; failed: number; skipped?: string };
@@ -202,7 +233,7 @@ export async function sendPushToCustomer(input: PushInput): Promise<PushOutcome>
     const data = {
       type: input.type,
       orderId: String(input.orderId ?? ""),
-      path: deepLinkFor(input.type, input.orderId, input.productId),
+      path: input.path ?? deepLinkFor(input.type, input.orderId, input.productId),
       productId: String(input.productId ?? ""),
       notificationId: String(notificationId ?? ""),
     };
@@ -267,5 +298,14 @@ export async function pushOrderStatus(orderId: string, status: string): Promise<
     await sendPushToCustomer({ phone: String(order.customer_phone), type, orderId });
   } catch (e) {
     console.error("[push] pushOrderStatus failed", e);
+  }
+}
+
+/** Best-effort push that never throws, for order/booking flows. */
+export async function safePush(input: PushInput): Promise<void> {
+  try {
+    await sendPushToCustomer(input);
+  } catch (e) {
+    console.error("[push] safePush failed", e);
   }
 }
