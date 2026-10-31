@@ -135,48 +135,6 @@ const bookingSchema = z.object({
 
 function code() { return "KB" + Math.random().toString(36).slice(2, 8).toUpperCase(); }
 
-/**
- * Booking push notifications (best-effort, never blocks the booking flow).
- * Customers hear about placed / confirmed / cancelled bookings; the partner
- * hears about new bookings and customer cancellations.
- */
-export async function pushBooking(
-  bookingId: string,
-  event: "placed" | "confirmed" | "cancelled" | "cancelled_by_customer",
-  known?: { phone: string; partnerId: string; listingName: string; code: string },
-) {
-  try {
-    const s = await db();
-    let info = known;
-    if (!info) {
-      const { data: b } = await s.from("mp_bookings").select("customer_phone,partner_id,booking_code,listing:mp_listings(name)").eq("id", bookingId).maybeSingle();
-      if (!b) return;
-      info = { phone: String(b.customer_phone ?? ""), partnerId: String(b.partner_id ?? ""), listingName: String(b.listing?.name ?? "your booking"), code: String(b.booking_code ?? "") };
-    }
-    const { safePush } = await import("./push.server");
-    const ref = info.code ? ` (${info.code})` : "";
-    if (info.phone) {
-      if (event === "placed") await safePush({ phone: info.phone, type: "BOOKING_PLACED", orderId: bookingId, body: `${info.listingName}${ref} is booked. We'll let you know once it's confirmed.` });
-      if (event === "confirmed") await safePush({ phone: info.phone, type: "BOOKING_CONFIRMED", orderId: bookingId, body: `${info.listingName}${ref} is confirmed.` });
-      if (event === "cancelled" || event === "cancelled_by_customer") await safePush({ phone: info.phone, type: "BOOKING_CANCELLED", orderId: bookingId, body: `${info.listingName}${ref} has been cancelled.` });
-    }
-    if (event === "placed" || event === "cancelled_by_customer") {
-      const { data: partner } = await s.from("mp_partners").select("supplier_phone").eq("id", info.partnerId).maybeSingle();
-      const partnerPhone = partner?.supplier_phone ? String(partner.supplier_phone) : "";
-      if (partnerPhone && partnerPhone !== info.phone) {
-        await safePush({
-          phone: partnerPhone,
-          type: event === "placed" ? "PARTNER_NEW_BOOKING" : "PARTNER_BOOKING_CANCELLED",
-          orderId: bookingId,
-          body: event === "placed" ? `New booking for ${info.listingName}${ref}. Open your bookings to confirm it.` : `The customer cancelled ${info.listingName}${ref}.`,
-        });
-      }
-    }
-  } catch (e) {
-    console.error("booking push failed", e);
-  }
-}
-
 export const createBookingFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => bookingSchema.parse(d))
   .handler(async ({ data }) => {
@@ -241,7 +199,7 @@ export const createBookingFn = createServerFn({ method: "POST" })
       return { ok: false as const, error: "Couldn't place the booking. Please try again." };
     }
     await s.from("mp_booking_status_history").insert({ booking_id: ins.id, status: "BOOKING_REQUESTED", note: "Booking placed by customer" });
-    await pushBooking(ins.id as string, "placed", { phone: session.phone, partnerId: l.partner_id as string, listingName: l.name as string, code: ins.booking_code as string });
+    await (await import("./booking-push.server")).pushBookingEvent(ins.id as string, "placed", { phone: session.phone, partnerId: l.partner_id as string, listingName: l.name as string, code: ins.booking_code as string });
     return { ok: true as const, id: ins.id as string, code: ins.booking_code as string };
   });
 
@@ -281,7 +239,7 @@ export const cancelBookingFn = createServerFn({ method: "POST" })
       return { ok: false, error: "This booking can no longer be cancelled." };
     await s.from("mp_bookings").update({ status: "CANCELLED", updated_at: new Date().toISOString() }).eq("id", b.id);
     await s.from("mp_booking_status_history").insert({ booking_id: b.id, status: "CANCELLED", note: "Cancelled by customer" });
-    await pushBooking(b.id, "cancelled_by_customer");
+    await (await import("./booking-push.server")).pushBookingEvent(b.id, "cancelled_by_customer");
     return { ok: true };
   });
 
@@ -312,8 +270,8 @@ export const adminUpdateBookingFn = createServerFn({ method: "POST" })
     if (data.quoteNote) patch.quote_note = data.quoteNote;
     await s.from("mp_bookings").update(patch).eq("id", data.id);
     await s.from("mp_booking_status_history").insert({ booking_id: data.id, status: data.status, note: data.quoteNote ?? "Updated by Kartogo" });
-    if (data.status === "CANCELLED") await pushBooking(data.id, "cancelled");
-    else if (data.status === "PROVIDER_CONFIRMED") await pushBooking(data.id, "confirmed");
+    if (data.status === "CANCELLED") await (await import("./booking-push.server")).pushBookingEvent(data.id, "cancelled");
+    else if (data.status === "PROVIDER_CONFIRMED") await (await import("./booking-push.server")).pushBookingEvent(data.id, "confirmed");
     return { ok: true };
   });
 
