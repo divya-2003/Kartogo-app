@@ -96,3 +96,8 @@
 - [x] Shop category bar fits all categories without sideways scrolling
 - [x] Admin top bar matches the seller portal
 - [ ] Check admin and seller top bars while signed in — needs a real admin/seller session
+
+## Oct 30 batch
+- [ ] Admin can switch Quick delivery on/off and set delivery time per area and per map point (coordinates + radius)
+- [ ] Push notifications for order/booking placed and cancelled (grocery, bookings, food, rides)
+- [ ] Empty-square select box on each cart product; only ticked items go to checkout
