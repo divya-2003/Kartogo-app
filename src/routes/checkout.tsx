@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { Header } from "@/components/Header";
+import { locationHasQuick } from "@/lib/delivery-tier";
 import { LocationPicker } from "@/components/LocationPicker";
 import { Button } from "@/components/ui/button";
 import { useAuth, useCart, useCatalog, useOrders, useLocation, useWallet, buildLocationQuery, type SavedLocation } from "@/lib/store";
@@ -69,7 +70,7 @@ function CheckoutPage() {
   const [appliedCode, setAppliedCode] = useState<string | null>(null);
 
   // Scheduled delivery (Standard orders only).
-  const isQuick = (location?.etaMinutes ?? 99) <= 13;
+  const isQuick = locationHasQuick(location);
   const [slots, setSlots] = useState<DeliverySlot[]>([]);
   const [slotId, setSlotId] = useState<string | null>(null);
   const [slotDate, setSlotDate] = useState<string | null>(null);
