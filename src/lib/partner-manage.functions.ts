@@ -168,6 +168,10 @@ export const partnerUpdateBookingFn = createServerFn({ method: "POST" })
     const { error } = await d.from("mp_bookings").update({ status: data.status }).eq("id", data.id);
     if (error) return { ok: false, error: "Could not update" };
     await d.from("mp_booking_status_history").insert({ booking_id: data.id, status: data.status, note: "Updated by partner" });
+    if (data.status === "CANCELLED" || data.status === "PROVIDER_CONFIRMED") {
+      const { pushBookingEvent } = await import("./booking-push.server");
+      await pushBookingEvent(data.id, data.status === "CANCELLED" ? "cancelled" : "confirmed");
+    }
     return { ok: true };
   });
 

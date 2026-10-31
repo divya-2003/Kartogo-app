@@ -550,6 +550,15 @@ export const cancelOrderFn = createServerFn({ method: "POST" })
     const { releaseForOrder } = await import("./inventory.server");
     await releaseForOrder(data.id, "customer");
 
+    // Push: cancellation confirmed (best-effort)
+    const { safePush } = await import("./push.server");
+    await safePush({
+      phone: String(existing.customer_phone),
+      type: "ORDER_CANCELLED",
+      orderId: data.id,
+      body: wasWallet ? "Your order has been cancelled and the amount is back in your Kartogo wallet." : "Your Kartogo order has been cancelled.",
+    });
+
     return row;
 
   });
