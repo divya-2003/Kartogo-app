@@ -52,6 +52,8 @@ export const createFoodOrderFn = createServerFn({ method: "POST" })
       details: { kitchen_id: kitchen.id, eta_min: kitchen.eta, items: lines, subtotal, delivery_fee: FOOD_DELIVERY_FEE, address: data.address, note: data.note ?? null, payment: "COD" },
     });
     if (!ins) return { ok: false as const, error: "Couldn't place the order. Please try again." };
+    const { safePush } = await import("./push.server");
+    await safePush({ phone: session.phone, type: "FOOD_ORDER_PLACED", orderId: ins.id, path: "/orders", body: `Your order from ${kitchen.name} (${ins.order_code}) has been placed.` });
     return { ok: true as const, id: ins.id, code: ins.order_code };
   });
 
@@ -73,6 +75,8 @@ export const createRideFn = createServerFn({ method: "POST" })
       details: { vehicle: data.vehicle, pickup: data.pickup, drop: data.drop, km: Math.round(km * 10) / 10, minutes: q.minutes, payment: "Cash/UPI" },
     });
     if (!ins) return { ok: false as const, error: "Couldn't book the ride. Please try again." };
+    const { safePush } = await import("./push.server");
+    await safePush({ phone: session.phone, type: "RIDE_BOOKED", orderId: ins.id, path: "/orders", body: `Your ${v.label.toLowerCase()} ride (${ins.order_code}) is booked. We're finding a driver.` });
     return { ok: true as const, id: ins.id, code: ins.order_code, fare: q.fare, minutes: q.minutes };
   });
 
@@ -98,6 +102,9 @@ export const cancelServiceOrderFn = createServerFn({ method: "POST" })
     if (!session) return { ok: false as const, error: "Please login." };
     const s = await db();
     const { data: row } = await s.from("service_orders").update({ status: "CANCELLED" })
-      .eq("id", data.id).eq("customer_phone", session.phone).in("status", ["PLACED", "SEARCHING"]).select("id").maybeSingle();
-    return row ? { ok: true as const } : { ok: false as const, error: "This can no longer be cancelled." };
+      .eq("id", data.id).eq("customer_phone", session.phone).in("status", ["PLACED", "SEARCHING"]).select("id,kind,order_code").maybeSingle();
+    if (!row) return { ok: false as const, error: "This can no longer be cancelled." };
+    const { safePush } = await import("./push.server");
+    await safePush({ phone: session.phone, type: "SERVICE_ORDER_CANCELLED", orderId: row.id, path: "/orders", title: row.kind === "RIDE" ? "Ride Cancelled" : "Food Order Cancelled", body: `${row.kind === "RIDE" ? "Your ride" : "Your food order"} (${row.order_code}) has been cancelled.` });
+    return { ok: true as const };
   });
