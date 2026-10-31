@@ -16,6 +16,7 @@ import {
 } from "./orders.functions";
 import { addWishlistFn, removeWishlistFn, mergeWishlistFn } from "./wishlist.functions";
 import { locationHasQuick } from "./delivery-tier";
+import { checkManyServiceabilityFn } from "./serviceability.functions";
 import { listDriverAvailabilityFn, setDriverAvailabilityFn } from "./drivers.functions";
 import { getCustomerProfileFn, saveCustomerProfileFn, saveCustomerAddressesFn } from "./customer.functions";
 import {
@@ -1045,6 +1046,11 @@ export type SavedLocation = {
   serviceable?: boolean;
   /** Expected door delivery time in minutes. */
   etaMinutes?: number;
+  /** Quick delivery offered here, as set by the admin for this area. */
+  quick?: boolean;
+  /** GPS point when the location was detected on the map. */
+  lat?: number;
+  lng?: number;
   /** Exact address details captured after the area is confirmed. */
   doorNumber?: string;
   apartment?: string;
@@ -1063,7 +1069,7 @@ export const ADDRESS_LABELS = ["Home", "Work", "Friends"] as const;
  * ETA; everything else is Standard. Saved profiles carry this so checkout can
  * show the right service the moment an address is picked.
  */
-export function addressZone(loc: Pick<SavedLocation, "serviceable" | "etaMinutes"> & Partial<Pick<SavedLocation, "query" | "area">>): "quick" | "standard" {
+export function addressZone(loc: Pick<SavedLocation, "serviceable" | "etaMinutes"> & Partial<Pick<SavedLocation, "query" | "area" | "quick">>): "quick" | "standard" {
   return locationHasQuick(loc) ? "quick" : "standard";
 }
 
@@ -1190,6 +1196,44 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     })();
     return () => { cancelled = true; };
   }, [customerToken, user?.phone]);
+
+  // Admins can change Quick delivery and delivery times per area at any time,
+  // so re-check the current and saved locations once per app open.
+  const zonesRefreshedRef = useRef(false);
+  useEffect(() => {
+    if (!ready || zonesRefreshedRef.current) return;
+    const list = [location, ...savedAddresses].filter((l): l is SavedLocation => !!l && l.serviceable !== false);
+    if (list.length === 0) return;
+    zonesRefreshedRef.current = true;
+    (async () => {
+      try {
+        const results = await checkManyServiceabilityFn({
+          data: { items: list.slice(0, 9).map(l => ({ location: (l.baseQuery || l.area || l.query).slice(0, 200), lat: l.lat, lng: l.lng })) },
+        });
+        const patch = (l: SavedLocation, r: (typeof results)[number] | undefined): SavedLocation => {
+          if (!r) return l;
+          return r.serviceable
+            ? { ...l, serviceable: true, quick: r.quick, etaMinutes: r.etaMinutes ?? l.etaMinutes }
+            : { ...l, quick: false };
+        };
+        let i = 0;
+        if (location && location.serviceable !== false) {
+          const next = patch(location, results[i++]);
+          setLoc(next);
+          write("qk_location", next);
+        }
+        setSaved(prev => {
+          const next = prev.map(a => {
+            if (a.serviceable === false) return a;
+            const idx = list.findIndex(l => l === a);
+            return idx >= 0 ? patch(a, results[idx]) : a;
+          });
+          write("qk_addresses", next);
+          return next;
+        });
+      } catch { /* offline — keep what we have */ }
+    })();
+  }, [ready, location, savedAddresses]);
 
   // Persist any later address changes to the server (once the initial sync is done).
   useEffect(() => {

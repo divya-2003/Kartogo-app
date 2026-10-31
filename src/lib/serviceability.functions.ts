@@ -72,3 +72,16 @@ export const locateByCoords = createServerFn({ method: "POST" })
     const result = applyDeliveryZones(evaluateServiceability(address), zones, address, coords);
     return { address: address || null, ...result, lat: data.lat, lng: data.lng };
   });
+
+/** Re-checks several saved locations at once so admin area changes reach every saved address. */
+export const checkManyServiceabilityFn = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => z.object({ items: z.array(inputSchema).max(12) }).parse(data))
+  .handler(async ({ data }) => {
+    const { loadDeliveryZones } = await import("./delivery-zones.server");
+    const zones = await loadDeliveryZones();
+    return data.items.map(it => {
+      const coords = it.lat != null && it.lng != null ? { lat: it.lat, lng: it.lng } : null;
+      const r = applyDeliveryZones(evaluateServiceability(it.location), zones, it.location, coords);
+      return { serviceable: r.serviceable, quick: r.quick, etaMinutes: r.etaMinutes };
+    });
+  });
