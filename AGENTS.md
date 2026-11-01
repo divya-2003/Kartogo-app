@@ -21,3 +21,5 @@
 - Ride start codes are generated and checked only on the server; driver job lists strip the code so riders must get it from the customer, and the fare is collected in a separate at-destination step before completion.
 - Decide whether a delivery location gets Quick only through the shared location-Quick helper in the delivery-tier module, so Home, product cards and saved-address badges never disagree.
 - Use the modular @firebase/app and @firebase/messaging packages for push, not the umbrella firebase package, because it bundles Firestore and its vulnerable gRPC dependency that the app never uses.
+- Quick availability and delivery minutes per area come from admin delivery areas (text match or map point + radius) applied server-side in the serviceability checks; saved locations carry the resulting quick flag and are re-checked once per app open so admin changes reach existing addresses.
+- Cart lines can be unticked; checkout buys and clears only ticked lines, so unticked products stay in the cart.
