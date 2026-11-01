@@ -87,9 +87,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   // Write only after the saved cart has been read, so the empty first render
   // can never overwrite it (React's dev double-mount would otherwise wipe it).
-  const cartLoaded = useRef(false);
-  useEffect(() => { setItems(read<CartItem[]>("qk_cart", [])); cartLoaded.current = true; }, []);
-  useEffect(() => { if (cartLoaded.current) write("qk_cart", items); }, [items]);
+  const [cartLoaded, setCartLoaded] = useState(false);
+  useEffect(() => { setItems(read<CartItem[]>("qk_cart", [])); setCartLoaded(true); }, []);
+  useEffect(() => { if (cartLoaded) write("qk_cart", items); }, [items, cartLoaded]);
 
   const products = useProductsValue();
 
