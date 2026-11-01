@@ -682,6 +682,42 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_briefings: {
+        Row: {
+          briefing_date: string
+          created_at: string
+          email_status: string
+          error: string | null
+          id: string
+          stats: Json
+          status: string
+          summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          briefing_date: string
+          created_at?: string
+          email_status?: string
+          error?: string | null
+          id?: string
+          stats?: Json
+          status?: string
+          summary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          briefing_date?: string
+          created_at?: string
+          email_status?: string
+          error?: string | null
+          id?: string
+          stats?: Json
+          status?: string
+          summary?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       delivery_assignments: {
         Row: {
           attempt: number
@@ -2417,6 +2453,27 @@ export type Database = {
         }
         Relationships: []
       }
+      product_ai_recommendations: {
+        Row: {
+          catalog_size: number
+          generated_at: string
+          product_id: string
+          related_ids: string[]
+        }
+        Insert: {
+          catalog_size?: number
+          generated_at?: string
+          product_id: string
+          related_ids?: string[]
+        }
+        Update: {
+          catalog_size?: number
+          generated_at?: string
+          product_id?: string
+          related_ids?: string[]
+        }
+        Relationships: []
+      }
       product_associations: {
         Row: {
           associated_product_id: string
@@ -3006,6 +3063,30 @@ export type Database = {
           note?: string | null
           reason?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      ui_translations: {
+        Row: {
+          created_at: string
+          lang: string
+          source: string
+          source_hash: string
+          translated: string
+        }
+        Insert: {
+          created_at?: string
+          lang: string
+          source: string
+          source_hash: string
+          translated: string
+        }
+        Update: {
+          created_at?: string
+          lang?: string
+          source?: string
+          source_hash?: string
+          translated?: string
         }
         Relationships: []
       }
