@@ -46,7 +46,7 @@ export const Route = createFileRoute("/checkout")({
 function CheckoutPage() {
   const { user, customerToken } = useAuth();
   // Only the products ticked in the cart are bought; unticked ones stay in the cart.
-  const { checkoutItems: items, checkoutSubtotal: subtotal, clearCheckedOut: clear } = useCart();
+  const { checkoutItems: items, checkoutSubtotal: subtotal, clearCheckedOut: clear, items: allCartItems } = useCart();
   const { products } = useCatalog();
   const { place } = useOrders();
   const { location, savedAddresses, deliveryAddresses, removeDeliveryAddress, removeSavedAddress, updateSavedAddress } = useLocation();
@@ -274,8 +274,12 @@ function CheckoutPage() {
       <div className="min-h-screen bg-background">
         <Header />
         <div className="mx-auto max-w-md px-4 py-16 text-center">
-          <h1 className="font-display text-2xl font-bold">Your cart is empty</h1>
-          <Link to="/" className="mt-5 inline-flex rounded-xl bg-primary px-5 py-3 font-bold text-primary-foreground">Start shopping</Link>
+          <h1 className="font-display text-2xl font-bold">{allCartItems.length > 0 ? "No products selected" : "Your cart is empty"}</h1>
+          {allCartItems.length > 0 ? (
+            <Link to="/cart" className="mt-5 inline-flex rounded-xl bg-primary px-5 py-3 font-bold text-primary-foreground">Select products in cart</Link>
+          ) : (
+            <Link to="/" className="mt-5 inline-flex rounded-xl bg-primary px-5 py-3 font-bold text-primary-foreground">Start shopping</Link>
+          )}
         </div>
       </div>
     );
