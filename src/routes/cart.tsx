@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { useCart, useCatalog, useWallet, useWishlist, useAuth } from "@/lib/store";
 import { formatINR } from "@/lib/data";
-import { Plus, Minus, ShoppingBag, Zap, PackageCheck, Truck, Wallet, Ticket, ChevronDown, ChevronUp, Trash2, Heart } from "lucide-react";
+import { Plus, Minus, ShoppingBag, Zap, PackageCheck, Truck, Wallet, Ticket, ChevronDown, ChevronUp, Trash2, Heart, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { RecommendationRow } from "@/components/RecommendationRow";
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/cart")({
 });
 
 function CartPage() {
-  const { items, setQty, remove, subtotal } = useCart();
+  const { items, setQty, remove, checkoutItems, checkoutSubtotal: subtotal, toggleSelected, setAllSelected } = useCart();
   const { products } = useCatalog();
   const { balance } = useWallet();
   const { has: inWishlist, toggle: toggleWishlist } = useWishlist();
@@ -43,7 +43,9 @@ function CartPage() {
   const fee = subtotal === 0 ? 0 : subtotal >= 199 ? 0 : 25;
   const total = subtotal + fee;
   // MRP total: each line's MRP (falls back to selling price when no MRP is set).
-  const mrpTotal = items.reduce((sum, i) => {
+  // Totals cover only the ticked products — those are what checkout buys.
+  const allSelected = checkoutItems.length === items.length;
+  const mrpTotal = checkoutItems.reduce((sum, i) => {
     const p = products.find(x => x.id === i.productId);
     if (!p) return sum;
     return sum + Math.max(p.mrp ?? p.price, p.price) * i.qty;
@@ -84,6 +86,17 @@ function CartPage() {
           <div className="mx-auto max-w-2xl space-y-4 px-4 pb-44 pt-4 md:px-6">
             <div className="flex items-center justify-between gap-3">
               <h1 className="font-display text-2xl font-bold">Your cart <span className="text-base font-semibold text-muted-foreground">({items.length})</span></h1>
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={allSelected}
+                onClick={() => setAllSelected(!allSelected)}
+                className="inline-flex items-center gap-2 text-sm font-bold"
+              >
+                <SelectBox checked={allSelected} />
+                {allSelected ? "Deselect all" : "Select all"}
+                <span className="font-semibold text-muted-foreground">({checkoutItems.length}/{items.length})</span>
+              </button>
             </div>
 
             <div className="rounded-2xl border border-border bg-card p-2">
@@ -112,8 +125,18 @@ function CartPage() {
                       const mrp = Math.max(p.mrp ?? p.price, p.price);
                       const off = mrp > p.price ? Math.round(((mrp - p.price) / mrp) * 100) : 0;
                       return (
-                        <div key={i.productId} className="space-y-3 p-4">
+                        <div key={i.productId} className={`space-y-3 p-4 ${i.unselected ? "opacity-60" : ""}`}>
                           <div className="flex items-start gap-3">
+                            <button
+                              type="button"
+                              role="checkbox"
+                              aria-checked={!i.unselected}
+                              aria-label={`${i.unselected ? "Select" : "Deselect"} ${p.name}`}
+                              onClick={() => toggleSelected(p.id)}
+                              className="-m-1 shrink-0 self-center p-1"
+                            >
+                              <SelectBox checked={!i.unselected} />
+                            </button>
                             <Link to="/product/$id" params={{ id: p.id }} className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-xl bg-cream bg-grain text-3xl">
                               {p.image ? <img src={p.image} alt={p.name} loading="lazy" className="h-full w-full object-cover" /> : p.emoji}
                             </Link>
@@ -247,8 +270,12 @@ function CartPage() {
                     <button onClick={() => document.getElementById("cart-price-details")?.scrollIntoView({ behavior: "smooth", block: "start" })} className="text-sm font-bold text-primary">View details</button>
                   </div>
                   {user ? (
-                    <button onClick={() => nav({ to: "/checkout" })} className="ml-auto flex-1 rounded-2xl bg-primary py-3.5 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90 sm:max-w-xs">
-                      Proceed to buy
+                    <button
+                      disabled={checkoutItems.length === 0}
+                      onClick={() => nav({ to: "/checkout" })}
+                      className="ml-auto flex-1 rounded-2xl bg-primary py-3.5 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 sm:max-w-xs"
+                    >
+                      {checkoutItems.length === 0 ? "Select products" : `Proceed to buy (${checkoutItems.length})`}
                     </button>
                   ) : (
                     <button onClick={() => nav({ to: "/login", search: { redirect: "/cart" } })} className="ml-auto flex-1 rounded-2xl bg-foreground py-3.5 font-display text-base font-extrabold text-background hover:bg-foreground/90 sm:max-w-xs">
@@ -262,6 +289,18 @@ function CartPage() {
         </>
       )}
     </div>
+  );
+}
+
+/** Empty square when unticked, filled square with a tick when ticked. */
+function SelectBox({ checked }: { checked: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className={`grid h-5 w-5 place-items-center rounded-[4px] border-2 transition-colors ${checked ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/60 bg-card"}`}
+    >
+      {checked && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+    </span>
   );
 }
 
