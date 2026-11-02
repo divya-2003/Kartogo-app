@@ -91,7 +91,17 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
 
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:shadow-pop">
+    <div
+      className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-border bg-card transition hover:shadow-pop"
+      onClick={(e) => {
+        // Anywhere on the card opens the product; its own buttons, links and
+        // pop-ups (share dialog) keep their own behaviour.
+        const target = e.target as HTMLElement;
+        if (!e.currentTarget.contains(target) || target.closest("button, a, input, select, textarea, [role=dialog]")) return;
+        onProductOpen?.(p.id);
+        nav({ to: "/product/$id", params: { id: p.id } });
+      }}
+    >
       <Link onClick={() => onProductOpen?.(p.id)} to="/product/$id" params={{ id: p.id }} className="relative grid aspect-square place-items-center overflow-hidden bg-cream bg-grain">
         {photos.length > 1 ? (
           <SwipePhotos photos={photos} alt={p.name} className="h-full w-full" />
