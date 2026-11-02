@@ -56,3 +56,35 @@ describe("partner portal on reopen", () => {
     expect(m.homeRedirectTarget()).toBeNull();
   });
 });
+
+describe("several partner sessions on one device", () => {
+  beforeEach(() => {
+    vi.stubGlobal("window", {});
+    vi.stubGlobal("localStorage", memoryStorage());
+    vi.stubGlobal("sessionStorage", memoryStorage());
+  });
+
+  it("an admin who also holds a delivery session reopens on the admin portal they used last", async () => {
+    localStorage.setItem("qk_admin_token", JSON.stringify("admin.token"));
+    localStorage.setItem("qk_delivery_token", "rider.token");
+    const m = await freshModule();
+    m.markActivePortal("/admin/orders");
+    expect(m.homeRedirectTarget()).toBe("/admin");
+  });
+
+  it("switches only when the person opens the other portal themselves", async () => {
+    localStorage.setItem("qk_admin_token", JSON.stringify("admin.token"));
+    localStorage.setItem("qk_supplier_token", JSON.stringify("seller.token"));
+    const m = await freshModule();
+    m.markActivePortal("/admin");
+    m.markActivePortal("/supplier/orders");
+    expect(m.homeRedirectTarget()).toBe("/supplier/sales");
+  });
+
+  it("falls back to the remaining session when the last-used one was signed out", async () => {
+    localStorage.setItem("qk_supplier_token", JSON.stringify("seller.token"));
+    localStorage.setItem("qk_active_portal", "/admin");
+    const m = await freshModule();
+    expect(m.homeRedirectTarget()).toBe("/supplier/sales");
+  });
+});
