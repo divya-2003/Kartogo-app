@@ -1,5 +1,4 @@
 import { MarketplaceCategoryGroups } from "@/components/marketplace/CategoryGroups";
-import { BottomNav } from "@/components/marketplace/BottomNav";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, Home, LayoutGrid, TrendingUp, Printer, Search, Store, Clock, X } from "lucide-react";
@@ -145,7 +144,6 @@ function CategoriesPage() {
           </div>
         )}
       </div>
-      <BottomNav />
     </div>
   );
 }

@@ -1,6 +1,20 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, LayoutGrid, ShoppingCart, Printer } from "lucide-react";
 import { useCart } from "@/lib/store";
+import { isPortalPath } from "@/lib/portal-mode";
+
+/** Pages without the bottom bar: payment steps, sign-in, and partner/admin portals. */
+const NO_BOTTOM_NAV = ["/checkout", "/topup", "/login", "/delivery-request"];
+export function showsBottomNav(path: string): boolean {
+  if (isPortalPath(path)) return false;
+  return !NO_BOTTOM_NAV.some(p => path === p || path.startsWith(`${p}/`));
+}
+
+/** Rendered once for the whole app; decides per page whether the bar shows. */
+export function GlobalBottomNav() {
+  const path = useRouterState({ select: s => s.location.pathname });
+  return showsBottomNav(path) ? <BottomNav /> : null;
+}
 
 const ITEMS = [
   { to: "/", label: "Home", icon: Home, match: (p: string) => p === "/" },
@@ -14,7 +28,7 @@ export function BottomNav() {
   const path = useRouterState({ select: s => s.location.pathname });
   const { count } = useCart();
   return (
-    <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+    <nav aria-label="Main" data-bottom-nav="" className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
       <div className="mx-auto flex max-w-2xl items-center justify-around px-2 py-2 lg:max-w-7xl">
         {ITEMS.map(({ to, label, icon: Icon, match }) => {
           const active = match(path);

@@ -154,7 +154,7 @@ function ItemPage() {
           )}
         </div>
       </div>
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-3 backdrop-blur">
+      <div className="above-bnav fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-3 backdrop-blur">
         <div className="mx-auto flex max-w-2xl gap-2">
           {visit ? (
             <>

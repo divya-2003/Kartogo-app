@@ -18,20 +18,21 @@ const TINTS = ["bg-saffron/15", "bg-leaf/15", "bg-primary/10"];
 const rememberOrigin = (slug: string) => { try { sessionStorage.setItem(`qk_explore_origin:${slug}`, window.location.pathname + window.location.search); } catch { /* unavailable */ } };
 
 /**
- * Shop category bar. It never scrolls sideways: every category fits the
- * available width, wrapping onto a second row only when the screen is narrow.
+ * Shop category bar: every category sits in ONE row that never scrolls
+ * sideways, on every screen size. Tiles shrink to share the width equally.
  */
 export function ShopCategoryStrip({ term = "" }: { term?: string }) {
   const cats = useQuery({ queryKey: ["mp-cats"], queryFn: () => listMpCategoriesFn(), staleTime: 5 * 60_000 });
   const q = term.trim().toLowerCase();
   const categories = sectionCategories((cats.data?.categories ?? []) as MpCategory[], "shop").filter(c => !q || c.name.toLowerCase().includes(q));
-  if (cats.isLoading) return <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(60px,1fr))] gap-2">{Array.from({ length: 9 }).map((_, i) => <div key={i} className="h-[76px] animate-pulse rounded-2xl bg-secondary" />)}</div>;
+  const cols = { gridTemplateColumns: `repeat(${Math.max(1, cats.isLoading ? 9 : categories.length)}, minmax(0, 1fr))` };
+  if (cats.isLoading) return <div className="mt-4 grid gap-1 sm:gap-3" style={cols}>{Array.from({ length: 9 }).map((_, i) => <div key={i} className="aspect-square animate-pulse rounded-xl bg-secondary" />)}</div>;
   return (
-    <nav aria-label="Shop categories" className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(60px,1fr))] gap-x-1.5 gap-y-3 sm:grid-cols-[repeat(auto-fit,minmax(72px,1fr))] sm:gap-x-3">
+    <nav aria-label="Shop categories" className="mt-4 grid gap-x-1 sm:gap-x-3" style={cols}>
       {categories.map((c, i) => (
         <Link key={c.slug} to="/explore/$slug" params={{ slug: c.slug }} onClick={() => rememberOrigin(c.slug)} className="flex min-w-0 flex-col items-center gap-1 text-center">
-          <span className={`grid aspect-square w-full max-w-16 place-items-center rounded-2xl text-2xl sm:max-w-[70px] sm:text-3xl ${TINTS[i % TINTS.length]}`}>{c.icon}</span>
-          <span className="w-full break-words text-[10px] font-semibold leading-tight text-foreground sm:text-xs">{c.name}</span>
+          <span className={`grid aspect-square w-full max-w-16 place-items-center rounded-xl text-lg min-[400px]:text-xl sm:max-w-[70px] sm:rounded-2xl sm:text-3xl ${TINTS[i % TINTS.length]}`}>{c.icon}</span>
+          <span className="w-full hyphens-auto break-words text-[9px] font-semibold leading-tight text-foreground min-[400px]:text-[10px] sm:text-xs">{c.name}</span>
         </Link>
       ))}
     </nav>

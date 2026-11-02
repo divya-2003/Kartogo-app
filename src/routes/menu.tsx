@@ -1,6 +1,5 @@
 import { ClipboardList as MClipboard, CreditCard as MCard, Tag as MTag, Store as MStore, Printer as MPrinter, Settings as MSettings, Shield as MShield, FileText as MFile, Pencil as MPencil } from "lucide-react";
-import { enterCustomerMode, leaveCustomerMode } from "@/lib/portal-mode";
-import { BottomNav } from "@/components/marketplace/BottomNav";
+import { enterCustomerMode, leaveCustomerMode, portalHomeTarget, type PortalHome } from "@/lib/portal-mode";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getReferralFn, applyReferralFn } from "@/lib/promo.functions";
@@ -133,6 +132,8 @@ function MenuPage() {
       <div className="min-h-screen bg-secondary/40 pb-24">
         <TopBar />
         <div className="mx-auto max-w-2xl space-y-3 md:px-6 md:py-4">
+          {/* Admins / partners browsing the customer side get a one-tap way back */}
+          <div className="px-4 pt-3 md:px-0 [&:empty]:hidden"><PortalReturnLink /></div>
           <section className="flex items-center justify-between gap-4 bg-card px-5 py-5 md:rounded-2xl md:shadow-pop">
             <div className="min-w-0">
               <h2 className="font-display text-xl font-extrabold">Account</h2>
@@ -159,7 +160,6 @@ function MenuPage() {
           </GuestGroup>
         </div>
         {showLang && <LanguageSheet value={lang} onPick={pickLang} onClose={() => setShowLang(false)} />}
-        <BottomNav />
       </div>
     );
   }
@@ -396,7 +396,6 @@ function MenuPage() {
           <LogOut className="h-5 w-5" /> Logout
         </button>
       </div>
-      <BottomNav />
     </div>
   );
 }
@@ -443,13 +442,19 @@ function Row({ to, onClick, icon, label, sub, last }: { to?: string; onClick?: (
 }
 
 function PortalReturnLink() {
-  const [target, setTarget] = useState<{ to: "/supplier/sales" | "/delivery"; label: string } | null>(null);
+  const [target, setTarget] = useState<{ to: PortalHome; label: string } | null>(null);
   useEffect(() => {
-    const has = (k: string) => {
-      try { const v = localStorage.getItem(k); return !!v && v !== "null" && v !== '""'; } catch { return false; }
+    // The portal this person used last (admin, seller, delivery or printer).
+    const home = portalHomeTarget();
+    if (!home) return;
+    const label: Record<PortalHome, string> = {
+      "/admin": "Back to admin dashboard",
+      "/supplier/sales": "Back to seller dashboard",
+      "/delivery": "Back to delivery dashboard",
+      "/delivery-request": "Back to delivery dashboard",
+      "/printer": "Back to printer dashboard",
     };
-    if (has("qk_supplier_token")) setTarget({ to: "/supplier/sales", label: "Back to seller portal" });
-    else if (has("qk_delivery_token")) setTarget({ to: "/delivery", label: "Back to delivery portal" });
+    setTarget({ to: home, label: label[home] });
   }, []);
   if (!target) return null;
   return (

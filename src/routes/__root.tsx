@@ -13,8 +13,9 @@ import { SplashScreen } from "@/components/SplashScreen";
 import { PushBridge } from "@/components/PushBridge";
 import { IdleReturnHome } from "@/components/IdleReturnHome";
 import { BottomSectionBack } from "@/components/BottomSectionBack";
+import { GlobalBottomNav } from "@/components/marketplace/BottomNav";
 import { CartProvider, AuthProvider, CatalogProvider, OrdersProvider, LocationProvider, WalletProvider, WishlistProvider, DriversProvider } from "@/lib/store";
-import { portalHomeTarget, isPortalPath, leaveCustomerMode } from "@/lib/portal-mode";
+import { portalHomeTarget, isPortalPath, leaveCustomerMode, markActivePortal, EARLY_PORTAL_REDIRECT_SCRIPT } from "@/lib/portal-mode";
 
 import appCss from "../styles.css?url";
 
@@ -61,7 +62,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
     ],
     links: [{ rel: "stylesheet", href: appCss }, { rel: "icon", type: "image/png", href: "/favicon.png" }],
-    scripts: [{
+    scripts: [{ children: EARLY_PORTAL_REDIRECT_SCRIPT }, {
       type: "application/ld+json",
       children: JSON.stringify({
         "@context": "https://schema.org",
@@ -132,7 +133,9 @@ function RouteMemory() {
         }
       }
     } catch { /* noop */ }
+    markActivePortal(window.location.pathname);
     return router.subscribe("onResolved", ({ toLocation }) => {
+      markActivePortal(toLocation.pathname);
       try { sessionStorage.setItem("qk_last_path", toLocation.href); } catch { /* noop */ }
     });
   }, [router]);
@@ -152,6 +155,7 @@ function RootComponent() {
                   <CartProvider>
                     <WishlistProvider>
                       <Outlet />
+                      <GlobalBottomNav />
                       <SplashScreen />
 <RouteMemory />
                       <PushBridge />

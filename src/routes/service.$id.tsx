@@ -75,7 +75,7 @@ function ServicePage() {
           ))}
         </section>
       </div>
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-3 backdrop-blur">
+      <div className="above-bnav fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-3 backdrop-blur">
         <button onClick={() => setBooking(true)} className="mx-auto flex h-12 w-full max-w-2xl items-center justify-center rounded-xl bg-primary font-bold text-primary-foreground">Book Now</button>
       </div>
     </div>
@@ -206,7 +206,7 @@ function BookingFlow({ listing, siblings, onBack }: { listing: MpListing & { par
           <p className="mt-2 text-[11px] text-muted-foreground">Pay at the salon or to the professional after the service.</p>
         </Step>
       </div>
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-3 backdrop-blur">
+      <div className="above-bnav fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-3 backdrop-blur">
         <button disabled={submitting || !time} onClick={confirm} className="mx-auto flex h-12 w-full max-w-2xl items-center justify-center rounded-xl bg-primary font-bold text-primary-foreground disabled:opacity-50">
           {submitting ? "Confirming…" : "Confirm Booking"}
         </button>

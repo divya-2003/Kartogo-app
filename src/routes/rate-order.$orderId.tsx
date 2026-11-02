@@ -168,7 +168,7 @@ function RateOrderPage() {
               })}
             </div>
 
-            <div className="sticky bottom-0 mt-5 flex items-center justify-between gap-3 rounded-2xl border border-border bg-card/95 p-4 backdrop-blur">
+            <div className="above-bnav sticky bottom-0 mt-5 flex items-center justify-between gap-3 rounded-2xl border border-border bg-card/95 p-4 backdrop-blur">
               <span className="text-sm text-muted-foreground">
                 {ratedCount} of {order.items.length} rated
               </span>

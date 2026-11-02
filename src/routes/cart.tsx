@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { useCart, useCatalog, useWallet, useWishlist, useAuth } from "@/lib/store";
 import { formatINR } from "@/lib/data";
-import { Plus, Minus, ShoppingBag, Zap, PackageCheck, Truck, Wallet, Ticket, ChevronDown, ChevronUp, Trash2, Heart, Check } from "lucide-react";
+import { Plus, Minus, ShoppingBag, Zap, PackageCheck, Truck, Wallet, Ticket, ChevronDown, ChevronUp, Trash2, Heart, Check, Store } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { RecommendationRow } from "@/components/RecommendationRow";
@@ -40,12 +40,20 @@ function CartPage() {
   const [showDiscounts, setShowDiscounts] = useState(true);
   useEffect(() => { track.trackCartView(); }, [track]);
 
-  const fee = subtotal === 0 ? 0 : subtotal >= 199 ? 0 : 25;
+  // Kartogo's own delivery fee applies to Kartogo items only; local stores deliver separately.
+  const grocerySubtotal = checkoutItems.reduce((sum, i) => {
+    if (i.listing) return sum;
+    const p = products.find(x => x.id === i.productId);
+    return sum + (p ? p.price * i.qty : 0);
+  }, 0);
+  const fee = grocerySubtotal === 0 ? 0 : grocerySubtotal >= 199 ? 0 : 25;
   const total = subtotal + fee;
   // MRP total: each line's MRP (falls back to selling price when no MRP is set).
   // Totals cover only the ticked products — those are what checkout buys.
   const allSelected = checkoutItems.length === items.length;
+  const storeLines = items.filter(i => i.listing);
   const mrpTotal = checkoutItems.reduce((sum, i) => {
+    if (i.listing) return sum + Math.max(i.listing.mrp ?? i.listing.price, i.listing.price) * i.qty;
     const p = products.find(x => x.id === i.productId);
     if (!p) return sum;
     return sum + Math.max(p.mrp ?? p.price, p.price) * i.qty;
@@ -140,7 +148,7 @@ function CartPage() {
                             <Link to="/product/$id" params={{ id: p.id }} className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-xl bg-cream bg-grain text-3xl">
                               {p.image ? <img src={p.image} alt={p.name} loading="lazy" className="h-full w-full object-cover" /> : p.emoji}
                             </Link>
-                            <div className="min-w-0 flex-1">
+                            <Link to="/product/$id" params={{ id: p.id }} className="min-w-0 flex-1">
                               <div className="font-semibold leading-tight">{p.name}</div>
                               <div className="mt-0.5 text-xs text-muted-foreground">{p.unit}</div>
                               <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
@@ -148,7 +156,7 @@ function CartPage() {
                                 {off > 0 && <span className="text-sm text-muted-foreground line-through">{formatINR(mrp * i.qty)}</span>}
                                 <span className="font-display text-lg font-extrabold">{formatINR(p.price * i.qty)}</span>
                               </div>
-                            </div>
+                            </Link>
                             <div className="flex shrink-0 items-center gap-1 rounded-lg border border-border">
                               <button aria-label={`Decrease quantity of ${p.name}`} onClick={() => { setQty(p.id, i.qty - 1); if (i.qty === 1) track.trackRemoveFromCart(p.id); }} className="grid h-8 w-8 place-items-center hover:bg-secondary"><Minus className="h-3 w-3" /></button>
                               <span className="min-w-6 text-center text-sm font-bold">{i.qty}</span>
@@ -175,6 +183,59 @@ function CartPage() {
                 </section>
               );
             })}
+
+            {/* Local-store products: scheduled delivery from the partner store */}
+            {storeLines.length > 0 && (
+              <section className="overflow-hidden rounded-2xl border border-border bg-card">
+                <div className="flex items-center gap-2 border-b border-border bg-secondary/40 px-4 py-2.5">
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-saffron/20 text-foreground"><Store className="h-4 w-4" /></span>
+                  <span className="truncate font-display text-sm font-extrabold">From local stores</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">({storeLines.length})</span>
+                </div>
+                <div className="divide-y divide-border">
+                  {storeLines.map(i => {
+                    const l = i.listing!;
+                    const mrp = Math.max(l.mrp ?? l.price, l.price);
+                    const off = mrp > l.price ? Math.round(((mrp - l.price) / mrp) * 100) : 0;
+                    const listingId = i.productId.slice(3);
+                    return (
+                      <div key={i.productId} className={`space-y-3 p-4 ${i.unselected ? "opacity-60" : ""}`}>
+                        <div className="flex items-start gap-3">
+                          <button type="button" role="checkbox" aria-checked={!i.unselected} aria-label={`${i.unselected ? "Select" : "Deselect"} ${l.name}`} onClick={() => toggleSelected(i.productId)} className="-m-1 shrink-0 self-center p-1">
+                            <SelectBox checked={!i.unselected} />
+                          </button>
+                          <Link to="/item/$id" params={{ id: listingId }} className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-xl bg-cream bg-grain text-3xl">
+                            {l.image ? <img src={l.image} alt={l.name} loading="lazy" className="h-full w-full object-cover" /> : (l.icon ?? "🛍️")}
+                          </Link>
+                          <Link to="/item/$id" params={{ id: listingId }} className="min-w-0 flex-1">
+                            <div className="font-semibold leading-tight">{l.name}</div>
+                            {l.partner && <div className="mt-0.5 truncate text-xs text-muted-foreground">{l.partner}</div>}
+                            <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
+                              {off > 0 && <span className="text-sm font-bold text-leaf">↓{off}%</span>}
+                              {off > 0 && <span className="text-sm text-muted-foreground line-through">{formatINR(mrp * i.qty)}</span>}
+                              <span className="font-display text-lg font-extrabold">{formatINR(l.price * i.qty)}</span>
+                            </div>
+                          </Link>
+                          <div className="flex shrink-0 items-center gap-1 rounded-lg border border-border">
+                            <button aria-label={`Decrease quantity of ${l.name}`} onClick={() => setQty(i.productId, i.qty - 1)} className="grid h-8 w-8 place-items-center hover:bg-secondary"><Minus className="h-3 w-3" /></button>
+                            <span className="min-w-6 text-center text-sm font-bold">{i.qty}</span>
+                            <button aria-label={`Increase quantity of ${l.name}`} onClick={() => setQty(i.productId, i.qty + 1)} className="grid h-8 w-8 place-items-center hover:bg-secondary"><Plus className="h-3 w-3" /></button>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 rounded-xl bg-secondary/60 px-3 py-2 text-sm">
+                          <Truck className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <span className="text-muted-foreground">Delivery</span>
+                          <span className="font-bold">Scheduled · pick the day at checkout</span>
+                        </div>
+                        <button onClick={() => remove(i.productId)} className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-border py-2 text-sm font-bold hover:bg-secondary">
+                          <Trash2 className="h-4 w-4" /> Remove
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
 
             {/* Savings zone */}
             <section className="space-y-3 rounded-2xl bg-primary/5 p-4">
@@ -224,7 +285,7 @@ function CartPage() {
                 {showFees && (
                   <div className="space-y-1 pl-3 text-muted-foreground">
                     <Row label="Delivery fee" value={fee === 0 ? "FREE" : formatINR(fee)} />
-                    {fee > 0 && <div className="text-xs text-primary">Add {formatINR(199 - subtotal)} more for free delivery</div>}
+                    {fee > 0 && <div className="text-xs text-primary">Add {formatINR(199 - grocerySubtotal)} more for free delivery</div>}
                   </div>
                 )}
                 <div className="border-t border-dashed border-border" />
@@ -255,7 +316,7 @@ function CartPage() {
           </div>
 
           {/* Always-visible total bar — cannot be closed or scrolled away. */}
-          <div className="fixed inset-x-0 bottom-0 z-40 pb-[env(safe-area-inset-bottom)]">
+          <div className="above-bnav fixed inset-x-0 bottom-0 z-40 pb-[env(safe-area-inset-bottom)]">
             <div className="mx-auto max-w-2xl px-3 pb-3">
               <div className="rounded-2xl border border-border bg-card p-3 shadow-pop">
                 {savings > 0 && (

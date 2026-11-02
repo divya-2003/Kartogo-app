@@ -14,6 +14,7 @@ import { getSurgeConfigFn, SURGE_REASON_LABELS, type SurgeConfig } from "@/lib/s
 import { computeDiscount, type PromoRule } from "@/lib/promo";
 import { listPromoRulesFn, validatePromoFn } from "@/lib/promo.functions";
 import { listDeliverySlotsFn, type DeliverySlot } from "@/lib/slots.functions";
+import { createBookingFn } from "@/lib/marketplace.functions";
 
 // ---- Scheduled delivery helpers -------------------------------------------
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -46,8 +47,15 @@ export const Route = createFileRoute("/checkout")({
 function CheckoutPage() {
   const { user, customerToken } = useAuth();
   // Only the products ticked in the cart are bought; unticked ones stay in the cart.
-  const { checkoutItems: items, checkoutSubtotal: subtotal, clearCheckedOut: clear, items: allCartItems } = useCart();
+  const { checkoutItems, remove: removeLine, items: allCartItems } = useCart();
   const { products } = useCatalog();
+  // Kartogo items go through the normal order; local-store items become store
+  // orders (paid on delivery) placed alongside it.
+  const items = useMemo(() => checkoutItems.filter(i => !i.listing), [checkoutItems]);
+  const storeLines = useMemo(() => checkoutItems.filter(i => i.listing), [checkoutItems]);
+  const subtotal = items.reduce((s, i) => s + (products.find(p => p.id === i.productId)?.price ?? 0) * i.qty, 0);
+  const storeTotal = storeLines.reduce((s, i) => s + (i.listing?.price ?? 0) * i.qty, 0);
+  const [storeDate, setStoreDate] = useState(() => ymd(new Date(Date.now() + 86400000)));
   const { place } = useOrders();
   const { location, savedAddresses, deliveryAddresses, removeDeliveryAddress, removeSavedAddress, updateSavedAddress } = useLocation();
   const { balance: walletBalance, refresh: refreshWallet } = useWallet();
@@ -269,7 +277,7 @@ function CheckoutPage() {
     );
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && storeLines.length === 0) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -333,13 +341,34 @@ function CheckoutPage() {
         return;
       }
     }
-    if (payment === "wallet" && walletBalance < total) {
+    if (items.length > 0 && payment === "wallet" && walletBalance < total) {
       toast.error(`Not enough wallet balance. Add ${formatINR(total - walletBalance)} more.`);
       return;
     }
     customerEventService.trackPaymentStarted();
     setPlacing(true);
     try {
+      // Local-store items: one store order each, delivered on the chosen day.
+      let storePlaced = 0;
+      for (const line of storeLines) {
+        const r = await createBookingFn({ data: {
+          token: customerToken ?? "",
+          listingId: line.productId.slice(3),
+          date: storeDate,
+          address: { line: selected.address.slice(0, 300) },
+          details: { quantity: line.qty },
+          customerName: selected.name,
+        } }).catch(() => null);
+        if (r?.ok) { removeLine(line.productId); storePlaced++; }
+        else toast.error(`${line.listing?.name ?? "A store item"}: ${r && !r.ok ? r.error : "couldn't be ordered"}`);
+      }
+      if (items.length === 0) {
+        if (storePlaced > 0) {
+          toast.success(`${storePlaced} store order${storePlaced > 1 ? "s" : ""} placed!`);
+          nav({ to: "/orders" });
+        }
+        return;
+      }
       // Only raw items + address are sent. The server recomputes subtotal,
       // delivery fee, promo discount and total from its own catalog so prices
       // can never be tampered with from the browser. When paying with Kartogo
@@ -355,7 +384,7 @@ function CheckoutPage() {
         slotDate: speed === "30min" ? undefined : (slotDate ?? undefined),
         deliverySpeed: speed,
       });
-      clear();
+      items.forEach(i => removeLine(i.productId));
       // Feed the recommendation engine: purchase events, refreshed preferences,
       // replenishment predictions and co-purchase associations. Idempotent, and
       // never allowed to block the confirmation.
@@ -660,10 +689,31 @@ function CheckoutPage() {
             <div className="font-display text-lg font-bold">Your order</div>
             <ul className="my-4 space-y-2 text-sm">
               {items.map(i => {
-                const p = products.find(p => p.id === i.productId)!;
+                const p = products.find(p => p.id === i.productId);
+                if (!p) return null;
                 return <li key={i.productId} className="flex justify-between"><span>{p.emoji} {p.name} × {i.qty}</span><span className="font-semibold">{formatINR(p.price * i.qty)}</span></li>;
               })}
             </ul>
+            {storeLines.length > 0 && (
+              <div className="mb-4 space-y-2 rounded-xl border border-border bg-secondary/40 p-3 text-sm">
+                <div className="font-bold">From local stores · pay on delivery</div>
+                <ul className="space-y-1">
+                  {storeLines.map(i => (
+                    <li key={i.productId} className="flex justify-between gap-2"><span className="min-w-0 truncate">{i.listing!.icon ?? "🛍️"} {i.listing!.name} × {i.qty}</span><span className="shrink-0 font-semibold">{formatINR(i.listing!.price * i.qty)}</span></li>
+                  ))}
+                </ul>
+                <label className="flex items-center justify-between gap-2 pt-1">
+                  <span className="text-muted-foreground">Delivery day</span>
+                  <select value={storeDate} onChange={e => setStoreDate(e.target.value)} className="rounded-lg border border-input bg-background px-2 py-1.5 text-sm font-semibold">
+                    {Array.from({ length: 7 }).map((_, d) => {
+                      const day = new Date(Date.now() + (d + 1) * 86400000);
+                      return <option key={d} value={ymd(day)}>{d === 0 ? "Tomorrow" : day.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}</option>;
+                    })}
+                  </select>
+                </label>
+                <div className="flex justify-between border-t border-border pt-2 font-bold"><span>Store items total</span><span>{formatINR(storeTotal)}</span></div>
+              </div>
+            )}
             {/* Promo code */}
             <div className="border-t border-border pt-3">
               {appliedCode ? (
@@ -759,15 +809,15 @@ function CheckoutPage() {
             {/* Kartogo Cash orders are blocked outright when the balance can't
                 cover the total — the server would reject them anyway. */}
             <button
-              disabled={placing || !selectedId || (payment === "wallet" && walletBalance < total)}
+              disabled={placing || !selectedId || (items.length > 0 && payment === "wallet" && walletBalance < total)}
               onClick={handlePlace}
               className="mt-5 w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
             >
               {placing
                 ? "Placing order..."
-                : payment === "wallet" && walletBalance < total
+                : items.length > 0 && payment === "wallet" && walletBalance < total
                   ? `Insufficient Kartogo Cash — add ${formatINR(total - walletBalance)}`
-                  : "Place order"}
+                  : storeLines.length > 0 ? `Place order · ${formatINR(total + storeTotal)}` : "Place order"}
             </button>
           </aside>
         </div>

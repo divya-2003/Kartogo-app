@@ -31,12 +31,22 @@ import {
 
 
 // ---------------- Cart ----------------
-/** `unselected` marks a line the customer unticked in the cart; it stays in the cart but is left out of checkout. */
-export type CartItem = { productId: string; qty: number; unselected?: boolean };
+/** A local-store product (marketplace listing) kept in the cart with the details needed to show and order it. */
+export type CartListing = { name: string; price: number; mrp?: number; image?: string; icon?: string; partner?: string };
+/**
+ * `unselected` marks a line the customer unticked in the cart; it stays in the cart but is left out of checkout.
+ * Local-store products use the id `mp:<listingId>` and carry a `listing` snapshot.
+ */
+export type CartItem = { productId: string; qty: number; unselected?: boolean; listing?: CartListing };
+
+/** Local-store products can be ordered up to 5 at a time. */
+export const LISTING_CART_MAX = 5;
+export const isListingLine = (i: Pick<CartItem, "productId">) => i.productId.startsWith("mp:");
+export const listingIdOf = (i: Pick<CartItem, "productId">) => i.productId.slice(3);
 
 type CartCtx = {
   items: CartItem[];
-  add: (id: string, qty?: number) => void;
+  add: (id: string, qty?: number, listing?: CartListing) => void;
   remove: (id: string) => void;
   setQty: (id: string, qty: number) => void;
   clear: () => void;
@@ -96,6 +106,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const value = useMemo<CartCtx>(() => {
     // Per-product purchase cap configured by admin / supplier.
     const capFor = (id: string) => {
+      if (id.startsWith("mp:")) return LISTING_CART_MAX;
       const p = products.find(p => p.id === id);
       const m = p?.maxPerOrder;
       const configured = m && m > 0 ? m : Infinity;
@@ -105,6 +116,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const cap = capFor(id);
       if (qty > cap) {
         const p = products.find(p => p.id === id);
+        if (id.startsWith("mp:")) { toast.info(`Up to ${cap} per order from local stores`); return cap; }
         toast.info(cap > 0
           ? `Only ${cap} of ${p?.name ?? "this item"} can be added`
           : `${p?.name ?? "This item"} is out of stock`);
@@ -112,12 +124,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return qty;
     };
-    const add: CartCtx["add"] = (id, qty = 1) =>
+    const add: CartCtx["add"] = (id, qty = 1, listing) =>
       setItems(prev => {
         const ex = prev.find(i => i.productId === id);
         return ex
-          ? prev.map(i => i.productId === id ? { ...i, qty: clamp(id, i.qty + qty), unselected: false } : i)
-          : [...prev, { productId: id, qty: clamp(id, qty) }];
+          ? prev.map(i => i.productId === id ? { ...i, qty: clamp(id, i.qty + qty), unselected: false, ...(listing ? { listing } : {}) } : i)
+          : [...prev, { productId: id, qty: clamp(id, qty), ...(listing ? { listing } : {}) }];
       });
     const remove: CartCtx["remove"] = (id) => setItems(prev => prev.filter(i => i.productId !== id));
     const setQty: CartCtx["setQty"] = (id, qty) =>
@@ -125,6 +137,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const clear = () => setItems([]);
     const count = items.reduce((s, i) => s + i.qty, 0);
     const sum = (list: CartItem[]) => list.reduce((s, i) => {
+      if (i.listing) return s + i.listing.price * i.qty;
       const p = products.find(p => p.id === i.productId);
       return s + (p ? p.price * i.qty : 0);
     }, 0);

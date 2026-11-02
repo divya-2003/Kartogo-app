@@ -20,16 +20,60 @@ function readToken(key: string): string | null {
   } catch { return raw; }
 }
 
+const TOKEN_OF: Record<PortalHome, string> = {
+  "/delivery": "qk_delivery_token",
+  "/delivery-request": "qk_delivery_pending_token",
+  "/admin": "qk_admin_token",
+  "/supplier/sales": "qk_supplier_token",
+  "/printer": "qk_printer_token",
+};
+const PRIORITY: PortalHome[] = ["/delivery", "/delivery-request", "/admin", "/supplier/sales", "/printer"];
+/** The portal the person last opened themselves. Several partner sessions can
+ * live on one device (an admin opening the seller portal, for example); the
+ * app always returns to the one used last and never hops to another by itself. */
+export const ACTIVE_PORTAL_KEY = "qk_active_portal";
+
+/** Which portal a path belongs to, if any. */
+export function portalForPath(path: string): PortalHome | null {
+  if (path === "/delivery-request" || path.startsWith("/delivery-request/")) return "/delivery-request";
+  if (path === "/delivery" || path.startsWith("/delivery/") || path.startsWith("/delivery-")) return "/delivery";
+  if (path === "/admin" || path.startsWith("/admin/") || path.startsWith("/admin-")) return "/admin";
+  if (path === "/supplier" || path.startsWith("/supplier/") || path.startsWith("/supplier-")) return "/supplier/sales";
+  if (path === "/printer" || path.startsWith("/printer/") || path.startsWith("/printer-")) return "/printer";
+  return null;
+}
+
+/** Remember the portal the person just opened (called on every portal page visit). */
+export function markActivePortal(path: string) {
+  const home = portalForPath(path);
+  if (!home) return;
+  try { localStorage.setItem(ACTIVE_PORTAL_KEY, home); } catch { /* unavailable */ }
+}
+
 /** The portal this device's saved session belongs to, if any. */
 export function portalHomeTarget(): PortalHome | null {
   if (typeof window === "undefined") return null;
-  if (readToken("qk_delivery_token")) return "/delivery";
-  if (readToken("qk_delivery_pending_token")) return "/delivery-request";
-  if (readToken("qk_admin_token")) return "/admin";
-  if (readToken("qk_supplier_token")) return "/supplier/sales";
-  if (readToken("qk_printer_token")) return "/printer";
-  return null;
+  let active: string | null = null;
+  try { active = localStorage.getItem(ACTIVE_PORTAL_KEY); } catch { active = null; }
+  if (active && active in TOKEN_OF && readToken(TOKEN_OF[active as PortalHome])) return active as PortalHome;
+  return PRIORITY.find(h => readToken(TOKEN_OF[h])) ?? null;
 }
+
+/**
+ * Same decision as portalHomeTarget, as a tiny script that runs in the page
+ * head before anything paints — so reopening the app goes straight to the
+ * right portal instead of flashing the customer home (or another account).
+ */
+export const EARLY_PORTAL_REDIRECT_SCRIPT = `(function(){try{
+var T=${JSON.stringify(TOKEN_OF)},P=${JSON.stringify(PRIORITY)};
+function tok(k){var r=localStorage.getItem(k);if(!r||r==="null"||r==="undefined"||r==='""')return null;try{var j=JSON.parse(r);return typeof j==="string"&&j?j:null}catch(e){return r}}
+var a=localStorage.getItem("${ACTIVE_PORTAL_KEY}"),h=null;
+if(a&&T[a]&&tok(T[a]))h=a;else for(var i=0;i<P.length;i++){if(tok(T[P[i]])){h=P[i];break}}
+if(!h)return;
+var p=location.pathname,n=(performance.getEntriesByType("navigation")[0]||{}).type;
+var portal=/^\/(admin|supplier|delivery|printer)([\/-]|$)/.test(p);
+if(!portal&&p!=="/login"&&(p==="/"||n==="reload"||n==="back_forward"))location.replace(h);
+}catch(e){}})();`;
 
 export function isPortalPath(path: string): boolean {
   return PORTAL_PREFIXES.some(p => path === p || path.startsWith(`${p}/`) || path.startsWith(`${p}-`));
