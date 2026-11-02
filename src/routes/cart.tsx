@@ -40,7 +40,13 @@ function CartPage() {
   const [showDiscounts, setShowDiscounts] = useState(true);
   useEffect(() => { track.trackCartView(); }, [track]);
 
-  const fee = subtotal === 0 ? 0 : subtotal >= 199 ? 0 : 25;
+  // Kartogo's own delivery fee applies to Kartogo items only; local stores deliver separately.
+  const grocerySubtotal = checkoutItems.reduce((sum, i) => {
+    if (i.listing) return sum;
+    const p = products.find(x => x.id === i.productId);
+    return sum + (p ? p.price * i.qty : 0);
+  }, 0);
+  const fee = grocerySubtotal === 0 ? 0 : grocerySubtotal >= 199 ? 0 : 25;
   const total = subtotal + fee;
   // MRP total: each line's MRP (falls back to selling price when no MRP is set).
   // Totals cover only the ticked products — those are what checkout buys.
@@ -279,7 +285,7 @@ function CartPage() {
                 {showFees && (
                   <div className="space-y-1 pl-3 text-muted-foreground">
                     <Row label="Delivery fee" value={fee === 0 ? "FREE" : formatINR(fee)} />
-                    {fee > 0 && <div className="text-xs text-primary">Add {formatINR(199 - subtotal)} more for free delivery</div>}
+                    {fee > 0 && <div className="text-xs text-primary">Add {formatINR(199 - grocerySubtotal)} more for free delivery</div>}
                   </div>
                 )}
                 <div className="border-t border-dashed border-border" />
