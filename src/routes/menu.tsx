@@ -1,5 +1,5 @@
 import { ClipboardList as MClipboard, CreditCard as MCard, Tag as MTag, Store as MStore, Printer as MPrinter, Settings as MSettings, Shield as MShield, FileText as MFile, Pencil as MPencil } from "lucide-react";
-import { enterCustomerMode, leaveCustomerMode } from "@/lib/portal-mode";
+import { enterCustomerMode, leaveCustomerMode, portalHomeTarget, type PortalHome } from "@/lib/portal-mode";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getReferralFn, applyReferralFn } from "@/lib/promo.functions";
@@ -440,13 +440,19 @@ function Row({ to, onClick, icon, label, sub, last }: { to?: string; onClick?: (
 }
 
 function PortalReturnLink() {
-  const [target, setTarget] = useState<{ to: "/supplier/sales" | "/delivery"; label: string } | null>(null);
+  const [target, setTarget] = useState<{ to: PortalHome; label: string } | null>(null);
   useEffect(() => {
-    const has = (k: string) => {
-      try { const v = localStorage.getItem(k); return !!v && v !== "null" && v !== '""'; } catch { return false; }
+    // The portal this person used last (admin, seller, delivery or printer).
+    const home = portalHomeTarget();
+    if (!home) return;
+    const label: Record<PortalHome, string> = {
+      "/admin": "Back to admin dashboard",
+      "/supplier/sales": "Back to seller dashboard",
+      "/delivery": "Back to delivery dashboard",
+      "/delivery-request": "Back to delivery dashboard",
+      "/printer": "Back to printer dashboard",
     };
-    if (has("qk_supplier_token")) setTarget({ to: "/supplier/sales", label: "Back to seller portal" });
-    else if (has("qk_delivery_token")) setTarget({ to: "/delivery", label: "Back to delivery portal" });
+    setTarget({ to: home, label: label[home] });
   }, []);
   if (!target) return null;
   return (
