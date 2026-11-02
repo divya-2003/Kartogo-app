@@ -149,7 +149,16 @@
 
 /* Scrolling: native momentum, no scroll chaining from inner scrollers. */
 html, body { scroll-behavior: auto; overscroll-behavior-y: none; -webkit-overflow-scrolling: touch; }
-.overflow-y-auto, .overflow-x-auto, .overflow-auto, .overflow-y-scroll, .overflow-x-scroll {
-  overscroll-behavior: contain;
+/* Vertical scrollers keep their scroll to themselves; sideways strips (coupons,
+   photo galleries, product rows) only contain sideways scrolling so an up/down
+   swipe or mouse wheel over them still scrolls the page. */
+.overflow-y-auto, .overflow-y-scroll {
+  overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
 }
+.overflow-x-auto, .overflow-x-scroll {
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.overflow-auto { -webkit-overflow-scrolling: touch; }
