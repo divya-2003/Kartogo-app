@@ -14,6 +14,7 @@ import { getSurgeConfigFn, SURGE_REASON_LABELS, type SurgeConfig } from "@/lib/s
 import { computeDiscount, type PromoRule } from "@/lib/promo";
 import { listPromoRulesFn, validatePromoFn } from "@/lib/promo.functions";
 import { listDeliverySlotsFn, type DeliverySlot } from "@/lib/slots.functions";
+import { createBookingFn } from "@/lib/marketplace.functions";
 
 // ---- Scheduled delivery helpers -------------------------------------------
 const pad = (n: number) => String(n).padStart(2, "0");
