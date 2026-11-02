@@ -6,7 +6,6 @@ import { listMpCategoriesFn } from "@/lib/marketplace.functions";
 import { catalogProductInShop } from "@/lib/home-sections";
 import type { MpCategory } from "@/lib/marketplace";
 import { HomeMarketplace } from "@/components/marketplace/HomeMarketplace";
-import { BottomNav } from "@/components/marketplace/BottomNav";
 import { SectionBar, type SectionId } from "@/components/marketplace/SectionBar";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -383,7 +382,6 @@ function Index() {
         </div>
       </div>
       }
-      <BottomNav />
     </div>
   );
 }

@@ -1,4 +1,3 @@
-import { BottomNav } from "@/components/marketplace/BottomNav";
 import { OrdersTabs, BookingsList, ServiceOrdersList, BookingCard, ServiceOrderCard, useMyBookings, useMyServiceOrders, type ServiceOrder } from "@/components/marketplace/BookingsList";
 import type { Booking } from "@/lib/marketplace";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -889,7 +888,6 @@ function OrdersPage() {
         )}
         </>)}
       </div>
-      <BottomNav />
 
       {cancelTarget && (
         <CancelReasonModal

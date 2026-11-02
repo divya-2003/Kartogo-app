@@ -1,6 +1,5 @@
 import { ClipboardList as MClipboard, CreditCard as MCard, Tag as MTag, Store as MStore, Printer as MPrinter, Settings as MSettings, Shield as MShield, FileText as MFile, Pencil as MPencil } from "lucide-react";
 import { enterCustomerMode, leaveCustomerMode } from "@/lib/portal-mode";
-import { BottomNav } from "@/components/marketplace/BottomNav";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getReferralFn, applyReferralFn } from "@/lib/promo.functions";
@@ -159,7 +158,6 @@ function MenuPage() {
           </GuestGroup>
         </div>
         {showLang && <LanguageSheet value={lang} onPick={pickLang} onClose={() => setShowLang(false)} />}
-        <BottomNav />
       </div>
     );
   }
@@ -396,7 +394,6 @@ function MenuPage() {
           <LogOut className="h-5 w-5" /> Logout
         </button>
       </div>
-      <BottomNav />
     </div>
   );
 }

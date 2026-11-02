@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { listCategoryFn } from "@/lib/marketplace.functions";
 import { ListingCard, PartnerCard, SkeletonGrid, EmptyState, PageTop } from "@/components/marketplace/Cards";
-import { BottomNav } from "@/components/marketplace/BottomNav";
 import { ProductCard } from "@/components/ProductCard";
 import { useCatalog } from "@/lib/store";
 import type { MpCategory, MpListing, MpPartner } from "@/lib/marketplace";
@@ -143,7 +142,6 @@ function ExplorePage() {
           </>
         )}
       </div>
-      <BottomNav />
     </div>
   );
 }
