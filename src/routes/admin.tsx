@@ -4,7 +4,7 @@ import { useOrders } from "@/lib/store";
 import { verifyAdminAccessFn, type AdminSessionAccess } from "@/lib/admin-access.functions";
 import { canOpenAdminPath, type AdminPermission } from "@/lib/admin-access.shared";
 import { PartnerMenu, useLeaveCustomerMode } from "@/components/PartnerMenu";
-import { Sparkles, LayoutDashboard, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound, BellRing, MapPin, UsersRound, ChevronLeft, Clock, ExternalLink, RefreshCw, Search, X } from "lucide-react";
+import { Sparkles, LayoutDashboard, Boxes, ClipboardList, Bike, PackageX, Star, Flame, BadgeIndianRupee, Store, Inbox, Sheet as SheetIcon, CalendarDays, Package, BarChart3, Printer, UserRound, BellRing, MapPin, UsersRound, Clock, ExternalLink, RefreshCw, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { renewSessions } from "@/lib/session-keeper";
 import { logAdminActivityFn } from "@/lib/admin-activity.functions";
@@ -187,11 +187,6 @@ function AdminLayout() {
               </div>
             )}
           </PartnerMenu>
-          {path !== "/admin" && (
-            <Button type="button" variant="outline" size="icon" aria-label="Go back" onClick={() => router.history.back()}>
-              <ChevronLeft />
-            </Button>
-          )}
           <span className="min-w-0 truncate font-display text-sm font-bold md:text-base">Admin</span>
           <Link
             to="/admin/account"
