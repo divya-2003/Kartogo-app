@@ -13,6 +13,7 @@ import { SplashScreen } from "@/components/SplashScreen";
 import { PushBridge } from "@/components/PushBridge";
 import { IdleReturnHome } from "@/components/IdleReturnHome";
 import { BottomSectionBack } from "@/components/BottomSectionBack";
+import { GlobalBottomNav } from "@/components/marketplace/BottomNav";
 import { CartProvider, AuthProvider, CatalogProvider, OrdersProvider, LocationProvider, WalletProvider, WishlistProvider, DriversProvider } from "@/lib/store";
 import { portalHomeTarget, isPortalPath, leaveCustomerMode } from "@/lib/portal-mode";
 
@@ -152,6 +153,7 @@ function RootComponent() {
                   <CartProvider>
                     <WishlistProvider>
                       <Outlet />
+                      <GlobalBottomNav />
                       <SplashScreen />
 <RouteMemory />
                       <PushBridge />

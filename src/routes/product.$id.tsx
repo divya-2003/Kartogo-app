@@ -534,7 +534,7 @@ function ProductPage() {
       </div>
 
       {/* ---------- Sticky bottom action bar (mobile & tablet only) ---------- */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
+      <div className="above-bnav fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
         <div className="mx-auto flex max-w-3xl items-center gap-3">
           <Link
             to="/cart"

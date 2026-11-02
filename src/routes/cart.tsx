@@ -316,7 +316,7 @@ function CartPage() {
           </div>
 
           {/* Always-visible total bar — cannot be closed or scrolled away. */}
-          <div className="fixed inset-x-0 bottom-0 z-40 pb-[env(safe-area-inset-bottom)]">
+          <div className="above-bnav fixed inset-x-0 bottom-0 z-40 pb-[env(safe-area-inset-bottom)]">
             <div className="mx-auto max-w-2xl px-3 pb-3">
               <div className="rounded-2xl border border-border bg-card p-3 shadow-pop">
                 {savings > 0 && (

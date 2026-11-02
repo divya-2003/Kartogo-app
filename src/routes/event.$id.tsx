@@ -88,7 +88,7 @@ function EventPage() {
         </Field>
         <p className="text-xs text-muted-foreground">{custom ? "The provider will review your details and send you a quote." : "The provider will confirm availability. No payment is taken now."}</p>
       </div>
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-3 backdrop-blur">
+      <div className="above-bnav fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-3 backdrop-blur">
         <button disabled={busy} onClick={submit} className="mx-auto flex h-12 w-full max-w-2xl items-center justify-center rounded-xl bg-primary font-bold text-primary-foreground disabled:opacity-50">{busy ? "Sending…" : custom ? "Request Quote" : "Request Booking"}</button>
       </div>
     </div>
@@ -142,7 +142,7 @@ function EventPage() {
           ))}
         </section>
       </div>
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-3 backdrop-blur">
+      <div className="above-bnav fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-3 backdrop-blur">
         <button onClick={() => { if (!isQuote && l.packages.length && !pkg) { setPkg(l.packages[0].name); } setStep("form"); }} className="mx-auto flex h-12 w-full max-w-2xl items-center justify-center rounded-xl bg-primary font-bold text-primary-foreground">
           {isQuote ? "Request Quote" : "Check Availability"}
         </button>

@@ -162,3 +162,7 @@ html, body { scroll-behavior: auto; overscroll-behavior-y: none; -webkit-overflo
   -webkit-overflow-scrolling: touch;
 }
 .overflow-auto { -webkit-overflow-scrolling: touch; }
+
+/* Shared bottom bar: pages make room for it and lift their own fixed action bars above it. */
+body:has(nav[data-bottom-nav]) { padding-bottom: calc(3.75rem + env(safe-area-inset-bottom)); }
+body:has(nav[data-bottom-nav]) .above-bnav { bottom: calc(3.6rem + env(safe-area-inset-bottom)) !important; padding-bottom: 0.75rem; }
