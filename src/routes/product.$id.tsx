@@ -79,6 +79,7 @@ function ProductGallery({ images, name, emoji, className = "" }: { images: strin
   );
 }
 import { RecommendationRow } from "@/components/RecommendationRow";
+import { AiAlsoLike } from "@/components/AiAlsoLike";
 import { useFrequentlyBoughtTogether, useCustomerTracking } from "@/hooks/use-recommendations";
 
 function Stars({ value, className = "h-4 w-4" }: { value: number; className?: string }) {
@@ -338,6 +339,8 @@ function ProductPage() {
             <RecommendationRow title="" items={together} limit={4} compact />
           </div>
         )}
+
+        <AiAlsoLike productId={p.id} className="mt-3 rounded-2xl bg-card p-4 shadow-pop" />
       </div>
 
       {/* ---------- Desktop (laptop) layout: two-column ---------- */}
@@ -526,6 +529,8 @@ function ProductPage() {
             <RecommendationRow title="" items={together} limit={4} compact />
           </div>
         )}
+
+        <AiAlsoLike productId={p.id} className="col-span-2 rounded-2xl bg-card p-5 shadow-pop" />
       </div>
 
       {/* ---------- Sticky bottom action bar (mobile & tablet only) ---------- */}
