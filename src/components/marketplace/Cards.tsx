@@ -1,11 +1,11 @@
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { enterCustomerMode } from "@/lib/portal-mode";
 import { SwipePhotos } from "@/components/SwipePhotos";
-import { Star, MapPin, Clock, Heart, Home as HomeIcon, Package, Truck, Wrench, Plus } from "lucide-react";
+import { Star, MapPin, Clock, Heart, Home as HomeIcon, Package, Truck, Wrench, Plus, Minus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { formatINR } from "@/lib/data";
-import { useAuth } from "@/lib/store";
+import { useAuth, useCart, LISTING_CART_MAX } from "@/lib/store";
 import { toggleFavoriteFn, myFavoritesFn } from "@/lib/marketplace.functions";
 import { type MpListing, type MpPartner, listingPrice, listingRoute, isOpenNow, fmtTime } from "@/lib/marketplace";
 
@@ -68,6 +68,30 @@ export function FavButton({ type, id, className = "" }: { type: "listing" | "par
   );
 }
 
+/** ADD / − qty + for a local-store product, exactly like grocery cards. */
+export function ListingAddButton({ l, price }: { l: MpListing; price: number }) {
+  const { items, add, setQty } = useCart();
+  const id = `mp:${l.id}`;
+  const line = items.find(i => i.productId === id);
+  const stop = (e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); };
+  const snapshot = { name: l.name, price, mrp: l.mrp ? Number(l.mrp) : undefined, image: l.images?.[0], icon: l.icon, partner: l.partner?.name };
+  if (line) {
+    return (
+      <div onClick={stop} className="inline-flex shrink-0 items-center overflow-hidden rounded-lg bg-primary text-primary-foreground">
+        <button type="button" aria-label={`Decrease quantity of ${l.name}`} onClick={e => { stop(e); setQty(id, line.qty - 1); }} className="grid h-8 w-8 place-items-center hover:bg-primary/80"><Minus className="h-3 w-3" /></button>
+        <span className="min-w-6 text-center text-xs font-bold">{line.qty}</span>
+        <button type="button" aria-label={`Increase quantity of ${l.name}`} disabled={line.qty >= LISTING_CART_MAX} onClick={e => { stop(e); setQty(id, line.qty + 1); }} className="grid h-8 w-8 place-items-center hover:bg-primary/80 disabled:opacity-50"><Plus className="h-3 w-3" /></button>
+      </div>
+    );
+  }
+  return (
+    <button type="button" onClick={e => { stop(e); add(id, 1, snapshot); toast.success("Added to cart"); }}
+      className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg border border-primary px-3 py-1.5 text-xs font-bold text-primary transition hover:bg-primary hover:text-primary-foreground">
+      <Plus className="h-3 w-3" /> ADD
+    </button>
+  );
+}
+
 function ctaFor(l: MpListing) {
   switch (l.transaction_type) {
     case "SERVICE_BOOKING": return "Book Now";
@@ -113,10 +137,8 @@ export function ListingCard({ l, compact = false }: { l: MpListing; compact?: bo
             ) : <span className="text-sm font-bold text-muted-foreground">Price on quote</span>}
           </div>
           {!compact && (l.transaction_type === "PRODUCT_ORDER" ? (
-            /* Same outlined ADD button as grocery product cards; opens the item to pick a delivery date. */
-            <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg border border-primary px-3 py-1.5 text-xs font-bold text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
-              <Plus className="h-3 w-3" /> ADD
-            </span>
+            /* Same ADD button / stepper as grocery product cards — goes straight into the cart. */
+            price.amount != null ? <ListingAddButton l={l} price={price.amount} /> : null
           ) : (
             <span className="rounded-lg bg-primary px-2.5 py-1.5 text-xs font-bold text-primary-foreground">{ctaFor(l)}</span>
           ))}
