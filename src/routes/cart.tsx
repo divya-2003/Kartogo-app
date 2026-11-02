@@ -148,7 +148,7 @@ function CartPage() {
                             <Link to="/product/$id" params={{ id: p.id }} className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-xl bg-cream bg-grain text-3xl">
                               {p.image ? <img src={p.image} alt={p.name} loading="lazy" className="h-full w-full object-cover" /> : p.emoji}
                             </Link>
-                            <div className="min-w-0 flex-1">
+                            <Link to="/product/$id" params={{ id: p.id }} className="min-w-0 flex-1">
                               <div className="font-semibold leading-tight">{p.name}</div>
                               <div className="mt-0.5 text-xs text-muted-foreground">{p.unit}</div>
                               <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
@@ -156,7 +156,7 @@ function CartPage() {
                                 {off > 0 && <span className="text-sm text-muted-foreground line-through">{formatINR(mrp * i.qty)}</span>}
                                 <span className="font-display text-lg font-extrabold">{formatINR(p.price * i.qty)}</span>
                               </div>
-                            </div>
+                            </Link>
                             <div className="flex shrink-0 items-center gap-1 rounded-lg border border-border">
                               <button aria-label={`Decrease quantity of ${p.name}`} onClick={() => { setQty(p.id, i.qty - 1); if (i.qty === 1) track.trackRemoveFromCart(p.id); }} className="grid h-8 w-8 place-items-center hover:bg-secondary"><Minus className="h-3 w-3" /></button>
                               <span className="min-w-6 text-center text-sm font-bold">{i.qty}</span>
