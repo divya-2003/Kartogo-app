@@ -132,6 +132,8 @@ function MenuPage() {
       <div className="min-h-screen bg-secondary/40 pb-24">
         <TopBar />
         <div className="mx-auto max-w-2xl space-y-3 md:px-6 md:py-4">
+          {/* Admins / partners browsing the customer side get a one-tap way back */}
+          <div className="px-4 pt-3 md:px-0 [&:empty]:hidden"><PortalReturnLink /></div>
           <section className="flex items-center justify-between gap-4 bg-card px-5 py-5 md:rounded-2xl md:shadow-pop">
             <div className="min-w-0">
               <h2 className="font-display text-xl font-extrabold">Account</h2>
