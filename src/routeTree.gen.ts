@@ -96,6 +96,7 @@ import { Route as SupplierSalesRouteImport } from './routes/supplier.sales'
 import { Route as SupplierServicesRouteImport } from './routes/supplier.services'
 import { Route as TrackOrderIdRouteImport } from './routes/track.$orderId'
 import { Route as ApiPublicAiDailyForecastRouteImport } from './routes/api/public/ai-daily-forecast'
+import { Route as ApiPublicDailyBriefingRouteImport } from './routes/api/public/daily-briefing'
 import { Route as ApiPublicDispatchSweepRouteImport } from './routes/api/public/dispatch-sweep'
 import { Route as ApiPublicInventoryDigestRouteImport } from './routes/api/public/inventory-digest'
 
@@ -536,6 +537,11 @@ const ApiPublicAiDailyForecastRoute =
     path: '/api/public/ai-daily-forecast',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicDailyBriefingRoute = ApiPublicDailyBriefingRouteImport.update({
+  id: '/api/public/daily-briefing',
+  path: '/api/public/daily-briefing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicDispatchSweepRoute = ApiPublicDispatchSweepRouteImport.update({
   id: '/api/public/dispatch-sweep',
   path: '/api/public/dispatch-sweep',
@@ -636,6 +642,7 @@ export interface FileRoutesByFullPath {
   '/printer/': typeof PrinterIndexRoute
   '/supplier/': typeof SupplierIndexRoute
   '/api/public/ai-daily-forecast': typeof ApiPublicAiDailyForecastRoute
+  '/api/public/daily-briefing': typeof ApiPublicDailyBriefingRoute
   '/api/public/dispatch-sweep': typeof ApiPublicDispatchSweepRoute
   '/api/public/inventory-digest': typeof ApiPublicInventoryDigestRoute
 }
@@ -724,6 +731,7 @@ export interface FileRoutesByTo {
   '/printer': typeof PrinterIndexRoute
   '/supplier': typeof SupplierIndexRoute
   '/api/public/ai-daily-forecast': typeof ApiPublicAiDailyForecastRoute
+  '/api/public/daily-briefing': typeof ApiPublicDailyBriefingRoute
   '/api/public/dispatch-sweep': typeof ApiPublicDispatchSweepRoute
   '/api/public/inventory-digest': typeof ApiPublicInventoryDigestRoute
 }
@@ -816,6 +824,7 @@ export interface FileRoutesById {
   '/printer/': typeof PrinterIndexRoute
   '/supplier/': typeof SupplierIndexRoute
   '/api/public/ai-daily-forecast': typeof ApiPublicAiDailyForecastRoute
+  '/api/public/daily-briefing': typeof ApiPublicDailyBriefingRoute
   '/api/public/dispatch-sweep': typeof ApiPublicDispatchSweepRoute
   '/api/public/inventory-digest': typeof ApiPublicInventoryDigestRoute
 }
@@ -909,6 +918,7 @@ export interface FileRouteTypes {
     | '/printer/'
     | '/supplier/'
     | '/api/public/ai-daily-forecast'
+    | '/api/public/daily-briefing'
     | '/api/public/dispatch-sweep'
     | '/api/public/inventory-digest'
   fileRoutesByTo: FileRoutesByTo
@@ -997,6 +1007,7 @@ export interface FileRouteTypes {
     | '/printer'
     | '/supplier'
     | '/api/public/ai-daily-forecast'
+    | '/api/public/daily-briefing'
     | '/api/public/dispatch-sweep'
     | '/api/public/inventory-digest'
   id:
@@ -1088,6 +1099,7 @@ export interface FileRouteTypes {
     | '/printer/'
     | '/supplier/'
     | '/api/public/ai-daily-forecast'
+    | '/api/public/daily-briefing'
     | '/api/public/dispatch-sweep'
     | '/api/public/inventory-digest'
   fileRoutesById: FileRoutesById
@@ -1136,6 +1148,7 @@ export interface RootRouteChildren {
   StoreIdRoute: typeof StoreIdRoute
   TrackOrderIdRoute: typeof TrackOrderIdRoute
   ApiPublicAiDailyForecastRoute: typeof ApiPublicAiDailyForecastRoute
+  ApiPublicDailyBriefingRoute: typeof ApiPublicDailyBriefingRoute
   ApiPublicDispatchSweepRoute: typeof ApiPublicDispatchSweepRoute
   ApiPublicInventoryDigestRoute: typeof ApiPublicInventoryDigestRoute
 }
@@ -1751,6 +1764,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAiDailyForecastRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/daily-briefing': {
+      id: '/api/public/daily-briefing'
+      path: '/api/public/daily-briefing'
+      fullPath: '/api/public/daily-briefing'
+      preLoaderRoute: typeof ApiPublicDailyBriefingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/dispatch-sweep': {
       id: '/api/public/dispatch-sweep'
       path: '/api/public/dispatch-sweep'
@@ -1927,6 +1947,7 @@ const rootRouteChildren: RootRouteChildren = {
   StoreIdRoute: StoreIdRoute,
   TrackOrderIdRoute: TrackOrderIdRoute,
   ApiPublicAiDailyForecastRoute: ApiPublicAiDailyForecastRoute,
+  ApiPublicDailyBriefingRoute: ApiPublicDailyBriefingRoute,
   ApiPublicDispatchSweepRoute: ApiPublicDispatchSweepRoute,
   ApiPublicInventoryDigestRoute: ApiPublicInventoryDigestRoute,
 }
