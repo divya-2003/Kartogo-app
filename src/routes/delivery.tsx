@@ -4,6 +4,7 @@ import { RiderJobsPanel } from "@/components/logistics/RiderJobsPanel";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { StaffAccountCard } from "@/components/StaffAccountCard";
+import { LanguageRow } from "@/components/LanguagePicker";
 import { PartnerMenu, useLeaveCustomerMode } from "@/components/PartnerMenu";
 import { Bike, Phone, Package, Undo2, ShieldAlert, Truck, CheckCircle2, MapPin, LogOut, RefreshCw, IndianRupee, HandPlatter, User2, Wallet, ListChecks, Navigation, ChevronDown, MessageSquare } from "lucide-react";
 import { listDeliveryOrdersFn, deliverySetStatusFn, listAvailableOrdersFn, claimOrderFn, listReturnPickupsFn, markReturnPickedUpFn } from "@/lib/delivery.functions";
@@ -731,6 +732,8 @@ function AccountView({ driver, deliveredCount, activeCount, orders, onLogout }: 
       <EarningsSection orders={orders} deliveredCount={deliveredCount} activeCount={activeCount} />
 
       <StaffAccountCard role="delivery_partner" />
+
+      <LanguageRow />
 
 
       {/* Account details */}
