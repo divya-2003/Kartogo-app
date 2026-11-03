@@ -298,6 +298,7 @@ function MenuPage() {
           <Row to="/wishlist" icon={<Heart className="h-5 w-5" />} label="Saved Items" sub="Your grocery wishlist" />
           <Row onClick={() => soon("E-Gift Cards")} icon={<CreditCard className="h-5 w-5" />} label="E-Gift Cards" />
           <Row to="/help" icon={<Headphones className="h-5 w-5" />} label="Help & Support" />
+          <Row onClick={() => setShowLang(true)} icon={<Languages className="h-5 w-5" />} label="Select Language" sub={languageLabel(lang)} />
           <Row to="/notifications" icon={<MSettings className="h-5 w-5" />} label="Settings" sub="Notification preferences" />
           <Row to="/account" icon={<UserCircle2 className="h-5 w-5" />} label="Profile" />
           {/* Refer & earn (expandable) */}
