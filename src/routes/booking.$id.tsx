@@ -2,11 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, Phone, MessageCircle, MapPin, CalendarPlus, Bike, Star } from "lucide-react";
+import { CheckCircle2, Phone, MessageCircle, MapPin, Bike, Star } from "lucide-react";
 import { getBookingFn, cancelBookingFn } from "@/lib/marketplace.functions";
 import { EmptyState, PageTop } from "@/components/marketplace/Cards";
 import { useAuth } from "@/lib/store";
 import { formatINR } from "@/lib/data";
+import { AddToCalendar } from "@/components/AddToCalendar";
+import type { CalendarEvent } from "@/lib/calendar";
 import { STATUS_LABELS, TX_LABELS, timelineFor, canCustomerCancel, fmtDate, fmtTime, bookedLabel, type Booking } from "@/lib/marketplace";
 
 export const Route = createFileRoute("/booking/$id")({
@@ -27,13 +29,19 @@ export const Route = createFileRoute("/booking/$id")({
 
 const SUPPORT_PHONE = "+919110310034";
 
-function icsFor(b: Booking) {
-  if (!b.booking_date) return null;
-  const start = `${b.booking_date.replace(/-/g, "")}T${(b.start_time ?? "10:00").slice(0, 5).replace(":", "")}00`;
-  const end = `${b.booking_date.replace(/-/g, "")}T${(b.end_time ?? b.start_time ?? "11:00").slice(0, 5).replace(":", "")}00`;
-  const body = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Kartogo//EN", "BEGIN:VEVENT", `UID:${b.id}@kartogo`, `DTSTART:${start}`, `DTEND:${end}`,
-    `SUMMARY:${b.listing?.name ?? "Kartogo booking"} (${b.booking_code})`, `LOCATION:${b.address?.line ?? b.partner?.address ?? ""}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
-  return URL.createObjectURL(new Blob([body], { type: "text/calendar" }));
+/** Calendar entry for a booking (with reminders), or null when it has no date or was cancelled. */
+function calendarEventFor(b: Booking): CalendarEvent | null {
+  if (!b.booking_date || b.status === "CANCELLED") return null;
+  const what = b.listing?.name ?? "Kartogo booking";
+  return {
+    uid: b.id,
+    title: `${what} — Kartogo (${b.booking_code})`,
+    date: b.booking_date,
+    start: b.start_time,
+    end: b.end_time,
+    location: b.address?.line ?? b.partner?.address ?? null,
+    description: [b.partner?.name ? `With ${b.partner.name}` : null, `Booking ID ${b.booking_code}`, "Manage it in the Kartogo app → Orders & Bookings."].filter(Boolean).join("\n"),
+  };
 }
 
 function BookingPage() {
@@ -69,7 +77,7 @@ function BookingPage() {
     toast.success("Booking cancelled");
     qc.invalidateQueries({ queryKey: ["mp-booking", id] });
   };
-  const ics = icsFor(b);
+  const calEvent = calendarEventFor(b);
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -146,8 +154,14 @@ function BookingPage() {
           <Link to="/support" className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card py-3 text-sm font-bold"><MessageCircle className="h-4 w-4" />Chat</Link>
           <a target="_blank" rel="noreferrer" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(b.address?.line ?? b.partner?.address ?? "Ongole")}`} className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card py-3 text-sm font-bold"><MapPin className="h-4 w-4" />Location</a>
         </div>
+        {calEvent && (
+          <section className="space-y-2 rounded-2xl border border-border bg-card p-4">
+            <div className="font-display font-bold">Remind me in my calendar</div>
+            <p className="text-xs text-muted-foreground">Adds this booking to your phone's calendar with reminders 1 day and 1 hour before.</p>
+            <AddToCalendar event={calEvent} filename={`kartogo-${b.booking_code}.ics`} />
+          </section>
+        )}
         <div className="flex gap-2">
-          {ics && <a href={ics} download={`kartogo-${b.booking_code}.ics`} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground"><CalendarPlus className="h-4 w-4" />Add to Calendar</a>}
           <Link to="/orders" search={{ tab: "bookings" } as never} className="flex flex-1 items-center justify-center rounded-xl border border-border bg-card py-3 text-sm font-bold">All bookings</Link>
         </div>
         {canCustomerCancel(b.status) && <button disabled={cancelling} onClick={cancel} className="w-full rounded-xl border border-destructive/40 py-3 text-sm font-bold text-destructive">{cancelling ? "Cancelling…" : "Cancel booking"}</button>}

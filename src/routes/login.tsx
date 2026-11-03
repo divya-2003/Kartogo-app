@@ -170,24 +170,25 @@ function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-brand-navy px-4">
+    // Compact, top-aligned layout: the brand and the form sit close together in
+    // the upper part of the screen, so opening the phone keyboard never has to
+    // move or cover the number field (which made the keyboard close again).
+    <div className="flex min-h-screen flex-col items-center bg-brand-navy px-4 pt-6 pb-6 sm:justify-center sm:pt-0">
       {/* Brand */}
-      <div className="mb-8 flex flex-col items-center gap-3">
-        <div className="text-center">
-          <h1>
-            <img src={kartogoWordmark.url} alt="Kartogo" className="mx-auto h-auto w-full max-w-[300px] object-contain" />
-          </h1>
-          <p className="mt-2 text-sm text-brand-on-navy/70">Everything You Need, Delivered Fast</p>
-        </div>
+      <div className="mb-3 flex flex-col items-center sm:mb-6">
+        <h1>
+          <img src={kartogoWordmark.url} alt="Kartogo" className="mx-auto h-auto w-full max-w-[170px] object-contain sm:max-w-[260px]" />
+        </h1>
+        <p className="mt-1 text-xs text-brand-on-navy/70 sm:text-sm">Everything You Need, Delivered Fast</p>
       </div>
 
       <div className="w-full max-w-md">
-        <div className="rounded-3xl border border-border bg-card p-6 shadow-pop md:p-8">
+        <div className="rounded-3xl border border-border bg-card p-5 shadow-pop md:p-8">
           <h2 className="font-display text-xl font-bold">Login or sign up</h2>
           <p className="mt-1 text-sm text-muted-foreground">We'll send an OTP to your mobile.</p>
 
           {stage === "phone" && (
-            <form onSubmit={handleSend} className="mt-6 space-y-4">
+            <form onSubmit={handleSend} className="mt-4 space-y-3">
               <div>
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Mobile number</label>
                 <PhoneNumberInput
@@ -207,7 +208,7 @@ function LoginPage() {
           )}
 
           {stage === "otp" && (
-            <form onSubmit={handleVerify} className="mt-6 space-y-4">
+            <form onSubmit={handleVerify} className="mt-4 space-y-3">
               {demoCode && (
                 <div className="rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
                   <span className="font-semibold">Demo mode:</span> SMS isn't live yet, so use OTP{" "}

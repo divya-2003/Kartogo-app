@@ -6,6 +6,7 @@ import { useSupplier } from "@/lib/supplier-context";
 import { CATEGORIES, formatINR } from "@/lib/data";
 import { toast } from "sonner";
 import { StaffAccountCard } from "@/components/StaffAccountCard";
+import { LanguageRow } from "@/components/LanguagePicker";
 
 export const Route = createFileRoute("/supplier/account")({ component: SupplierAccount });
 
@@ -68,6 +69,7 @@ function SupplierAccount() {
       </div>
 
       <StaffAccountCard role="vendor" />
+      <LanguageRow />
 
       {/* Account details */}
       <section>

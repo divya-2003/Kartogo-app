@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { LanguageRow } from "@/components/LanguagePicker";
 import { LogOut, Phone, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -31,6 +32,8 @@ function PrinterAccount() {
           This portal handles every customer print order — download the file, print it, then mark it ready so the delivery partner can pick it up.
         </p>
       </div>
+
+      <LanguageRow />
 
       <Button variant="destructive" onClick={logout}><LogOut /> Log out</Button>
     </div>
