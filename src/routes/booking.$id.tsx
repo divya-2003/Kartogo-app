@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, Phone, MessageCircle, MapPin, CalendarPlus, Bike, Star } from "lucide-react";
+import { CheckCircle2, Phone, MessageCircle, MapPin, Bike, Star } from "lucide-react";
 import { getBookingFn, cancelBookingFn } from "@/lib/marketplace.functions";
 import { EmptyState, PageTop } from "@/components/marketplace/Cards";
 import { useAuth } from "@/lib/store";
@@ -77,7 +77,7 @@ function BookingPage() {
     toast.success("Booking cancelled");
     qc.invalidateQueries({ queryKey: ["mp-booking", id] });
   };
-  const ics = icsFor(b);
+  const calEvent = calendarEventFor(b);
 
   return (
     <div className="min-h-screen bg-background pb-24">
