@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { PendingTopups } from "@/components/PendingTopups";
 import { StaffAccountCard } from "@/components/StaffAccountCard";
 import { AdminUsagePanel } from "@/components/admin/AdminUsagePanel";
+import { MorningBriefing } from "@/components/admin/MorningBriefing";
 import { IndianRupee, ShoppingBag, AlertTriangle, Truck } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({ component: Dashboard });
@@ -117,6 +118,8 @@ function Dashboard() {
         <h1 className="font-display text-2xl font-bold md:text-3xl">Dashboard</h1>
         <p className="text-sm text-muted-foreground">Today's snapshot for Kartogo Ongole</p>
       </div>
+
+      <MorningBriefing />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat icon={<IndianRupee className="h-5 w-5" />} label="Today's revenue" value={formatINR(revenue)} onClick={() => setOpenPeriod("today")} />
