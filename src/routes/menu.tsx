@@ -1,4 +1,6 @@
 import { ClipboardList as MClipboard, CreditCard as MCard, Tag as MTag, Store as MStore, Printer as MPrinter, Settings as MSettings, Shield as MShield, FileText as MFile, Pencil as MPencil } from "lucide-react";
+import { LanguageSheet, useAppLanguage } from "@/components/LanguagePicker";
+import { languageLabel } from "@/lib/i18n";
 import { enterCustomerMode, leaveCustomerMode, portalHomeTarget, type PortalHome } from "@/lib/portal-mode";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -30,40 +32,12 @@ import {
   X,
 } from "lucide-react";
 
-const LANGS = [
-  { code: "en", label: "English", native: "English", ready: true },
-  { code: "te", label: "Telugu", native: "తెలుగు", ready: false },
-  { code: "hi", label: "Hindi", native: "हिन्दी", ready: false },
-  { code: "ta", label: "Tamil", native: "தமிழ்", ready: false },
-];
-
 function GuestGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="bg-card md:rounded-2xl md:shadow-pop">
       <h2 className="px-4 pb-1 pt-4 font-display text-lg font-extrabold">{title}</h2>
       <div>{children}</div>
     </section>
-  );
-}
-
-function LanguageSheet({ value, onPick, onClose }: { value: string; onPick: (code: string) => void; onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 md:items-center" onClick={onClose}>
-      <div role="dialog" aria-label="Select language" className="w-full max-w-md rounded-t-3xl bg-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] md:rounded-3xl" onClick={e => e.stopPropagation()}>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-lg font-extrabold">Select Language</h2>
-          <button onClick={onClose} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full hover:bg-secondary"><X className="h-4 w-4" /></button>
-        </div>
-        <div className="space-y-2">
-          {LANGS.map(l => (
-            <button key={l.code} onClick={() => onPick(l.code)} className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left ${value === l.code ? "border-primary bg-primary/5" : "border-border"}`}>
-              <span><span className="font-semibold">{l.label}</span> <span className="text-sm text-muted-foreground">{l.native}</span></span>
-              {value === l.code ? <Check className="h-5 w-5 text-primary" /> : !l.ready ? <span className="text-xs font-bold text-muted-foreground">Coming soon</span> : null}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -88,15 +62,8 @@ function MenuPage() {
   const [amount, setAmount] = useState("");
   const [showAddr, setShowAddr] = useState(false);
   const [showLang, setShowLang] = useState(false);
-  const [lang, setLang] = useState("en");
-  useEffect(() => { try { setLang(localStorage.getItem("qk_language") || "en"); } catch { /* noop */ } }, []);
-  const pickLang = (code: string) => {
-    const l = LANGS.find(x => x.code === code);
-    if (!l?.ready) { toast.info(`${l?.label ?? "This language"} is coming soon`); return; }
-    setLang(code);
-    try { localStorage.setItem("qk_language", code); } catch { /* noop */ }
-    setShowLang(false);
-  };
+  const { lang, pick } = useAppLanguage();
+  const pickLang = (code: string) => { pick(code); setShowLang(false); };
 
   // Refer & earn — both friends get Kartogo Cash after a first order of ₹200+.
   const [showRefer, setShowRefer] = useState(false);
@@ -145,7 +112,7 @@ function MenuPage() {
           </section>
 
           <GuestGroup title="Account Settings">
-            <Row onClick={() => setShowLang(true)} icon={<Languages className="h-5 w-5" />} label="Select Language" sub={LANGS.find(l => l.code === lang)?.label} />
+            <Row onClick={() => setShowLang(true)} icon={<Languages className="h-5 w-5" />} label="Select Language" sub={languageLabel(lang)} />
             <Row to="/notifications" icon={<BellRing className="h-5 w-5" />} label="Notification Settings" />
             <Row to="/help" icon={<Headphones className="h-5 w-5" />} label="Help Center" last />
           </GuestGroup>
