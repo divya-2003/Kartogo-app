@@ -71,7 +71,7 @@ var a=localStorage.getItem("${ACTIVE_PORTAL_KEY}"),h=null;
 if(a&&T[a]&&tok(T[a]))h=a;else for(var i=0;i<P.length;i++){if(tok(T[P[i]])){h=P[i];break}}
 if(!h)return;
 var p=location.pathname,n=(performance.getEntriesByType("navigation")[0]||{}).type;
-var portal=/^\/(admin|supplier|delivery|printer)([\/-]|$)/.test(p);
+var portal=["/admin","/supplier","/delivery","/printer"].some(function(x){return p===x||p.indexOf(x+"/")===0||p.indexOf(x+"-")===0});
 if(!portal&&p!=="/login"&&(p==="/"||n==="reload"||n==="back_forward"))location.replace(h);
 }catch(e){}})();`;
 

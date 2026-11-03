@@ -13,6 +13,15 @@ type Engine = { stop: () => void };
 const sources = new WeakMap<Text, string>();
 const applied = new WeakMap<Text, string>();
 const attrSources = new WeakMap<Element, Record<string, { src: string; tr: string }>>();
+// Text that keeps changing (typing animations, countdown timers) is left as it
+// is — translating every frame would send endless one-off text to the AI.
+const changes = new WeakMap<object, number>();
+const MAX_CHANGES = 3;
+function tooNoisy(target: object): boolean {
+  const n = (changes.get(target) ?? 0) + 1;
+  changes.set(target, n);
+  return n > MAX_CHANGES;
+}
 
 function readCache(lang: string): Record<string, string> {
   try { return JSON.parse(localStorage.getItem(`qk_tr_${lang}`) || "{}") as Record<string, string>; } catch { return {}; }
@@ -71,6 +80,8 @@ function startEngine(lang: string): Engine {
     const parent = node.parentElement;
     if (!parent || parent.closest(SKIP)) return;
     if (!isTranslatableText(value)) return;
+    const prev = sources.get(node);
+    if (prev != null && prev !== value && tooNoisy(node)) return;
     sources.set(node, value);
     const key = value.trim();
     const hit = cache[key];
@@ -89,6 +100,7 @@ function startEngine(lang: string): Engine {
       const rec = attrSources.get(el) ?? {};
       if (rec[a]?.tr === v) continue;
       if (!isTranslatableText(v)) continue;
+      if (rec[a] && rec[a].src !== v && tooNoisy(el)) continue;
       const key = v.trim();
       const hit = cache[key];
       if (hit != null) {

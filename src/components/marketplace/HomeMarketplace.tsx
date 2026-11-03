@@ -15,6 +15,10 @@ const DESIGN = {
 
 const TINTS = ["bg-saffron/15", "bg-leaf/15", "bg-primary/10"];
 
+// Soft hyphens so long names break neatly ("Elec-tronics") inside the narrow one-row tiles.
+const SOFT: Record<string, string> = { household: "House\u00ADhold", electronics: "Elec\u00ADtronics", furniture: "Furni\u00ADture", pharmacy: "Phar\u00ADmacy", products: "Pro\u00ADducts", groceries: "Gro\u00ADceries", stationery: "Statio\u00ADnery", clothes: "Clothes", cosmetics: "Cos\u00ADmetics" };
+const softName = (name: string) => name.split(" ").map(w => SOFT[w.toLowerCase()] ?? w).join(" ");
+
 const rememberOrigin = (slug: string) => { try { sessionStorage.setItem(`qk_explore_origin:${slug}`, window.location.pathname + window.location.search); } catch { /* unavailable */ } };
 
 /**
@@ -32,7 +36,7 @@ export function ShopCategoryStrip({ term = "" }: { term?: string }) {
       {categories.map((c, i) => (
         <Link key={c.slug} to="/explore/$slug" params={{ slug: c.slug }} onClick={() => rememberOrigin(c.slug)} className="flex min-w-0 flex-col items-center gap-1 text-center">
           <span className={`grid aspect-square w-full max-w-16 place-items-center rounded-xl text-lg min-[400px]:text-xl sm:max-w-[70px] sm:rounded-2xl sm:text-3xl ${TINTS[i % TINTS.length]}`}>{c.icon}</span>
-          <span className="w-full hyphens-auto break-words text-[9px] font-semibold leading-tight text-foreground min-[400px]:text-[10px] sm:text-xs">{c.name}</span>
+          <span className="w-full hyphens-manual text-[9px] font-semibold leading-tight text-foreground min-[400px]:text-[10px] sm:text-xs">{softName(c.name)}</span>
         </Link>
       ))}
     </nav>
