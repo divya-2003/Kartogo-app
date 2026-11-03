@@ -185,6 +185,7 @@ function MenuPage() {
         </div>
 
 
+        {showLang && <LanguageSheet value={lang} onPick={pickLang} onClose={() => setShowLang(false)} />}
         {showAdd && (
           <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center" onClick={() => setShowAdd(false)}>
             <div className="w-full max-w-sm rounded-2xl bg-card p-5 shadow-pop" onClick={e => e.stopPropagation()}>
