@@ -13,7 +13,7 @@
 - Record admin login, logout and page-view events in the admin audit trail under the admin_session entity keyed by staff id, so usage analytics come from server-verified tokens only.
 - Store empty session slots by removing the storage key, never as the text "null", so portal auto-redirects cannot mistake an empty slot for a saved session.
 - Open Home-tab sub-pages (e.g. a restaurant) on their own route so the Home section cards never render above a sub-page.
-- Partner and admin portals share the PartnerMenu three-line top bar; "shop as a customer" intent lives only in memory for the current app run (src/lib/portal-mode.ts), so reopening, reloading or idling the app always returns a saved portal session to its portal.
+- Partner and admin portals share the PartnerMenu three-line top bar; "shop as a customer" intent lives only in memory for the current app run (src/lib/portal-mode.ts), so reopening, reloading or idling the app returns to the portal the person opened last (qk_active_portal), decided by an inline head script before first paint so other accounts never flash or take over.
 - Rider self-claim ("I'm taking this order") puts the rider on duty and falls back to a direct single-order assignment when the order cannot join a trip, so claiming never depends on packing or store data.
 - Ask notification permission directly after the first-open location prompt (no in-app card); PushBridge listens for the grant event to register the device.
 - The customer Orders "All" tab is one list of product orders, bookings, food and rides sorted newest-first by creation time.
@@ -23,3 +23,7 @@
 - Use the modular @firebase/app and @firebase/messaging packages for push, not the umbrella firebase package, because it bundles Firestore and its vulnerable gRPC dependency that the app never uses.
 - Quick availability and delivery minutes per area come from admin delivery areas (text match or map point + radius) applied server-side in the serviceability checks; saved locations carry the resulting quick flag and are re-checked once per app open so admin changes reach existing addresses.
 - Cart lines can be unticked; checkout buys and clears only ticked lines, so unticked products stay in the cart.
+- Lovable AI calls go through src/lib/ai-responses.server.ts (Responses API, streamed, structured output) and every AI result shown to shoppers is cached in the database, because those endpoints are public and each call is billed.
+- App translation is a DOM-level translator (PageTranslator) backed by cached AI translations per language; admin paths are never translated and text that keeps changing is skipped, so new UI text needs no translation keys.
+- The customer bottom bar renders once in the root for every non-portal page except payment and sign-in; pages with their own fixed action bars add the above-bnav class so both stay visible.
+- Local-store (marketplace) products live in the cart as mp:<listingId> lines with a snapshot, and checkout places them as store orders alongside the Kartogo order.

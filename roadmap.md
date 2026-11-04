@@ -104,18 +104,19 @@
 - [x] Empty-square select box on each cart product; only ticked items go to checkout
 
 ## Nov 1 batch
-- [ ] Top section pills: equal outer size regardless of label length
-- [ ] "You may also like" on product pages, picked by Lovable AI from the catalog
-- [ ] Finish/verify Oct 30 batch (admin Quick areas page signed in)
-- [ ] Language picker on customer/seller/rider/printer profile pages (not admin); full Telugu, Hindi, Tamil + more, alphabetical
-- [ ] Never auto-switch between accounts; detect the right portal fast without flashing other accounts
-- [ ] Mobile login: keyboard must not close (compact layout)
-- [ ] Shop by category: one non-scrolling row on every layout
-- [ ] ADD on every shop-by-category product lands in the cart (like groceries)
-- [ ] Page scroll works with finger/cursor over Coupons & offers and sideways photo strips; audit all portals
-- [ ] Tapping anywhere on a product card opens the product page
-- [ ] Bottom bar on every customer page except payment
-- [ ] "Back to dashboard" for admins browsing the customer side
-- [ ] Remove only the back button from the admin page
-- [ ] Morning AI briefing email (yesterday's sales, bookings, open tasks)
-- [ ] Booking reminders in the customer's device calendar
+- [x] Top section pills: equal outer size regardless of label length
+- [x] "You may also like" on product pages, picked by Lovable AI from the catalog
+- [x] Finish/verify Oct 30 batch (admin Quick areas page signed in)
+- [x] Language picker on customer/seller/rider/printer profile pages (not admin); full Telugu, Hindi, Tamil + more, alphabetical
+- [x] Never auto-switch between accounts; detect the right portal fast without flashing other accounts
+- [x] Mobile login: keyboard must not close (compact layout)
+- [x] Shop by category: one non-scrolling row on every layout
+- [x] ADD on every shop-by-category product lands in the cart (like groceries)
+- [x] Page scroll works with finger/cursor over Coupons & offers and sideways photo strips; audit all portals
+- [x] Tapping anywhere on a product card opens the product page
+- [x] Bottom bar on every customer page except payment
+- [x] "Back to dashboard" for admins browsing the customer side
+- [x] Remove only the back button from the admin page
+- [x] Morning AI briefing written daily at 7 AM and shown on the admin dashboard
+- [ ] Email the morning briefing — needs the sender email domain set up and the address to send it to
+- [x] Booking reminders in the customer's device calendar
