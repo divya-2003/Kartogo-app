@@ -120,3 +120,10 @@
 - [x] Morning AI briefing written daily at 7 AM and shown on the admin dashboard
 - [ ] Email the morning briefing — needs the sender email domain set up and the address to send it to
 - [x] Booking reminders in the customer's device calendar
+
+## Nov 4 batch
+- [ ] Community/forum/directory outreach list with a drafted post per place
+- [ ] Real SMS + push reaching real phones for customers and sellers
+- [ ] Kitchen portal: see food orders, print tickets, mark ready
+- [ ] Shopify for catalog, cart, checkout and orders
+- [ ] Seller manual inventory: category picked automatically from the product name
