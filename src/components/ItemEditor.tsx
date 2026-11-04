@@ -1,9 +1,19 @@
-import { useState } from "react";
-import { X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import type { CATEGORIES } from "@/lib/data";
 import type { Product } from "@/lib/data";
 import { MultiImagePicker } from "@/components/ImagePicker";
+import { guessCategory } from "@/lib/category-guess";
+import { suggestCategoryFn } from "@/lib/category.functions";
+
+function readToken(key: string): string | undefined {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return undefined;
+    try { const v = JSON.parse(raw); return typeof v === "string" ? v : raw; } catch { return raw; }
+  } catch { return undefined; }
+}
 
 /**
  * Shared "new / edit item" dialog used by both the supplier inventory and the
@@ -27,7 +37,52 @@ export function ItemEditor({
 }) {
   const [p, setP] = useState<Product>(product);
   const [noExpiry, setNoExpiry] = useState(!!product.id && !!product.name && !product.expiryDate);
+  // The category follows the name automatically until the person picks one by hand.
+  const isNew = !product.name;
+  const [manualCategory, setManualCategory] = useState(!isNew);
+  const [autoPicked, setAutoPicked] = useState<"rule" | "ai" | null>(null);
+  const [thinking, setThinking] = useState(false);
+  const aiSeq = useRef(0);
   const today = new Date().toISOString().slice(0, 10);
+  const allowed = categories.filter((c) => c.slug !== "combos");
+  const nameOf = (slug: string) => categories.find((c) => c.slug === slug)?.name ?? slug;
+
+  useEffect(() => {
+    if (manualCategory) return;
+    const name = p.name.trim();
+    if (name.length < 3) return;
+    const slugs = allowed.map((c) => c.slug);
+    const g = guessCategory(name, p.description, slugs);
+    if (g) {
+      if (g.slug !== p.category) setP((cur) => ({ ...cur, category: g.slug }));
+      setAutoPicked("rule");
+      return;
+    }
+    // No keyword matched: ask Lovable AI once the seller stops typing.
+    const seq = ++aiSeq.current;
+    const t = window.setTimeout(async () => {
+      setThinking(true);
+      try {
+        const res = await suggestCategoryFn({
+          data: {
+            name,
+            description: p.description.slice(0, 600) || undefined,
+            allowed: allowed.map((c) => ({ slug: c.slug, name: c.name })),
+            supplierToken: readToken("qk_supplier_token"),
+            adminToken: readToken("qk_admin_token"),
+          },
+        });
+        if (seq !== aiSeq.current || !res.slug) return;
+        setP((cur) => ({ ...cur, category: res.slug as string }));
+        setAutoPicked("ai");
+      } catch { /* the seller can still choose by hand */ } finally {
+        if (seq === aiSeq.current) setThinking(false);
+      }
+    }, 900);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [p.name, p.description, manualCategory]);
+
   const save = () => {
     if (!p.name.trim() || !p.unit.trim()) { toast.error("Name & unit required"); return; }
     if (requireDetails) {
@@ -36,6 +91,12 @@ export function ItemEditor({
       if (!noExpiry && !p.expiryDate) { toast.error("Add the expiry date, or tick \"Doesn't expire\""); return; }
     }
     if (p.expiryDate && !noExpiry && p.expiryDate < today) { toast.error("Expiry date is already past"); return; }
+    // Catch obvious mistakes such as a pickle filed under Cosmetics.
+    const g = guessCategory(p.name, p.description, allowed.map((c) => c.slug));
+    if (g?.strong && g.slug !== p.category && p.category !== "combos") {
+      const ok = window.confirm(`"${p.name}" looks like ${nameOf(g.slug)}, but you chose ${nameOf(p.category)}. Save it under ${nameOf(p.category)} anyway?`);
+      if (!ok) { setP({ ...p, category: g.slug }); setAutoPicked("rule"); setManualCategory(false); return; }
+    }
     onSave({ ...p, expiryDate: noExpiry ? undefined : p.expiryDate });
   };
   return (
@@ -57,9 +118,22 @@ export function ItemEditor({
             <input value={p.emoji} onChange={(e) => setP({ ...p, emoji: e.target.value })} placeholder="🛒" className="rounded-lg border border-input bg-background px-3 py-2 text-center text-2xl outline-none" />
             <input value={p.name} onChange={(e) => setP({ ...p, name: e.target.value })} placeholder="Item name" className="min-w-0 rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring" />
           </div>
-          <select value={p.category} onChange={(e) => setP({ ...p, category: e.target.value })} className="rounded-lg border border-input bg-background px-3 py-2 outline-none">
-            {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
-          </select>
+          <div>
+            <select
+              value={p.category}
+              aria-label="Category"
+              onChange={(e) => { setManualCategory(true); setAutoPicked(null); aiSeq.current++; setThinking(false); setP({ ...p, category: e.target.value }); }}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none"
+            >
+              {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+            </select>
+            {(thinking || autoPicked) && (
+              <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                <Sparkles className="h-3 w-3" />
+                {thinking ? "Finding the right category…" : `Category picked automatically from the name — change it if needed.`}
+              </div>
+            )}
+          </div>
           <input value={p.unit} onChange={(e) => setP({ ...p, unit: e.target.value })} placeholder="Unit (e.g. 250g jar)" className="rounded-lg border border-input bg-background px-3 py-2 outline-none" />
           <div className="grid grid-cols-3 gap-3">
             <NumField label="Price ₹" value={p.price} onChange={(v) => setP({ ...p, price: v })} />
