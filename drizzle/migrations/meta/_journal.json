@@ -64,6 +64,13 @@
       "when": 1793509279915,
       "tag": "0008_ai_recs_translations_briefings",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793942754379,
+      "tag": "0009_kitchen_portal",
+      "breakpoints": true
     }
   ]
 }

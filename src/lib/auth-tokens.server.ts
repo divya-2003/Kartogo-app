@@ -160,6 +160,16 @@ export function verifyPrinterToken(token?: string): { phone: string } | null {
   return null;
 }
 
+// ---- Kitchen staff (food orders portal) ----
+export function issueKitchenToken(phone: string, kitchenId: string): string {
+  return sign({ role: "kitchen", phone, kitchenId, exp: Date.now() + SESSION_LIFETIME }, supplierSecret());
+}
+export function verifyKitchenToken(token?: string): { phone: string; kitchenId: string } | null {
+  const data = verify(token, supplierSecret());
+  if (data && data.role === "kitchen" && typeof data.phone === "string" && typeof data.kitchenId === "string") return { phone: data.phone, kitchenId: data.kitchenId };
+  return null;
+}
+
 // ---- Silent session renewal ----
 // Re-signs every genuine session token the device holds with a fresh expiry.
 // Only tokens whose HMAC signature verifies are renewed, and the renewed token
