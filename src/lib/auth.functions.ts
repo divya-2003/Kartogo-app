@@ -173,8 +173,20 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
       ? { token: issuePrinterToken(data.phone, staff?.userId), service: { name: PRINTER_SERVICE.name, phone: data.phone } }
       : null;
 
+    // --- Kitchen staff portal ---
+    let kitchen: { token: string; kitchenId: string; name: string } | null = null;
+    {
+      const { data: ks } = await (supabaseAdmin as any).from("kitchen_staff").select("kitchen_id,name").eq("phone", data.phone).eq("active", true).maybeSingle();
+      if (ks) {
+        const { issueKitchenToken } = await import("./auth-tokens.server");
+        const { KITCHENS } = await import("./food");
+        kitchen = { token: issueKitchenToken(data.phone, ks.kitchen_id), kitchenId: ks.kitchen_id, name: KITCHENS.find((k) => k.id === ks.kitchen_id)?.name ?? ks.name ?? "Kitchen" };
+      }
+    }
+
     return {
       ok: true as const,
+      kitchen,
       phone: data.phone,
       token: issueCustomerToken(data.phone),
       isAdminPhone: !!staff && staff.role === "admin" && isStaffActive,
