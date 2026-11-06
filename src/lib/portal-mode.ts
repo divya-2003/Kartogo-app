@@ -5,7 +5,7 @@
 
 export type PortalHome = "/delivery" | "/admin" | "/supplier/sales" | "/printer" | "/delivery-request";
 
-export const PORTAL_PREFIXES = ["/admin", "/supplier", "/delivery", "/printer"] as const;
+export const PORTAL_PREFIXES = ["/admin", "/supplier", "/delivery", "/printer", "/kitchen"] as const;
 
 let customerMode = false;
 

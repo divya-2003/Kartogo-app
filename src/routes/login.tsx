@@ -79,7 +79,17 @@ function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { isAdminPhone, delivery, deliveryPending, supplier, printer } = await verifyOtp(e164 ?? phone, otp);
+      const { isAdminPhone, delivery, deliveryPending, supplier, printer, kitchen } = await verifyOtp(e164 ?? phone, otp);
+      // Kitchen staff go straight to their order board.
+      if (kitchen) {
+        try {
+          localStorage.setItem("qk_kitchen_token", JSON.stringify(kitchen.token));
+          localStorage.setItem("qk_kitchen", JSON.stringify({ id: kitchen.kitchenId, name: kitchen.name }));
+        } catch { /* noop */ }
+        toast.success(`Welcome, ${kitchen.name} kitchen!`);
+        nav({ to: "/kitchen", replace: true });
+        return;
+      }
       // Clear tokens belonging to OTHER roles so a device that previously
       // hosted a supplier/delivery/admin session doesn't bounce a new customer
       // (or a different role) back to the wrong portal via roleRedirectTarget.

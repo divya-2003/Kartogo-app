@@ -273,7 +273,7 @@ type AuthCtx = {
   /** Request an SMS OTP. Returns demo-mode info when SMS is bypassed. */
   sendOtp: (phone: string) => Promise<{ demo: boolean; demoCode?: string }>;
   /** Verify the SMS OTP. Returns admin-eligibility, delivery and supplier sessions. */
-  verifyOtp: (phone: string, otp: string) => Promise<{ user: User; isAdminPhone: boolean; delivery: DeliverySession | null; deliveryPending: { name: string; phone: string; requested: boolean; pendingToken: string } | null; supplier: SupplierSession | null; printer: { token: string; service: { name: string; phone: string } } | null }>;
+  verifyOtp: (phone: string, otp: string) => Promise<{ user: User; isAdminPhone: boolean; delivery: DeliverySession | null; deliveryPending: { name: string; phone: string; requested: boolean; pendingToken: string } | null; supplier: SupplierSession | null; printer: { token: string; service: { name: string; phone: string } } | null; kitchen: { token: string; kitchenId: string; name: string } | null }>;
   /** Exchange the secret admin passcode for a signed admin token. */
   adminLogin: (passcode: string, phone?: string) => Promise<User>;
   setName: (name: string) => void;
@@ -368,7 +368,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       write("qk_customer_token", res.token);
       // A new login is not yet an admin session until the passcode is provided.
       setAdminToken(null);
-      return { user: u, isAdminPhone: res.isAdminPhone, delivery: res.delivery ?? null, deliveryPending: res.deliveryPending ?? null, supplier: res.supplier ?? null, printer: res.printer ?? null };
+      return { user: u, isAdminPhone: res.isAdminPhone, delivery: res.delivery ?? null, deliveryPending: res.deliveryPending ?? null, supplier: res.supplier ?? null, printer: res.printer ?? null, kitchen: (res as any).kitchen ?? null };
     },
     adminLogin: async (passcode, phone) => {
       const res = await adminLoginFn({ data: { passcode, phone } });

@@ -176,7 +176,8 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
     // --- Kitchen staff portal ---
     let kitchen: { token: string; kitchenId: string; name: string } | null = null;
     {
-      const { data: ks } = await (supabaseAdmin as any).from("kitchen_staff").select("kitchen_id,name").eq("phone", data.phone).eq("active", true).maybeSingle();
+      const { supabaseAdmin: sa } = await import("@/integrations/supabase/client.server");
+      const { data: ks } = await (sa as any).from("kitchen_staff").select("kitchen_id,name").eq("phone", data.phone).eq("active", true).maybeSingle();
       if (ks) {
         const { issueKitchenToken } = await import("./auth-tokens.server");
         const { KITCHENS } = await import("./food");

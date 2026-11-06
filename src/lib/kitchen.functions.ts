@@ -42,7 +42,7 @@ export const updateKitchenOrderFn = createServerFn({ method: "POST" })
     if (!row) return { ok: false as const, error: "Order not found or cancelled." };
     if (data.action === "READY") {
       const { safePush } = await import("./push.server");
-      await safePush({ phone: row.customer_phone, type: "FOOD_READY", orderId: row.id, path: "/orders", body: `Your food (${row.order_code}) is ready and waiting for the rider.` });
+      await safePush({ phone: row.customer_phone, type: "FOOD_READY" as any, orderId: row.id, path: "/orders", body: `Your food (${row.order_code}) is ready and waiting for the rider.` });
     }
     return { ok: true as const };
   });
