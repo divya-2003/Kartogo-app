@@ -1406,6 +1406,33 @@ export type Database = {
         }
         Relationships: []
       }
+      kitchen_staff: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          kitchen_id: string
+          name: string | null
+          phone: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          kitchen_id: string
+          name?: string | null
+          phone: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          kitchen_id?: string
+          name?: string | null
+          phone?: string
+        }
+        Relationships: []
+      }
       market_replenish_requests: {
         Row: {
           created_at: string
@@ -2905,6 +2932,9 @@ export type Database = {
           driver_phone: string | null
           id: string
           kind: string
+          kitchen_printed_at: string | null
+          kitchen_ready_at: string | null
+          kitchen_status: string
           order_code: string
           otp_attempts: number
           otp_verified_at: string | null
@@ -2929,6 +2959,9 @@ export type Database = {
           driver_phone?: string | null
           id?: string
           kind: string
+          kitchen_printed_at?: string | null
+          kitchen_ready_at?: string | null
+          kitchen_status?: string
           order_code: string
           otp_attempts?: number
           otp_verified_at?: string | null
@@ -2953,6 +2986,9 @@ export type Database = {
           driver_phone?: string | null
           id?: string
           kind?: string
+          kitchen_printed_at?: string | null
+          kitchen_ready_at?: string | null
+          kitchen_status?: string
           order_code?: string
           otp_attempts?: number
           otp_verified_at?: string | null
