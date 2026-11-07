@@ -201,3 +201,15 @@ export const getPublicMarketFn = createServerFn({ method: "POST" })
     if (!row) throw new Error("Market not found");
     return toPublic(row as Row);
   });
+
+// ---------------- Kitchen staff (shown on the admin Partner markets page) ----------------
+export type KitchenStaffRow = { id: string; phone: string; kitchenId: string; kitchenName: string; name: string | null; active: boolean };
+export const listKitchenStaffFn = createServerFn({ method: "POST" })
+  .inputValidator((data: { adminToken: string }) => ({ adminToken: String(data?.adminToken ?? "") }))
+  .handler(async ({ data }): Promise<KitchenStaffRow[]> => {
+    await requireAdmin(data.adminToken);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { KITCHENS } = await import("./food");
+    const { data: rows } = await supabaseAdmin.from("kitchen_staff").select("id,phone,kitchen_id,name,active").order("created_at", { ascending: false });
+    return ((rows ?? []) as any[]).map(r => ({ id: r.id, phone: r.phone, kitchenId: r.kitchen_id, kitchenName: KITCHENS.find(k => k.id === r.kitchen_id)?.name ?? r.kitchen_id, name: r.name, active: r.active }));
+  });

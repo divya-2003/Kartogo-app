@@ -43,9 +43,11 @@ export const requestOtpFn = createServerFn({ method: "POST" })
       throw new Error("Could not generate a verification code. Please try again.");
     }
 
-    // The code only ever leaves the server by SMS to the phone being verified.
-    // It is never returned in this response — not even when SMS delivery fails —
-    // because anyone can ask for a code for anyone else's number.
+    // Demo mode (SMS billing not active yet): the code is returned to the app
+    // and shown on the sign-in screen. Set OTP_SMS_ENABLED=true to send real SMS.
+    if (process.env.OTP_SMS_ENABLED !== "true") {
+      return { ok: true as const, demo: true as const, demoCode: code };
+    }
     try {
       await sendSms(canonicalToE164(phone) ?? `+91${phone}`, `Your Kartogo verification code is ${code}. It expires in 5 minutes.`);
     } catch (err) {
@@ -53,7 +55,7 @@ export const requestOtpFn = createServerFn({ method: "POST" })
       await supabaseAdmin.from("otp_codes").update({ consumed: true }).eq("phone", phone).eq("consumed", false);
       throw new Error("We couldn't send the verification SMS to this number. Please try again in a few minutes.");
     }
-    return { ok: true as const, demo: false as const };
+    return { ok: true as const, demo: false as const, demoCode: undefined };
 
   });
 
