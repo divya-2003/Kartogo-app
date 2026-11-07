@@ -7,6 +7,8 @@ import {
   upsertPartnerMarketFn,
   deletePartnerMarketFn,
   setMarketOperationsFn,
+  listKitchenStaffFn,
+  type KitchenStaffRow,
   type PartnerMarket,
 } from "@/lib/partners.functions";
 
@@ -55,7 +57,12 @@ function AdminPartnersPage() {
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { load(); }, []);
+  const [kitchenStaff, setKitchenStaff] = useState<KitchenStaffRow[]>([]);
+  useEffect(() => {
+    load();
+    const t = adminToken();
+    if (t) listKitchenStaffFn({ data: { adminToken: t } }).then(setKitchenStaff).catch(() => {});
+  }, []);
 
   const toggleActive = async (m: PartnerMarket) => {
     const token = adminToken(); if (!token) return;
@@ -213,6 +220,26 @@ function AdminPartnersPage() {
           ))}
         </ul>
       )}
+
+      <section className="rounded-2xl border border-border bg-card p-4">
+        <h2 className="font-display text-lg font-bold">Kitchen staff</h2>
+        <p className="text-xs text-muted-foreground">These numbers sign in to the kitchen portal to see and print food orders.</p>
+        {kitchenStaff.length === 0 ? (
+          <p className="mt-2 text-sm text-muted-foreground">No kitchen staff yet.</p>
+        ) : (
+          <ul className="mt-3 grid gap-2 md:grid-cols-2">
+            {kitchenStaff.map(k => (
+              <li key={k.id} className="flex items-center justify-between gap-2 rounded-xl border border-border p-3 text-sm">
+                <div className="min-w-0">
+                  <div className="font-semibold">{k.kitchenName}</div>
+                  <a href={`tel:+91${k.phone}`} className="text-xs font-semibold text-primary hover:underline">📞 {k.phone}</a>
+                </div>
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${k.active ? "bg-leaf/15 text-leaf" : "bg-muted text-muted-foreground"}`}>{k.active ? "Active" : "Inactive"}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       {(creating || editing) && (
         <MarketEditor

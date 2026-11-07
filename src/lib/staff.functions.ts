@@ -115,7 +115,7 @@ export const requestMobileChangeOtpFn = createServerFn({ method: "POST" })
     // The code is delivered by SMS only. It is returned in the response solely
     // in private/staging environments where the server-only DEMO_OTP_MODE flag
     // is explicitly set to "true" (never set in production).
-    if (process.env.DEMO_OTP_MODE === "true") {
+    if (process.env.OTP_SMS_ENABLED !== "true") {
       return { ok: true as const, demo: true as const, demoCode: code };
     }
     const { sendSms } = await import("./sms.server");
