@@ -7,6 +7,9 @@ import { ListingCard, PartnerCard, SkeletonGrid, EmptyState, PageTop } from "@/c
 import { ProductCard } from "@/components/ProductCard";
 import { useCatalog } from "@/lib/store";
 import type { MpCategory, MpListing, MpPartner } from "@/lib/marketplace";
+import { listCategoryRanksFn } from "@/lib/category-ranks.functions";
+import { listingRef, rankLookup } from "@/lib/category-ranks";
+import { TopPick } from "@/components/TopPick";
 
 export const Route = createFileRoute("/explore/$slug")({
   head: ({ params }) => {
@@ -87,6 +90,20 @@ function ExplorePage() {
 
   const shownPartners = partners.filter(p => !q || p.name.toLowerCase().includes(q.toLowerCase()));
 
+  // Admin-chosen 1st / 2nd / 3rd products lead the category (unless the shopper re-sorts).
+  const { data: ranks = [] } = useQuery({ queryKey: ["category-ranks"], queryFn: () => listCategoryRanksFn(), staleTime: 60_000 });
+  const rankOf = useMemo(() => rankLookup(ranks, [slug]), [ranks, slug]);
+  const topPicks = useMemo(() => {
+    if (sort !== "relevance" || rankOf.size === 0) return [];
+    return [
+      ...legacyProducts.filter(p => rankOf.has(p.id)).map(p => ({ rank: rankOf.get(p.id)!, key: p.id, el: <ProductCard p={p} /> })),
+      ...shown.filter(l => rankOf.has(listingRef(l.id))).map(l => ({ rank: rankOf.get(listingRef(l.id))!, key: l.id, el: <ListingCard l={l} /> })),
+    ].sort((a, b) => a.rank - b.rank);
+  }, [sort, rankOf, legacyProducts, shown]);
+  const picked = new Set(topPicks.map(t => t.key));
+  const restProducts = legacyProducts.filter(p => !picked.has(p.id));
+  const restListings = shown.filter(l => !picked.has(l.id));
+
   return (
     <div className="min-h-screen bg-background pb-28">
       <PageTop title={cat?.name ?? "Explore"} back="/categories" returnTo={origin} />
@@ -125,18 +142,24 @@ function ExplorePage() {
                 <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none]">{shownPartners.map(p => <PartnerCard key={p.id} p={p} compact />)}</div>
               </section>
             )}
-            {legacyProducts.length > 0 && (
-              <section>
-                <h2 className="mb-2 font-display text-base font-bold">Delivered fast</h2>
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">{legacyProducts.slice(0, 40).map(p => <ProductCard key={p.id} p={p} />)}</div>
+            {topPicks.length > 0 && (
+              <section aria-label="Top picks">
+                <h2 className="mb-2 font-display text-base font-bold">Top picks</h2>
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">{topPicks.map(t => <TopPick key={t.key} rank={t.rank}>{t.el}</TopPick>)}</div>
               </section>
             )}
-            {shown.length > 0 ? (
+            {restProducts.length > 0 && (
               <section>
-                {legacyProducts.length > 0 && <h2 className="mb-2 font-display text-base font-bold">More from local stores</h2>}
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">{shown.map(l => <ListingCard key={l.id} l={l} />)}</div>
+                <h2 className="mb-2 font-display text-base font-bold">Delivered fast</h2>
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">{restProducts.slice(0, 40).map(p => <ProductCard key={p.id} p={p} />)}</div>
               </section>
-            ) : legacyProducts.length === 0 && (
+            )}
+            {restListings.length > 0 ? (
+              <section>
+                {(restProducts.length > 0 || topPicks.length > 0) && <h2 className="mb-2 font-display text-base font-bold">{restProducts.length > 0 ? "More from local stores" : "More products"}</h2>}
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">{restListings.map(l => <ListingCard key={l.id} l={l} />)}</div>
+              </section>
+            ) : legacyProducts.length === 0 && shown.length === 0 && (
               <EmptyState title="Nothing here yet" body={q || filter !== "all" ? "Try a different search or filter." : "New partners are joining soon."} />
             )}
           </>
