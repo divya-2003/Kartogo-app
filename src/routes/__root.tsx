@@ -15,6 +15,7 @@ import { IdleReturnHome } from "@/components/IdleReturnHome";
 import { BottomSectionBack } from "@/components/BottomSectionBack";
 import { GlobalBottomNav } from "@/components/marketplace/BottomNav";
 import { PageTranslator } from "@/components/PageTranslator";
+import { CustomerClickTracker } from "@/components/CustomerClickTracker";
 import { CartProvider, AuthProvider, CatalogProvider, OrdersProvider, LocationProvider, WalletProvider, WishlistProvider, DriversProvider } from "@/lib/store";
 import { portalHomeTarget, isPortalPath, leaveCustomerMode, markActivePortal, EARLY_PORTAL_REDIRECT_SCRIPT } from "@/lib/portal-mode";
 
@@ -158,6 +159,7 @@ function RootComponent() {
                       <Outlet />
                       <GlobalBottomNav />
                       <PageTranslator />
+                      <CustomerClickTracker />
                       <SplashScreen />
 <RouteMemory />
                       <PushBridge />

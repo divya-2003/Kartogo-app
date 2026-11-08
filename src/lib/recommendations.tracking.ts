@@ -86,10 +86,10 @@ async function flush() {
   }
 }
 
-export function trackEvent(event: QueuedEvent, opts: { dedupeMs?: number } = {}) {
+export function trackEvent(event: QueuedEvent, opts: { dedupeMs?: number; key?: string } = {}) {
   if (typeof window === "undefined") return;
   const dedupeMs = opts.dedupeMs ?? 4000;
-  const key = `${event.eventType}:${event.productId ?? ""}:${event.category ?? ""}:${event.searchQuery ?? ""}:${event.orderId ?? ""}`;
+  const key = opts.key ?? `${event.eventType}:${event.productId ?? ""}:${event.category ?? ""}:${event.searchQuery ?? ""}:${event.orderId ?? ""}`;
   const now = Date.now();
   const last = recent.get(key);
   if (last && now - last < dedupeMs) return;
@@ -127,6 +127,9 @@ export const customerEventService = {
     trackEvent({ eventType: "RECOMMENDATION_ADDED_TO_CART", productId, metadata: { type } }, { dedupeMs: 1000 })),
   trackRecommendationPurchased: (productId: string, orderId: string) =>
     trackEvent({ eventType: "RECOMMENDATION_PURCHASED", productId, orderId }, { dedupeMs: 600_000 }),
+  trackClick: (label: string, path: string, target?: string, productId?: string) =>
+    trackEvent({ eventType: "ELEMENT_CLICKED", productId, metadata: { label, path, ...(target ? { target } : {}) } },
+      { dedupeMs: 400, key: `click:${path}:${label}:${target ?? ""}` }),
 };
 
 export type CustomerEventService = typeof customerEventService;

@@ -195,6 +195,7 @@ export async function recomputeCustomer(phone: string): Promise<void> {
     .from("customer_events")
     .select("event_type, product_id, category, created_at")
     .eq("phone", phone)
+    .not("product_id", "is", null)
     .gte("created_at", new Date(Date.now() - 180 * DAY).toISOString())
     .order("created_at", { ascending: false })
     .limit(3000);
