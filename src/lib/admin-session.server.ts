@@ -49,6 +49,15 @@ export async function resolveAccess(token: string): Promise<AdminSessionAccess> 
   };
 }
 
+/** Throws unless the token belongs to an active admin holding the permission. Returns the actor id. */
+export async function requireAdminPermission(token: string, permission: AdminPermission): Promise<string> {
+  const access = await resolveAccess(token);
+  if (!access.valid || !(access.isSuperAdmin || access.permissions.includes(permission))) {
+    throw new Error("Admin authorization required");
+  }
+  return access.userId ?? "main-admin";
+}
+
 /** Records one admin session event (login, logout, page view). Best-effort. */
 export async function recordAdminSessionEvent(token: string, action: "login" | "logout" | "page_view", path?: string) {
   const { readAdminToken } = await import("./auth-tokens.server");

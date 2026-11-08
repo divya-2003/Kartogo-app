@@ -71,6 +71,13 @@
       "when": 1793942754379,
       "tag": "0009_kitchen_portal",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794116988099,
+      "tag": "0010_category_product_ranks",
+      "breakpoints": true
     }
   ]
 }

@@ -382,6 +382,30 @@ export type Database = {
         }
         Relationships: []
       }
+      category_product_ranks: {
+        Row: {
+          category_slug: string
+          product_ref: string
+          rank: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          category_slug: string
+          product_ref: string
+          rank: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          category_slug?: string
+          product_ref?: string
+          rank?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       combos: {
         Row: {
           category: string | null
