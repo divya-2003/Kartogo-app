@@ -69,7 +69,11 @@ function AdminCustomersPage() {
     return data?.productNames[id] ?? products.find(p => p.id === id)?.name ?? id;
   }, [data, products]);
 
-  const remove = async (payload: Parameters<typeof deleteCustomerEventsFn>[0]["data"]) => {
+  type DeletePayload =
+    | { mode: "events"; adminToken: string; ids: string[] }
+    | { mode: "customer"; adminToken: string; phone: string | null; sessionIds: string[] }
+    | { mode: "all"; adminToken: string };
+  const remove = async (payload: DeletePayload) => {
     try {
       const r = await deleteCustomerEventsFn({ data: payload });
       toast.success(`Deleted ${r.deleted} action${r.deleted === 1 ? "" : "s"}`);
