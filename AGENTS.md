@@ -27,3 +27,5 @@
 - App translation is a DOM-level translator (PageTranslator) backed by cached AI translations per language; admin paths are never translated and text that keeps changing is skipped, so new UI text needs no translation keys.
 - The customer bottom bar renders once in the root for every non-portal page except payment and sign-in; pages with their own fixed action bars add the above-bnav class so both stay visible.
 - Local-store (marketplace) products live in the cart as mp:<listingId> lines with a snapshot, and checkout places them as store orders alongside the Kartogo order.
+- Customer actions (including every customer-page button/link click) go only to customer_events through the batched recommendations tracker; recommendation scoring reads product-linked events only, so click volume cannot crowd out product signals.
+- Admin-chosen 1st/2nd/3rd products per Shop category live in category_product_ranks (catalog id or mp:<listingId>) and are applied with the shared category-ranks helpers on every category view, so admin and customer ordering never disagree.
