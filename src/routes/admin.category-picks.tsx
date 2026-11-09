@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Save, Trophy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,12 @@ function CategoryPicksPage() {
   useEffect(() => { if (!slug && shopCats[0]) setSlug(shopCats[0].slug); }, [slug, shopCats]);
   const cat = shopCats.find(c => c.slug === slug);
   const listing = useQuery({ queryKey: ["mp-category", slug], queryFn: () => listCategoryFn({ data: { slug } }), enabled: !!slug });
+
+  // Names for every category's store products, for the overview list.
+  const allListings = useQueries({ queries: shopCats.map(c => ({ queryKey: ["mp-category", c.slug], queryFn: () => listCategoryFn({ data: { slug: c.slug } }), staleTime: 60_000 })) });
+  const refName = (ref: string) => ref.startsWith("mp:")
+    ? (allListings.flatMap(q => (q.data?.listings ?? []) as MpListing[]).find(l => listingRef(l.id) === ref)?.name ?? "Store product")
+    : products.find(p => p.id === ref)?.name ?? ref;
 
   const candidates = useMemo<Candidate[]>(() => {
     if (!cat) return [];
@@ -139,7 +145,7 @@ function CategoryPicksPage() {
               <li key={c.slug} className="flex flex-wrap items-center gap-2 py-2">
                 <span className="w-32 shrink-0 font-semibold">{c.icon} {c.name}</span>
                 {rows.length ? rows.map(r => (
-                  <span key={r.rank} className="rounded-full bg-secondary px-2.5 py-1 text-xs"><b>{rankLabel(r.rank)}</b> {c.slug === slug ? nameOf(r.product_ref)?.name ?? r.product_ref : (products.find(p => p.id === r.product_ref)?.name ?? (r.product_ref.startsWith("mp:") ? "Store product" : r.product_ref))}</span>
+                  <span key={r.rank} className="rounded-full bg-secondary px-2.5 py-1 text-xs"><b>{rankLabel(r.rank)}</b> {refName(r.product_ref)}</span>
                 )) : <span className="text-xs text-muted-foreground">Normal order</span>}
               </li>
             );
