@@ -81,6 +81,8 @@ const NAV = [
   { to: "/admin/print", label: "Print queue", icon: Printer, permission: "print" },
   { to: "/admin/partners", label: "Partner markets", icon: Store, permission: "partners" },
   { to: "/admin/partner-applications", label: "Partner applications", icon: Store, permission: "partners" },
+  { to: "/admin/category-picks", label: "Category top picks", icon: Star, permission: "partners" },
+  { to: "/admin/customers", label: "Customers", icon: UsersRound, permission: "customers" },
   { to: "/admin/combos", label: "Combo bundles", icon: Package, permission: "combos" },
   
   { to: "/admin/promos", label: "Promo codes", icon: BadgeIndianRupee, permission: "promos" },

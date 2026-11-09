@@ -9,7 +9,7 @@ const MAX_EVENTS = 10000;
 
 export const customerActivityFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ adminToken: z.string().min(10).max(800), days: z.number().int().min(1).max(365) }).parse(d))
-  .handler(async ({ data }): Promise<{ customers: CustomerActivity[]; totalEvents: number; truncated: boolean }> => {
+  .handler(async ({ data }): Promise<{ customers: CustomerActivity[]; productNames: Record<string, string>; totalEvents: number; truncated: boolean }> => {
     const { requireAdminPermission } = await import("./admin-session.server");
     await requireAdminPermission(data.adminToken, "customers");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -25,7 +25,14 @@ export const customerActivityFn = createServerFn({ method: "POST" })
       const { data: people } = await supabaseAdmin.from("customers").select("phone, name").in("phone", phones.slice(i, i + 200));
       for (const p of people ?? []) if (p.phone && p.name) names[p.phone] = p.name;
     }
-    return { customers: groupCustomerActivity(events, names), totalEvents: events.length, truncated: events.length >= MAX_EVENTS };
+    // Names for local-store products (mp:<listingId>); catalog names are resolved in the browser.
+    const productNames: Record<string, string> = {};
+    const listingIds = [...new Set(events.map(e => e.product_id ?? "").filter(id => /^mp:[0-9a-f-]{36}$/.test(id)).map(id => id.slice(3)))];
+    for (let i = 0; i < listingIds.length; i += 200) {
+      const { data: rows } = await supabaseAdmin.from("mp_listings").select("id, name").in("id", listingIds.slice(i, i + 200));
+      for (const r of rows ?? []) productNames[`mp:${r.id}`] = r.name;
+    }
+    return { customers: groupCustomerActivity(events, names), productNames, totalEvents: events.length, truncated: events.length >= MAX_EVENTS };
   });
 
 const deleteSchema = z.discriminatedUnion("mode", [

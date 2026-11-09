@@ -11,7 +11,7 @@ export type ActivityEvent = {
   category: string | null;
   order_id: string | null;
   search_query: string | null;
-  metadata: Record<string, unknown> | null;
+  metadata: Record<string, string | number | boolean | null> | null;
   created_at: string;
 };
 
