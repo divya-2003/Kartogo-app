@@ -1,4 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Clock, Minus, Plus, X, ShoppingBag, Search } from "lucide-react";
@@ -9,6 +10,18 @@ import { useAuth } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import { KITCHENS, FOOD_DELIVERY_FEE, dishUnitPrice, type Dish, type Kitchen } from "@/lib/food";
 import { createFoodOrderFn } from "@/lib/service-orders.functions";
+import { listFoodMenusFn } from "@/lib/food-menu.functions";
+
+// Kitchen staff edit dishes from the kitchen portal; the static list is only
+// shown for the first moment before the live menu arrives.
+function useFoodMenus(): Kitchen[] {
+  const { data } = useQuery({
+    queryKey: ["food-menus"],
+    queryFn: async () => (await listFoodMenusFn()).kitchens as Kitchen[],
+    staleTime: 60_000,
+  });
+  return data ?? KITCHENS;
+}
 
 
 
@@ -21,7 +34,9 @@ function VegMark({ veg }: { veg: boolean }) {
 export function FoodExperience({ embedded = false, initialQ = "", initialKitchen }: { embedded?: boolean; initialQ?: string; initialKitchen?: string }) {
   const { customerToken } = useAuth();
   const nav = useNavigate();
-  const [kitchen, setKitchen] = useState<Kitchen | null>(() => KITCHENS.find(k => k.id === initialKitchen) ?? null);
+  const menus = useFoodMenus();
+  const [kitchenId, setKitchenId] = useState<string | null>(() => KITCHENS.some(k => k.id === initialKitchen) ? initialKitchen ?? null : null);
+  const kitchen = useMemo(() => menus.find(k => k.id === kitchenId) ?? null, [menus, kitchenId]);
   const [vegOnly, setVegOnly] = useState(false);
   const [q] = useState(initialQ);
   const [lines, setLines] = useState<Line[]>([]);
@@ -34,9 +49,9 @@ export function FoodExperience({ embedded = false, initialQ = "", initialKitchen
   const visibleDishes = (kitchen?.dishes ?? []).filter(d => (!vegOnly || d.veg) && (!dishTerm || `${d.name} ${d.desc ?? ""}`.toLowerCase().includes(dishTerm)));
   const onAddr = useCallback((v: { line: string; landmark?: string }) => setAddress(v), []);
 
-  const kitchens = useMemo(() => KITCHENS.filter(k =>
+  const kitchens = useMemo(() => menus.filter(k =>
     (!vegOnly || k.dishes.some(d => d.veg)) &&
-    (!q || (k.name + k.cuisine + k.dishes.map(d => d.name).join(" ")).toLowerCase().includes(q.toLowerCase()))), [vegOnly, q]);
+    (!q || (k.name + k.cuisine + k.dishes.map(d => d.name).join(" ")).toLowerCase().includes(q.toLowerCase()))), [menus, vegOnly, q]);
 
   const count = lines.reduce((s, l) => s + l.qty, 0);
   const subtotal = lines.reduce((s, l) => s + dishUnitPrice(l.dish, l.addons) * l.qty, 0);
@@ -57,7 +72,7 @@ export function FoodExperience({ embedded = false, initialQ = "", initialKitchen
     // section cards never sit on top of a sub-page.
     if (embedded) { nav({ to: "/food", search: { kitchen: k.id } }); return; }
     if (lines.length && kitchen && kitchen.id !== k.id) { if (!confirm("Your basket has items from another kitchen. Clear it?")) return; setLines([]); }
-    setKitchen(k); setCheckout(false); setDishQ("");
+    setKitchenId(k.id); setCheckout(false); setDishQ("");
   };
 
   const place = async () => {
@@ -159,6 +174,7 @@ export function FoodExperience({ embedded = false, initialQ = "", initialKitchen
                     <div className="font-semibold">{formatINR(d.price)}</div>
                     <p className="mt-1 text-xs text-muted-foreground">{d.desc}</p>
                   </div>
+                  {d.image && <img src={d.image} alt={d.name} loading="lazy" className="h-20 w-20 shrink-0 rounded-xl object-cover" />}
                   <div className="flex shrink-0 flex-col items-end justify-center gap-1">
                     {n === 0 ? (
                       <Button size="natural" variant="ghost" onClick={() => d.addons?.length ? setCustom({ dish: d, addons: [] }) : add(d, [])} className="rounded-lg border border-primary px-5 py-1.5 text-sm font-extrabold text-primary">ADD</Button>
