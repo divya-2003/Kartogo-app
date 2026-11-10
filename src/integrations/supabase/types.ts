@@ -451,6 +451,24 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_carts: {
+        Row: {
+          items: Json
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          items?: Json
+          phone: string
+          updated_at?: string
+        }
+        Update: {
+          items?: Json
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customer_category_preferences: {
         Row: {
           category: string
@@ -1430,6 +1448,54 @@ export type Database = {
         }
         Relationships: []
       }
+      kitchen_dishes: {
+        Row: {
+          addons: Json
+          bestseller: boolean
+          created_at: string
+          description: string
+          id: string
+          image: string | null
+          is_available: boolean
+          kitchen_id: string
+          name: string
+          price: number
+          sort: number
+          updated_at: string
+          veg: boolean
+        }
+        Insert: {
+          addons?: Json
+          bestseller?: boolean
+          created_at?: string
+          description?: string
+          id?: string
+          image?: string | null
+          is_available?: boolean
+          kitchen_id: string
+          name: string
+          price: number
+          sort?: number
+          updated_at?: string
+          veg?: boolean
+        }
+        Update: {
+          addons?: Json
+          bestseller?: boolean
+          created_at?: string
+          description?: string
+          id?: string
+          image?: string | null
+          is_available?: boolean
+          kitchen_id?: string
+          name?: string
+          price?: number
+          sort?: number
+          updated_at?: string
+          veg?: boolean
+        }
+        Relationships: []
+      }
       kitchen_staff: {
         Row: {
           active: boolean
@@ -2107,9 +2173,11 @@ export type Database = {
           id: string
           notification_type: string
           order_id: string | null
+          product_id: string | null
           read_at: string | null
           sent_at: string | null
           status: string
+          stock_alert_id: string | null
           title: string
           user_phone: string
         }
@@ -2122,9 +2190,11 @@ export type Database = {
           id?: string
           notification_type: string
           order_id?: string | null
+          product_id?: string | null
           read_at?: string | null
           sent_at?: string | null
           status?: string
+          stock_alert_id?: string | null
           title: string
           user_phone: string
         }
@@ -2137,9 +2207,11 @@ export type Database = {
           id?: string
           notification_type?: string
           order_id?: string | null
+          product_id?: string | null
           read_at?: string | null
           sent_at?: string | null
           status?: string
+          stock_alert_id?: string | null
           title?: string
           user_phone?: string
         }
