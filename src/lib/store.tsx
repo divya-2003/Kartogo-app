@@ -15,6 +15,8 @@ import {
   resolveRefundRequestFn,
 } from "./orders.functions";
 import { addWishlistFn, removeWishlistFn, mergeWishlistFn } from "./wishlist.functions";
+import { getSavedCartFn, saveCartFn } from "./cart.functions";
+import { mergeCartLines } from "./cart-merge";
 import { locationHasQuick } from "./delivery-tier";
 import { checkManyServiceabilityFn } from "./serviceability.functions";
 import { listDriverAvailabilityFn, setDriverAvailabilityFn } from "./drivers.functions";
@@ -100,6 +102,55 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [cartLoaded, setCartLoaded] = useState(false);
   useEffect(() => { setItems(read<CartItem[]>("qk_cart", [])); setCartLoaded(true); }, []);
   useEffect(() => { if (cartLoaded) write("qk_cart", items); }, [items, cartLoaded]);
+
+  // Each account keeps its own cart on the server:
+  //  - login (or app open while signed in) → merge the saved cart with what's here
+  //  - while signed in → save changes shortly after they happen
+  //  - logout → save one last time, then empty this device's cart
+  const { customerToken, ready: authReady } = useAuth();
+  const syncedToken = useRef<string | null>(null);
+  const saveTimer = useRef<number | null>(null);
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+  const toSaved = (list: CartItem[]) => list.filter(l => l.qty > 0).slice(0, 100).map(l => ({ productId: l.productId, qty: Math.min(99, Math.max(1, Math.round(l.qty))), ...(l.unselected ? { unselected: true } : {}), ...(l.listing ? { listing: l.listing } : {}) }));
+  const flush = useCallback((token: string, list: CartItem[]) => {
+    if (saveTimer.current) { window.clearTimeout(saveTimer.current); saveTimer.current = null; }
+    void saveCartFn({ data: { token, items: toSaved(list) } }).catch(() => { /* retried on the next change */ });
+  }, []);
+  const prevCustomer = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    if (!authReady || !cartLoaded) return;
+    const prev = prevCustomer.current;
+    prevCustomer.current = customerToken;
+    if (prev === customerToken) return;
+    if (!customerToken) {
+      if (prev) {
+        // Genuine logout: keep the account's cart on the server, clear the device.
+        flush(prev, itemsRef.current);
+        syncedToken.current = null;
+        setItems([]);
+      }
+      return;
+    }
+    let alive = true;
+    (async () => {
+      try {
+        const res = await getSavedCartFn({ data: { token: customerToken } });
+        if (!alive || !res.ok) return;
+        const merged = mergeCartLines(res.items as CartItem[], itemsRef.current);
+        setItems(merged);
+        syncedToken.current = customerToken;
+        flush(customerToken, merged);
+      } catch { /* offline — the local cart stays and syncs on the next login */ }
+    })();
+    return () => { alive = false; };
+  }, [customerToken, authReady, cartLoaded, flush]);
+  useEffect(() => {
+    const token = syncedToken.current;
+    if (!token || token !== customerToken) return;
+    if (saveTimer.current) window.clearTimeout(saveTimer.current);
+    saveTimer.current = window.setTimeout(() => flush(token, itemsRef.current), 800);
+  }, [items, customerToken, flush]);
 
   const products = useProductsValue();
 
