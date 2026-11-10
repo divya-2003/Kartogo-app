@@ -127,3 +127,11 @@
 - [ ] Kitchen portal: see food orders, print tickets, mark ready
 - [ ] Shopify for catalog, cart, checkout and orders
 - [ ] Seller manual inventory: category picked automatically from the product name
+
+## Nov 9 batch
+- [ ] Cart: Move to wishlist beside Remove for every cart line (incl. local-store items)
+- [ ] Checkout: drop the promo/payment-split clutter; totals include every product (no ₹0)
+- [ ] Logout from any page → signed-out Home; cart/wishlist cleared on logout; per-account cart saved and merged with guest cart on login
+- [ ] Signed-out Home: delivery time under the location on the left
+- [ ] Kitchen portal: menu management (add/edit dishes, see all dish details), shared top bar with customer view
+- [ ] Push: ask notification permission on a tap on every page/portal; fix missing history columns
