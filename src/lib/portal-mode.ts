@@ -3,7 +3,7 @@
 // memory for the current app run, so reopening or reloading the app always
 // lands partners back on their own portal.
 
-export type PortalHome = "/delivery" | "/admin" | "/supplier/sales" | "/printer" | "/delivery-request";
+export type PortalHome = "/delivery" | "/admin" | "/supplier/sales" | "/printer" | "/delivery-request" | "/kitchen";
 
 export const PORTAL_PREFIXES = ["/admin", "/supplier", "/delivery", "/printer", "/kitchen"] as const;
 
@@ -26,8 +26,9 @@ const TOKEN_OF: Record<PortalHome, string> = {
   "/admin": "qk_admin_token",
   "/supplier/sales": "qk_supplier_token",
   "/printer": "qk_printer_token",
+  "/kitchen": "qk_kitchen_token",
 };
-const PRIORITY: PortalHome[] = ["/delivery", "/delivery-request", "/admin", "/supplier/sales", "/printer"];
+const PRIORITY: PortalHome[] = ["/delivery", "/delivery-request", "/admin", "/supplier/sales", "/printer", "/kitchen"];
 /** The portal the person last opened themselves. Several partner sessions can
  * live on one device (an admin opening the seller portal, for example); the
  * app always returns to the one used last and never hops to another by itself. */
@@ -40,6 +41,7 @@ export function portalForPath(path: string): PortalHome | null {
   if (path === "/admin" || path.startsWith("/admin/") || path.startsWith("/admin-")) return "/admin";
   if (path === "/supplier" || path.startsWith("/supplier/") || path.startsWith("/supplier-")) return "/supplier/sales";
   if (path === "/printer" || path.startsWith("/printer/") || path.startsWith("/printer-")) return "/printer";
+  if (path === "/kitchen" || path.startsWith("/kitchen/")) return "/kitchen";
   return null;
 }
 
@@ -71,7 +73,7 @@ var a=localStorage.getItem("${ACTIVE_PORTAL_KEY}"),h=null;
 if(a&&T[a]&&tok(T[a]))h=a;else for(var i=0;i<P.length;i++){if(tok(T[P[i]])){h=P[i];break}}
 if(!h)return;
 var p=location.pathname,n=(performance.getEntriesByType("navigation")[0]||{}).type;
-var portal=["/admin","/supplier","/delivery","/printer"].some(function(x){return p===x||p.indexOf(x+"/")===0||p.indexOf(x+"-")===0});
+var portal=["/admin","/supplier","/delivery","/printer","/kitchen"].some(function(x){return p===x||p.indexOf(x+"/")===0||p.indexOf(x+"-")===0});
 if(!portal&&p!=="/login"&&(p==="/"||n==="reload"||n==="back_forward"))location.replace(h);
 }catch(e){}})();`;
 

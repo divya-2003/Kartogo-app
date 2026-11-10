@@ -422,6 +422,7 @@ function PortalReturnLink() {
       "/delivery": "Back to delivery dashboard",
       "/delivery-request": "Back to delivery dashboard",
       "/printer": "Back to printer dashboard",
+      "/kitchen": "Back to kitchen dashboard",
     };
     setTarget({ to: home, label: label[home] });
   }, []);
