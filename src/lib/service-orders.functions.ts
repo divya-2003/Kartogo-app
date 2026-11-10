@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { findDish, dishUnitPrice, FOOD_DELIVERY_FEE } from "./food";
+import { dishUnitPrice, FOOD_DELIVERY_FEE, type Kitchen } from "./food";
 import { distanceKm, quote, VEHICLES } from "./rides";
 
 // Food delivery orders and ride bookings. Prices are always recomputed here.
@@ -35,18 +35,21 @@ export const createFoodOrderFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const session = await customer(data.token);
     if (!session) return { ok: false as const, error: "Please login to order." };
+    const { findLiveDish } = await import("./food-menu.server");
     let kitchenId: string | null = null, subtotal = 0;
+    let kitchen: Kitchen | null = null;
     const lines = [];
     for (const it of data.items) {
-      const f = findDish(it.dishId);
+      const f = await findLiveDish(it.dishId);
       if (!f) return { ok: false as const, error: "An item is no longer available." };
       if (kitchenId && kitchenId !== f.kitchen.id) return { ok: false as const, error: "Order from one kitchen at a time." };
       kitchenId = f.kitchen.id;
+      kitchen = f.kitchen;
       const unit = dishUnitPrice(f.dish, it.addons);
       subtotal += unit * it.qty;
       lines.push({ name: f.dish.name, qty: it.qty, unit, veg: f.dish.veg, addons: (f.dish.addons ?? []).filter(a => it.addons.includes(a.id)).map(a => a.name) });
     }
-    const kitchen = findDish(data.items[0].dishId)!.kitchen;
+    if (!kitchen) return { ok: false as const, error: "An item is no longer available." };
     const ins = await insertOrder(session.phone, {
       order_code: code("KF"), kind: "FOOD", title: kitchen.name, amount: subtotal + FOOD_DELIVERY_FEE,
       details: { kitchen_id: kitchen.id, eta_min: kitchen.eta, items: lines, subtotal, delivery_fee: FOOD_DELIVERY_FEE, address: data.address, note: data.note ?? null, payment: "COD" },

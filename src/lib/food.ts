@@ -8,6 +8,8 @@ export type Dish = {
   veg: boolean;
   desc: string;
   bestseller?: boolean;
+  /** Dish photo added by kitchen staff (optional). */
+  image?: string | null;
   /** Optional add-ons shown in the customizer. */
   addons?: { id: string; name: string; price: number }[];
 };
