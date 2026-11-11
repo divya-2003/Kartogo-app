@@ -2,19 +2,14 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { LanguageRow } from "@/components/LanguagePicker";
 import { LogOut, Phone, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSignOut } from "@/hooks/use-sign-out";
 
 export const Route = createFileRoute("/printer/account")({ component: PrinterAccount });
 
 function PrinterAccount() {
   const nav = useNavigate();
 
-  const logout = () => {
-    try {
-      localStorage.removeItem("qk_printer_token");
-      localStorage.removeItem("qk_printer");
-    } catch { /* noop */ }
-    nav({ to: "/login", replace: true });
-  };
+  const logout = useSignOut();
 
   return (
     <div className="space-y-5">

@@ -7,6 +7,7 @@ import { CATEGORIES, formatINR } from "@/lib/data";
 import { toast } from "sonner";
 import { StaffAccountCard } from "@/components/StaffAccountCard";
 import { LanguageRow } from "@/components/LanguagePicker";
+import { useSignOut } from "@/hooks/use-sign-out";
 
 export const Route = createFileRoute("/supplier/account")({ component: SupplierAccount });
 
@@ -44,14 +45,7 @@ function SupplierAccount() {
     .map(slug => CATEGORIES.find(c => c.slug === slug)?.name ?? slug)
     .join(", ");
 
-  const onLogout = () => {
-    try {
-      localStorage.removeItem("qk_supplier_token");
-      localStorage.removeItem("qk_supplier");
-    } catch { /* noop */ }
-    toast.success("Signed out");
-    nav({ to: "/login" });
-  };
+  const onLogout = useSignOut();
 
   return (
     <div className="space-y-5">
