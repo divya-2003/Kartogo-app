@@ -486,6 +486,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.removeItem("qk_supplier");
           localStorage.removeItem("qk_printer_token");
           localStorage.removeItem("qk_printer");
+          localStorage.removeItem("qk_kitchen_token");
+          localStorage.removeItem("qk_kitchen");
+          localStorage.removeItem("qk_delivery_pending_token");
+          localStorage.removeItem("qk_active_portal");
           localStorage.removeItem("qk_cart");
           localStorage.removeItem("qk_wishlist");
           // Clear the local address cache so the next person to log in on this
