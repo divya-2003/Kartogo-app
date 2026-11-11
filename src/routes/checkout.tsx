@@ -75,7 +75,8 @@ function CheckoutPage() {
   const [editLandmark, setEditLandmark] = useState("");
 
   // Promo code state.
-  const [promoInput, setPromoInput] = useState("");
+  // Coupon chosen in the Cart, applied here once the basket total is known.
+  const [pendingCode, setPendingCode] = useState<string | null>(null);
   const [appliedCode, setAppliedCode] = useState<string | null>(null);
 
   // Scheduled delivery (Standard orders only).
@@ -239,27 +240,27 @@ function CheckoutPage() {
       const verdict = await validatePromoFn({ data: { token: token ?? "", code, subtotal, items: basketLines } });
       if (!verdict.ok) { toast.error(verdict.reason); return; }
       setAppliedCode(verdict.code);
-      setPromoInput("");
       toast.success(`${verdict.code} applied — you saved ${formatINR(verdict.discount)}!`);
     } catch {
       toast.error("Could not check that promo code");
     }
   };
 
-  const applyPromo = () => { void tryPromo(promoInput); };
-
-  // A coupon tapped on the home page is remembered and pre-filled here.
+  // A coupon picked in the Cart (or tapped on Home) is remembered and applied here.
   useEffect(() => {
     let saved: string | null = null;
     try { saved = localStorage.getItem("qk_promo_code"); } catch { /* ignore */ }
     if (saved) {
-      setPromoInput(saved);
+      setPendingCode(saved);
       try { localStorage.removeItem("qk_promo_code"); } catch { /* ignore */ }
     }
   }, []);
-
-
-
+  useEffect(() => {
+    if (!pendingCode || subtotal <= 0) return;
+    setPendingCode(null);
+    void tryPromo(pendingCode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingCode, subtotal]);
 
   const removePromo = () => {
     setAppliedCode(null);
