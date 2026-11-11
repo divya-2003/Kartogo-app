@@ -2,7 +2,7 @@ import { ClipboardList as MClipboard, CreditCard as MCard, Tag as MTag, Store as
 import { LanguageSheet, useAppLanguage } from "@/components/LanguagePicker";
 import { languageLabel } from "@/lib/i18n";
 import { useSignOut } from "@/hooks/use-sign-out";
-import { enterCustomerMode, leaveCustomerMode, portalHomeTarget, type PortalHome } from "@/lib/portal-mode";
+import { leaveCustomerMode, portalHomeTarget, type PortalHome } from "@/lib/portal-mode";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getReferralFn, applyReferralFn } from "@/lib/promo.functions";
