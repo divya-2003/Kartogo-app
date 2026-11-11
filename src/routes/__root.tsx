@@ -17,6 +17,7 @@ import { GlobalBottomNav } from "@/components/marketplace/BottomNav";
 import { PageTranslator } from "@/components/PageTranslator";
 import { CustomerClickTracker } from "@/components/CustomerClickTracker";
 import { CartProvider, AuthProvider, CatalogProvider, OrdersProvider, LocationProvider, WalletProvider, WishlistProvider, DriversProvider } from "@/lib/store";
+import { ensureNotificationPrompt } from "@/lib/notification-permission";
 import { portalHomeTarget, isPortalPath, leaveCustomerMode, markActivePortal, EARLY_PORTAL_REDIRECT_SCRIPT } from "@/lib/portal-mode";
 
 import appCss from "../styles.css?url";
@@ -112,6 +113,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RouteMemory() {
   const router = useRouter();
+  // Every page and portal: if this phone hasn't answered the notification
+  // prompt yet, show it on the next tap.
+  useEffect(() => { void ensureNotificationPrompt(); }, []);
   useEffect(() => {
     try {
       const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
