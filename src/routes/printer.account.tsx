@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { LanguageRow } from "@/components/LanguagePicker";
 import { LogOut, Phone, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,6 @@ import { useSignOut } from "@/hooks/use-sign-out";
 export const Route = createFileRoute("/printer/account")({ component: PrinterAccount });
 
 function PrinterAccount() {
-  const nav = useNavigate();
 
   const logout = useSignOut();
 

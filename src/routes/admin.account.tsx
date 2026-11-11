@@ -1,5 +1,5 @@
 import { useSignOut } from "@/hooks/use-sign-out";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { LogOut, ShieldCheck } from "lucide-react";
 import { StaffAccountCard } from "@/components/StaffAccountCard";
 import { useAuth } from "@/lib/store";
