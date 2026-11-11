@@ -1,7 +1,8 @@
 import { ClipboardList as MClipboard, CreditCard as MCard, Tag as MTag, Store as MStore, Printer as MPrinter, Settings as MSettings, Shield as MShield, FileText as MFile, Pencil as MPencil } from "lucide-react";
 import { LanguageSheet, useAppLanguage } from "@/components/LanguagePicker";
 import { languageLabel } from "@/lib/i18n";
-import { enterCustomerMode, leaveCustomerMode, portalHomeTarget, type PortalHome } from "@/lib/portal-mode";
+import { useSignOut } from "@/hooks/use-sign-out";
+import { leaveCustomerMode, portalHomeTarget, type PortalHome } from "@/lib/portal-mode";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getReferralFn, applyReferralFn } from "@/lib/promo.functions";
@@ -54,7 +55,8 @@ export const Route = createFileRoute("/menu")({
 });
 
 function MenuPage() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const signOut = useSignOut();
   const { location, savedAddresses, setLocation, removeSavedAddress } = useLocation();
   const { balance } = useWallet();
   const nav = useNavigate();
@@ -131,14 +133,8 @@ function MenuPage() {
     );
   }
 
-  const handleLogout = () => {
-    logout();
-    toast.success("Signed out");
-    // Back to the same first page a new visitor sees: Home, Shop tab.
-    try { sessionStorage.setItem("qk_home_section", "shop"); } catch { /* noop */ }
-    enterCustomerMode();
-    nav({ to: "/", replace: true });
-  };
+  // Back to the same first page a new visitor sees: Home, Shop tab.
+  const handleLogout = signOut;
 
   const soon = (label: string) => toast.info(`${label} coming soon`);
 

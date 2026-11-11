@@ -245,11 +245,11 @@ function Index() {
           <SectionBar value={section} onChange={next => { sessionStorage.setItem("qk_home_section", next); setSection(next); }} />
 
           {!user && (
-            /* slim delivery line under the sections for signed-out shoppers */
-            <div className="mt-1 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-              <div className="min-w-0 max-w-[260px]"><LocationPicker /></div>
+            /* slim delivery line under the sections for signed-out shoppers: location, then the delivery time below it on the left */
+            <div className="mt-1 flex flex-col items-start gap-1">
+              <div className="w-full min-w-0 max-w-[260px]"><LocationPicker /></div>
               {location && (
-                <span className="flex shrink-0 items-center gap-1 text-xs font-extrabold text-foreground">
+                <span className="flex items-center gap-1 pl-1 text-xs font-extrabold text-foreground">
                   <Zap className="h-3.5 w-3.5 shrink-0 fill-saffron text-saffron" /> {deliveryWindow(location.etaMinutes)}
                 </span>
               )}

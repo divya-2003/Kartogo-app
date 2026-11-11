@@ -10,6 +10,7 @@ import { LocationPicker } from "@/components/LocationPicker";
 import { useFrequentlyBoughtTogether, useCustomerTracking } from "@/hooks/use-recommendations";
 import { tierOf, tierEta, TIER_LABEL, type DeliveryTier } from "@/lib/delivery-tier";
 import { COUPONS } from "@/lib/promo";
+import { useFavorite } from "@/components/marketplace/Cards";
 
 const SEGMENTS: { tier: DeliveryTier }[] = [{ tier: "quick" }, { tier: "standard" }];
 
@@ -227,9 +228,7 @@ function CartPage() {
                           <span className="text-muted-foreground">Delivery</span>
                           <span className="font-bold">Scheduled · pick the day at checkout</span>
                         </div>
-                        <button onClick={() => remove(i.productId)} className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-border py-2 text-sm font-bold hover:bg-secondary">
-                          <Trash2 className="h-4 w-4" /> Remove
-                        </button>
+                        <StoreLineActions listingId={listingId} onRemove={() => remove(i.productId)} />
                       </div>
                     );
                   })}
@@ -367,4 +366,27 @@ function SelectBox({ checked }: { checked: boolean }) {
 
 function Row({ label, value }: { label: string; value: string }) {
   return <div className="flex justify-between"><span>{label}</span><span className="font-semibold">{value}</span></div>;
+}
+
+/** Remove + Move to Wishlist for a local-store product (saved to the account, so login is needed). */
+function StoreLineActions({ listingId, onRemove }: { listingId: string; onRemove: () => void }) {
+  const { customerToken } = useAuth();
+  const nav = useNavigate();
+  const { saved, toggle } = useFavorite("listing", listingId);
+  const move = async () => {
+    if (!customerToken) { toast("Login to save items to your wishlist"); nav({ to: "/login", search: { redirect: "/cart" } as never }); return; }
+    if (!saved) await toggle();
+    onRemove();
+    toast.success("Moved to your wishlist");
+  };
+  return (
+    <div className="flex gap-2">
+      <button onClick={onRemove} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border py-2 text-sm font-bold hover:bg-secondary">
+        <Trash2 className="h-4 w-4" /> Remove
+      </button>
+      <button onClick={() => void move()} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border py-2 text-sm font-bold hover:bg-secondary">
+        <Heart className="h-4 w-4" /> Move to Wishlist
+      </button>
+    </div>
+  );
 }

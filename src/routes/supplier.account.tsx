@@ -1,18 +1,17 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Building2, User2, Boxes, LogOut, CheckCircle2, RotateCcw, Clock, IndianRupee } from "lucide-react";
 import { listSupplierOrdersFn, type SupplierOrder } from "@/lib/supplier.functions";
 import { useSupplier } from "@/lib/supplier-context";
 import { CATEGORIES, formatINR } from "@/lib/data";
-import { toast } from "sonner";
 import { StaffAccountCard } from "@/components/StaffAccountCard";
 import { LanguageRow } from "@/components/LanguagePicker";
+import { useSignOut } from "@/hooks/use-sign-out";
 
 export const Route = createFileRoute("/supplier/account")({ component: SupplierAccount });
 
 function SupplierAccount() {
   const supplier = useSupplier();
-  const nav = useNavigate();
   const [orders, setOrders] = useState<SupplierOrder[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,14 +43,7 @@ function SupplierAccount() {
     .map(slug => CATEGORIES.find(c => c.slug === slug)?.name ?? slug)
     .join(", ");
 
-  const onLogout = () => {
-    try {
-      localStorage.removeItem("qk_supplier_token");
-      localStorage.removeItem("qk_supplier");
-    } catch { /* noop */ }
-    toast.success("Signed out");
-    nav({ to: "/login" });
-  };
+  const onLogout = useSignOut();
 
   return (
     <div className="space-y-5">

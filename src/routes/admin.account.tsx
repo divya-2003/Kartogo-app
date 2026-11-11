@@ -1,4 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useSignOut } from "@/hooks/use-sign-out";
+import { createFileRoute } from "@tanstack/react-router";
 import { LogOut, ShieldCheck } from "lucide-react";
 import { StaffAccountCard } from "@/components/StaffAccountCard";
 import { useAuth } from "@/lib/store";
@@ -20,15 +21,14 @@ export const Route = createFileRoute("/admin/account")({
 
 
 function AdminAccount() {
-  const { logout, adminToken } = useAuth();
-  const navigate = useNavigate();
+  const { adminToken } = useAuth();
+  const signOut = useSignOut();
   // Log out AND leave the admin area — otherwise the guarded layout stays
   // mounted and the button looks like it did nothing.
   const handleLogout = async () => {
     // Usage analytics: record the sign-out before the token is cleared.
     if (adminToken) await logAdminActivityFn({ data: { token: adminToken, event: "logout" } }).catch(() => {});
-    logout();
-    void navigate({ to: "/login", replace: true });
+    signOut();
   };
   return (
     <div className="space-y-5">

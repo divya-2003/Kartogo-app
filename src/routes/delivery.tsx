@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { StaffAccountCard } from "@/components/StaffAccountCard";
 import { LanguageRow } from "@/components/LanguagePicker";
+import { useSignOut } from "@/hooks/use-sign-out";
 import { PartnerMenu, useLeaveCustomerMode } from "@/components/PartnerMenu";
 import { Bike, Phone, Package, Undo2, ShieldAlert, Truck, CheckCircle2, MapPin, LogOut, RefreshCw, IndianRupee, HandPlatter, User2, Wallet, ListChecks, Navigation, ChevronDown, MessageSquare } from "lucide-react";
 import { listDeliveryOrdersFn, deliverySetStatusFn, listAvailableOrdersFn, claimOrderFn, listReturnPickupsFn, markReturnPickedUpFn } from "@/lib/delivery.functions";
@@ -113,14 +114,11 @@ function DeliveryPortal() {
     void renewSessions(true).then((r) => { if (r.delivery) setToken(r.delivery); });
   }, []);
 
+  const signOut = useSignOut();
   const onLogout = () => {
     setToken(null);
     setDriver(null);
-    try {
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(DRIVER_KEY);
-    } catch { /* noop */ }
-    nav({ to: "/login" });
+    signOut();
   };
 
   if (!ready) return null;

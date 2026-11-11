@@ -112,7 +112,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const saveTimer = useRef<number | null>(null);
   const itemsRef = useRef(items);
   itemsRef.current = items;
-  const toSaved = (list: CartItem[]) => list.filter(l => l.qty > 0).slice(0, 100).map(l => ({ productId: l.productId, qty: Math.min(99, Math.max(1, Math.round(l.qty))), ...(l.unselected ? { unselected: true } : {}), ...(l.listing ? { listing: l.listing } : {}) }));
+  const toSaved = (list: CartItem[]) => list.filter(l => l.qty > 0).slice(0, 100).map(l => ({ productId: l.productId, qty: Math.min(99, Math.max(1, Math.round(l.qty))), ...(l.unselected ? { unselected: true } : {}), ...(l.listing ? { listing: { ...l.listing, image: l.listing.image && l.listing.image.length <= 2000 ? l.listing.image : undefined, icon: l.listing.icon?.slice(0, 20) } } : {}) }));
   const flush = useCallback((token: string, list: CartItem[]) => {
     if (saveTimer.current) { window.clearTimeout(saveTimer.current); saveTimer.current = null; }
     void saveCartFn({ data: { token, items: toSaved(list) } }).catch(() => { /* retried on the next change */ });
@@ -486,6 +486,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.removeItem("qk_supplier");
           localStorage.removeItem("qk_printer_token");
           localStorage.removeItem("qk_printer");
+          localStorage.removeItem("qk_kitchen_token");
+          localStorage.removeItem("qk_kitchen");
+          localStorage.removeItem("qk_delivery_pending_token");
+          localStorage.removeItem("qk_active_portal");
           localStorage.removeItem("qk_cart");
           localStorage.removeItem("qk_wishlist");
           // Clear the local address cache so the next person to log in on this

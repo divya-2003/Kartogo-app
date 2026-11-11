@@ -75,7 +75,8 @@ function CheckoutPage() {
   const [editLandmark, setEditLandmark] = useState("");
 
   // Promo code state.
-  const [promoInput, setPromoInput] = useState("");
+  // Coupon chosen in the Cart, applied here once the basket total is known.
+  const [pendingCode, setPendingCode] = useState<string | null>(null);
   const [appliedCode, setAppliedCode] = useState<string | null>(null);
 
   // Scheduled delivery (Standard orders only).
@@ -217,6 +218,8 @@ function CheckoutPage() {
     [appliedCode, subtotal, promoRules, basketLines],
   );
   const total = Math.max(0, subtotal + fee - discount);
+  // Everything being bought: Kartogo items (with delivery) plus local-store items.
+  const grandTotal = (items.length > 0 ? total : 0) + storeTotal;
   // GST is inclusive in listed prices (5% slab) — show it as a breakdown line
   // so the estimate stays transparent without changing what's payable.
   const GST_RATE = 0.05;
@@ -237,27 +240,27 @@ function CheckoutPage() {
       const verdict = await validatePromoFn({ data: { token: token ?? "", code, subtotal, items: basketLines } });
       if (!verdict.ok) { toast.error(verdict.reason); return; }
       setAppliedCode(verdict.code);
-      setPromoInput("");
       toast.success(`${verdict.code} applied — you saved ${formatINR(verdict.discount)}!`);
     } catch {
       toast.error("Could not check that promo code");
     }
   };
 
-  const applyPromo = () => { void tryPromo(promoInput); };
-
-  // A coupon tapped on the home page is remembered and pre-filled here.
+  // A coupon picked in the Cart (or tapped on Home) is remembered and applied here.
   useEffect(() => {
     let saved: string | null = null;
     try { saved = localStorage.getItem("qk_promo_code"); } catch { /* ignore */ }
     if (saved) {
-      setPromoInput(saved);
+      setPendingCode(saved);
       try { localStorage.removeItem("qk_promo_code"); } catch { /* ignore */ }
     }
   }, []);
-
-
-
+  useEffect(() => {
+    if (!pendingCode || subtotal <= 0) return;
+    setPendingCode(null);
+    void tryPromo(pendingCode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingCode, subtotal]);
 
   const removePromo = () => {
     setAppliedCode(null);
@@ -714,52 +717,17 @@ function CheckoutPage() {
                 <div className="flex justify-between border-t border-border pt-2 font-bold"><span>Store items total</span><span>{formatINR(storeTotal)}</span></div>
               </div>
             )}
-            {/* Promo code */}
-            <div className="border-t border-border pt-3">
-              {appliedCode ? (
-                <div className="flex items-center justify-between rounded-xl border border-primary/40 bg-primary/5 px-3 py-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Tag className="h-4 w-4 text-primary" />
-                    <span className="font-bold text-primary">{appliedCode}</span>
-                    <span className="text-muted-foreground">applied</span>
-                  </div>
-                  <button onClick={removePromo} className="text-xs font-semibold text-muted-foreground hover:text-destructive">Remove</button>
+            {/* Coupons are picked in the Cart; an applied one shows here and can be removed. */}
+            {appliedCode && (
+              <div className="flex items-center justify-between rounded-xl border border-primary/40 bg-primary/5 px-3 py-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <Tag className="h-4 w-4 text-primary" />
+                  <span className="font-bold text-primary">{appliedCode}</span>
+                  <span className="text-muted-foreground">applied</span>
                 </div>
-              ) : (
-                <>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Tag className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <input
-                        value={promoInput}
-                        onChange={e => setPromoInput(e.target.value.toUpperCase())}
-                        onKeyDown={e => { if (e.key === "Enter") applyPromo(); }}
-                        placeholder="Promo code"
-                        maxLength={20}
-                        className="w-full rounded-lg border border-input bg-background py-2 pl-9 pr-3 text-sm uppercase outline-none focus:ring-2 focus:ring-ring"
-                      />
-                    </div>
-                    <button onClick={applyPromo} className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90">Apply</button>
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {promoRules.map(rule => {
-                      const eligible = subtotal >= rule.minSubtotal;
-                      return (
-                        <button
-                          key={rule.code}
-                          type="button"
-                          onClick={() => { void tryPromo(rule.code); }}
-                          className={`rounded-lg border px-2.5 py-1.5 text-left text-[11px] ${eligible ? "border-primary/40 bg-primary/5" : "border-border opacity-70"}`}
-                        >
-                          <span className="font-bold text-primary">{rule.code}</span>
-                          <span className="ml-1 text-muted-foreground">{rule.description}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-            </div>
+                <button onClick={removePromo} className="text-xs font-semibold text-muted-foreground hover:text-destructive">Remove</button>
+              </div>
+            )}
 
             <div className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
               <div className="mb-1 flex items-center justify-between">
@@ -768,9 +736,10 @@ function CheckoutPage() {
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-leaf" /> updates live
                 </span>
               </div>
-              <Row label="Subtotal" value={formatINR(subtotal)} />
-              <Row label="Delivery" value={baseFee === 0 ? "FREE" : formatINR(baseFee)} />
-              {freeDeliveryGap > 0 && (
+              {items.length > 0 && <Row label={storeLines.length > 0 ? "Kartogo items" : "Subtotal"} value={formatINR(subtotal)} />}
+              {storeLines.length > 0 && <Row label="Local store items" value={formatINR(storeTotal)} />}
+              {items.length > 0 && <Row label="Delivery" value={baseFee === 0 ? "FREE" : formatINR(baseFee)} />}
+              {items.length > 0 && freeDeliveryGap > 0 && (
                 <div className="text-xs text-primary">Add {formatINR(freeDeliveryGap)} more for free delivery</div>
               )}
               {surgeAmount > 0 && surge && (
@@ -788,20 +757,20 @@ function CheckoutPage() {
               {gst > 0 && (
                 <div className="flex justify-between text-xs"><span className="text-muted-foreground">Incl. GST @ 5%</span><span className="text-muted-foreground">{formatINR(gst)}</span></div>
               )}
-              <div className="mt-2 flex justify-between border-t border-border pt-2 text-base font-bold"><span>Total</span><span>{formatINR(total)}</span></div>
+              <div className="mt-2 flex justify-between border-t border-border pt-2 text-base font-bold"><span>Total</span><span>{formatINR(grandTotal)}</span></div>
 
 
-              {/* Payment split */}
-              {payment === "wallet" ? (
+              {/* Payment split — local-store items are always paid on delivery */}
+              {payment === "wallet" && items.length > 0 ? (
                 <div className="mt-3 space-y-1 rounded-xl bg-primary/5 p-3">
                   <div className="flex justify-between"><span className="text-muted-foreground">Paid via Kartogo Cash</span><span className="font-semibold text-primary">−{formatINR(total)}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Wallet balance after</span><span className="font-semibold">{formatINR(walletBalance - total)}</span></div>
+                  {storeTotal > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Local store items, pay on delivery</span><span className="font-semibold">{formatINR(storeTotal)}</span></div>}
                   <div className="mt-1 flex justify-between border-t border-primary/15 pt-1.5 font-bold"><span>Payable now</span><span className="text-leaf">{formatINR(0)}</span></div>
                 </div>
               ) : (
-                <div className="mt-3 space-y-1 rounded-xl bg-secondary/40 p-3">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Pay on delivery ({payment === "upi" ? "UPI" : "Cash"})</span><span className="font-semibold">{formatINR(total)}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Wallet used</span><span className="font-semibold">{formatINR(0)}</span></div>
+                <div className="mt-3 rounded-xl bg-secondary/40 p-3">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Pay on delivery ({payment === "upi" ? "UPI" : "Cash"})</span><span className="font-semibold">{formatINR(grandTotal)}</span></div>
                 </div>
               )}
             </div>
@@ -817,7 +786,7 @@ function CheckoutPage() {
                 ? "Placing order..."
                 : items.length > 0 && payment === "wallet" && walletBalance < total
                   ? `Insufficient Kartogo Cash — add ${formatINR(total - walletBalance)}`
-                  : storeLines.length > 0 ? `Place order · ${formatINR(total + storeTotal)}` : "Place order"}
+                  : `Place order · ${formatINR(grandTotal)}`}
             </button>
           </aside>
         </div>
