@@ -112,7 +112,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const saveTimer = useRef<number | null>(null);
   const itemsRef = useRef(items);
   itemsRef.current = items;
-  const toSaved = (list: CartItem[]) => list.filter(l => l.qty > 0).slice(0, 100).map(l => ({ productId: l.productId, qty: Math.min(99, Math.max(1, Math.round(l.qty))), ...(l.unselected ? { unselected: true } : {}), ...(l.listing ? { listing: l.listing } : {}) }));
+  const toSaved = (list: CartItem[]) => list.filter(l => l.qty > 0).slice(0, 100).map(l => ({ productId: l.productId, qty: Math.min(99, Math.max(1, Math.round(l.qty))), ...(l.unselected ? { unselected: true } : {}), ...(l.listing ? { listing: { ...l.listing, image: l.listing.image && l.listing.image.length <= 2000 ? l.listing.image : undefined, icon: l.listing.icon?.slice(0, 20) } } : {}) }));
   const flush = useCallback((token: string, list: CartItem[]) => {
     if (saveTimer.current) { window.clearTimeout(saveTimer.current); saveTimer.current = null; }
     void saveCartFn({ data: { token, items: toSaved(list) } }).catch(() => { /* retried on the next change */ });
