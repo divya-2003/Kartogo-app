@@ -10,6 +10,7 @@ import { LocationPicker } from "@/components/LocationPicker";
 import { useFrequentlyBoughtTogether, useCustomerTracking } from "@/hooks/use-recommendations";
 import { tierOf, tierEta, TIER_LABEL, type DeliveryTier } from "@/lib/delivery-tier";
 import { COUPONS } from "@/lib/promo";
+import { useFavorite } from "@/components/marketplace/Cards";
 
 const SEGMENTS: { tier: DeliveryTier }[] = [{ tier: "quick" }, { tier: "standard" }];
 
