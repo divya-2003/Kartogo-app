@@ -15,7 +15,7 @@
 - Open Home-tab sub-pages (e.g. a restaurant) on their own route so the Home section cards never render above a sub-page.
 - Partner and admin portals share the PartnerMenu three-line top bar; "shop as a customer" intent lives only in memory for the current app run (src/lib/portal-mode.ts), so reopening, reloading or idling the app returns to the portal the person opened last (qk_active_portal), decided by an inline head script before first paint so other accounts never flash or take over.
 - Rider self-claim ("I'm taking this order") puts the rider on duty and falls back to a direct single-order assignment when the order cannot join a trip, so claiming never depends on packing or store data.
-- Ask notification permission directly after the first-open location prompt (no in-app card); PushBridge listens for the grant event to register the device.
+- Ask notification permission directly after the first-open location prompt and, on every page and portal while still unanswered, on the next tap (mobile browsers ignore untapped requests); no in-app card, and PushBridge listens for the grant event to register the device.
 - The customer Orders "All" tab is one list of product orders, bookings, food and rides sorted newest-first by creation time.
 - Shared server helpers called from several server functions live in *.server.ts files, never as plain exports of *.functions.ts files, because those exports (and their server-only imports) are kept in the browser bundle and break the build.
 - Ride start codes are generated and checked only on the server; driver job lists strip the code so riders must get it from the customer, and the fare is collected in a separate at-destination step before completion.
@@ -29,3 +29,6 @@
 - Local-store (marketplace) products live in the cart as mp:<listingId> lines with a snapshot, and checkout places them as store orders alongside the Kartogo order.
 - Customer actions (including every customer-page button/link click) go only to customer_events through the batched recommendations tracker; recommendation scoring reads product-linked events only, so click volume cannot crowd out product signals.
 - Admin-chosen 1st/2nd/3rd products per Shop category live in category_product_ranks (catalog id or mp:<listingId>) and are applied with the shared category-ranks helpers on every category view, so admin and customer ordering never disagree.
+- Every logout goes through the shared sign-out hook, which clears all role sessions on the device and opens the signed-out Home, so no portal or account details survive a logout.
+- Signed-in carts are saved per phone on the server and merged with the device's guest cart on login (larger quantity wins), so logout empties the device without losing the account's cart.
+- Food dishes live per kitchen in the database and are managed from the kitchen portal; the static food list only supplies kitchen details and a fallback, and order prices are re-read from the database.
