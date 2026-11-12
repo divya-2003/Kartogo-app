@@ -44,7 +44,9 @@ type Tab = "orders" | "menu";
 
 function KitchenPortal() {
   useLeaveCustomerMode();
-  const [{ token, name, id: kitchenId }] = useState(readKitchen);
+  // Read the saved kitchen after hydration so the server and browser render the same first frame.
+  const [{ token, name, id: kitchenId }, setKitchenInfo] = useState<{ token: string | null; name: string; id: string | null }>({ token: null, name: "Kitchen", id: null });
+  useEffect(() => { setKitchenInfo(readKitchen()); }, []);
   const [tab, setTab] = useState<Tab>("orders");
   const signOut = useSignOut();
 
