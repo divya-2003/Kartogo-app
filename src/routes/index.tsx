@@ -17,7 +17,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { RecommendationRow } from "@/components/RecommendationRow";
 import { useRecommendationBundle, useCustomerTracking } from "@/hooks/use-recommendations";
 import { formatINR } from "@/lib/data";
-import { useCatalog, useAuth, useLocation, useCart, useWallet, useWishlist } from "@/lib/store";
+import { useCatalog, useAuth, useLocation, useCart, useWallet } from "@/lib/store";
 import { COUPONS as PROMO_COUPONS } from "@/lib/promo";
 import { toast } from "sonner";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter";
