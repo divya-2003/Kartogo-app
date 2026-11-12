@@ -18,31 +18,31 @@ const DESIGN = {
 
 const TINTS = ["bg-saffron/15", "bg-leaf/15", "bg-primary/10"];
 
-// Soft hyphens so long names break neatly ("Elec-tronics") inside the narrow one-row tiles.
-const SOFT: Record<string, string> = { household: "House\u00ADhold", electronics: "Elec\u00ADtronics", furniture: "Furni\u00ADture", pharmacy: "Phar\u00ADmacy", products: "Pro\u00ADducts", groceries: "Gro\u00ADceries", stationery: "Statio\u00ADnery", clothes: "Clothes", cosmetics: "Cos\u00ADmetics" };
-const softName = (name: string) => name.split(" ").map(w => SOFT[w.toLowerCase()] ?? w).join(" ");
-
 const rememberOrigin = (slug: string) => { try { sessionStorage.setItem(`qk_explore_origin:${slug}`, window.location.pathname + window.location.search); } catch { /* unavailable */ } };
 
 /**
- * Shop category bar: every category sits in ONE row that never scrolls
- * sideways, on every screen size. Tiles shrink to share the width equally.
+ * Shop category bar: one row that scrolls sideways on phones (and on any
+ * screen where the categories don't fit), so new categories always have room.
+ * Every column is the same width — the width the longest one-line name needs —
+ * so all icons are equal squares and every name stays on one line.
  */
 export function ShopCategoryStrip({ term = "" }: { term?: string }) {
   const cats = useQuery({ queryKey: ["mp-cats"], queryFn: () => listMpCategoriesFn(), staleTime: 5 * 60_000 });
   const q = term.trim().toLowerCase();
   const categories = sectionCategories((cats.data?.categories ?? []) as MpCategory[], "shop").filter(c => !q || c.name.toLowerCase().includes(q));
-  const cols = { gridTemplateColumns: `repeat(${Math.max(1, cats.isLoading ? 9 : categories.length)}, minmax(0, 1fr))` };
-  if (cats.isLoading) return <div className="mt-4 grid gap-1 sm:gap-3" style={cols}>{Array.from({ length: 9 }).map((_, i) => <div key={i} className="aspect-square animate-pulse rounded-xl bg-secondary" />)}</div>;
+  const row = "grid w-max min-w-full grid-flow-col auto-cols-[minmax(64px,1fr)] gap-x-2 sm:auto-cols-[minmax(84px,1fr)] sm:gap-x-3";
+  if (cats.isLoading) return <div className="-mx-4 overflow-hidden px-4"><div className={row}>{Array.from({ length: 9 }).map((_, i) => <div key={i} className="mx-auto aspect-square w-full max-w-[84px] animate-pulse rounded-2xl bg-secondary" />)}</div></div>;
   return (
-    <nav aria-label="Shop categories" className="mt-4 grid gap-x-1 sm:gap-x-3" style={cols}>
-      {categories.map((c, i) => (
-        <Link key={c.slug} to="/explore/$slug" params={{ slug: c.slug }} onClick={() => rememberOrigin(c.slug)} className="flex min-w-0 flex-col items-center gap-1 text-center">
-          <span className={`grid aspect-square w-full max-w-16 place-items-center rounded-xl text-lg min-[400px]:text-xl sm:max-w-[70px] sm:rounded-2xl sm:text-3xl ${TINTS[i % TINTS.length]}`}>{c.icon}</span>
-          <span className="w-full hyphens-manual text-[9px] font-semibold leading-tight text-foreground min-[400px]:text-[10px] sm:text-xs">{softName(c.name)}</span>
-        </Link>
-      ))}
-    </nav>
+    <div className="-mx-4 overflow-x-auto overscroll-x-contain px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <nav aria-label="Shop categories" className={row}>
+        {categories.map((c, i) => (
+          <Link key={c.slug} to="/explore/$slug" params={{ slug: c.slug }} onClick={() => rememberOrigin(c.slug)} className="flex min-w-0 flex-col items-center gap-1 text-center">
+            <span className={`grid aspect-square w-full max-w-[84px] place-items-center rounded-2xl text-2xl sm:text-3xl ${TINTS[i % TINTS.length]}`}>{c.icon}</span>
+            <span className="whitespace-nowrap px-0.5 text-[11px] font-semibold leading-tight text-foreground sm:text-xs">{c.name}</span>
+          </Link>
+        ))}
+      </nav>
+    </div>
   );
 }
 
@@ -63,11 +63,11 @@ export function HomeMarketplace({ section = "shop", term = "", hideNames }: { se
   const loading = cats.isLoading || results.some(r => r.isLoading);
   const error = cats.isError || results.some(r => r.isError);
   return (
-    <section className="py-6" aria-label={d.title}>
-      <div className={section === "shop" ? "mb-1" : "mb-5 border-b border-border pb-4"}>
+    <section className={section === "shop" ? "pb-6 pt-3" : "py-6"} aria-label={d.title}>
+      {section !== "shop" && <div className="mb-5 border-b border-border pb-4">
         <h2 className={`font-display text-2xl font-extrabold ${d.colour}`}>{d.title}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{d.note}</p>
-      </div>
+      </div>}
       {section === "shop" ? <div className="mb-6"><ShopCategoryStrip term={term} /></div> : <div className={`mb-6 grid gap-3 ${section === "events" ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3 sm:grid-cols-4 lg:grid-cols-6"}`}>
         {categories.filter(c => !q || c.name.toLowerCase().includes(q)).map(c => (
           <Link key={c.slug} to="/explore/$slug" params={{ slug: c.slug }} onClick={() => rememberOrigin(c.slug)} className="overflow-hidden rounded-xl border border-border bg-card">
