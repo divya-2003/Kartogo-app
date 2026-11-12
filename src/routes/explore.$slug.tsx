@@ -143,8 +143,7 @@ function ExplorePage() {
               </section>
             )}
             {topPicks.length > 0 && (
-              <section aria-label="Top picks">
-                <h2 className="mb-2 font-display text-base font-bold">Top picks</h2>
+              <section>
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">{topPicks.map(t => <TopPick key={t.key} rank={t.rank}>{t.el}</TopPick>)}</div>
               </section>
             )}
