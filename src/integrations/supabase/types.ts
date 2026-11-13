@@ -1591,6 +1591,59 @@ export type Database = {
           },
         ]
       }
+      mp_appointment_settings: {
+        Row: {
+          allow_business_location: boolean
+          allow_customer_location: boolean
+          breaks: Json
+          buffer_minutes: number
+          date_overrides: Json
+          max_per_slot: number
+          partner_id: string
+          paused_from: string | null
+          paused_until: string | null
+          slot_minutes: number
+          updated_at: string
+          working_hours: Json
+        }
+        Insert: {
+          allow_business_location?: boolean
+          allow_customer_location?: boolean
+          breaks?: Json
+          buffer_minutes?: number
+          date_overrides?: Json
+          max_per_slot?: number
+          partner_id: string
+          paused_from?: string | null
+          paused_until?: string | null
+          slot_minutes?: number
+          updated_at?: string
+          working_hours?: Json
+        }
+        Update: {
+          allow_business_location?: boolean
+          allow_customer_location?: boolean
+          breaks?: Json
+          buffer_minutes?: number
+          date_overrides?: Json
+          max_per_slot?: number
+          partner_id?: string
+          paused_from?: string | null
+          paused_until?: string | null
+          slot_minutes?: number
+          updated_at?: string
+          working_hours?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mp_appointment_settings_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: true
+            referencedRelation: "mp_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mp_booking_status_history: {
         Row: {
           booking_id: string
@@ -1627,19 +1680,27 @@ export type Database = {
         Row: {
           address: Json | null
           amount: number
+          appointment_status: string
+          appointment_type: string | null
           booking_code: string
           booking_date: string | null
           created_at: string
           customer_name: string | null
+          customer_notes: string | null
           customer_phone: string
           details: Json
           end_time: string | null
+          enquiry_id: string | null
           fee: number
           id: string
           listing_id: string | null
+          location_type: string | null
           partner_id: string
+          payment_status: string
           quote_amount: number | null
           quote_note: string | null
+          reschedule_count: number
+          seller_notes: string | null
           service_mode: string | null
           staff_id: string | null
           start_time: string | null
@@ -1650,19 +1711,27 @@ export type Database = {
         Insert: {
           address?: Json | null
           amount?: number
+          appointment_status: string
+          appointment_type?: string | null
           booking_code: string
           booking_date?: string | null
           created_at?: string
           customer_name?: string | null
+          customer_notes?: string | null
           customer_phone: string
           details?: Json
           end_time?: string | null
+          enquiry_id?: string | null
           fee?: number
           id?: string
           listing_id?: string | null
+          location_type?: string | null
           partner_id: string
+          payment_status?: string
           quote_amount?: number | null
           quote_note?: string | null
+          reschedule_count?: number
+          seller_notes?: string | null
           service_mode?: string | null
           staff_id?: string | null
           start_time?: string | null
@@ -1673,19 +1742,27 @@ export type Database = {
         Update: {
           address?: Json | null
           amount?: number
+          appointment_status?: string
+          appointment_type?: string | null
           booking_code?: string
           booking_date?: string | null
           created_at?: string
           customer_name?: string | null
+          customer_notes?: string | null
           customer_phone?: string
           details?: Json
           end_time?: string | null
+          enquiry_id?: string | null
           fee?: number
           id?: string
           listing_id?: string | null
+          location_type?: string | null
           partner_id?: string
+          payment_status?: string
           quote_amount?: number | null
           quote_note?: string | null
+          reschedule_count?: number
+          seller_notes?: string | null
           service_mode?: string | null
           staff_id?: string | null
           start_time?: string | null
@@ -1694,6 +1771,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "mp_bookings_enquiry_fk"
+            columns: ["enquiry_id"]
+            isOneToOne: false
+            referencedRelation: "mp_enquiries"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "mp_bookings_listing_id_fkey"
             columns: ["listing_id"]
@@ -1719,7 +1803,9 @@ export type Database = {
       }
       mp_categories: {
         Row: {
+          appointment_types: string[]
           behavior: string
+          booking_mode: string
           created_at: string
           group_key: string
           icon: string
@@ -1732,7 +1818,9 @@ export type Database = {
           sort: number
         }
         Insert: {
+          appointment_types?: string[]
           behavior?: string
+          booking_mode?: string
           created_at?: string
           group_key: string
           icon?: string
@@ -1745,7 +1833,9 @@ export type Database = {
           sort?: number
         }
         Update: {
+          appointment_types?: string[]
           behavior?: string
+          booking_mode?: string
           created_at?: string
           group_key?: string
           icon?: string
@@ -1758,6 +1848,102 @@ export type Database = {
           sort?: number
         }
         Relationships: []
+      }
+      mp_enquiries: {
+        Row: {
+          booking_id: string | null
+          created_at: string
+          customer_name: string | null
+          customer_phone: string
+          id: string
+          listing_id: string | null
+          message: string
+          partner_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone: string
+          id?: string
+          listing_id?: string | null
+          message: string
+          partner_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string
+          id?: string
+          listing_id?: string | null
+          message?: string
+          partner_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mp_enquiries_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "mp_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mp_enquiries_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "mp_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mp_enquiries_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "mp_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mp_enquiry_events: {
+        Row: {
+          actor: string
+          created_at: string
+          enquiry_id: string
+          id: string
+          kind: string
+          message: string
+        }
+        Insert: {
+          actor: string
+          created_at?: string
+          enquiry_id: string
+          id?: string
+          kind?: string
+          message: string
+        }
+        Update: {
+          actor?: string
+          created_at?: string
+          enquiry_id?: string
+          id?: string
+          kind?: string
+          message?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mp_enquiry_events_enquiry_id_fkey"
+            columns: ["enquiry_id"]
+            isOneToOne: false
+            referencedRelation: "mp_enquiries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mp_favorites: {
         Row: {
@@ -1804,6 +1990,61 @@ export type Database = {
         }
         Relationships: []
       }
+      mp_inventory_movements: {
+        Row: {
+          booking_id: string | null
+          change: number
+          created_at: string
+          id: string
+          listing_id: string
+          partner_id: string
+          qty_after: number
+          reason: string
+        }
+        Insert: {
+          booking_id?: string | null
+          change: number
+          created_at?: string
+          id?: string
+          listing_id: string
+          partner_id: string
+          qty_after: number
+          reason: string
+        }
+        Update: {
+          booking_id?: string | null
+          change?: number
+          created_at?: string
+          id?: string
+          listing_id?: string
+          partner_id?: string
+          qty_after?: number
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mp_inventory_movements_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "mp_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mp_inventory_movements_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "mp_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mp_inventory_movements_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "mp_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mp_listings: {
         Row: {
           attributes: Json
@@ -1818,6 +2059,7 @@ export type Database = {
           includes: string[]
           is_active: boolean
           listing_type: string
+          low_stock_threshold: number
           mrp: number | null
           name: string
           packages: Json
@@ -1827,8 +2069,13 @@ export type Database = {
           review_count: number
           service_area: string | null
           service_modes: string[]
+          sku: string | null
           starting_price: number | null
+          stock_qty: number | null
+          subcategory: string | null
           transaction_type: string
+          updated_at: string
+          variants: Json
         }
         Insert: {
           attributes?: Json
@@ -1843,6 +2090,7 @@ export type Database = {
           includes?: string[]
           is_active?: boolean
           listing_type: string
+          low_stock_threshold?: number
           mrp?: number | null
           name: string
           packages?: Json
@@ -1852,8 +2100,13 @@ export type Database = {
           review_count?: number
           service_area?: string | null
           service_modes?: string[]
+          sku?: string | null
           starting_price?: number | null
+          stock_qty?: number | null
+          subcategory?: string | null
           transaction_type: string
+          updated_at?: string
+          variants?: Json
         }
         Update: {
           attributes?: Json
@@ -1868,6 +2121,7 @@ export type Database = {
           includes?: string[]
           is_active?: boolean
           listing_type?: string
+          low_stock_threshold?: number
           mrp?: number | null
           name?: string
           packages?: Json
@@ -1877,8 +2131,13 @@ export type Database = {
           review_count?: number
           service_area?: string | null
           service_modes?: string[]
+          sku?: string | null
           starting_price?: number | null
+          stock_qty?: number | null
+          subcategory?: string | null
           transaction_type?: string
+          updated_at?: string
+          variants?: Json
         }
         Relationships: [
           {
@@ -1897,9 +2156,41 @@ export type Database = {
           },
         ]
       }
+      mp_partner_customer_notes: {
+        Row: {
+          customer_phone: string
+          note: string
+          partner_id: string
+          updated_at: string
+        }
+        Insert: {
+          customer_phone: string
+          note?: string
+          partner_id: string
+          updated_at?: string
+        }
+        Update: {
+          customer_phone?: string
+          note?: string
+          partner_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mp_partner_customer_notes_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "mp_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mp_partners: {
         Row: {
+          account_status: string
           address: string | null
+          booking_mode: string | null
+          business_phone: string | null
           category_slugs: string[]
           closed_dates: string[]
           closes_at: string | null
@@ -1909,6 +2200,9 @@ export type Database = {
           icon: string
           id: string
           is_active: boolean
+          lat: number | null
+          lng: number | null
+          logo_url: string | null
           name: string
           opens_at: string | null
           partner_market_id: string | null
@@ -1920,10 +2214,15 @@ export type Database = {
           service_modes: string[]
           slug: string
           supplier_phone: string | null
+          updated_at: string
+          verification_status: string
           weekly_off: number[]
         }
         Insert: {
+          account_status?: string
           address?: string | null
+          booking_mode?: string | null
+          business_phone?: string | null
           category_slugs?: string[]
           closed_dates?: string[]
           closes_at?: string | null
@@ -1933,6 +2232,9 @@ export type Database = {
           icon?: string
           id?: string
           is_active?: boolean
+          lat?: number | null
+          lng?: number | null
+          logo_url?: string | null
           name: string
           opens_at?: string | null
           partner_market_id?: string | null
@@ -1944,10 +2246,15 @@ export type Database = {
           service_modes?: string[]
           slug: string
           supplier_phone?: string | null
+          updated_at?: string
+          verification_status?: string
           weekly_off?: number[]
         }
         Update: {
+          account_status?: string
           address?: string | null
+          booking_mode?: string | null
+          business_phone?: string | null
           category_slugs?: string[]
           closed_dates?: string[]
           closes_at?: string | null
@@ -1957,6 +2264,9 @@ export type Database = {
           icon?: string
           id?: string
           is_active?: boolean
+          lat?: number | null
+          lng?: number | null
+          logo_url?: string | null
           name?: string
           opens_at?: string | null
           partner_market_id?: string | null
@@ -1968,12 +2278,15 @@ export type Database = {
           service_modes?: string[]
           slug?: string
           supplier_phone?: string | null
+          updated_at?: string
+          verification_status?: string
           weekly_off?: number[]
         }
         Relationships: []
       }
       mp_reviews: {
         Row: {
+          booking_id: string | null
           comment: string | null
           created_at: string
           customer_name: string
@@ -1981,8 +2294,11 @@ export type Database = {
           listing_id: string | null
           partner_id: string | null
           rating: number
+          replied_at: string | null
+          reply: string | null
         }
         Insert: {
+          booking_id?: string | null
           comment?: string | null
           created_at?: string
           customer_name: string
@@ -1990,8 +2306,11 @@ export type Database = {
           listing_id?: string | null
           partner_id?: string | null
           rating: number
+          replied_at?: string | null
+          reply?: string | null
         }
         Update: {
+          booking_id?: string | null
           comment?: string | null
           created_at?: string
           customer_name?: string
@@ -1999,8 +2318,17 @@ export type Database = {
           listing_id?: string | null
           partner_id?: string | null
           rating?: number
+          replied_at?: string | null
+          reply?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "mp_reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "mp_bookings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "mp_reviews_listing_id_fkey"
             columns: ["listing_id"]
@@ -2019,37 +2347,52 @@ export type Database = {
       }
       mp_staff: {
         Row: {
+          created_at: string
           id: string
           is_active: boolean
           name: string
           off_dates: string[]
           off_weekdays: number[]
           partner_id: string
+          phone: string | null
           photo_url: string | null
           rating: number
+          service_ids: string[]
           title: string | null
+          work_end: string | null
+          work_start: string | null
         }
         Insert: {
+          created_at?: string
           id?: string
           is_active?: boolean
           name: string
           off_dates?: string[]
           off_weekdays?: number[]
           partner_id: string
+          phone?: string | null
           photo_url?: string | null
           rating?: number
+          service_ids?: string[]
           title?: string | null
+          work_end?: string | null
+          work_start?: string | null
         }
         Update: {
+          created_at?: string
           id?: string
           is_active?: boolean
           name?: string
           off_dates?: string[]
           off_weekdays?: number[]
           partner_id?: string
+          phone?: string | null
           photo_url?: string | null
           rating?: number
+          service_ids?: string[]
           title?: string | null
+          work_end?: string | null
+          work_start?: string | null
         }
         Relationships: [
           {
@@ -3395,6 +3738,15 @@ export type Database = {
       finish_delivery_stop: {
         Args: { p_driver: string; p_index: number; p_trip: string }
         Returns: Json
+      }
+      mp_appointment_status_of: { Args: { p_status: string }; Returns: string }
+      mp_set_stock: {
+        Args: { p_listing: string; p_qty: number; p_reason: string }
+        Returns: number
+      }
+      mp_take_stock: {
+        Args: { p_booking: string; p_listing: string; p_qty: number }
+        Returns: number
       }
       release_inventory: {
         Args: { p_actor?: string; p_order_id: string }

@@ -135,3 +135,11 @@
 - [x] Signed-out Home: delivery time under the location on the left
 - [x] Kitchen portal: menu management (add/edit dishes, see all dish details), shared top bar with customer view
 - [x] Push: ask notification permission on a tap on every page/portal; fix missing history columns
+
+## Nov 12 batch
+- [x] Remove the number badge on the Home Wishlist button
+- [x] Scrollable Shop category bar (no heading, equal icons, one-line names)
+- [ ] Partner markets: kitchens shown in the same card style as marts
+- [x] Hide 1st/2nd/3rd pick and "Top picks" labels from shoppers
+- [ ] Partner Studio (furniture seller + service provider dashboards, appointment engine, enquiries, admin view) per uploaded spec
+- [ ] Assign 9849078098 to Comfort Furniture House and verify Studio login
