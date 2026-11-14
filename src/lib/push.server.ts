@@ -31,6 +31,12 @@ export const NOTIFICATION_TYPES = [
   "FOOD_ORDER_PLACED",
   "RIDE_BOOKED",
   "SERVICE_ORDER_CANCELLED",
+  "BOOKING_RESCHEDULED",
+  "BOOKING_COMPLETED",
+  "ENQUIRY_REPLY",
+  "PARTNER_NEW_ENQUIRY",
+  "PARTNER_LOW_STOCK",
+  "PARTNER_UPCOMING_APPOINTMENT",
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
@@ -55,6 +61,12 @@ export const MESSAGES: Record<NotificationType, { title: string; body: string }>
   FOOD_ORDER_PLACED: { title: "Food Order Placed 🍲", body: "Your food order has been placed with the kitchen." },
   RIDE_BOOKED: { title: "Ride Booked 🛺", body: "We're finding a driver for your ride." },
   SERVICE_ORDER_CANCELLED: { title: "Cancelled", body: "Your Kartogo order has been cancelled." },
+  BOOKING_RESCHEDULED: { title: "Appointment rescheduled 🗓️", body: "Your appointment has a new date and time." },
+  BOOKING_COMPLETED: { title: "Appointment completed ✅", body: "Thanks for visiting. We'd love your feedback." },
+  ENQUIRY_REPLY: { title: "The seller replied 💬", body: "You have a reply to your enquiry." },
+  PARTNER_NEW_ENQUIRY: { title: "New customer enquiry 💬", body: "A customer asked about one of your products." },
+  PARTNER_LOW_STOCK: { title: "Low stock ⚠️", body: "One of your products is running low." },
+  PARTNER_UPCOMING_APPOINTMENT: { title: "Upcoming appointment ⏰", body: "You have an appointment coming up soon." },
 };
 
 /** Which preference switch gates each notification type. */
@@ -77,17 +89,28 @@ const PREF_OF: Record<NotificationType, "order_updates" | "delivery_updates" | "
   FOOD_ORDER_PLACED: "order_updates",
   RIDE_BOOKED: "order_updates",
   SERVICE_ORDER_CANCELLED: "order_updates",
+  BOOKING_RESCHEDULED: "order_updates",
+  BOOKING_COMPLETED: "order_updates",
+  ENQUIRY_REPLY: "order_updates",
+  PARTNER_NEW_ENQUIRY: "important_updates",
+  PARTNER_LOW_STOCK: "important_updates",
+  PARTNER_UPCOMING_APPOINTMENT: "important_updates",
 };
 
 /** Deep link target for a notification tap. */
 export function deepLinkFor(type: NotificationType, orderId?: string | null, productId?: string | null): string {
   if (type === "BACK_IN_STOCK" && productId) return `/product/${encodeURIComponent(productId)}`;
-  if (type === "PARTNER_NEW_BOOKING" || type === "PARTNER_BOOKING_CANCELLED") return "/supplier/bookings";
+  if (type === "PARTNER_NEW_BOOKING" || type === "PARTNER_BOOKING_CANCELLED" || type === "PARTNER_UPCOMING_APPOINTMENT") return "/supplier/studio/appointments";
+  if (type === "PARTNER_NEW_ENQUIRY") return "/supplier/studio/enquiries";
+  if (type === "PARTNER_LOW_STOCK") return "/supplier/studio/inventory";
+  if (type === "ENQUIRY_REPLY") return "/notifications";
   if (!orderId) return "/orders";
   switch (type) {
     case "BOOKING_PLACED":
     case "BOOKING_CONFIRMED":
     case "BOOKING_CANCELLED":
+    case "BOOKING_RESCHEDULED":
+    case "BOOKING_COMPLETED":
       return `/booking/${orderId}`;
     case "DRIVER_ASSIGNED":
     case "ORDER_PICKED_UP":
