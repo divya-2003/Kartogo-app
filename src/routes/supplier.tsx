@@ -3,14 +3,14 @@ import { useEffect, useState } from "react";
 import { verifySupplierTokenFn } from "@/lib/supplier.functions";
 import { findSupplierById } from "@/lib/suppliers";
 import { SupplierContext, type SupplierInfo } from "@/lib/supplier-context";
-import { CalendarCheck, CalendarClock, Boxes, ClipboardList, User2, BarChart3, Sparkles, ChevronLeft } from "lucide-react";
+import { CalendarCheck, CalendarClock, Boxes, ClipboardList, User2, BarChart3, Sparkles, ChevronLeft, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { renewSessions } from "@/lib/session-keeper";
 import { PartnerMenu, useLeaveCustomerMode } from "@/components/PartnerMenu";
 
 
 export const Route = createFileRoute("/supplier")({
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     if (typeof window === "undefined") return;
     // Supplier portal is gated on a SERVER-CONFIRMED identity check. The token is
     // read from localStorage but never trusted — the server verifies its HMAC
@@ -19,14 +19,17 @@ export const Route = createFileRoute("/supplier")({
     try { token = JSON.parse(localStorage.getItem("qk_supplier_token") || "null"); } catch { token = null; }
     if (!token) throw redirect({ to: "/login" });
     try {
-      let { valid } = await verifySupplierTokenFn({ data: { token } });
-      if (!valid) {
+      let res = await verifySupplierTokenFn({ data: { token } });
+      if (!res.valid) {
         // An old session is silently re-signed before anyone is signed out.
         const renewed = await renewSessions(true);
         const fresh = renewed.supplier;
-        if (fresh) valid = (await verifySupplierTokenFn({ data: { token: fresh } })).valid;
+        if (fresh) res = await verifySupplierTokenFn({ data: { token: fresh } });
       }
-      if (!valid) throw redirect({ to: "/login" });
+      if (!res.valid) throw redirect({ to: "/login" });
+      // Furniture sellers and service providers only have Partner Studio.
+      if (res.supplier?.studioOnly && !location.pathname.startsWith("/supplier/studio")) throw redirect({ to: "/supplier/studio", replace: true });
+      try { localStorage.setItem("qk_supplier_studio", res.supplier?.studio ? "1" : "0"); } catch { /* noop */ }
     } catch (e) {
       if (isRedirect(e)) throw e;
       // Network or server hiccup: keep the session and let the portal load.
@@ -53,6 +56,8 @@ function SupplierLayout() {
   const [info, setInfo] = useState<SupplierInfo | null>(null);
   const isActive = (to: string) => (to === "/supplier" ? path === "/supplier" : path.startsWith(to));
   useLeaveCustomerMode();
+  const [hasStudio, setHasStudio] = useState(false);
+  useEffect(() => { try { setHasStudio(localStorage.getItem("qk_supplier_studio") === "1"); } catch { /* noop */ } }, [path]);
 
   useEffect(() => {
     try {
@@ -63,6 +68,8 @@ function SupplierLayout() {
       }
     } catch { /* noop */ }
   }, []);
+
+  if (path === "/supplier/studio" || path.startsWith("/supplier/studio/")) return <Outlet />;
 
   return (
     <SupplierContext.Provider value={info}>
@@ -84,6 +91,11 @@ function SupplierLayout() {
                       <n.icon className="h-4 w-4" /> {n.label}
                     </Link>
                   ))}
+                  {hasStudio && (
+                    <Link to="/supplier/studio" onClick={close} className="flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition hover:bg-secondary">
+                      <LayoutDashboard className="h-4 w-4" /> Partner Studio
+                    </Link>
+                  )}
                 </nav>
               )}
             </PartnerMenu>

@@ -25,11 +25,20 @@ export const verifySupplierTokenFn = createServerFn({ method: "POST" })
     const { findSupplierById } = await import("./suppliers");
     const session = verifySupplierToken(data.token);
     if (!session) return { valid: false as const, supplier: null };
+    const { ownedStudioPartners } = await import("./studio.server");
+    const studioPartners = await ownedStudioPartners(session.phone);
+    if (session.supplierId.startsWith("studio:")) {
+      if (!studioPartners.length) return { valid: false as const, supplier: null };
+      return {
+        valid: true as const,
+        supplier: { id: session.supplierId, name: studioPartners[0].name, categories: [] as string[], studio: true, studioOnly: true },
+      };
+    }
     const supplier = findSupplierById(session.supplierId);
     if (!supplier) return { valid: false as const, supplier: null };
     return {
       valid: true as const,
-      supplier: { id: supplier.id, name: supplier.name, categories: supplier.categories },
+      supplier: { id: supplier.id, name: supplier.name, categories: supplier.categories, studio: studioPartners.length > 0, studioOnly: false },
     };
   });
 

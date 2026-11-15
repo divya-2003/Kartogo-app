@@ -126,7 +126,8 @@ function LoginPage() {
           localStorage.setItem("qk_supplier", JSON.stringify(supplier.supplier));
         } catch { /* noop */ }
         toast.success(`Welcome, ${supplier.supplier.name}!`);
-        nav({ to: "/supplier/sales", replace: true });
+        if (supplier.studioOnly) nav({ to: "/supplier/studio", replace: true });
+        else nav({ to: "/supplier/sales", replace: true });
         return;
       }
       // Printer service portal — same shape as the supplier portal.

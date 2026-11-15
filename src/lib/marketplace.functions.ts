@@ -16,6 +16,13 @@ async function customer(token?: string) {
 }
 
 const PARTNER_LITE = "id,name,slug,icon,rating,distance_km,partner_type";
+/** Seller login numbers and admin-only fields never leave the server on public reads. */
+function pub<T extends Record<string, any> | null | undefined>(p: T): T {
+  if (!p) return p;
+  const { supplier_phone: _a, account_status: _b, booking_mode: _c, ...rest } = p as Record<string, any>;
+  return rest as T;
+}
+const pubAll = (rows: any[] | null | undefined) => (rows ?? []).map(r => pub(r));
 
 export const listMpCategoriesFn = createServerFn({ method: "GET" }).handler(async () => {
   const s = await db();
@@ -36,7 +43,7 @@ export const listCategoryFn = createServerFn({ method: "POST" })
       s.from("mp_listings").select(`*, partner:mp_partners(${PARTNER_LITE})`).eq("category_slug", data.slug).eq("is_active", true),
       s.from("mp_partners").select("*").contains("category_slugs", [data.slug]).eq("is_active", true),
     ]);
-    return { category, listings: listings ?? [], partners: partners ?? [] };
+    return { category, listings: listings ?? [], partners: pubAll(partners) };
   });
 
 export const homeMarketplaceFn = createServerFn({ method: "GET" }).handler(async () => {
@@ -46,7 +53,7 @@ export const homeMarketplaceFn = createServerFn({ method: "GET" }).handler(async
     s.from("mp_listings").select(`*, partner:mp_partners(${PARTNER_LITE})`).eq("is_active", true).order("created_at", { ascending: false }).limit(8),
     s.from("mp_partners").select("*").eq("is_active", true).order("created_at", { ascending: false }).limit(8),
   ]);
-  return { trending: trending ?? [], fresh: fresh ?? [], stores: stores ?? [] };
+  return { trending: trending ?? [], fresh: fresh ?? [], stores: pubAll(stores) };
 });
 
 export const getPartnerFn = createServerFn({ method: "POST" })
@@ -61,7 +68,7 @@ export const getPartnerFn = createServerFn({ method: "POST" })
       s.from("mp_reviews").select("*").eq("partner_id", partner.id).order("created_at", { ascending: false }).limit(20),
       s.from("mp_staff").select("id,name,title,photo_url,rating").eq("partner_id", partner.id).eq("is_active", true),
     ]);
-    return { partner, listings: listings ?? [], reviews: reviews ?? [], staff: staff ?? [] };
+    return { partner: pub(partner), listings: listings ?? [], reviews: reviews ?? [], staff: staff ?? [] };
   });
 
 export const getListingFn = createServerFn({ method: "POST" })
@@ -74,7 +81,7 @@ export const getListingFn = createServerFn({ method: "POST" })
       s.from("mp_listings").select("*").eq("partner_id", listing.partner_id).eq("is_active", true).neq("id", listing.id).limit(10),
       s.from("mp_reviews").select("*").or(`listing_id.eq.${listing.id},partner_id.eq.${listing.partner_id}`).limit(10),
     ]);
-    return { listing, siblings: siblings ?? [], reviews: reviews ?? [] };
+    return { listing: { ...listing, partner: pub(listing.partner) }, siblings: siblings ?? [], reviews: reviews ?? [] };
   });
 
 // ---------- availability ----------
@@ -83,33 +90,24 @@ const toTime = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${
 
 async function computeSlots(listingId: string, date: string) {
   const s = await db();
-  const { data: l } = await s.from("mp_listings").select("id,partner_id,duration_min, partner:mp_partners(opens_at,closes_at,weekly_off,closed_dates)").eq("id", listingId).maybeSingle();
-  if (!l) return { slots: [], staff: [] };
+  const { data: l } = await s.from("mp_listings").select("id,partner_id,duration_min,attributes, partner:mp_partners(account_status)").eq("id", listingId).maybeSingle();
+  if (!l || l.partner?.account_status === "SUSPENDED") return { slots: [], staff: [] };
   const dur = l.duration_min || 60;
-  const open = toMin(l.partner?.opens_at ?? "09:00");
-  const close = toMin(l.partner?.closes_at ?? "20:00");
-  const [{ data: staffAll }, { data: booked }] = await Promise.all([
-    s.from("mp_staff").select("id,name,title,rating,photo_url,off_weekdays,off_dates").eq("partner_id", l.partner_id).eq("is_active", true),
-    s.from("mp_bookings").select("staff_id,start_time,end_time").eq("partner_id", l.partner_id).eq("booking_date", date).neq("status", "CANCELLED"),
-  ]);
-  // Partner-managed availability: weekly offs, closed dates and staff leave.
   const weekday = new Date(`${date}T00:00:00Z`).getUTCDay();
-  if ((l.partner?.weekly_off ?? []).includes(weekday) || (l.partner?.closed_dates ?? []).includes(date)) {
-    return { slots: [], staff: [], duration: dur };
-  }
-  const staff = (staffAll ?? []).filter((st: any) => !(st.off_weekdays ?? []).includes(weekday) && !(st.off_dates ?? []).includes(date));
-  // Customer timezone is IST; hide past slots for today.
-  const nowIst = new Date(Date.now() + 5.5 * 3600_000);
-  const todayIst = nowIst.toISOString().slice(0, 10);
-  const nowMin = nowIst.getUTCHours() * 60 + nowIst.getUTCMinutes() + 30;
-  const slots: { time: string; staffIds: string[] }[] = [];
-  for (let t = open; t + dur <= close; t += 30) {
-    if (date === todayIst && t < nowMin) continue;
-    const free = (staff ?? []).filter((st: any) => !(booked ?? []).some((b: any) =>
-      b.staff_id === st.id && toMin(b.start_time) < t + dur && toMin(b.end_time ?? b.start_time) > t));
-    if (free.length) slots.push({ time: toTime(t), staffIds: free.map((f: any) => f.id) });
-  }
-  return { slots, staff: staff ?? [], duration: dur };
+  const days = (l.attributes as any)?.available_days;
+  if (Array.isArray(days) && days.length && !days.includes(weekday)) return { slots: [], staff: [], duration: dur };
+  const { data: staffAll } = await s.from("mp_staff").select("id,name,title,rating,photo_url,off_weekdays,off_dates,service_ids,work_start,work_end").eq("partner_id", l.partner_id).eq("is_active", true);
+  // Professionals on leave, or not assigned to this service, aren't offered.
+  const staff = ((staffAll ?? []) as any[]).filter(st => !(st.off_weekdays ?? []).includes(weekday) && !(st.off_dates ?? []).includes(date)
+    && (!(st.service_ids ?? []).length || (st.service_ids ?? []).includes(l.id)));
+  if (!staff.length) return { slots: [], staff: [], duration: dur };
+  // Shared appointment engine: business hours, breaks, holidays, buffer, capacity and professional overlap.
+  const { appointmentSlots } = await import("./studio.server");
+  const r = await appointmentSlots(l.partner_id, date, { durationMin: dur, staffIds: staff.map(st => st.id) });
+  const within = (st: any, t: number) => (!st.work_start || toMin(st.work_start) <= t) && (!st.work_end || t + dur <= toMin(st.work_end));
+  const slots = r.slots.map(x => ({ time: x.time, staffIds: x.staffIds.filter(id => within(staff.find(st => st.id === id), toMin(x.time))) })).filter(x => x.staffIds.length);
+  const publicStaff = staff.map(({ service_ids: _a, work_start: _b, work_end: _c, ...rest }) => rest);
+  return { slots, staff: publicStaff, duration: dur };
 }
 
 export const getAvailabilityFn = createServerFn({ method: "POST" })
@@ -130,6 +128,10 @@ const bookingSchema = z.object({
   /** Furniture/electronics: book a showroom appointment instead of a delivery. */
   storeVisit: z.boolean().optional(),
   customerName: z.string().max(80).optional(),
+  /** Partner Studio appointment engine. */
+  appointmentType: z.string().max(60).optional(),
+  customerNotes: z.string().max(500).optional(),
+  atCustomer: z.boolean().optional(),
 
 });
 
@@ -143,11 +145,17 @@ export const createBookingFn = createServerFn({ method: "POST" })
     const s = await db();
     const { data: l } = await s.from("mp_listings").select("*").eq("id", data.listingId).eq("is_active", true).maybeSingle();
     if (!l) return { ok: false as const, error: "This listing is no longer available." };
+    const { data: owner } = await s.from("mp_partners").select("id,name,partner_type,category_slugs,booking_mode,account_status,opens_at,closes_at,weekly_off").eq("id", l.partner_id).maybeSingle();
+    if (!owner || owner.account_status === "SUSPENDED") return { ok: false as const, error: "This business isn't taking bookings right now." };
+    const studio = await import("./studio.server");
+    const { initialStatusFor, CUSTOMER_LOCATION_TYPES } = await import("./studio");
     const tx = l.transaction_type as string;
     let staffId: string | null = null, start: string | null = null, end: string | null = null, amount = 0, fee = 0;
     const mode = tx === "HOME_SERVICE_BOOKING" ? "HOME_SERVICE" : (data.serviceMode ?? null);
     if (mode && l.service_modes?.length && !l.service_modes.includes(mode)) return { ok: false as const, error: "This service mode isn't offered." };
     const storeVisit = tx === "PRODUCT_ORDER" && data.storeVisit === true;
+    const atCustomer = storeVisit && data.atCustomer === true;
+    if (atCustomer && !data.address?.line?.trim()) return { ok: false as const, error: "Please add the address for the home visit." };
     if (!storeVisit && (mode === "HOME_SERVICE" || tx === "EVENT_BOOKING" || tx === "QUOTE_REQUEST" || tx === "PRODUCT_ORDER") && !data.address?.line?.trim())
       return { ok: false as const, error: "Please add an address." };
 
@@ -175,31 +183,68 @@ export const createBookingFn = createServerFn({ method: "POST" })
       if (!data.date) return { ok: false as const, error: storeVisit ? "Choose a visit date." : "Choose a delivery date." };
       if (storeVisit) {
         if (!data.time) return { ok: false as const, error: "Choose a visit time." };
+        const { slots: free, settings: st } = await studio.appointmentSlots(l.partner_id, data.date, {});
+        if (!free.some(x => x.time === data.time)) return { ok: false as const, error: "That time was just taken. Please pick another slot." };
+        if (st && atCustomer && !st.allow_customer_location) return { ok: false as const, error: "This store doesn't visit homes. Please book a showroom visit." };
         start = data.time;
+        end = studio.endTimeFor(data.time, st?.slot_minutes ?? 30);
       } else {
         const qty = Math.max(1, Math.min(5, Number(data.details?.quantity ?? 1)));
+        if (l.stock_qty != null && Number(l.stock_qty) < qty) return { ok: false as const, error: Number(l.stock_qty) <= 0 ? "This product is out of stock." : `Only ${l.stock_qty} left in stock.` };
         amount = Number(l.price ?? 0) * qty;
       }
     }
 
 
     const { data: cust } = await s.from("customers").select("name").eq("phone", session.phone).maybeSingle();
+    // Appointment engine: business booking mode decides whether it's confirmed straight away.
+    const isAppointment = storeVisit || tx === "SERVICE_BOOKING" || tx === "HOME_SERVICE_BOOKING";
+    const bookingMode = isAppointment ? await studio.bookingModeFor(s as any, owner) : "SELLER_APPROVAL";
+    const types = isAppointment ? await studio.appointmentTypesFor(s as any, owner) : [];
+    let apptType: string | null = null;
+    if (isAppointment) {
+      apptType = data.appointmentType && types.includes(data.appointmentType) ? data.appointmentType
+        : storeVisit ? (types.find(t => t === "Showroom Visit") ?? types[0] ?? "Showroom Visit")
+        : (mode === "HOME_SERVICE" ? types.find(t => t === "Home Service") : null) ?? types[0] ?? null;
+      if (storeVisit && apptType && CUSTOMER_LOCATION_TYPES.includes(apptType) !== atCustomer)
+        return { ok: false as const, error: atCustomer ? "Choose Home Measurement for a visit at your place." : "Add your address for a home visit." };
+    }
+    const engineStatus = isAppointment ? initialStatusFor(bookingMode) : "PENDING";
+    const legacyStatus = engineStatus === "CONFIRMED" ? "PROVIDER_CONFIRMED" : "BOOKING_REQUESTED";
     const row = {
       booking_code: code(), customer_phone: session.phone, customer_name: cust?.name ?? data.customerName ?? null,
       partner_id: l.partner_id, listing_id: l.id, transaction_type: tx, service_mode: mode, staff_id: staffId,
       booking_date: data.date ?? null, start_time: start, end_time: end, address: storeVisit ? null : (data.address ?? null),
-      details: { ...(data.details ?? {}), package: storeVisit ? "Showroom visit" : (data.packageName ?? null), store_visit: storeVisit }, amount, fee,
-
-      status: "BOOKING_REQUESTED",
+      details: { ...(data.details ?? {}), package: storeVisit ? (apptType ?? "Showroom visit") : (data.packageName ?? null), store_visit: storeVisit && !atCustomer, booking_mode: bookingMode }, amount, fee,
+      status: legacyStatus, appointment_status: engineStatus, appointment_type: apptType,
+      location_type: mode === "HOME_SERVICE" || atCustomer || (tx === "PRODUCT_ORDER" && !storeVisit) || tx === "EVENT_BOOKING" ? "CUSTOMER" : "BUSINESS",
+      customer_notes: data.customerNotes?.trim() || null,
     };
+    if (atCustomer) row.address = data.address ?? null;
     const { data: ins, error } = await s.from("mp_bookings").insert(row).select("id,booking_code").single();
     if (error) {
       if (String(error.code) === "23505") return { ok: false as const, error: "That slot was just booked. Please pick another time." };
       console.error("createBooking", error);
       return { ok: false as const, error: "Couldn't place the booking. Please try again." };
     }
-    await s.from("mp_booking_status_history").insert({ booking_id: ins.id, status: "BOOKING_REQUESTED", note: "Booking placed by customer" });
-    await (await import("./booking-push.server")).pushBookingEvent(ins.id as string, "placed", { phone: session.phone, partnerId: l.partner_id as string, listingName: l.name as string, code: ins.booking_code as string });
+    // Furniture stock is taken atomically; a sold-out race cancels the order cleanly.
+    if (tx === "PRODUCT_ORDER" && !storeVisit && l.stock_qty != null) {
+      const qty = Math.max(1, Math.min(5, Number(data.details?.quantity ?? 1)));
+      const { data: after, error: stockErr } = await (s as any).rpc("mp_take_stock", { p_listing: l.id, p_qty: qty, p_booking: ins.id });
+      if (stockErr) {
+        await s.from("mp_bookings").update({ status: "CANCELLED", seller_notes: "Sold out before the order completed" }).eq("id", ins.id);
+        return { ok: false as const, error: "Sorry, this product just sold out." };
+      }
+      await s.from("mp_bookings").update({ details: { ...row.details, stock_taken: qty } }).eq("id", ins.id);
+      if (after != null && Number(after) <= Number(l.low_stock_threshold ?? 3)) {
+        const { data: pp } = await s.from("mp_partners").select("supplier_phone").eq("id", l.partner_id).maybeSingle();
+        await studio.notifySeller(pp?.supplier_phone, { type: "PARTNER_LOW_STOCK", refId: l.id, body: Number(after) <= 0 ? `${l.name} is now out of stock.` : `${l.name} is low on stock (${after} left).` });
+      }
+    }
+    await s.from("mp_booking_status_history").insert({ booking_id: ins.id, status: legacyStatus, note: engineStatus === "CONFIRMED" ? "Booked and confirmed instantly" : "Booking placed by customer" });
+    const push = (await import("./booking-push.server")).pushBookingEvent;
+    await push(ins.id as string, "placed", { phone: session.phone, partnerId: l.partner_id as string, listingName: l.name as string, code: ins.booking_code as string });
+    if (engineStatus === "CONFIRMED") await push(ins.id as string, "confirmed", { phone: session.phone, partnerId: l.partner_id as string, listingName: l.name as string, code: ins.booking_code as string });
     return { ok: true as const, id: ins.id as string, code: ins.booking_code as string };
   });
 
@@ -291,7 +336,7 @@ export const myFavoritesFn = createServerFn({ method: "POST" })
       lIds.length ? s.from("mp_listings").select(`*, partner:mp_partners(${PARTNER_LITE})`).in("id", lIds) : Promise.resolve({ data: [] }),
       pIds.length ? s.from("mp_partners").select("*").in("id", pIds) : Promise.resolve({ data: [] }),
     ]);
-    return { listings: listings ?? [], partners: partners ?? [], keys: (favs ?? []).map((f: any) => `${f.entity_type}:${f.entity_id}`) };
+    return { listings: listings ?? [], partners: pubAll(partners), keys: (favs ?? []).map((f: any) => `${f.entity_type}:${f.entity_id}`) };
   });
 
 export const toggleFavoriteFn = createServerFn({ method: "POST" })

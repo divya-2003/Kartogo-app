@@ -1,6 +1,7 @@
 // Server-only Partner Studio helpers shared by the seller, customer and admin
 // server functions. Every seller call resolves the business from the signed
 // seller token (mp_partners.supplier_phone), never from client input alone.
+import { createHash } from "node:crypto";
 import {
   canUse, defaultSettings, generateSlots, studioKindOf, toMin, toTime,
   type AvailabilitySettings, type BookingMode, type StudioKind, type StudioPage,
@@ -78,7 +79,7 @@ export async function appointmentTypesFor(d: Db, partner: { category_slugs?: str
 export async function settingsFor(d: Db, partner: { id: string; opens_at?: string | null; closes_at?: string | null; weekly_off?: number[] | null }): Promise<{ settings: AvailabilitySettings; saved: boolean }> {
   const { data } = await d.from("mp_appointment_settings").select("*").eq("partner_id", partner.id).maybeSingle();
   const base = defaultSettings(partner.opens_at ?? "10:00", partner.closes_at ?? "20:00", partner.weekly_off ?? []);
-  if (!data) return { settings: base, saved: false };
+  if (!data) return { settings: { ...base, max_per_slot: 50 }, saved: false };
   return {
     saved: true,
     settings: {
@@ -135,4 +136,9 @@ export async function studioResult<T>(fn: () => Promise<T>): Promise<{ ok: true;
     console.error("[studio]", e);
     return { ok: false, error: "Something went wrong. Please try again." };
   }
+}
+
+/** Stable, non-reversible customer id shown to sellers instead of the phone number. */
+export function customerKey(partnerId: string, phone: string): string {
+  return createHash("sha256").update(`${partnerId}:${phone}`).digest("hex").slice(0, 16);
 }

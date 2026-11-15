@@ -97,11 +97,14 @@ import { Route as SupplierBookingsRouteImport } from './routes/supplier.bookings
 import { Route as SupplierOrdersRouteImport } from './routes/supplier.orders'
 import { Route as SupplierSalesRouteImport } from './routes/supplier.sales'
 import { Route as SupplierServicesRouteImport } from './routes/supplier.services'
+import { Route as SupplierStudioRouteImport } from './routes/supplier.studio'
 import { Route as TrackOrderIdRouteImport } from './routes/track.$orderId'
 import { Route as ApiPublicAiDailyForecastRouteImport } from './routes/api/public/ai-daily-forecast'
 import { Route as ApiPublicDailyBriefingRouteImport } from './routes/api/public/daily-briefing'
 import { Route as ApiPublicDispatchSweepRouteImport } from './routes/api/public/dispatch-sweep'
 import { Route as ApiPublicInventoryDigestRouteImport } from './routes/api/public/inventory-digest'
+import { Route as SupplierStudioIndexRouteImport } from './routes/supplier.studio.index'
+import { Route as SupplierStudioInventoryRouteImport } from './routes/supplier.studio.inventory'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -544,6 +547,11 @@ const SupplierServicesRoute = SupplierServicesRouteImport.update({
   path: '/services',
   getParentRoute: () => SupplierRoute,
 } as any)
+const SupplierStudioRoute = SupplierStudioRouteImport.update({
+  id: '/studio',
+  path: '/studio',
+  getParentRoute: () => SupplierRoute,
+} as any)
 const TrackOrderIdRoute = TrackOrderIdRouteImport.update({
   id: '/track/$orderId',
   path: '/track/$orderId',
@@ -571,6 +579,16 @@ const ApiPublicInventoryDigestRoute =
     path: '/api/public/inventory-digest',
     getParentRoute: () => rootRouteImport,
   } as any)
+const SupplierStudioIndexRoute = SupplierStudioIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SupplierStudioRoute,
+} as any)
+const SupplierStudioInventoryRoute = SupplierStudioInventoryRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
+  getParentRoute: () => SupplierStudioRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -658,6 +676,7 @@ export interface FileRoutesByFullPath {
   '/supplier/orders': typeof SupplierOrdersRoute
   '/supplier/sales': typeof SupplierSalesRoute
   '/supplier/services': typeof SupplierServicesRoute
+  '/supplier/studio': typeof SupplierStudioRouteWithChildren
   '/track/$orderId': typeof TrackOrderIdRoute
   '/admin/': typeof AdminIndexRoute
   '/printer/': typeof PrinterIndexRoute
@@ -666,6 +685,8 @@ export interface FileRoutesByFullPath {
   '/api/public/daily-briefing': typeof ApiPublicDailyBriefingRoute
   '/api/public/dispatch-sweep': typeof ApiPublicDispatchSweepRoute
   '/api/public/inventory-digest': typeof ApiPublicInventoryDigestRoute
+  '/supplier/studio/inventory': typeof SupplierStudioInventoryRoute
+  '/supplier/studio/': typeof SupplierStudioIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -758,6 +779,8 @@ export interface FileRoutesByTo {
   '/api/public/daily-briefing': typeof ApiPublicDailyBriefingRoute
   '/api/public/dispatch-sweep': typeof ApiPublicDispatchSweepRoute
   '/api/public/inventory-digest': typeof ApiPublicInventoryDigestRoute
+  '/supplier/studio/inventory': typeof SupplierStudioInventoryRoute
+  '/supplier/studio': typeof SupplierStudioIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -846,6 +869,7 @@ export interface FileRoutesById {
   '/supplier/orders': typeof SupplierOrdersRoute
   '/supplier/sales': typeof SupplierSalesRoute
   '/supplier/services': typeof SupplierServicesRoute
+  '/supplier/studio': typeof SupplierStudioRouteWithChildren
   '/track/$orderId': typeof TrackOrderIdRoute
   '/admin/': typeof AdminIndexRoute
   '/printer/': typeof PrinterIndexRoute
@@ -854,6 +878,8 @@ export interface FileRoutesById {
   '/api/public/daily-briefing': typeof ApiPublicDailyBriefingRoute
   '/api/public/dispatch-sweep': typeof ApiPublicDispatchSweepRoute
   '/api/public/inventory-digest': typeof ApiPublicInventoryDigestRoute
+  '/supplier/studio/inventory': typeof SupplierStudioInventoryRoute
+  '/supplier/studio/': typeof SupplierStudioIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -943,6 +969,7 @@ export interface FileRouteTypes {
     | '/supplier/orders'
     | '/supplier/sales'
     | '/supplier/services'
+    | '/supplier/studio'
     | '/track/$orderId'
     | '/admin/'
     | '/printer/'
@@ -951,6 +978,8 @@ export interface FileRouteTypes {
     | '/api/public/daily-briefing'
     | '/api/public/dispatch-sweep'
     | '/api/public/inventory-digest'
+    | '/supplier/studio/inventory'
+    | '/supplier/studio/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1043,6 +1072,8 @@ export interface FileRouteTypes {
     | '/api/public/daily-briefing'
     | '/api/public/dispatch-sweep'
     | '/api/public/inventory-digest'
+    | '/supplier/studio/inventory'
+    | '/supplier/studio'
   id:
     | '__root__'
     | '/'
@@ -1130,6 +1161,7 @@ export interface FileRouteTypes {
     | '/supplier/orders'
     | '/supplier/sales'
     | '/supplier/services'
+    | '/supplier/studio'
     | '/track/$orderId'
     | '/admin/'
     | '/printer/'
@@ -1138,6 +1170,8 @@ export interface FileRouteTypes {
     | '/api/public/daily-briefing'
     | '/api/public/dispatch-sweep'
     | '/api/public/inventory-digest'
+    | '/supplier/studio/inventory'
+    | '/supplier/studio/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1808,6 +1842,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SupplierServicesRouteImport
       parentRoute: typeof SupplierRoute
     }
+    '/supplier/studio': {
+      id: '/supplier/studio'
+      path: '/studio'
+      fullPath: '/supplier/studio'
+      preLoaderRoute: typeof SupplierStudioRouteImport
+      parentRoute: typeof SupplierRoute
+    }
     '/track/$orderId': {
       id: '/track/$orderId'
       path: '/track/$orderId'
@@ -1842,6 +1883,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/inventory-digest'
       preLoaderRoute: typeof ApiPublicInventoryDigestRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/supplier/studio/': {
+      id: '/supplier/studio/'
+      path: '/'
+      fullPath: '/supplier/studio/'
+      preLoaderRoute: typeof SupplierStudioIndexRouteImport
+      parentRoute: typeof SupplierStudioRoute
+    }
+    '/supplier/studio/inventory': {
+      id: '/supplier/studio/inventory'
+      path: '/inventory'
+      fullPath: '/supplier/studio/inventory'
+      preLoaderRoute: typeof SupplierStudioInventoryRouteImport
+      parentRoute: typeof SupplierStudioRoute
     }
   }
 }
@@ -1941,6 +1996,20 @@ const PrinterRouteChildren: PrinterRouteChildren = {
 const PrinterRouteWithChildren =
   PrinterRoute._addFileChildren(PrinterRouteChildren)
 
+interface SupplierStudioRouteChildren {
+  SupplierStudioInventoryRoute: typeof SupplierStudioInventoryRoute
+  SupplierStudioIndexRoute: typeof SupplierStudioIndexRoute
+}
+
+const SupplierStudioRouteChildren: SupplierStudioRouteChildren = {
+  SupplierStudioInventoryRoute: SupplierStudioInventoryRoute,
+  SupplierStudioIndexRoute: SupplierStudioIndexRoute,
+}
+
+const SupplierStudioRouteWithChildren = SupplierStudioRoute._addFileChildren(
+  SupplierStudioRouteChildren,
+)
+
 interface SupplierRouteChildren {
   SupplierAccountRoute: typeof SupplierAccountRoute
   SupplierAiRoute: typeof SupplierAiRoute
@@ -1948,6 +2017,7 @@ interface SupplierRouteChildren {
   SupplierOrdersRoute: typeof SupplierOrdersRoute
   SupplierSalesRoute: typeof SupplierSalesRoute
   SupplierServicesRoute: typeof SupplierServicesRoute
+  SupplierStudioRoute: typeof SupplierStudioRouteWithChildren
   SupplierIndexRoute: typeof SupplierIndexRoute
 }
 
@@ -1958,6 +2028,7 @@ const SupplierRouteChildren: SupplierRouteChildren = {
   SupplierOrdersRoute: SupplierOrdersRoute,
   SupplierSalesRoute: SupplierSalesRoute,
   SupplierServicesRoute: SupplierServicesRoute,
+  SupplierStudioRoute: SupplierStudioRouteWithChildren,
   SupplierIndexRoute: SupplierIndexRoute,
 }
 
