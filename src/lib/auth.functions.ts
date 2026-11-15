@@ -129,6 +129,17 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
             role: "vendor", refId: legacySupplier.id,
             fullName: legacySupplier.name, mobileNumber: legacySupplier.phone,
           });
+        } else {
+          // Partner Studio businesses (furniture sellers, service providers) are
+          // owned by the number saved on the business; give them a seller account.
+          const { ownedStudioPartners } = await import("./studio.server");
+          const owned = await ownedStudioPartners(data.phone);
+          if (owned.length) {
+            staff = await ensureStaffAccount({
+              role: "vendor", refId: `studio:${owned[0].id}`,
+              fullName: owned[0].name, mobileNumber: data.phone,
+            });
+          }
         }
       }
     }
@@ -159,13 +170,22 @@ export const verifyOtpFn = createServerFn({ method: "POST" })
     }
 
     // --- Vendor / supplier ---
+    const isStudioRef = !!staff && staff.role === "vendor" && !!staff.refId && staff.refId.startsWith("studio:");
     const supplierAccount = staff && staff.role === "vendor" && staff.refId
-      ? findSupplierById(staff.refId)
+      ? (isStudioRef ? { id: staff.refId, name: staff.fullName || "Partner Studio", categories: [] as string[] } : findSupplierById(staff.refId))
       : null;
+    let studioAccess = isStudioRef;
+    if (supplierAccount && !isStudioRef) {
+      const { ownedStudioPartners } = await import("./studio.server");
+      studioAccess = (await ownedStudioPartners(data.phone)).length > 0;
+    }
     const supplier = supplierAccount && isStaffActive
       ? {
           token: issueSupplierToken(supplierAccount.id, data.phone, staff!.userId),
           supplier: { id: supplierAccount.id, name: staff!.fullName || supplierAccount.name, phone: data.phone },
+          /** Studio-only sellers land on Partner Studio; others may open it from their menu. */
+          studio: studioAccess,
+          studioOnly: isStudioRef,
         }
       : null;
 

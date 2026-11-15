@@ -79,7 +79,7 @@ export async function appointmentTypesFor(d: Db, partner: { category_slugs?: str
 export async function settingsFor(d: Db, partner: { id: string; opens_at?: string | null; closes_at?: string | null; weekly_off?: number[] | null }): Promise<{ settings: AvailabilitySettings; saved: boolean }> {
   const { data } = await d.from("mp_appointment_settings").select("*").eq("partner_id", partner.id).maybeSingle();
   const base = defaultSettings(partner.opens_at ?? "10:00", partner.closes_at ?? "20:00", partner.weekly_off ?? []);
-  if (!data) return { settings: base, saved: false };
+  if (!data) return { settings: { ...base, max_per_slot: 50 }, saved: false };
   return {
     saved: true,
     settings: {
