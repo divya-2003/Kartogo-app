@@ -15,8 +15,7 @@ async function S() { return import("./studio.server"); }
 async function L() { return import("./studio"); }
 const mask = (p?: string | null) => (p ? `••••••${String(p).slice(-4)}` : null);
 async function customerKey(partnerId: string, phone: string) {
-  const { createHash } = await import("node:crypto");
-  return createHash("sha256").update(`${partnerId}:${phone}`).digest("hex").slice(0, 16);
+  return (await S()).customerKey(partnerId, phone);
 }
 
 // ---------------- session / overview ----------------

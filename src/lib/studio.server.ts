@@ -1,6 +1,7 @@
 // Server-only Partner Studio helpers shared by the seller, customer and admin
 // server functions. Every seller call resolves the business from the signed
 // seller token (mp_partners.supplier_phone), never from client input alone.
+import { createHash } from "node:crypto";
 import {
   canUse, defaultSettings, generateSlots, studioKindOf, toMin, toTime,
   type AvailabilitySettings, type BookingMode, type StudioKind, type StudioPage,
@@ -135,4 +136,9 @@ export async function studioResult<T>(fn: () => Promise<T>): Promise<{ ok: true;
     console.error("[studio]", e);
     return { ok: false, error: "Something went wrong. Please try again." };
   }
+}
+
+/** Stable, non-reversible customer id shown to sellers instead of the phone number. */
+export function customerKey(partnerId: string, phone: string): string {
+  return createHash("sha256").update(`${partnerId}:${phone}`).digest("hex").slice(0, 16);
 }
