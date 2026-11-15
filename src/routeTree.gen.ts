@@ -103,6 +103,7 @@ import { Route as ApiPublicAiDailyForecastRouteImport } from './routes/api/publi
 import { Route as ApiPublicDailyBriefingRouteImport } from './routes/api/public/daily-briefing'
 import { Route as ApiPublicDispatchSweepRouteImport } from './routes/api/public/dispatch-sweep'
 import { Route as ApiPublicInventoryDigestRouteImport } from './routes/api/public/inventory-digest'
+import { Route as SupplierStudioIndexRouteImport } from './routes/supplier.studio.index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -577,6 +578,11 @@ const ApiPublicInventoryDigestRoute =
     path: '/api/public/inventory-digest',
     getParentRoute: () => rootRouteImport,
   } as any)
+const SupplierStudioIndexRoute = SupplierStudioIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SupplierStudioRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -664,7 +670,7 @@ export interface FileRoutesByFullPath {
   '/supplier/orders': typeof SupplierOrdersRoute
   '/supplier/sales': typeof SupplierSalesRoute
   '/supplier/services': typeof SupplierServicesRoute
-  '/supplier/studio': typeof SupplierStudioRoute
+  '/supplier/studio': typeof SupplierStudioRouteWithChildren
   '/track/$orderId': typeof TrackOrderIdRoute
   '/admin/': typeof AdminIndexRoute
   '/printer/': typeof PrinterIndexRoute
@@ -673,6 +679,7 @@ export interface FileRoutesByFullPath {
   '/api/public/daily-briefing': typeof ApiPublicDailyBriefingRoute
   '/api/public/dispatch-sweep': typeof ApiPublicDispatchSweepRoute
   '/api/public/inventory-digest': typeof ApiPublicInventoryDigestRoute
+  '/supplier/studio/': typeof SupplierStudioIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -757,7 +764,6 @@ export interface FileRoutesByTo {
   '/supplier/orders': typeof SupplierOrdersRoute
   '/supplier/sales': typeof SupplierSalesRoute
   '/supplier/services': typeof SupplierServicesRoute
-  '/supplier/studio': typeof SupplierStudioRoute
   '/track/$orderId': typeof TrackOrderIdRoute
   '/admin': typeof AdminIndexRoute
   '/printer': typeof PrinterIndexRoute
@@ -766,6 +772,7 @@ export interface FileRoutesByTo {
   '/api/public/daily-briefing': typeof ApiPublicDailyBriefingRoute
   '/api/public/dispatch-sweep': typeof ApiPublicDispatchSweepRoute
   '/api/public/inventory-digest': typeof ApiPublicInventoryDigestRoute
+  '/supplier/studio': typeof SupplierStudioIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -854,7 +861,7 @@ export interface FileRoutesById {
   '/supplier/orders': typeof SupplierOrdersRoute
   '/supplier/sales': typeof SupplierSalesRoute
   '/supplier/services': typeof SupplierServicesRoute
-  '/supplier/studio': typeof SupplierStudioRoute
+  '/supplier/studio': typeof SupplierStudioRouteWithChildren
   '/track/$orderId': typeof TrackOrderIdRoute
   '/admin/': typeof AdminIndexRoute
   '/printer/': typeof PrinterIndexRoute
@@ -863,6 +870,7 @@ export interface FileRoutesById {
   '/api/public/daily-briefing': typeof ApiPublicDailyBriefingRoute
   '/api/public/dispatch-sweep': typeof ApiPublicDispatchSweepRoute
   '/api/public/inventory-digest': typeof ApiPublicInventoryDigestRoute
+  '/supplier/studio/': typeof SupplierStudioIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -961,6 +969,7 @@ export interface FileRouteTypes {
     | '/api/public/daily-briefing'
     | '/api/public/dispatch-sweep'
     | '/api/public/inventory-digest'
+    | '/supplier/studio/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1045,7 +1054,6 @@ export interface FileRouteTypes {
     | '/supplier/orders'
     | '/supplier/sales'
     | '/supplier/services'
-    | '/supplier/studio'
     | '/track/$orderId'
     | '/admin'
     | '/printer'
@@ -1054,6 +1062,7 @@ export interface FileRouteTypes {
     | '/api/public/daily-briefing'
     | '/api/public/dispatch-sweep'
     | '/api/public/inventory-digest'
+    | '/supplier/studio'
   id:
     | '__root__'
     | '/'
@@ -1150,6 +1159,7 @@ export interface FileRouteTypes {
     | '/api/public/daily-briefing'
     | '/api/public/dispatch-sweep'
     | '/api/public/inventory-digest'
+    | '/supplier/studio/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1862,6 +1872,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicInventoryDigestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/supplier/studio/': {
+      id: '/supplier/studio/'
+      path: '/'
+      fullPath: '/supplier/studio/'
+      preLoaderRoute: typeof SupplierStudioIndexRouteImport
+      parentRoute: typeof SupplierStudioRoute
+    }
   }
 }
 
@@ -1960,6 +1977,18 @@ const PrinterRouteChildren: PrinterRouteChildren = {
 const PrinterRouteWithChildren =
   PrinterRoute._addFileChildren(PrinterRouteChildren)
 
+interface SupplierStudioRouteChildren {
+  SupplierStudioIndexRoute: typeof SupplierStudioIndexRoute
+}
+
+const SupplierStudioRouteChildren: SupplierStudioRouteChildren = {
+  SupplierStudioIndexRoute: SupplierStudioIndexRoute,
+}
+
+const SupplierStudioRouteWithChildren = SupplierStudioRoute._addFileChildren(
+  SupplierStudioRouteChildren,
+)
+
 interface SupplierRouteChildren {
   SupplierAccountRoute: typeof SupplierAccountRoute
   SupplierAiRoute: typeof SupplierAiRoute
@@ -1967,7 +1996,7 @@ interface SupplierRouteChildren {
   SupplierOrdersRoute: typeof SupplierOrdersRoute
   SupplierSalesRoute: typeof SupplierSalesRoute
   SupplierServicesRoute: typeof SupplierServicesRoute
-  SupplierStudioRoute: typeof SupplierStudioRoute
+  SupplierStudioRoute: typeof SupplierStudioRouteWithChildren
   SupplierIndexRoute: typeof SupplierIndexRoute
 }
 
@@ -1978,7 +2007,7 @@ const SupplierRouteChildren: SupplierRouteChildren = {
   SupplierOrdersRoute: SupplierOrdersRoute,
   SupplierSalesRoute: SupplierSalesRoute,
   SupplierServicesRoute: SupplierServicesRoute,
-  SupplierStudioRoute: SupplierStudioRoute,
+  SupplierStudioRoute: SupplierStudioRouteWithChildren,
   SupplierIndexRoute: SupplierIndexRoute,
 }
 
