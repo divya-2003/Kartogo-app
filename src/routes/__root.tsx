@@ -64,7 +64,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Order groceries, snacks, homemade pickles, tiffin batter and daily essentials on Kartogo with 15-minute quick delivery or scheduled slots across Ongole, Andhra Pradesh." },
       { property: "og:type", content: "website" },
     ],
-    links: [{ rel: "stylesheet", href: appCss }, { rel: "icon", type: "image/png", href: "/favicon.png" }],
+    links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      // Inter is used only inside Partner Studio.
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" },
+    ],
     scripts: [{ children: EARLY_PORTAL_REDIRECT_SCRIPT }, {
       type: "application/ld+json",
       children: JSON.stringify({
