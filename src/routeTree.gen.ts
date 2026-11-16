@@ -104,6 +104,7 @@ import { Route as ApiPublicDailyBriefingRouteImport } from './routes/api/public/
 import { Route as ApiPublicDispatchSweepRouteImport } from './routes/api/public/dispatch-sweep'
 import { Route as ApiPublicInventoryDigestRouteImport } from './routes/api/public/inventory-digest'
 import { Route as SupplierStudioIndexRouteImport } from './routes/supplier.studio.index'
+import { Route as SupplierStudioAppointmentsRouteImport } from './routes/supplier.studio.appointments'
 import { Route as SupplierStudioInventoryRouteImport } from './routes/supplier.studio.inventory'
 
 const IndexRoute = IndexRouteImport.update({
@@ -584,6 +585,12 @@ const SupplierStudioIndexRoute = SupplierStudioIndexRouteImport.update({
   path: '/',
   getParentRoute: () => SupplierStudioRoute,
 } as any)
+const SupplierStudioAppointmentsRoute =
+  SupplierStudioAppointmentsRouteImport.update({
+    id: '/appointments',
+    path: '/appointments',
+    getParentRoute: () => SupplierStudioRoute,
+  } as any)
 const SupplierStudioInventoryRoute = SupplierStudioInventoryRouteImport.update({
   id: '/inventory',
   path: '/inventory',
@@ -685,6 +692,7 @@ export interface FileRoutesByFullPath {
   '/api/public/daily-briefing': typeof ApiPublicDailyBriefingRoute
   '/api/public/dispatch-sweep': typeof ApiPublicDispatchSweepRoute
   '/api/public/inventory-digest': typeof ApiPublicInventoryDigestRoute
+  '/supplier/studio/appointments': typeof SupplierStudioAppointmentsRoute
   '/supplier/studio/inventory': typeof SupplierStudioInventoryRoute
   '/supplier/studio/': typeof SupplierStudioIndexRoute
 }
@@ -779,6 +787,7 @@ export interface FileRoutesByTo {
   '/api/public/daily-briefing': typeof ApiPublicDailyBriefingRoute
   '/api/public/dispatch-sweep': typeof ApiPublicDispatchSweepRoute
   '/api/public/inventory-digest': typeof ApiPublicInventoryDigestRoute
+  '/supplier/studio/appointments': typeof SupplierStudioAppointmentsRoute
   '/supplier/studio/inventory': typeof SupplierStudioInventoryRoute
   '/supplier/studio': typeof SupplierStudioIndexRoute
 }
@@ -878,6 +887,7 @@ export interface FileRoutesById {
   '/api/public/daily-briefing': typeof ApiPublicDailyBriefingRoute
   '/api/public/dispatch-sweep': typeof ApiPublicDispatchSweepRoute
   '/api/public/inventory-digest': typeof ApiPublicInventoryDigestRoute
+  '/supplier/studio/appointments': typeof SupplierStudioAppointmentsRoute
   '/supplier/studio/inventory': typeof SupplierStudioInventoryRoute
   '/supplier/studio/': typeof SupplierStudioIndexRoute
 }
@@ -978,6 +988,7 @@ export interface FileRouteTypes {
     | '/api/public/daily-briefing'
     | '/api/public/dispatch-sweep'
     | '/api/public/inventory-digest'
+    | '/supplier/studio/appointments'
     | '/supplier/studio/inventory'
     | '/supplier/studio/'
   fileRoutesByTo: FileRoutesByTo
@@ -1072,6 +1083,7 @@ export interface FileRouteTypes {
     | '/api/public/daily-briefing'
     | '/api/public/dispatch-sweep'
     | '/api/public/inventory-digest'
+    | '/supplier/studio/appointments'
     | '/supplier/studio/inventory'
     | '/supplier/studio'
   id:
@@ -1170,6 +1182,7 @@ export interface FileRouteTypes {
     | '/api/public/daily-briefing'
     | '/api/public/dispatch-sweep'
     | '/api/public/inventory-digest'
+    | '/supplier/studio/appointments'
     | '/supplier/studio/inventory'
     | '/supplier/studio/'
   fileRoutesById: FileRoutesById
@@ -1891,6 +1904,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SupplierStudioIndexRouteImport
       parentRoute: typeof SupplierStudioRoute
     }
+    '/supplier/studio/appointments': {
+      id: '/supplier/studio/appointments'
+      path: '/appointments'
+      fullPath: '/supplier/studio/appointments'
+      preLoaderRoute: typeof SupplierStudioAppointmentsRouteImport
+      parentRoute: typeof SupplierStudioRoute
+    }
     '/supplier/studio/inventory': {
       id: '/supplier/studio/inventory'
       path: '/inventory'
@@ -1997,11 +2017,13 @@ const PrinterRouteWithChildren =
   PrinterRoute._addFileChildren(PrinterRouteChildren)
 
 interface SupplierStudioRouteChildren {
+  SupplierStudioAppointmentsRoute: typeof SupplierStudioAppointmentsRoute
   SupplierStudioInventoryRoute: typeof SupplierStudioInventoryRoute
   SupplierStudioIndexRoute: typeof SupplierStudioIndexRoute
 }
 
 const SupplierStudioRouteChildren: SupplierStudioRouteChildren = {
+  SupplierStudioAppointmentsRoute: SupplierStudioAppointmentsRoute,
   SupplierStudioInventoryRoute: SupplierStudioInventoryRoute,
   SupplierStudioIndexRoute: SupplierStudioIndexRoute,
 }
