@@ -105,7 +105,9 @@ import { Route as ApiPublicDispatchSweepRouteImport } from './routes/api/public/
 import { Route as ApiPublicInventoryDigestRouteImport } from './routes/api/public/inventory-digest'
 import { Route as SupplierStudioIndexRouteImport } from './routes/supplier.studio.index'
 import { Route as SupplierStudioAppointmentsRouteImport } from './routes/supplier.studio.appointments'
+import { Route as SupplierStudioAvailabilityRouteImport } from './routes/supplier.studio.availability'
 import { Route as SupplierStudioInventoryRouteImport } from './routes/supplier.studio.inventory'
+import { Route as SupplierStudioServicesRouteImport } from './routes/supplier.studio.services'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -591,9 +593,20 @@ const SupplierStudioAppointmentsRoute =
     path: '/appointments',
     getParentRoute: () => SupplierStudioRoute,
   } as any)
+const SupplierStudioAvailabilityRoute =
+  SupplierStudioAvailabilityRouteImport.update({
+    id: '/availability',
+    path: '/availability',
+    getParentRoute: () => SupplierStudioRoute,
+  } as any)
 const SupplierStudioInventoryRoute = SupplierStudioInventoryRouteImport.update({
   id: '/inventory',
   path: '/inventory',
+  getParentRoute: () => SupplierStudioRoute,
+} as any)
+const SupplierStudioServicesRoute = SupplierStudioServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
   getParentRoute: () => SupplierStudioRoute,
 } as any)
 
@@ -693,7 +706,9 @@ export interface FileRoutesByFullPath {
   '/api/public/dispatch-sweep': typeof ApiPublicDispatchSweepRoute
   '/api/public/inventory-digest': typeof ApiPublicInventoryDigestRoute
   '/supplier/studio/appointments': typeof SupplierStudioAppointmentsRoute
+  '/supplier/studio/availability': typeof SupplierStudioAvailabilityRoute
   '/supplier/studio/inventory': typeof SupplierStudioInventoryRoute
+  '/supplier/studio/services': typeof SupplierStudioServicesRoute
   '/supplier/studio/': typeof SupplierStudioIndexRoute
 }
 export interface FileRoutesByTo {
@@ -788,7 +803,9 @@ export interface FileRoutesByTo {
   '/api/public/dispatch-sweep': typeof ApiPublicDispatchSweepRoute
   '/api/public/inventory-digest': typeof ApiPublicInventoryDigestRoute
   '/supplier/studio/appointments': typeof SupplierStudioAppointmentsRoute
+  '/supplier/studio/availability': typeof SupplierStudioAvailabilityRoute
   '/supplier/studio/inventory': typeof SupplierStudioInventoryRoute
+  '/supplier/studio/services': typeof SupplierStudioServicesRoute
   '/supplier/studio': typeof SupplierStudioIndexRoute
 }
 export interface FileRoutesById {
@@ -888,7 +905,9 @@ export interface FileRoutesById {
   '/api/public/dispatch-sweep': typeof ApiPublicDispatchSweepRoute
   '/api/public/inventory-digest': typeof ApiPublicInventoryDigestRoute
   '/supplier/studio/appointments': typeof SupplierStudioAppointmentsRoute
+  '/supplier/studio/availability': typeof SupplierStudioAvailabilityRoute
   '/supplier/studio/inventory': typeof SupplierStudioInventoryRoute
+  '/supplier/studio/services': typeof SupplierStudioServicesRoute
   '/supplier/studio/': typeof SupplierStudioIndexRoute
 }
 export interface FileRouteTypes {
@@ -989,7 +1008,9 @@ export interface FileRouteTypes {
     | '/api/public/dispatch-sweep'
     | '/api/public/inventory-digest'
     | '/supplier/studio/appointments'
+    | '/supplier/studio/availability'
     | '/supplier/studio/inventory'
+    | '/supplier/studio/services'
     | '/supplier/studio/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -1084,7 +1105,9 @@ export interface FileRouteTypes {
     | '/api/public/dispatch-sweep'
     | '/api/public/inventory-digest'
     | '/supplier/studio/appointments'
+    | '/supplier/studio/availability'
     | '/supplier/studio/inventory'
+    | '/supplier/studio/services'
     | '/supplier/studio'
   id:
     | '__root__'
@@ -1183,7 +1206,9 @@ export interface FileRouteTypes {
     | '/api/public/dispatch-sweep'
     | '/api/public/inventory-digest'
     | '/supplier/studio/appointments'
+    | '/supplier/studio/availability'
     | '/supplier/studio/inventory'
+    | '/supplier/studio/services'
     | '/supplier/studio/'
   fileRoutesById: FileRoutesById
 }
@@ -1911,11 +1936,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SupplierStudioAppointmentsRouteImport
       parentRoute: typeof SupplierStudioRoute
     }
+    '/supplier/studio/availability': {
+      id: '/supplier/studio/availability'
+      path: '/availability'
+      fullPath: '/supplier/studio/availability'
+      preLoaderRoute: typeof SupplierStudioAvailabilityRouteImport
+      parentRoute: typeof SupplierStudioRoute
+    }
     '/supplier/studio/inventory': {
       id: '/supplier/studio/inventory'
       path: '/inventory'
       fullPath: '/supplier/studio/inventory'
       preLoaderRoute: typeof SupplierStudioInventoryRouteImport
+      parentRoute: typeof SupplierStudioRoute
+    }
+    '/supplier/studio/services': {
+      id: '/supplier/studio/services'
+      path: '/services'
+      fullPath: '/supplier/studio/services'
+      preLoaderRoute: typeof SupplierStudioServicesRouteImport
       parentRoute: typeof SupplierStudioRoute
     }
   }
@@ -2018,13 +2057,17 @@ const PrinterRouteWithChildren =
 
 interface SupplierStudioRouteChildren {
   SupplierStudioAppointmentsRoute: typeof SupplierStudioAppointmentsRoute
+  SupplierStudioAvailabilityRoute: typeof SupplierStudioAvailabilityRoute
   SupplierStudioInventoryRoute: typeof SupplierStudioInventoryRoute
+  SupplierStudioServicesRoute: typeof SupplierStudioServicesRoute
   SupplierStudioIndexRoute: typeof SupplierStudioIndexRoute
 }
 
 const SupplierStudioRouteChildren: SupplierStudioRouteChildren = {
   SupplierStudioAppointmentsRoute: SupplierStudioAppointmentsRoute,
+  SupplierStudioAvailabilityRoute: SupplierStudioAvailabilityRoute,
   SupplierStudioInventoryRoute: SupplierStudioInventoryRoute,
+  SupplierStudioServicesRoute: SupplierStudioServicesRoute,
   SupplierStudioIndexRoute: SupplierStudioIndexRoute,
 }
 
