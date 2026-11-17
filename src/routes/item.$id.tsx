@@ -2,16 +2,17 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { Truck, Wrench, Ruler, Layers, Minus, Plus, CalendarClock, Store, MapPin } from "lucide-react";
+import { Truck, Wrench, Ruler, Layers, Minus, Plus, CalendarClock, Store, MapPin, MessageSquare, Home } from "lucide-react";
 import { getListingFn, createBookingFn } from "@/lib/marketplace.functions";
+import { appointmentOptionsFn, createEnquiryFn } from "@/lib/studio.functions";
+import { CUSTOMER_LOCATION_TYPES, stockState } from "@/lib/studio";
 import { Rating, Thumb, FavButton, EmptyState, PageTop } from "@/components/marketplace/Cards";
 import { AddressField, DatePicker, nextDays } from "@/components/marketplace/AddressField";
 import { useAuth } from "@/lib/store";
 import { formatINR } from "@/lib/data";
 import type { MpListing } from "@/lib/marketplace";
 
-const VISIT_TIMES = ["10:00", "12:00", "14:00", "17:00", "19:00"];
-const timeLabel = (t: string) => { const h = Number(t.slice(0, 2)); return `${h % 12 || 12}:00 ${h < 12 ? "AM" : "PM"}`; };
+const timeLabel = (t: string) => { if (!t) return ""; const h = Number(t.slice(0, 2)); return `${h % 12 || 12}:${t.slice(3, 5)} ${h < 12 ? "AM" : "PM"}`; };
 
 // Marketplace products (furniture, electronics) sold by local sellers. These
 // use scheduled delivery rather than the quick grocery cart.
@@ -46,7 +47,15 @@ function ItemPage() {
   // Showroom visit flow (furniture & electronics): pick a day and a slot.
   const [visit, setVisit] = useState(false);
   const [visitDate, setVisitDate] = useState(nextDays(3)[1].iso);
-  const [visitTime, setVisitTime] = useState(VISIT_TIMES[0]);
+  const [visitTime, setVisitTime] = useState("");
+  const [apptType, setApptType] = useState("");
+  const [visitNotes, setVisitNotes] = useState("");
+  const [visitAddress, setVisitAddress] = useState<{ line: string; landmark?: string }>({ line: "" });
+  const onVisitAddr = useCallback((v: { line: string; landmark?: string }) => setVisitAddress(v), []);
+  const opts = useQuery({ queryKey: ["appt-options", id, visitDate], queryFn: () => appointmentOptionsFn({ data: { listingId: id, date: visitDate } }), enabled: visit });
+  const [asking, setAsking] = useState(false);
+  const [question, setQuestion] = useState("");
+  const [sending, setSending] = useState(false);
 
   if (isLoading) return <div className="min-h-screen bg-background"><PageTop title="Loading…" /><div className="mx-auto mt-4 h-72 max-w-2xl animate-pulse rounded-2xl bg-secondary" /></div>;
   if (!data) return <div className="min-h-screen bg-background"><PageTop title="Not found" /><div className="mx-auto max-w-2xl p-4"><EmptyState title="This item isn't available" /></div></div>;
@@ -69,20 +78,40 @@ function ItemPage() {
     nav({ to: "/booking/$id", params: { id: r.id }, search: { confirmed: true } });
   };
 
+  const types = (opts.data?.types ?? []).filter(t => CUSTOMER_LOCATION_TYPES.includes(t) ? opts.data?.allowCustomer : opts.data?.allowBusiness !== false);
+  const chosenType = types.includes(apptType) ? apptType : (types[0] ?? "Showroom Visit");
+  const atCustomer = CUSTOMER_LOCATION_TYPES.includes(chosenType);
+  const freeTimes = opts.data?.slots ?? [];
+  const chosenTime = freeTimes.includes(visitTime) ? visitTime : "";
+
   const bookVisit = async () => {
     if (!customerToken) { toast("Please login to book a visit"); nav({ to: "/login", search: { redirect: `/item/${l.id}` } }); return; }
+    if (!chosenTime) return void toast.error("Pick a free time");
+    if (atCustomer && !visitAddress.line.trim()) return void toast.error("Add the address for the home visit");
     setBusy(true);
     const r = await createBookingFn({ data: {
-      token: customerToken, listingId: l.id, storeVisit: true, date: visitDate, time: visitTime,
+      token: customerToken, listingId: l.id, storeVisit: true, date: visitDate, time: chosenTime,
+      appointmentType: chosenType, atCustomer, address: atCustomer ? visitAddress : null, customerNotes: visitNotes.trim() || undefined,
       details: { variant: v ?? "", visit_store: l.partner.name },
     } }).catch(() => null);
     setBusy(false);
     if (!r) return void toast.error("Network error, please try again");
-    if (!r.ok) return void toast.error(r.error);
-    toast.success("Showroom visit booked");
+    if (!r.ok) { opts.refetch(); return void toast.error(r.error); }
+    toast.success(opts.data?.mode === "INSTANT" ? "Appointment confirmed" : "Appointment requested — the seller will confirm");
     nav({ to: "/booking/$id", params: { id: r.id }, search: { confirmed: true } });
   };
 
+  const sendQuestion = async () => {
+    if (!customerToken) return;
+    if (question.trim().length < 5) return void toast.error("Write a few words about what you need");
+    setSending(true);
+    const r = await createEnquiryFn({ data: { token: customerToken, listingId: l.id, message: question.trim() } }).catch(() => null);
+    setSending(false);
+    if (!r) return void toast.error("Network error, please try again");
+    if (!r.ok) return void toast.error(r.error);
+    toast.success("Enquiry sent. The seller will reply soon.");
+    setQuestion(""); setAsking(false);
+  };
 
   return (
     <div className="min-h-screen bg-background pb-28">
@@ -104,7 +133,7 @@ function ItemPage() {
               {l.mrp && <span className="text-muted-foreground line-through">{formatINR(Number(l.mrp))}</span>}
               <Rating value={l.rating} count={l.review_count} />
             </div>
-            <div className="mt-1 text-sm font-semibold text-leaf">In stock</div>
+            {(() => { const st = stockState(l.stock_qty ?? null, l.low_stock_threshold ?? 3); return st === "out" ? <div className="mt-1 text-sm font-semibold text-destructive">Out of stock</div> : st === "low" ? <div className="mt-1 text-sm font-semibold text-saffron-foreground">Only {l.stock_qty} left</div> : <div className="mt-1 text-sm font-semibold text-leaf">In stock</div>; })()}
           </div>
           {a.variants && a.variants.length > 0 && (
             <div><div className="mb-1 text-sm font-bold">Colour / variant</div>
@@ -119,6 +148,19 @@ function ItemPage() {
           </div>
           {l.description && <p className="text-sm text-muted-foreground">{l.description}</p>}
           <Link to="/store/$id" params={{ id: l.partner.slug }} className="flex justify-between rounded-2xl border border-border bg-card p-3 text-sm"><span>Sold by <b>{l.partner.name}</b></span><span className="font-bold text-primary">View store</span></Link>
+          {isFurniture && (asking ? (
+            <div className="space-y-2 rounded-2xl border border-border bg-card p-3">
+              <div className="flex items-center gap-1.5 text-sm font-bold"><MessageSquare className="h-4 w-4" />Ask {l.partner.name}</div>
+              <textarea aria-label="Your question" rows={3} value={question} onChange={e => setQuestion(e.target.value)} placeholder="e.g. Is this available in walnut? Can you deliver to Kurnool Road?" className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm" />
+              <div className="flex gap-2">
+                <button onClick={() => setAsking(false)} className="h-10 flex-1 rounded-xl border border-border text-sm font-bold">Cancel</button>
+                <button disabled={sending} onClick={sendQuestion} className="h-10 flex-1 rounded-xl bg-primary text-sm font-bold text-primary-foreground disabled:opacity-50">{sending ? "Sending…" : "Send enquiry"}</button>
+              </div>
+              <p className="text-[11px] text-muted-foreground">The seller replies through a Kartogo notification. Your number stays private.</p>
+            </div>
+          ) : (
+            <button onClick={() => { if (!customerToken) { toast("Please login to ask the seller"); nav({ to: "/login", search: { redirect: `/item/${l.id}` } }); return; } setAsking(true); }} className="flex w-full items-center justify-center gap-1.5 rounded-2xl border border-border bg-card p-3 text-sm font-bold text-primary"><MessageSquare className="h-4 w-4" />Ask the seller</button>
+          ))}
 
           {checkout && (
             <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
@@ -138,17 +180,29 @@ function ItemPage() {
 
           {visit && (
             <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
-              <div className="flex items-center gap-2 font-bold"><Store className="h-4 w-4" />Showroom visit</div>
+              <div className="flex items-center gap-2 font-bold"><Store className="h-4 w-4" />Book an appointment</div>
               <div className="flex items-start gap-2 text-sm text-muted-foreground"><MapPin className="mt-0.5 h-4 w-4 shrink-0" /><span><b className="text-foreground">{l.partner.name}</b>{l.partner.address ? ` · ${l.partner.address}` : ""}</span></div>
-              <div><div className="mb-2 flex items-center gap-1 font-bold"><CalendarClock className="h-4 w-4" />Visit date</div><DatePicker value={visitDate} onChange={setVisitDate} start={0} /></div>
-              <div>
-                <div className="mb-2 font-bold">Visit time</div>
-                <div className="flex flex-wrap gap-2">
-                  {VISIT_TIMES.map(t => (
-                    <button key={t} onClick={() => setVisitTime(t)} className={`rounded-full border px-3 py-1.5 text-sm font-semibold ${visitTime === t ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>{timeLabel(t)}</button>
-                  ))}
+              {types.length > 1 && (
+                <div>
+                  <div className="mb-2 font-bold">Appointment type</div>
+                  <div className="flex flex-wrap gap-2">{types.map(t => (
+                    <button key={t} onClick={() => setApptType(t)} className={`flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm font-semibold ${chosenType === t ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>{CUSTOMER_LOCATION_TYPES.includes(t) ? <Home className="h-3.5 w-3.5" /> : <Store className="h-3.5 w-3.5" />}{t}</button>
+                  ))}</div>
                 </div>
+              )}
+              <div><div className="mb-2 flex items-center gap-1 font-bold"><CalendarClock className="h-4 w-4" />{atCustomer ? "Visit date" : "Appointment date"}</div><DatePicker value={visitDate} onChange={d => { setVisitDate(d); setVisitTime(""); }} start={0} /></div>
+              <div>
+                <div className="mb-2 font-bold">Time</div>
+                {opts.isLoading ? <div className="h-9 animate-pulse rounded-full bg-secondary" /> : freeTimes.length === 0 ? <p className="text-sm text-muted-foreground">No free times on this day. Please pick another date.</p> : (
+                  <div className="flex flex-wrap gap-2">
+                    {freeTimes.map(t => (
+                      <button key={t} onClick={() => setVisitTime(t)} className={`rounded-full border px-3 py-1.5 text-sm font-semibold ${chosenTime === t ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>{timeLabel(t)}</button>
+                    ))}
+                  </div>
+                )}
               </div>
+              {atCustomer && <div><div className="mb-2 font-bold">Address for the visit</div><AddressField value={visitAddress} onChange={onVisitAddr} /></div>}
+              <textarea aria-label="Notes for the seller" rows={2} value={visitNotes} onChange={e => setVisitNotes(e.target.value)} placeholder="Notes for the seller (optional)" className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm" />
               <p className="text-[11px] text-muted-foreground">Free visit. Your appointment pass appears in My Orders → Bookings.</p>
             </div>
           )}
@@ -159,7 +213,7 @@ function ItemPage() {
           {visit ? (
             <>
               <button disabled={busy} onClick={() => setVisit(false)} className="h-12 flex-1 rounded-xl border border-border font-bold">Back</button>
-              <button disabled={busy} onClick={bookVisit} className="h-12 flex-[2] rounded-xl bg-primary font-bold text-primary-foreground disabled:opacity-50">{busy ? "Booking…" : `Book visit · ${timeLabel(visitTime)}`}</button>
+              <button disabled={busy} onClick={bookVisit} className="h-12 flex-[2] rounded-xl bg-primary font-bold text-primary-foreground disabled:opacity-50">{busy ? "Booking…" : chosenTime ? `Book · ${timeLabel(chosenTime)}` : "Pick a time"}</button>
             </>
           ) : (
             <>
@@ -168,8 +222,8 @@ function ItemPage() {
                   <Store className="h-4 w-4" /> Visit store
                 </button>
               )}
-              <button disabled={busy} onClick={buy} className="h-12 flex-1 rounded-xl bg-primary font-bold text-primary-foreground disabled:opacity-50">
-                {busy ? "Placing order…" : checkout ? "Place order" : "Buy Now"}
+              <button disabled={busy || (l.stock_qty != null && l.stock_qty <= 0)} onClick={buy} className="h-12 flex-1 rounded-xl bg-primary font-bold text-primary-foreground disabled:opacity-50">
+                {l.stock_qty != null && l.stock_qty <= 0 ? "Out of stock" : busy ? "Placing order…" : checkout ? "Place order" : "Buy Now"}
               </button>
             </>
           )}
