@@ -74,6 +74,7 @@ import { Route as AdminReportsVendorsRouteImport } from './routes/admin.reports-
 import { Route as AdminSalesRouteImport } from './routes/admin.sales'
 import { Route as AdminSlotsRouteImport } from './routes/admin.slots'
 import { Route as AdminStockAlertsRouteImport } from './routes/admin.stock-alerts'
+import { Route as AdminStudioRouteImport } from './routes/admin.studio'
 import { Route as AdminSubAdminsRouteImport } from './routes/admin.sub-admins'
 import { Route as AdminSurgeRouteImport } from './routes/admin.surge'
 import { Route as AdminUnserviceableRouteImport } from './routes/admin.unserviceable'
@@ -443,6 +444,11 @@ const AdminStockAlertsRoute = AdminStockAlertsRouteImport.update({
   path: '/stock-alerts',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminStudioRoute = AdminStudioRouteImport.update({
+  id: '/studio',
+  path: '/studio',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSubAdminsRoute = AdminSubAdminsRouteImport.update({
   id: '/sub-admins',
   path: '/sub-admins',
@@ -725,6 +731,7 @@ export interface FileRoutesByFullPath {
   '/admin/sales': typeof AdminSalesRoute
   '/admin/slots': typeof AdminSlotsRoute
   '/admin/stock-alerts': typeof AdminStockAlertsRoute
+  '/admin/studio': typeof AdminStudioRoute
   '/admin/sub-admins': typeof AdminSubAdminsRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
@@ -831,6 +838,7 @@ export interface FileRoutesByTo {
   '/admin/sales': typeof AdminSalesRoute
   '/admin/slots': typeof AdminSlotsRoute
   '/admin/stock-alerts': typeof AdminStockAlertsRoute
+  '/admin/studio': typeof AdminStudioRoute
   '/admin/sub-admins': typeof AdminSubAdminsRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
@@ -940,6 +948,7 @@ export interface FileRoutesById {
   '/admin/sales': typeof AdminSalesRoute
   '/admin/slots': typeof AdminSlotsRoute
   '/admin/stock-alerts': typeof AdminStockAlertsRoute
+  '/admin/studio': typeof AdminStudioRoute
   '/admin/sub-admins': typeof AdminSubAdminsRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
@@ -1051,6 +1060,7 @@ export interface FileRouteTypes {
     | '/admin/sales'
     | '/admin/slots'
     | '/admin/stock-alerts'
+    | '/admin/studio'
     | '/admin/sub-admins'
     | '/admin/surge'
     | '/admin/unserviceable'
@@ -1157,6 +1167,7 @@ export interface FileRouteTypes {
     | '/admin/sales'
     | '/admin/slots'
     | '/admin/stock-alerts'
+    | '/admin/studio'
     | '/admin/sub-admins'
     | '/admin/surge'
     | '/admin/unserviceable'
@@ -1265,6 +1276,7 @@ export interface FileRouteTypes {
     | '/admin/sales'
     | '/admin/slots'
     | '/admin/stock-alerts'
+    | '/admin/studio'
     | '/admin/sub-admins'
     | '/admin/surge'
     | '/admin/unserviceable'
@@ -1817,6 +1829,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminStockAlertsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/studio': {
+      id: '/admin/studio'
+      path: '/studio'
+      fullPath: '/admin/studio'
+      preLoaderRoute: typeof AdminStudioRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/sub-admins': {
       id: '/admin/sub-admins'
       path: '/sub-admins'
@@ -2147,6 +2166,7 @@ interface AdminRouteChildren {
   AdminSalesRoute: typeof AdminSalesRoute
   AdminSlotsRoute: typeof AdminSlotsRoute
   AdminStockAlertsRoute: typeof AdminStockAlertsRoute
+  AdminStudioRoute: typeof AdminStudioRoute
   AdminSubAdminsRoute: typeof AdminSubAdminsRoute
   AdminSurgeRoute: typeof AdminSurgeRoute
   AdminUnserviceableRoute: typeof AdminUnserviceableRoute
@@ -2187,6 +2207,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSalesRoute: AdminSalesRoute,
   AdminSlotsRoute: AdminSlotsRoute,
   AdminStockAlertsRoute: AdminStockAlertsRoute,
+  AdminStudioRoute: AdminStudioRoute,
   AdminSubAdminsRoute: AdminSubAdminsRoute,
   AdminSurgeRoute: AdminSurgeRoute,
   AdminUnserviceableRoute: AdminUnserviceableRoute,
