@@ -80,6 +80,7 @@ const NAV = [
   { to: "/admin/delivery-zones", label: "Quick areas & times", icon: MapPin, permission: "delivery" },
   { to: "/admin/print", label: "Print queue", icon: Printer, permission: "print" },
   { to: "/admin/partners", label: "Partner markets", icon: Store, permission: "partners" },
+  { to: "/admin/studio", label: "Partner Studio sellers", icon: Store, permission: "partners" },
   { to: "/admin/partner-applications", label: "Partner applications", icon: Store, permission: "partners" },
   { to: "/admin/category-picks", label: "Category top picks", icon: Star, permission: "partners" },
   { to: "/admin/customers", label: "Customers", icon: UsersRound, permission: "customers" },

@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Store, Plus, Pencil, Trash2, LocateFixed, MapPin, X, ExternalLink, Loader2, Power, PauseCircle, Timer } from "lucide-react";
+import { Store, Plus, Pencil, Trash2, LocateFixed, MapPin, X, ExternalLink, Loader2, Power, PauseCircle, Timer, ChefHat } from "lucide-react";
 import {
   listPartnerMarketsFn,
   upsertPartnerMarketFn,
   deletePartnerMarketFn,
   setMarketOperationsFn,
   listKitchenStaffFn,
+  setKitchenStaffActiveFn,
   type KitchenStaffRow,
   type PartnerMarket,
 } from "@/lib/partners.functions";
@@ -64,6 +65,15 @@ function AdminPartnersPage() {
     if (t) listKitchenStaffFn({ data: { adminToken: t } }).then(setKitchenStaff).catch(() => {});
   }, []);
 
+  const toggleKitchen = async (k: KitchenStaffRow) => {
+    const token = adminToken(); if (!token) return;
+    try {
+      await setKitchenStaffActiveFn({ data: { adminToken: token, id: k.id, active: !k.active } });
+      toast.success(!k.active ? "Kitchen activated" : "Kitchen deactivated");
+      setKitchenStaff(await listKitchenStaffFn({ data: { adminToken: token } }));
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
+  };
+
   const toggleActive = async (m: PartnerMarket) => {
     const token = adminToken(); if (!token) return;
     try {
@@ -116,7 +126,7 @@ function AdminPartnersPage() {
             <Store className="h-6 w-6 text-primary" /> Partner markets
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Supermarkets and partner stores supplying Kartogo. Location pinned on Google Maps.
+            Supermarkets, kitchens and partner stores supplying Kartogo.
           </p>
         </div>
         <button
@@ -131,7 +141,7 @@ function AdminPartnersPage() {
         <div className="grid place-items-center py-10 text-sm text-muted-foreground">
           <Loader2 className="h-5 w-5 animate-spin" />
         </div>
-      ) : markets.length === 0 ? (
+      ) : markets.length === 0 && kitchenStaff.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
           No partner markets yet. Add your first supermarket to get started.
         </div>
@@ -143,6 +153,7 @@ function AdminPartnersPage() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-display text-base font-bold truncate">{m.name}</span>
+                    <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold">Supermarket</span>
                     <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${m.isActive ? "bg-leaf/15 text-leaf" : "bg-muted text-muted-foreground"}`}>
                       {m.isActive ? "Active" : "Inactive"}
                     </span>
@@ -218,28 +229,45 @@ function AdminPartnersPage() {
               </div>
             </li>
           ))}
+          {kitchenStaff.map(k => (
+            <li key={k.id} className="rounded-2xl border border-border bg-card p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-display text-base font-bold truncate">{k.kitchenName}</span>
+                    <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold">Kitchen</span>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${k.active ? "bg-leaf/15 text-leaf" : "bg-muted text-muted-foreground"}`}>
+                      {k.active ? "Active" : "Inactive"}
+                    </span>
+                    {k.etaMinutes != null && <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold">~{k.etaMinutes} min prep</span>}
+                  </div>
+                  <div className="mt-1 flex items-start gap-1 text-xs text-muted-foreground">
+                    <ChefHat className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    <span className="line-clamp-2">{k.cuisine ?? "Kitchen partner"}{k.name ? ` · Staff: ${k.name}` : ""}</span>
+                  </div>
+                  <a href={`tel:+91${k.phone}`} className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">📞 {k.phone}</a>
+                  <p className="mt-2 text-xs italic text-muted-foreground">This number signs in to the kitchen portal to see and print food orders.</p>
+                </div>
+              </div>
+              {k.image && (
+                <div className="mt-3 overflow-hidden rounded-xl border border-border">
+                  <img src={k.image} alt={k.kitchenName} loading="lazy" className="h-40 w-full object-cover" />
+                </div>
+              )}
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <a href={`/food?kitchen=${encodeURIComponent(k.kitchenId)}`} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-secondary">
+                  <ExternalLink className="h-3.5 w-3.5" /> Customer view
+                </a>
+                <button onClick={() => toggleKitchen(k)}
+                  className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-secondary">
+                  <Power className="h-3.5 w-3.5" /> {k.active ? "Deactivate" : "Activate"}
+                </button>
+              </div>
+            </li>
+          ))}
         </ul>
       )}
-
-      <section className="rounded-2xl border border-border bg-card p-4">
-        <h2 className="font-display text-lg font-bold">Kitchen staff</h2>
-        <p className="text-xs text-muted-foreground">These numbers sign in to the kitchen portal to see and print food orders.</p>
-        {kitchenStaff.length === 0 ? (
-          <p className="mt-2 text-sm text-muted-foreground">No kitchen staff yet.</p>
-        ) : (
-          <ul className="mt-3 grid gap-2 md:grid-cols-2">
-            {kitchenStaff.map(k => (
-              <li key={k.id} className="flex items-center justify-between gap-2 rounded-xl border border-border p-3 text-sm">
-                <div className="min-w-0">
-                  <div className="font-semibold">{k.kitchenName}</div>
-                  <a href={`tel:+91${k.phone}`} className="text-xs font-semibold text-primary hover:underline">📞 {k.phone}</a>
-                </div>
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${k.active ? "bg-leaf/15 text-leaf" : "bg-muted text-muted-foreground"}`}>{k.active ? "Active" : "Inactive"}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
 
       {(creating || editing) && (
         <MarketEditor

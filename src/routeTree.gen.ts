@@ -74,6 +74,7 @@ import { Route as AdminReportsVendorsRouteImport } from './routes/admin.reports-
 import { Route as AdminSalesRouteImport } from './routes/admin.sales'
 import { Route as AdminSlotsRouteImport } from './routes/admin.slots'
 import { Route as AdminStockAlertsRouteImport } from './routes/admin.stock-alerts'
+import { Route as AdminStudioRouteImport } from './routes/admin.studio'
 import { Route as AdminSubAdminsRouteImport } from './routes/admin.sub-admins'
 import { Route as AdminSurgeRouteImport } from './routes/admin.surge'
 import { Route as AdminUnserviceableRouteImport } from './routes/admin.unserviceable'
@@ -106,10 +107,16 @@ import { Route as ApiPublicInventoryDigestRouteImport } from './routes/api/publi
 import { Route as SupplierStudioIndexRouteImport } from './routes/supplier.studio.index'
 import { Route as SupplierStudioAppointmentsRouteImport } from './routes/supplier.studio.appointments'
 import { Route as SupplierStudioAvailabilityRouteImport } from './routes/supplier.studio.availability'
+import { Route as SupplierStudioCustomersRouteImport } from './routes/supplier.studio.customers'
 import { Route as SupplierStudioEnquiriesRouteImport } from './routes/supplier.studio.enquiries'
 import { Route as SupplierStudioInventoryRouteImport } from './routes/supplier.studio.inventory'
+import { Route as SupplierStudioNotificationsRouteImport } from './routes/supplier.studio.notifications'
 import { Route as SupplierStudioProfessionalsRouteImport } from './routes/supplier.studio.professionals'
+import { Route as SupplierStudioProfileRouteImport } from './routes/supplier.studio.profile'
+import { Route as SupplierStudioReportsRouteImport } from './routes/supplier.studio.reports'
+import { Route as SupplierStudioReviewsRouteImport } from './routes/supplier.studio.reviews'
 import { Route as SupplierStudioServicesRouteImport } from './routes/supplier.studio.services'
+import { Route as SupplierStudioSettingsRouteImport } from './routes/supplier.studio.settings'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -437,6 +444,11 @@ const AdminStockAlertsRoute = AdminStockAlertsRouteImport.update({
   path: '/stock-alerts',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminStudioRoute = AdminStudioRouteImport.update({
+  id: '/studio',
+  path: '/studio',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSubAdminsRoute = AdminSubAdminsRouteImport.update({
   id: '/sub-admins',
   path: '/sub-admins',
@@ -601,6 +613,11 @@ const SupplierStudioAvailabilityRoute =
     path: '/availability',
     getParentRoute: () => SupplierStudioRoute,
   } as any)
+const SupplierStudioCustomersRoute = SupplierStudioCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => SupplierStudioRoute,
+} as any)
 const SupplierStudioEnquiriesRoute = SupplierStudioEnquiriesRouteImport.update({
   id: '/enquiries',
   path: '/enquiries',
@@ -611,15 +628,41 @@ const SupplierStudioInventoryRoute = SupplierStudioInventoryRouteImport.update({
   path: '/inventory',
   getParentRoute: () => SupplierStudioRoute,
 } as any)
+const SupplierStudioNotificationsRoute =
+  SupplierStudioNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => SupplierStudioRoute,
+  } as any)
 const SupplierStudioProfessionalsRoute =
   SupplierStudioProfessionalsRouteImport.update({
     id: '/professionals',
     path: '/professionals',
     getParentRoute: () => SupplierStudioRoute,
   } as any)
+const SupplierStudioProfileRoute = SupplierStudioProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => SupplierStudioRoute,
+} as any)
+const SupplierStudioReportsRoute = SupplierStudioReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => SupplierStudioRoute,
+} as any)
+const SupplierStudioReviewsRoute = SupplierStudioReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => SupplierStudioRoute,
+} as any)
 const SupplierStudioServicesRoute = SupplierStudioServicesRouteImport.update({
   id: '/services',
   path: '/services',
+  getParentRoute: () => SupplierStudioRoute,
+} as any)
+const SupplierStudioSettingsRoute = SupplierStudioSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => SupplierStudioRoute,
 } as any)
 
@@ -688,6 +731,7 @@ export interface FileRoutesByFullPath {
   '/admin/sales': typeof AdminSalesRoute
   '/admin/slots': typeof AdminSlotsRoute
   '/admin/stock-alerts': typeof AdminStockAlertsRoute
+  '/admin/studio': typeof AdminStudioRoute
   '/admin/sub-admins': typeof AdminSubAdminsRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
@@ -720,10 +764,16 @@ export interface FileRoutesByFullPath {
   '/api/public/inventory-digest': typeof ApiPublicInventoryDigestRoute
   '/supplier/studio/appointments': typeof SupplierStudioAppointmentsRoute
   '/supplier/studio/availability': typeof SupplierStudioAvailabilityRoute
+  '/supplier/studio/customers': typeof SupplierStudioCustomersRoute
   '/supplier/studio/enquiries': typeof SupplierStudioEnquiriesRoute
   '/supplier/studio/inventory': typeof SupplierStudioInventoryRoute
+  '/supplier/studio/notifications': typeof SupplierStudioNotificationsRoute
   '/supplier/studio/professionals': typeof SupplierStudioProfessionalsRoute
+  '/supplier/studio/profile': typeof SupplierStudioProfileRoute
+  '/supplier/studio/reports': typeof SupplierStudioReportsRoute
+  '/supplier/studio/reviews': typeof SupplierStudioReviewsRoute
   '/supplier/studio/services': typeof SupplierStudioServicesRoute
+  '/supplier/studio/settings': typeof SupplierStudioSettingsRoute
   '/supplier/studio/': typeof SupplierStudioIndexRoute
 }
 export interface FileRoutesByTo {
@@ -788,6 +838,7 @@ export interface FileRoutesByTo {
   '/admin/sales': typeof AdminSalesRoute
   '/admin/slots': typeof AdminSlotsRoute
   '/admin/stock-alerts': typeof AdminStockAlertsRoute
+  '/admin/studio': typeof AdminStudioRoute
   '/admin/sub-admins': typeof AdminSubAdminsRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
@@ -819,10 +870,16 @@ export interface FileRoutesByTo {
   '/api/public/inventory-digest': typeof ApiPublicInventoryDigestRoute
   '/supplier/studio/appointments': typeof SupplierStudioAppointmentsRoute
   '/supplier/studio/availability': typeof SupplierStudioAvailabilityRoute
+  '/supplier/studio/customers': typeof SupplierStudioCustomersRoute
   '/supplier/studio/enquiries': typeof SupplierStudioEnquiriesRoute
   '/supplier/studio/inventory': typeof SupplierStudioInventoryRoute
+  '/supplier/studio/notifications': typeof SupplierStudioNotificationsRoute
   '/supplier/studio/professionals': typeof SupplierStudioProfessionalsRoute
+  '/supplier/studio/profile': typeof SupplierStudioProfileRoute
+  '/supplier/studio/reports': typeof SupplierStudioReportsRoute
+  '/supplier/studio/reviews': typeof SupplierStudioReviewsRoute
   '/supplier/studio/services': typeof SupplierStudioServicesRoute
+  '/supplier/studio/settings': typeof SupplierStudioSettingsRoute
   '/supplier/studio': typeof SupplierStudioIndexRoute
 }
 export interface FileRoutesById {
@@ -891,6 +948,7 @@ export interface FileRoutesById {
   '/admin/sales': typeof AdminSalesRoute
   '/admin/slots': typeof AdminSlotsRoute
   '/admin/stock-alerts': typeof AdminStockAlertsRoute
+  '/admin/studio': typeof AdminStudioRoute
   '/admin/sub-admins': typeof AdminSubAdminsRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
@@ -923,10 +981,16 @@ export interface FileRoutesById {
   '/api/public/inventory-digest': typeof ApiPublicInventoryDigestRoute
   '/supplier/studio/appointments': typeof SupplierStudioAppointmentsRoute
   '/supplier/studio/availability': typeof SupplierStudioAvailabilityRoute
+  '/supplier/studio/customers': typeof SupplierStudioCustomersRoute
   '/supplier/studio/enquiries': typeof SupplierStudioEnquiriesRoute
   '/supplier/studio/inventory': typeof SupplierStudioInventoryRoute
+  '/supplier/studio/notifications': typeof SupplierStudioNotificationsRoute
   '/supplier/studio/professionals': typeof SupplierStudioProfessionalsRoute
+  '/supplier/studio/profile': typeof SupplierStudioProfileRoute
+  '/supplier/studio/reports': typeof SupplierStudioReportsRoute
+  '/supplier/studio/reviews': typeof SupplierStudioReviewsRoute
   '/supplier/studio/services': typeof SupplierStudioServicesRoute
+  '/supplier/studio/settings': typeof SupplierStudioSettingsRoute
   '/supplier/studio/': typeof SupplierStudioIndexRoute
 }
 export interface FileRouteTypes {
@@ -996,6 +1060,7 @@ export interface FileRouteTypes {
     | '/admin/sales'
     | '/admin/slots'
     | '/admin/stock-alerts'
+    | '/admin/studio'
     | '/admin/sub-admins'
     | '/admin/surge'
     | '/admin/unserviceable'
@@ -1028,10 +1093,16 @@ export interface FileRouteTypes {
     | '/api/public/inventory-digest'
     | '/supplier/studio/appointments'
     | '/supplier/studio/availability'
+    | '/supplier/studio/customers'
     | '/supplier/studio/enquiries'
     | '/supplier/studio/inventory'
+    | '/supplier/studio/notifications'
     | '/supplier/studio/professionals'
+    | '/supplier/studio/profile'
+    | '/supplier/studio/reports'
+    | '/supplier/studio/reviews'
     | '/supplier/studio/services'
+    | '/supplier/studio/settings'
     | '/supplier/studio/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -1096,6 +1167,7 @@ export interface FileRouteTypes {
     | '/admin/sales'
     | '/admin/slots'
     | '/admin/stock-alerts'
+    | '/admin/studio'
     | '/admin/sub-admins'
     | '/admin/surge'
     | '/admin/unserviceable'
@@ -1127,10 +1199,16 @@ export interface FileRouteTypes {
     | '/api/public/inventory-digest'
     | '/supplier/studio/appointments'
     | '/supplier/studio/availability'
+    | '/supplier/studio/customers'
     | '/supplier/studio/enquiries'
     | '/supplier/studio/inventory'
+    | '/supplier/studio/notifications'
     | '/supplier/studio/professionals'
+    | '/supplier/studio/profile'
+    | '/supplier/studio/reports'
+    | '/supplier/studio/reviews'
     | '/supplier/studio/services'
+    | '/supplier/studio/settings'
     | '/supplier/studio'
   id:
     | '__root__'
@@ -1198,6 +1276,7 @@ export interface FileRouteTypes {
     | '/admin/sales'
     | '/admin/slots'
     | '/admin/stock-alerts'
+    | '/admin/studio'
     | '/admin/sub-admins'
     | '/admin/surge'
     | '/admin/unserviceable'
@@ -1230,10 +1309,16 @@ export interface FileRouteTypes {
     | '/api/public/inventory-digest'
     | '/supplier/studio/appointments'
     | '/supplier/studio/availability'
+    | '/supplier/studio/customers'
     | '/supplier/studio/enquiries'
     | '/supplier/studio/inventory'
+    | '/supplier/studio/notifications'
     | '/supplier/studio/professionals'
+    | '/supplier/studio/profile'
+    | '/supplier/studio/reports'
+    | '/supplier/studio/reviews'
     | '/supplier/studio/services'
+    | '/supplier/studio/settings'
     | '/supplier/studio/'
   fileRoutesById: FileRoutesById
 }
@@ -1744,6 +1829,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminStockAlertsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/studio': {
+      id: '/admin/studio'
+      path: '/studio'
+      fullPath: '/admin/studio'
+      preLoaderRoute: typeof AdminStudioRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/sub-admins': {
       id: '/admin/sub-admins'
       path: '/sub-admins'
@@ -1968,6 +2060,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SupplierStudioAvailabilityRouteImport
       parentRoute: typeof SupplierStudioRoute
     }
+    '/supplier/studio/customers': {
+      id: '/supplier/studio/customers'
+      path: '/customers'
+      fullPath: '/supplier/studio/customers'
+      preLoaderRoute: typeof SupplierStudioCustomersRouteImport
+      parentRoute: typeof SupplierStudioRoute
+    }
     '/supplier/studio/enquiries': {
       id: '/supplier/studio/enquiries'
       path: '/enquiries'
@@ -1982,6 +2081,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SupplierStudioInventoryRouteImport
       parentRoute: typeof SupplierStudioRoute
     }
+    '/supplier/studio/notifications': {
+      id: '/supplier/studio/notifications'
+      path: '/notifications'
+      fullPath: '/supplier/studio/notifications'
+      preLoaderRoute: typeof SupplierStudioNotificationsRouteImport
+      parentRoute: typeof SupplierStudioRoute
+    }
     '/supplier/studio/professionals': {
       id: '/supplier/studio/professionals'
       path: '/professionals'
@@ -1989,11 +2095,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SupplierStudioProfessionalsRouteImport
       parentRoute: typeof SupplierStudioRoute
     }
+    '/supplier/studio/profile': {
+      id: '/supplier/studio/profile'
+      path: '/profile'
+      fullPath: '/supplier/studio/profile'
+      preLoaderRoute: typeof SupplierStudioProfileRouteImport
+      parentRoute: typeof SupplierStudioRoute
+    }
+    '/supplier/studio/reports': {
+      id: '/supplier/studio/reports'
+      path: '/reports'
+      fullPath: '/supplier/studio/reports'
+      preLoaderRoute: typeof SupplierStudioReportsRouteImport
+      parentRoute: typeof SupplierStudioRoute
+    }
+    '/supplier/studio/reviews': {
+      id: '/supplier/studio/reviews'
+      path: '/reviews'
+      fullPath: '/supplier/studio/reviews'
+      preLoaderRoute: typeof SupplierStudioReviewsRouteImport
+      parentRoute: typeof SupplierStudioRoute
+    }
     '/supplier/studio/services': {
       id: '/supplier/studio/services'
       path: '/services'
       fullPath: '/supplier/studio/services'
       preLoaderRoute: typeof SupplierStudioServicesRouteImport
+      parentRoute: typeof SupplierStudioRoute
+    }
+    '/supplier/studio/settings': {
+      id: '/supplier/studio/settings'
+      path: '/settings'
+      fullPath: '/supplier/studio/settings'
+      preLoaderRoute: typeof SupplierStudioSettingsRouteImport
       parentRoute: typeof SupplierStudioRoute
     }
   }
@@ -2032,6 +2166,7 @@ interface AdminRouteChildren {
   AdminSalesRoute: typeof AdminSalesRoute
   AdminSlotsRoute: typeof AdminSlotsRoute
   AdminStockAlertsRoute: typeof AdminStockAlertsRoute
+  AdminStudioRoute: typeof AdminStudioRoute
   AdminSubAdminsRoute: typeof AdminSubAdminsRoute
   AdminSurgeRoute: typeof AdminSurgeRoute
   AdminUnserviceableRoute: typeof AdminUnserviceableRoute
@@ -2072,6 +2207,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSalesRoute: AdminSalesRoute,
   AdminSlotsRoute: AdminSlotsRoute,
   AdminStockAlertsRoute: AdminStockAlertsRoute,
+  AdminStudioRoute: AdminStudioRoute,
   AdminSubAdminsRoute: AdminSubAdminsRoute,
   AdminSurgeRoute: AdminSurgeRoute,
   AdminUnserviceableRoute: AdminUnserviceableRoute,
@@ -2097,20 +2233,32 @@ const PrinterRouteWithChildren =
 interface SupplierStudioRouteChildren {
   SupplierStudioAppointmentsRoute: typeof SupplierStudioAppointmentsRoute
   SupplierStudioAvailabilityRoute: typeof SupplierStudioAvailabilityRoute
+  SupplierStudioCustomersRoute: typeof SupplierStudioCustomersRoute
   SupplierStudioEnquiriesRoute: typeof SupplierStudioEnquiriesRoute
   SupplierStudioInventoryRoute: typeof SupplierStudioInventoryRoute
+  SupplierStudioNotificationsRoute: typeof SupplierStudioNotificationsRoute
   SupplierStudioProfessionalsRoute: typeof SupplierStudioProfessionalsRoute
+  SupplierStudioProfileRoute: typeof SupplierStudioProfileRoute
+  SupplierStudioReportsRoute: typeof SupplierStudioReportsRoute
+  SupplierStudioReviewsRoute: typeof SupplierStudioReviewsRoute
   SupplierStudioServicesRoute: typeof SupplierStudioServicesRoute
+  SupplierStudioSettingsRoute: typeof SupplierStudioSettingsRoute
   SupplierStudioIndexRoute: typeof SupplierStudioIndexRoute
 }
 
 const SupplierStudioRouteChildren: SupplierStudioRouteChildren = {
   SupplierStudioAppointmentsRoute: SupplierStudioAppointmentsRoute,
   SupplierStudioAvailabilityRoute: SupplierStudioAvailabilityRoute,
+  SupplierStudioCustomersRoute: SupplierStudioCustomersRoute,
   SupplierStudioEnquiriesRoute: SupplierStudioEnquiriesRoute,
   SupplierStudioInventoryRoute: SupplierStudioInventoryRoute,
+  SupplierStudioNotificationsRoute: SupplierStudioNotificationsRoute,
   SupplierStudioProfessionalsRoute: SupplierStudioProfessionalsRoute,
+  SupplierStudioProfileRoute: SupplierStudioProfileRoute,
+  SupplierStudioReportsRoute: SupplierStudioReportsRoute,
+  SupplierStudioReviewsRoute: SupplierStudioReviewsRoute,
   SupplierStudioServicesRoute: SupplierStudioServicesRoute,
+  SupplierStudioSettingsRoute: SupplierStudioSettingsRoute,
   SupplierStudioIndexRoute: SupplierStudioIndexRoute,
 }
 

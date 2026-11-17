@@ -203,7 +203,7 @@ export const getPublicMarketFn = createServerFn({ method: "POST" })
   });
 
 // ---------------- Kitchen staff (shown on the admin Partner markets page) ----------------
-export type KitchenStaffRow = { id: string; phone: string; kitchenId: string; kitchenName: string; name: string | null; active: boolean };
+export type KitchenStaffRow = { id: string; phone: string; kitchenId: string; kitchenName: string; name: string | null; active: boolean; cuisine: string | null; etaMinutes: number | null; image: string | null };
 export const listKitchenStaffFn = createServerFn({ method: "POST" })
   .inputValidator((data: { adminToken: string }) => ({ adminToken: String(data?.adminToken ?? "") }))
   .handler(async ({ data }): Promise<KitchenStaffRow[]> => {
@@ -211,5 +211,18 @@ export const listKitchenStaffFn = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { KITCHENS } = await import("./food");
     const { data: rows } = await supabaseAdmin.from("kitchen_staff").select("id,phone,kitchen_id,name,active").order("created_at", { ascending: false });
-    return ((rows ?? []) as any[]).map(r => ({ id: r.id, phone: r.phone, kitchenId: r.kitchen_id, kitchenName: KITCHENS.find(k => k.id === r.kitchen_id)?.name ?? r.kitchen_id, name: r.name, active: r.active }));
+    return ((rows ?? []) as any[]).map(r => {
+      const k = KITCHENS.find(x => x.id === r.kitchen_id);
+      return { id: r.id, phone: r.phone, kitchenId: r.kitchen_id, kitchenName: k?.name ?? r.kitchen_id, name: r.name, active: r.active, cuisine: k?.cuisine ?? null, etaMinutes: k?.eta ?? null, image: k?.image ?? null };
+    });
+  });
+
+export const setKitchenStaffActiveFn = createServerFn({ method: "POST" })
+  .inputValidator((data: { adminToken: string; id: string; active: boolean }) => ({ adminToken: String(data?.adminToken ?? ""), id: String(data?.id ?? ""), active: !!data?.active }))
+  .handler(async ({ data }) => {
+    await requireAdmin(data.adminToken);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("kitchen_staff").update({ active: data.active }).eq("id", data.id);
+    if (error) throw new Error("Could not update kitchen access");
+    return { ok: true };
   });
