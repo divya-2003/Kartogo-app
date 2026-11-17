@@ -111,8 +111,11 @@ import { Route as SupplierStudioEnquiriesRouteImport } from './routes/supplier.s
 import { Route as SupplierStudioInventoryRouteImport } from './routes/supplier.studio.inventory'
 import { Route as SupplierStudioNotificationsRouteImport } from './routes/supplier.studio.notifications'
 import { Route as SupplierStudioProfessionalsRouteImport } from './routes/supplier.studio.professionals'
+import { Route as SupplierStudioProfileRouteImport } from './routes/supplier.studio.profile'
+import { Route as SupplierStudioReportsRouteImport } from './routes/supplier.studio.reports'
 import { Route as SupplierStudioReviewsRouteImport } from './routes/supplier.studio.reviews'
 import { Route as SupplierStudioServicesRouteImport } from './routes/supplier.studio.services'
+import { Route as SupplierStudioSettingsRouteImport } from './routes/supplier.studio.settings'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -631,6 +634,16 @@ const SupplierStudioProfessionalsRoute =
     path: '/professionals',
     getParentRoute: () => SupplierStudioRoute,
   } as any)
+const SupplierStudioProfileRoute = SupplierStudioProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => SupplierStudioRoute,
+} as any)
+const SupplierStudioReportsRoute = SupplierStudioReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => SupplierStudioRoute,
+} as any)
 const SupplierStudioReviewsRoute = SupplierStudioReviewsRouteImport.update({
   id: '/reviews',
   path: '/reviews',
@@ -639,6 +652,11 @@ const SupplierStudioReviewsRoute = SupplierStudioReviewsRouteImport.update({
 const SupplierStudioServicesRoute = SupplierStudioServicesRouteImport.update({
   id: '/services',
   path: '/services',
+  getParentRoute: () => SupplierStudioRoute,
+} as any)
+const SupplierStudioSettingsRoute = SupplierStudioSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => SupplierStudioRoute,
 } as any)
 
@@ -744,8 +762,11 @@ export interface FileRoutesByFullPath {
   '/supplier/studio/inventory': typeof SupplierStudioInventoryRoute
   '/supplier/studio/notifications': typeof SupplierStudioNotificationsRoute
   '/supplier/studio/professionals': typeof SupplierStudioProfessionalsRoute
+  '/supplier/studio/profile': typeof SupplierStudioProfileRoute
+  '/supplier/studio/reports': typeof SupplierStudioReportsRoute
   '/supplier/studio/reviews': typeof SupplierStudioReviewsRoute
   '/supplier/studio/services': typeof SupplierStudioServicesRoute
+  '/supplier/studio/settings': typeof SupplierStudioSettingsRoute
   '/supplier/studio/': typeof SupplierStudioIndexRoute
 }
 export interface FileRoutesByTo {
@@ -846,8 +867,11 @@ export interface FileRoutesByTo {
   '/supplier/studio/inventory': typeof SupplierStudioInventoryRoute
   '/supplier/studio/notifications': typeof SupplierStudioNotificationsRoute
   '/supplier/studio/professionals': typeof SupplierStudioProfessionalsRoute
+  '/supplier/studio/profile': typeof SupplierStudioProfileRoute
+  '/supplier/studio/reports': typeof SupplierStudioReportsRoute
   '/supplier/studio/reviews': typeof SupplierStudioReviewsRoute
   '/supplier/studio/services': typeof SupplierStudioServicesRoute
+  '/supplier/studio/settings': typeof SupplierStudioSettingsRoute
   '/supplier/studio': typeof SupplierStudioIndexRoute
 }
 export interface FileRoutesById {
@@ -953,8 +977,11 @@ export interface FileRoutesById {
   '/supplier/studio/inventory': typeof SupplierStudioInventoryRoute
   '/supplier/studio/notifications': typeof SupplierStudioNotificationsRoute
   '/supplier/studio/professionals': typeof SupplierStudioProfessionalsRoute
+  '/supplier/studio/profile': typeof SupplierStudioProfileRoute
+  '/supplier/studio/reports': typeof SupplierStudioReportsRoute
   '/supplier/studio/reviews': typeof SupplierStudioReviewsRoute
   '/supplier/studio/services': typeof SupplierStudioServicesRoute
+  '/supplier/studio/settings': typeof SupplierStudioSettingsRoute
   '/supplier/studio/': typeof SupplierStudioIndexRoute
 }
 export interface FileRouteTypes {
@@ -1061,8 +1088,11 @@ export interface FileRouteTypes {
     | '/supplier/studio/inventory'
     | '/supplier/studio/notifications'
     | '/supplier/studio/professionals'
+    | '/supplier/studio/profile'
+    | '/supplier/studio/reports'
     | '/supplier/studio/reviews'
     | '/supplier/studio/services'
+    | '/supplier/studio/settings'
     | '/supplier/studio/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -1163,8 +1193,11 @@ export interface FileRouteTypes {
     | '/supplier/studio/inventory'
     | '/supplier/studio/notifications'
     | '/supplier/studio/professionals'
+    | '/supplier/studio/profile'
+    | '/supplier/studio/reports'
     | '/supplier/studio/reviews'
     | '/supplier/studio/services'
+    | '/supplier/studio/settings'
     | '/supplier/studio'
   id:
     | '__root__'
@@ -1269,8 +1302,11 @@ export interface FileRouteTypes {
     | '/supplier/studio/inventory'
     | '/supplier/studio/notifications'
     | '/supplier/studio/professionals'
+    | '/supplier/studio/profile'
+    | '/supplier/studio/reports'
     | '/supplier/studio/reviews'
     | '/supplier/studio/services'
+    | '/supplier/studio/settings'
     | '/supplier/studio/'
   fileRoutesById: FileRoutesById
 }
@@ -2040,6 +2076,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SupplierStudioProfessionalsRouteImport
       parentRoute: typeof SupplierStudioRoute
     }
+    '/supplier/studio/profile': {
+      id: '/supplier/studio/profile'
+      path: '/profile'
+      fullPath: '/supplier/studio/profile'
+      preLoaderRoute: typeof SupplierStudioProfileRouteImport
+      parentRoute: typeof SupplierStudioRoute
+    }
+    '/supplier/studio/reports': {
+      id: '/supplier/studio/reports'
+      path: '/reports'
+      fullPath: '/supplier/studio/reports'
+      preLoaderRoute: typeof SupplierStudioReportsRouteImport
+      parentRoute: typeof SupplierStudioRoute
+    }
     '/supplier/studio/reviews': {
       id: '/supplier/studio/reviews'
       path: '/reviews'
@@ -2052,6 +2102,13 @@ declare module '@tanstack/react-router' {
       path: '/services'
       fullPath: '/supplier/studio/services'
       preLoaderRoute: typeof SupplierStudioServicesRouteImport
+      parentRoute: typeof SupplierStudioRoute
+    }
+    '/supplier/studio/settings': {
+      id: '/supplier/studio/settings'
+      path: '/settings'
+      fullPath: '/supplier/studio/settings'
+      preLoaderRoute: typeof SupplierStudioSettingsRouteImport
       parentRoute: typeof SupplierStudioRoute
     }
   }
@@ -2160,8 +2217,11 @@ interface SupplierStudioRouteChildren {
   SupplierStudioInventoryRoute: typeof SupplierStudioInventoryRoute
   SupplierStudioNotificationsRoute: typeof SupplierStudioNotificationsRoute
   SupplierStudioProfessionalsRoute: typeof SupplierStudioProfessionalsRoute
+  SupplierStudioProfileRoute: typeof SupplierStudioProfileRoute
+  SupplierStudioReportsRoute: typeof SupplierStudioReportsRoute
   SupplierStudioReviewsRoute: typeof SupplierStudioReviewsRoute
   SupplierStudioServicesRoute: typeof SupplierStudioServicesRoute
+  SupplierStudioSettingsRoute: typeof SupplierStudioSettingsRoute
   SupplierStudioIndexRoute: typeof SupplierStudioIndexRoute
 }
 
@@ -2173,8 +2233,11 @@ const SupplierStudioRouteChildren: SupplierStudioRouteChildren = {
   SupplierStudioInventoryRoute: SupplierStudioInventoryRoute,
   SupplierStudioNotificationsRoute: SupplierStudioNotificationsRoute,
   SupplierStudioProfessionalsRoute: SupplierStudioProfessionalsRoute,
+  SupplierStudioProfileRoute: SupplierStudioProfileRoute,
+  SupplierStudioReportsRoute: SupplierStudioReportsRoute,
   SupplierStudioReviewsRoute: SupplierStudioReviewsRoute,
   SupplierStudioServicesRoute: SupplierStudioServicesRoute,
+  SupplierStudioSettingsRoute: SupplierStudioSettingsRoute,
   SupplierStudioIndexRoute: SupplierStudioIndexRoute,
 }
 
