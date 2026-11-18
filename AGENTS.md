@@ -32,3 +32,4 @@
 - Every logout goes through the shared sign-out hook, which clears all role sessions on the device and opens the signed-out Home, so no portal or account details survive a logout.
 - Signed-in carts are saved per phone on the server and merged with the device's guest cart on login (larger quantity wins), so logout empties the device without losing the account's cart.
 - Food dishes live per kitchen in the database and are managed from the kitchen portal; the static food list only supplies kitchen details and a fallback, and order prices are re-read from the database.
+- Partner Studio (furniture sellers and service providers) reuses the signed supplier token with a studio:<partnerId> vendor ref; every Studio server function re-resolves the partner from the token and its supplier_phone and checks the business kind server-side, so sellers only ever reach their own business and allowed sections.

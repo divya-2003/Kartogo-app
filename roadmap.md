@@ -139,7 +139,8 @@
 ## Nov 12 batch
 - [x] Remove the number badge on the Home Wishlist button
 - [x] Scrollable Shop category bar (no heading, equal icons, one-line names)
-- [ ] Partner markets: kitchens shown in the same card style as marts
+- [x] Partner markets: kitchens shown in the same card style as marts
 - [x] Hide 1st/2nd/3rd pick and "Top picks" labels from shoppers
-- [ ] Partner Studio (furniture seller + service provider dashboards, appointment engine, enquiries, admin view) per uploaded spec
-- [ ] Assign 9849078098 to Comfort Furniture House and verify Studio login
+- [x] Partner Studio (furniture seller + service provider dashboards, appointment engine, enquiries, admin view) per uploaded spec
+- [ ] Verify the admin Partner Studio page signed in — needs the admin passcode
+- [x] Assign 9849078098 to Comfort Furniture House and verify Studio login
