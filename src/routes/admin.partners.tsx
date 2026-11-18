@@ -148,19 +148,19 @@ function AdminPartnersPage() {
       ) : (
         <ul className="grid gap-3 md:grid-cols-2">
           {markets.map(m => (
-            <li key={m.id} className="rounded-2xl border border-border bg-card p-4">
+            <li key={m.id} className="min-w-0 rounded-2xl border border-border bg-card p-4">
               <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-display text-base font-bold truncate">{m.name}</span>
-                    <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold">Supermarket</span>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${m.isActive ? "bg-leaf/15 text-leaf" : "bg-muted text-muted-foreground"}`}>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="w-full font-display text-base font-bold leading-snug sm:w-auto">{m.name}</span>
+                    <span className="whitespace-nowrap rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold">Supermarket</span>
+                    <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold ${m.isActive ? "bg-leaf/15 text-leaf" : "bg-muted text-muted-foreground"}`}>
                       {m.isActive ? "Active" : "Inactive"}
                     </span>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${m.acceptingOrders ? "bg-primary/10 text-primary" : "bg-destructive/15 text-destructive"}`}>
+                    <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold ${m.acceptingOrders ? "bg-primary/10 text-primary" : "bg-destructive/15 text-destructive"}`}>
                       {m.acceptingOrders ? "Taking orders" : "Paused"}
                     </span>
-                    <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold">~{m.prepMinutes} min prep</span>
+                    <span className="whitespace-nowrap rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold">~{m.prepMinutes} min prep</span>
                   </div>
                   <div className="mt-1 flex items-start gap-1 text-xs text-muted-foreground">
                     <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
@@ -230,16 +230,16 @@ function AdminPartnersPage() {
             </li>
           ))}
           {kitchenStaff.map(k => (
-            <li key={k.id} className="rounded-2xl border border-border bg-card p-4">
+            <li key={k.id} className="min-w-0 rounded-2xl border border-border bg-card p-4">
               <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-display text-base font-bold truncate">{k.kitchenName}</span>
-                    <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold">Kitchen</span>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${k.active ? "bg-leaf/15 text-leaf" : "bg-muted text-muted-foreground"}`}>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="w-full font-display text-base font-bold leading-snug sm:w-auto">{k.kitchenName}</span>
+                    <span className="whitespace-nowrap rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold">Kitchen</span>
+                    <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold ${k.active ? "bg-leaf/15 text-leaf" : "bg-muted text-muted-foreground"}`}>
                       {k.active ? "Active" : "Inactive"}
                     </span>
-                    {k.etaMinutes != null && <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold">~{k.etaMinutes} min prep</span>}
+                    {k.etaMinutes != null && <span className="whitespace-nowrap rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold">~{k.etaMinutes} min prep</span>}
                   </div>
                   <div className="mt-1 flex items-start gap-1 text-xs text-muted-foreground">
                     <ChefHat className="mt-0.5 h-3.5 w-3.5 shrink-0" />
