@@ -79,7 +79,7 @@ export function Loading({ rows = 4 }: { rows?: number }) {
 export const Spinner = () => <Loader2 className="h-4 w-4 animate-spin" />;
 
 /** Button that asks for confirmation before running a destructive action. */
-export function ConfirmButton({ title, body, confirmLabel = "Confirm", onConfirm, className, children, disabled }: { title: string; body?: string; confirmLabel?: string; onConfirm: () => void | Promise<void>; className?: string; children: ReactNode; disabled?: boolean }) {
+export function ConfirmButton({ title, body, confirmLabel = "Confirm", onConfirm, className, children, disabled }: { title: string; body?: string; confirmLabel?: string; onConfirm: () => unknown; className?: string; children: ReactNode; disabled?: boolean }) {
   const [open, setOpen] = useState(false);
   return (
     <>

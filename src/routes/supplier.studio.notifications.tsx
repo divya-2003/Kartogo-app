@@ -30,7 +30,7 @@ function Notifications() {
       <PageHeader title="Notifications" crumb="Notifications" sub="Also sent to your phone when notifications are allowed." />
       <Card title="Upcoming appointments (today & tomorrow)">
         {upcoming.length === 0 ? <p className="text-sm text-muted-foreground">Nothing coming up.</p> : <ul className="divide-y divide-border">{upcoming.map((b: any) => (
-          <li key={b.id} className="flex items-center gap-2 py-2 text-sm"><CalendarClock className="h-4 w-4 text-primary" /><span className="flex-1">{fmtDate(b.booking_date)} {fmtTime(b.start_time)} · {b.customer_name ?? "Customer"} · {b.appointment_type ?? b.listing?.name ?? "Booking"}</span><Link to="/supplier/studio/appointments" className="text-xs font-semibold text-primary">Open</Link></li>
+          <li key={b.id} className="flex items-center gap-2 py-2 text-sm"><CalendarClock className="h-4 w-4 text-primary" /><span className="flex-1">{fmtDate(b.booking_date)} {fmtTime(b.start_time)} · {b.customer_name || "Customer"} · {b.appointment_type ?? b.listing?.name ?? "Booking"}</span><Link to="/supplier/studio/appointments" className="text-xs font-semibold text-primary">Open</Link></li>
         ))}</ul>}
       </Card>
       {visible.length === 0 ? <Empty title="No notifications yet" body="New appointment requests, cancellations, enquiries and low-stock alerts appear here." /> : (

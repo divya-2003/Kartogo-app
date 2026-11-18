@@ -16,7 +16,11 @@ export async function db(): Promise<Db> {
 
 export class StudioError extends Error {}
 
-export type StudioPartner = Record<string, any> & { id: string; name: string; kind: StudioKind; supplier_phone: string };
+export type StudioPartner = {
+  id: string; name: string; kind: StudioKind; supplier_phone: string;
+  booking_mode?: string | null; category_slugs?: string[] | null; partner_type?: string | null;
+  [key: string]: any;
+};
 
 /** Signed seller session (same token as the seller portal). */
 export async function sellerSession(token: string) {

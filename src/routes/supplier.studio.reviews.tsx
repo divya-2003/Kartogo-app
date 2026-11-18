@@ -51,7 +51,7 @@ function ReviewItem({ r }: { r: any }) {
   return (
     <li className="rounded-xl border border-border bg-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="font-semibold">{r.customer_name ?? "Customer"} <span className="ml-1 inline-flex items-center gap-0.5 text-sm text-saffron">{Array.from({ length: 5 }).map((_, i) => <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(r.rating) ? "fill-current" : "opacity-30"}`} />)}</span></div>
+        <div className="font-semibold">{r.customer_name || "Customer"} <span className="ml-1 inline-flex items-center gap-0.5 text-sm text-saffron">{Array.from({ length: 5 }).map((_, i) => <Star key={i} className={`h-3.5 w-3.5 ${i < Math.round(r.rating) ? "fill-current" : "opacity-30"}`} />)}</span></div>
         <div className="text-xs text-muted-foreground">{r.listing?.name ?? "Your business"} · {fmtWhen(r.created_at)}</div>
       </div>
       {r.comment && <p className="mt-1 text-sm">{r.comment}</p>}

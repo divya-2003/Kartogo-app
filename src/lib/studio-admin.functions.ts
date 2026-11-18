@@ -4,15 +4,11 @@ import { z } from "zod";
 // Kartogo admin view of Partner Studio businesses. Every call checks the
 // "partners" admin permission on the server and writes an audit row.
 
-async function admin(token: string) {
-  const { requireAdminPermission } = await import("./admin-session.server");
-  return requireAdminPermission(token, "partners");
-}
 
 export const adminStudioOverviewFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: z.string().min(10) }).parse(d))
   .handler(async ({ data }) => {
-    await admin(data.token);
+    await (await import("./admin-session.server")).requireAdminPermission(data.token, "partners");
     const { db } = await import("./studio.server");
     const { studioKindOf } = await import("./studio");
     const d = await db();
@@ -49,7 +45,7 @@ export const adminUpdateStudioPartnerFn = createServerFn({ method: "POST" })
     phone: z.string().regex(/^\d{10}$/).optional(),
   }).parse(d))
   .handler(async ({ data }) => {
-    const actor = await admin(data.token);
+    const actor = await (await import("./admin-session.server")).requireAdminPermission(data.token, "partners");
     const { db } = await import("./studio.server");
     const d = await db();
     const { data: before } = await d.from("mp_partners").select("id,name,verification_status,account_status,booking_mode,is_active,supplier_phone").eq("id", data.id).maybeSingle();
@@ -77,7 +73,7 @@ export const adminUpdateCategoryConfigFn = createServerFn({ method: "POST" })
     appointmentTypes: z.array(z.string().trim().min(2).max(60)).max(12),
   }).parse(d))
   .handler(async ({ data }) => {
-    const actor = await admin(data.token);
+    const actor = await (await import("./admin-session.server")).requireAdminPermission(data.token, "partners");
     const { db } = await import("./studio.server");
     const d = await db();
     const { data: before } = await d.from("mp_categories").select("booking_mode,appointment_types").eq("slug", data.slug).maybeSingle();

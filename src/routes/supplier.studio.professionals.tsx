@@ -44,7 +44,7 @@ function Professionals() {
             </div>
             <div className="mt-3 rounded-lg bg-secondary/40 p-2 text-xs">
               <div className="mb-1 font-semibold">Upcoming schedule</div>
-              {s.schedule.length === 0 ? <span className="text-muted-foreground">No upcoming appointments.</span> : s.schedule.map((a: any) => <div key={a.id}>{fmtDate(a.booking_date)} {fmtTime(a.start_time)} · {a.customer_name ?? "Customer"} · {a.listing?.name ?? ""}</div>)}
+              {s.schedule.length === 0 ? <span className="text-muted-foreground">No upcoming appointments.</span> : s.schedule.map((a: any) => <div key={a.id}>{fmtDate(a.booking_date)} {fmtTime(a.start_time)} · {a.customer_name || "Customer"} · {a.listing?.name ?? ""}</div>)}
             </div>
             <div className="mt-3 flex gap-2">
               <button className={btnOutline} onClick={() => setEditing(s)}><Pencil className="h-4 w-4" />Edit</button>

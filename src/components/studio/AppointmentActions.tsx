@@ -46,7 +46,7 @@ export function AppointmentActions({ b, onDone, staff }: { b: any; onDone: () =>
     const r = await appointmentActionFn({ data: { token, partnerId, id: b.id, action, ...extra } as never }).catch(() => ({ ok: false as const, error: "Network error" }));
     setBusy(false);
     if (!r.ok) return void toast.error(r.error);
-    toast.success(action === "ASSIGN" ? "Professional updated" : action === "PAYMENT" ? "Payment status updated" : `${LABEL[action as AppointmentAction]} done`);
+    toast.success(action === "ASSIGN" ? "Professional updated" : action === "PAYMENT" ? "Payment status updated" : ({ ACCEPT: "Appointment accepted", REJECT: "Appointment rejected", CONFIRM: "Appointment confirmed", RESCHEDULE: "Appointment rescheduled", CANCEL: "Appointment cancelled", COMPLETE: "Marked as completed", NO_SHOW: "Marked as no-show" } as Record<string, string>)[action] ?? "Updated");
     setDialog(null); setNote(""); onDone();
   };
 
@@ -68,7 +68,7 @@ export function AppointmentActions({ b, onDone, staff }: { b: any; onDone: () =>
       )}
       <Dialog open={!!dialog} onOpenChange={o => !o && setDialog(null)}>
         <DialogContent className="font-studio max-w-md">
-          <DialogHeader><DialogTitle>{dialog ? LABEL[dialog] : ""} · {b.customer_name ?? "Customer"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{dialog ? LABEL[dialog] : ""} · {b.customer_name || "Customer"}</DialogTitle></DialogHeader>
           {dialog === "RESCHEDULE" && <SlotPicker date={date} onDate={setDate} value={time} onPick={setTime} durationMin={dur} staffId={b.staff_id} ignoreBookingId={b.id} />}
           <Field label={dialog === "RESCHEDULE" ? "Message to customer (optional)" : "Reason (shared with the customer)"}><textarea rows={3} value={note} onChange={e => setNote(e.target.value)} className={inputCls} /></Field>
           <div className="flex justify-end gap-2">

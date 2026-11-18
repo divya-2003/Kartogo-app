@@ -15,7 +15,7 @@ function Overview() {
   if (q.isLoading) return <Loading rows={6} />;
   if (q.error) return <ErrorBox message={(q.error as Error).message} onRetry={() => q.refetch()} />;
   const o = q.data!;
-  const k = o.kpis as Record<string, number>;
+  const k = o.kpis as unknown as Record<string, number>;
   const furniture = o.kind === "furniture";
   return (
     <div className="space-y-5">
@@ -49,7 +49,7 @@ function Overview() {
                 <li key={b.id} className="flex items-center gap-3 py-2.5 text-sm">
                   <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-medium">{b.customer_name ?? "Customer"} · {b.appointment_type ?? b.listing?.name ?? "Booking"}</div>
+                    <div className="truncate font-medium">{b.customer_name || "Customer"} · {b.appointment_type ?? b.listing?.name ?? "Booking"}</div>
                     <div className="text-xs text-muted-foreground">{fmtDate(b.booking_date)} {fmtTime(b.start_time)}{b.staff?.name ? ` · ${b.staff.name}` : ""}</div>
                   </div>
                   <StatusBadge s={b.appointment_status} />
@@ -76,7 +76,7 @@ function Overview() {
               {o.recentEnquiries.length === 0 ? <Empty title="No enquiries yet" /> : (
                 <ul className="divide-y divide-border">{o.recentEnquiries.map((e: any) => (
                   <li key={e.id} className="flex items-start gap-2 py-2.5 text-sm"><MessageSquare className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                    <div className="min-w-0 flex-1"><div className="truncate font-medium">{e.customer_name ?? "Customer"} · {e.listing?.name ?? "General"}</div><div className="line-clamp-1 text-xs text-muted-foreground">{e.message}</div></div>
+                    <div className="min-w-0 flex-1"><div className="truncate font-medium">{e.customer_name || "Customer"} · {e.listing?.name ?? "General"}</div><div className="line-clamp-1 text-xs text-muted-foreground">{e.message}</div></div>
                     <EnquiryBadge s={e.status} /></li>
                 ))}</ul>
               )}
@@ -95,7 +95,7 @@ function Overview() {
             {o.upcoming.length === 0 ? <Empty title="No upcoming appointments" /> : (
               <ul className="divide-y divide-border">{o.upcoming.map((b: any) => (
                 <li key={b.id} className="flex items-center gap-3 py-2.5 text-sm"><CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <div className="min-w-0 flex-1"><div className="truncate font-medium">{b.listing?.name ?? b.appointment_type ?? "Booking"} · {b.customer_name ?? "Customer"}</div><div className="text-xs text-muted-foreground">{fmtDate(b.booking_date)} {fmtTime(b.start_time)}{b.staff?.name ? ` · ${b.staff.name}` : ""}</div></div>
+                  <div className="min-w-0 flex-1"><div className="truncate font-medium">{b.listing?.name ?? b.appointment_type ?? "Booking"} · {b.customer_name || "Customer"}</div><div className="text-xs text-muted-foreground">{fmtDate(b.booking_date)} {fmtTime(b.start_time)}{b.staff?.name ? ` · ${b.staff.name}` : ""}</div></div>
                   <StatusBadge s={b.appointment_status} /></li>
               ))}</ul>
             )}

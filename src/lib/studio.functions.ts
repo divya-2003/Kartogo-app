@@ -11,18 +11,13 @@ const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const hhmm = z.string().regex(/^\d{2}:\d{2}$/);
 const img = z.string().max(600_000);
 
-async function S() { return import("./studio.server"); }
-async function L() { return import("./studio"); }
 const mask = (p?: string | null) => (p ? `••••••${String(p).slice(-4)}` : null);
-async function customerKey(partnerId: string, phone: string) {
-  return (await S()).customerKey(partnerId, phone);
-}
 
 // ---------------- session / overview ----------------
 export const studioMeFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tok, partnerId: pid }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult, bookingModeFor, appointmentTypesFor } = await S();
+    const { requireStudio, studioResult, bookingModeFor, appointmentTypesFor } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, partners, d, session } = await requireStudio(data.token, { partnerId: data.partnerId });
       const [mode, types, unread] = await Promise.all([
@@ -48,8 +43,8 @@ export const studioMeFn = createServerFn({ method: "POST" })
 export const studioOverviewFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tok, partnerId: pid }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult, todayIst } = await S();
-    const { stockState } = await L();
+    const { requireStudio, studioResult, todayIst } = await import("./studio.server");
+    const { stockState } = await import("./studio");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "overview" });
       const today = todayIst();
@@ -124,18 +119,17 @@ const productSchema = z.object({
   variants: z.array(variantSchema).max(30).default([]), isActive: z.boolean().default(true),
 });
 
-async function lowStockCheck(d: any, partner: any, listingId: string, after: number | null) {
+async function lowStockCheck(d: any, partner: any, listingId: string, after: number | null, notifySeller: (phone: string | null | undefined, input: { type: any; body: string; refId?: string | null }) => Promise<void>) {
   if (after == null) return;
   const { data: l } = await d.from("mp_listings").select("name,low_stock_threshold").eq("id", listingId).maybeSingle();
   if (!l || after > Number(l.low_stock_threshold ?? 3)) return;
-  const { notifySeller } = await S();
   await notifySeller(partner.supplier_phone, { type: "PARTNER_LOW_STOCK", refId: listingId, body: after <= 0 ? `${l.name} is out of stock.` : `${l.name} is low on stock (${after} left).` });
 }
 
 export const listInventoryFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tok, partnerId: pid }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult } = await S();
+    const { requireStudio, studioResult } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "inventory" });
       const { data: rows } = await d.from("mp_listings").select("*").eq("partner_id", partner.id).order("created_at", { ascending: false });
@@ -147,7 +141,7 @@ export const listInventoryFn = createServerFn({ method: "POST" })
 export const saveProductFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => productSchema.parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult, StudioError } = await S();
+    const { requireStudio, studioResult, StudioError } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "inventory", write: true });
       if (!(partner.category_slugs ?? []).includes(data.category)) throw new StudioError("Pick one of your business categories.");
@@ -179,7 +173,7 @@ export const saveProductFn = createServerFn({ method: "POST" })
         id = ins.id as string;
         await d.rpc("mp_set_stock", { p_listing: id, p_qty: data.stock, p_reason: "CREATED" });
       }
-      await lowStockCheck(d, partner, id!, data.stock);
+      await lowStockCheck(d, partner, id!, data.stock, (await import("./studio.server")).notifySeller);
       return { id };
     });
   });
@@ -187,7 +181,7 @@ export const saveProductFn = createServerFn({ method: "POST" })
 export const deleteProductFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tok, partnerId: pid, id: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult, StudioError } = await S();
+    const { requireStudio, studioResult, StudioError } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "inventory", write: true });
       const { data: open } = await d.from("mp_bookings").select("id").eq("listing_id", data.id).in("appointment_status", ["PENDING", "CONFIRMED", "RESCHEDULED"]).limit(1);
@@ -202,7 +196,7 @@ export const deleteProductFn = createServerFn({ method: "POST" })
 export const setListingActiveFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tok, partnerId: pid, ids: z.array(z.string().uuid()).min(1).max(200), active: z.boolean() }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult } = await S();
+    const { requireStudio, studioResult } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, write: true });
       await d.from("mp_listings").update({ is_active: data.active, updated_at: new Date().toISOString() }).in("id", data.ids).eq("partner_id", partner.id);
@@ -216,7 +210,7 @@ export const updateStockFn = createServerFn({ method: "POST" })
     items: z.array(z.object({ id: z.string().uuid().optional(), sku: z.string().max(60).optional(), qty: z.number().int().min(0).max(100000), price: z.number().positive().max(10_000_000).optional() })).min(1).max(500),
   }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult } = await S();
+    const { requireStudio, studioResult } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "inventory", write: true });
       const { data: own } = await d.from("mp_listings").select("id,sku").eq("partner_id", partner.id);
@@ -228,7 +222,7 @@ export const updateStockFn = createServerFn({ method: "POST" })
         if (!id) { missing.push(it.sku || it.id || "?"); continue; }
         await d.rpc("mp_set_stock", { p_listing: id, p_qty: it.qty, p_reason: data.bulk ? "BULK" : "MANUAL" });
         if (it.price) await d.from("mp_listings").update({ price: it.price, updated_at: new Date().toISOString() }).eq("id", id);
-        await lowStockCheck(d, partner, id, it.qty);
+        await lowStockCheck(d, partner, id, it.qty, (await import("./studio.server")).notifySeller);
         updated++;
       }
       return { updated, missing };
@@ -251,7 +245,7 @@ const serviceSchema = z.object({
 export const listServicesFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tok, partnerId: pid }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult } = await S();
+    const { requireStudio, studioResult } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "services" });
       const { data: rows } = await d.from("mp_listings").select("id,name,category_slug,description,images,icon,price,starting_price,duration_min,service_modes,home_service_fee,attributes,is_active,created_at").eq("partner_id", partner.id).order("created_at", { ascending: false });
@@ -263,7 +257,7 @@ export const listServicesFn = createServerFn({ method: "POST" })
 export const saveServiceFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => serviceSchema.parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult, StudioError } = await S();
+    const { requireStudio, studioResult, StudioError } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "services", write: true });
       if (!(partner.category_slugs ?? []).includes(data.category)) throw new StudioError("Pick one of your business categories.");
@@ -289,7 +283,7 @@ export const saveServiceFn = createServerFn({ method: "POST" })
 export const deleteServiceFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tok, partnerId: pid, id: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult, StudioError } = await S();
+    const { requireStudio, studioResult, StudioError } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "services", write: true });
       const { data: open } = await d.from("mp_bookings").select("id").eq("listing_id", data.id).in("appointment_status", ["PENDING", "CONFIRMED", "RESCHEDULED"]).limit(1);
@@ -308,7 +302,7 @@ const shapeAppt = (b: any) => ({ ...b, customer_phone: mask(b.customer_phone) })
 export const listAppointmentsFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tok, partnerId: pid, from: isoDate.optional(), to: isoDate.optional() }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult } = await S();
+    const { requireStudio, studioResult } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "appointments" });
       let q = d.from("mp_bookings").select(APPT_SELECT).eq("partner_id", partner.id).neq("transaction_type", "PRODUCT_ORDER_DELIVERY");
@@ -325,7 +319,7 @@ export const listAppointmentsFn = createServerFn({ method: "POST" })
 export const studioSlotsFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tok, partnerId: pid, date: isoDate, durationMin: z.number().int().min(10).max(600).optional(), staffId: z.string().uuid().nullable().optional(), ignoreBookingId: z.string().uuid().optional() }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult, appointmentSlots } = await S();
+    const { requireStudio, studioResult, appointmentSlots } = await import("./studio.server");
     return studioResult(async () => {
       const { partner } = await requireStudio(data.token, { partnerId: data.partnerId, page: "appointments" });
       const r = await appointmentSlots(partner.id, data.date, { durationMin: data.durationMin, staffIds: data.staffId ? [data.staffId] : undefined, ignoreBookingId: data.ignoreBookingId });
@@ -341,8 +335,8 @@ export const appointmentActionFn = createServerFn({ method: "POST" })
     note: z.string().trim().max(500).optional(), paymentStatus: z.enum(["UNPAID", "PAID", "REFUNDED", "NOT_APPLICABLE"]).optional(),
   }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult, StudioError, appointmentSlots, endTimeFor, notifyCustomer } = await S();
-    const { allowedActions, nextStatus, legacyStatusFor, STATUS_LABEL, toMin } = await L();
+    const { requireStudio, studioResult, StudioError, appointmentSlots, endTimeFor, notifyCustomer } = await import("./studio.server");
+    const { allowedActions, nextStatus, legacyStatusFor, STATUS_LABEL, toMin } = await import("./studio");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "appointments", write: true });
       const { data: b } = await d.from("mp_bookings").select("*, listing:mp_listings(name,duration_min)").eq("id", data.id).eq("partner_id", partner.id).maybeSingle();
@@ -411,7 +405,7 @@ export const createSellerAppointmentFn = createServerFn({ method: "POST" })
     locationType: z.enum(["BUSINESS", "CUSTOMER"]).default("BUSINESS"), address: z.string().trim().max(300).optional(), notes: z.string().trim().max(500).optional(),
   }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult, StudioError, appointmentSlots, endTimeFor, notifyCustomer } = await S();
+    const { requireStudio, studioResult, StudioError, appointmentSlots, endTimeFor, notifyCustomer } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "appointments", write: true });
       let phone = data.customerPhone?.replace(/^\+91/, "") ?? null;
@@ -465,7 +459,7 @@ const settingsSchema = z.object({
 export const getAvailabilityFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tok, partnerId: pid }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult, settingsFor } = await S();
+    const { requireStudio, studioResult, settingsFor } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId });
       const page = partner.kind === "service" ? "availability" : "settings";
@@ -478,8 +472,8 @@ export const getAvailabilityFn = createServerFn({ method: "POST" })
 export const saveAvailabilityFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tok, partnerId: pid, settings: settingsSchema, holidays: z.array(isoDate).max(200) }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult, StudioError } = await S();
-    const { toMin } = await L();
+    const { requireStudio, studioResult, StudioError } = await import("./studio.server");
+    const { toMin } = await import("./studio");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, write: true });
       await requireStudio(data.token, { partnerId: partner.id, page: partner.kind === "service" ? "availability" : "settings" });
@@ -506,7 +500,7 @@ export const saveAvailabilityFn = createServerFn({ method: "POST" })
 export const listEnquiriesFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tok, partnerId: pid }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult } = await S();
+    const { requireStudio, studioResult } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "enquiries" });
       const { data: rows } = await d.from("mp_enquiries").select("*, listing:mp_listings(id,name,icon,images), events:mp_enquiry_events(id,actor,kind,message,created_at)").eq("partner_id", partner.id).order("created_at", { ascending: false }).limit(300);
@@ -517,7 +511,7 @@ export const listEnquiriesFn = createServerFn({ method: "POST" })
 export const respondEnquiryFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tok, partnerId: pid, id: z.string().uuid(), message: z.string().trim().max(1000).optional(), status: z.enum(["NEW", "RESPONDED", "IN_PROGRESS", "CLOSED"]).optional() }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult, StudioError, notifyCustomer } = await S();
+    const { requireStudio, studioResult, StudioError, notifyCustomer } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "enquiries", write: true });
       const { data: e } = await d.from("mp_enquiries").select("id,customer_phone,status,listing:mp_listings(name)").eq("id", data.id).eq("partner_id", partner.id).maybeSingle();
@@ -538,7 +532,7 @@ export const respondEnquiryFn = createServerFn({ method: "POST" })
 export const listProfessionalsFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tok, partnerId: pid }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult, todayIst } = await S();
+    const { requireStudio, studioResult, todayIst } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "professionals" });
       const today = todayIst();
@@ -560,7 +554,7 @@ export const saveProfessionalFn = createServerFn({ method: "POST" })
     workStart: hhmm.nullable().optional(), workEnd: hhmm.nullable().optional(), isActive: z.boolean().default(true),
   }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult, StudioError } = await S();
+    const { requireStudio, studioResult, StudioError } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "professionals", write: true });
       if (data.workStart && data.workEnd && data.workEnd <= data.workStart) throw new StudioError("Working hours must end after they start.");
@@ -583,7 +577,7 @@ export const saveProfessionalFn = createServerFn({ method: "POST" })
 export const deleteProfessionalFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tok, partnerId: pid, id: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult, StudioError } = await S();
+    const { requireStudio, studioResult, StudioError } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "professionals", write: true });
       const { data: open } = await d.from("mp_bookings").select("id").eq("staff_id", data.id).in("appointment_status", ["PENDING", "CONFIRMED", "RESCHEDULED"]).limit(1);
@@ -598,7 +592,7 @@ export const deleteProfessionalFn = createServerFn({ method: "POST" })
 export const listStudioCustomersFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tok, partnerId: pid }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult } = await S();
+    const { requireStudio, studioResult } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "customers" });
       const [{ data: b }, { data: e }, { data: notes }] = await Promise.all([
@@ -618,7 +612,7 @@ export const listStudioCustomersFn = createServerFn({ method: "POST" })
       for (const c of map.values()) {
         const last = [...c.bookings.map((x: any) => x.created_at), ...c.enquiries.map((x: any) => x.created_at)].sort().slice(-1)[0] ?? null;
         out.push({
-          key: await customerKey(partner.id, c.phone), name: c.name, phone: mask(c.phone), note: c.note, lastActivity: last,
+          key: (await import("./studio.server")).customerKey(partner.id, c.phone), name: c.name, phone: mask(c.phone), note: c.note, lastActivity: last,
           completed: c.bookings.filter((x: any) => x.appointment_status === "COMPLETED").length,
           cancelled: c.bookings.filter((x: any) => ["CANCELLED", "REJECTED", "NO_SHOW"].includes(x.appointment_status)).length,
           bookings: c.bookings, enquiries: c.enquiries,
@@ -631,7 +625,7 @@ export const listStudioCustomersFn = createServerFn({ method: "POST" })
 export const saveCustomerNoteFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tok, partnerId: pid, key: z.string().length(16), note: z.string().max(2000) }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult, StudioError } = await S();
+    const { requireStudio, studioResult, StudioError } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "customers", write: true });
       const [{ data: b }, { data: e }] = await Promise.all([
@@ -640,7 +634,7 @@ export const saveCustomerNoteFn = createServerFn({ method: "POST" })
       ]);
       const phones = Array.from(new Set([...(b ?? []), ...(e ?? [])].map((r: any) => r.customer_phone).filter(Boolean)));
       let phone: string | null = null;
-      for (const p of phones) if ((await customerKey(partner.id, p)) === data.key) { phone = p; break; }
+      for (const p of phones) if (((await import("./studio.server")).customerKey(partner.id, p)) === data.key) { phone = p; break; }
       if (!phone) throw new StudioError("Customer not found.");
       await d.from("mp_partner_customer_notes").upsert({ partner_id: partner.id, customer_phone: phone, note: data.note, updated_at: new Date().toISOString() });
       return true;
@@ -651,7 +645,7 @@ export const saveCustomerNoteFn = createServerFn({ method: "POST" })
 export const studioNotificationsFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tok, partnerId: pid, markRead: z.boolean().optional() }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult, todayIst } = await S();
+    const { requireStudio, studioResult, todayIst } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d, session } = await requireStudio(data.token, { partnerId: data.partnerId, page: "notifications" });
       if (data.markRead) await d.from("notifications").update({ read_at: new Date().toISOString() }).eq("user_phone", session.phone).is("read_at", null);
@@ -669,7 +663,7 @@ export const studioNotificationsFn = createServerFn({ method: "POST" })
 export const listStudioReviewsFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tok, partnerId: pid }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult } = await S();
+    const { requireStudio, studioResult } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "reviews" });
       const { data: rows } = await d.from("mp_reviews").select("id,customer_name,rating,comment,created_at,reply,replied_at,listing:mp_listings(name)").eq("partner_id", partner.id).order("created_at", { ascending: false }).limit(300);
@@ -680,7 +674,7 @@ export const listStudioReviewsFn = createServerFn({ method: "POST" })
 export const replyReviewFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tok, partnerId: pid, id: z.string().uuid(), reply: z.string().trim().min(2).max(1000) }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult, StudioError } = await S();
+    const { requireStudio, studioResult, StudioError } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "reviews", write: true });
       const { error, count } = await d.from("mp_reviews").update({ reply: data.reply, replied_at: new Date().toISOString() }, { count: "exact" }).eq("id", data.id).eq("partner_id", partner.id);
@@ -693,8 +687,8 @@ export const replyReviewFn = createServerFn({ method: "POST" })
 export const studioReportsFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: tok, partnerId: pid, from: isoDate, to: isoDate }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult } = await S();
-    const { stockState } = await L();
+    const { requireStudio, studioResult } = await import("./studio.server");
+    const { stockState } = await import("./studio");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "reports" });
       const fromTs = `${data.from}T00:00:00+05:30`, toTs = `${data.to}T23:59:59+05:30`;
@@ -751,7 +745,7 @@ export const saveBusinessProfileFn = createServerFn({ method: "POST" })
     isActive: z.boolean(),
   }).parse(d))
   .handler(async ({ data }) => {
-    const { requireStudio, studioResult, StudioError } = await S();
+    const { requireStudio, studioResult, StudioError } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "profile", write: true });
       // Category, verification and account status are controlled by Kartogo admin only.
@@ -766,17 +760,13 @@ export const saveBusinessProfileFn = createServerFn({ method: "POST" })
   });
 
 // ---------------- customer side: enquiries + appointment options ----------------
-async function customerPhone(token: string) {
-  const { verifyCustomerToken } = await import("./auth-tokens.server");
-  return verifyCustomerToken(token)?.phone ?? null;
-}
 
 export const createEnquiryFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: z.string().min(10), listingId: z.string().uuid(), message: z.string().trim().min(5, "Write a few words about what you need").max(1000), name: z.string().trim().max(80).optional() }).parse(d))
   .handler(async ({ data }) => {
-    const phone = await customerPhone(data.token);
+    const phone = (await import("./auth-tokens.server")).verifyCustomerToken(data.token)?.phone ?? null;
     if (!phone) return { ok: false as const, error: "Please login to send an enquiry." };
-    const { db, notifySeller } = await S();
+    const { db, notifySeller } = await import("./studio.server");
     const d = await db();
     const { data: l } = await d.from("mp_listings").select("id,name,partner_id,partner:mp_partners(name,supplier_phone,account_status)").eq("id", data.listingId).eq("is_active", true).maybeSingle();
     if (!l) return { ok: false as const, error: "This product is no longer available." };
@@ -794,9 +784,9 @@ export const createEnquiryFn = createServerFn({ method: "POST" })
 export const myEnquiriesFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: z.string().min(10), listingId: z.string().uuid().optional() }).parse(d))
   .handler(async ({ data }) => {
-    const phone = await customerPhone(data.token);
+    const phone = (await import("./auth-tokens.server")).verifyCustomerToken(data.token)?.phone ?? null;
     if (!phone) return [];
-    const { db } = await S();
+    const { db } = await import("./studio.server");
     const d = await db();
     let q = d.from("mp_enquiries").select("id,message,status,created_at,listing:mp_listings(id,name),partner:mp_partners(name),events:mp_enquiry_events(actor,message,created_at,kind)").eq("customer_phone", phone);
     if (data.listingId) q = q.eq("listing_id", data.listingId);
@@ -808,7 +798,7 @@ export const myEnquiriesFn = createServerFn({ method: "POST" })
 export const appointmentOptionsFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ listingId: z.string().uuid(), date: isoDate }).parse(d))
   .handler(async ({ data }) => {
-    const { db, appointmentSlots, appointmentTypesFor, bookingModeFor, settingsFor } = await S();
+    const { db, appointmentSlots, appointmentTypesFor, bookingModeFor, settingsFor } = await import("./studio.server");
     const d = await db();
     const { data: l } = await d.from("mp_listings").select("id,partner_id,duration_min,partner:mp_partners(id,category_slugs,partner_type,booking_mode,opens_at,closes_at,weekly_off,is_active,account_status)").eq("id", data.listingId).eq("is_active", true).maybeSingle();
     if (!l?.partner || l.partner.account_status === "SUSPENDED") return { types: [], mode: "SELLER_APPROVAL" as const, slots: [], allowBusiness: true, allowCustomer: false };

@@ -48,7 +48,7 @@ function Enquiries() {
         <div className="grid gap-4 lg:grid-cols-5">
           <ul className="space-y-2 lg:col-span-2">{rows.map((e: any) => (
             <li key={e.id}><button onClick={() => setOpenId(e.id)} className={`w-full rounded-xl border bg-card p-3 text-left ${openId === e.id ? "border-brand-navy" : "border-border"}`}>
-              <div className="flex items-center justify-between gap-2"><span className="truncate text-sm font-semibold">{e.customer_name ?? "Customer"}</span><EnquiryBadge s={e.status} /></div>
+              <div className="flex items-center justify-between gap-2"><span className="truncate text-sm font-semibold">{e.customer_name || "Customer"}</span><EnquiryBadge s={e.status} /></div>
               <div className="truncate text-xs text-muted-foreground">{e.listing?.name ?? "General enquiry"} · {fmtWhen(e.created_at)}</div>
               <p className="mt-1 line-clamp-2 text-sm">{e.message}</p>
             </button></li>
@@ -57,7 +57,7 @@ function Enquiries() {
             {!current ? <Empty title="Select an enquiry" body="Open an enquiry to see the full history and reply." /> : (
               <div className="rounded-xl border border-border bg-card p-4">
                 <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div><h2 className="font-semibold">{current.customer_name ?? "Customer"} <span className="text-sm font-normal text-muted-foreground">· {current.customer_phone}</span></h2>
+                  <div><h2 className="font-semibold">{current.customer_name || "Customer"} <span className="text-sm font-normal text-muted-foreground">· {current.customer_phone}</span></h2>
                     <div className="text-sm text-muted-foreground">Interested in <b className="text-foreground">{current.listing?.name ?? "your products"}</b> · {fmtWhen(current.created_at)}</div></div>
                   <EnquiryBadge s={current.status} />
                 </div>

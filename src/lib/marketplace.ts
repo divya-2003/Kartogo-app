@@ -30,9 +30,11 @@ export type MpListing = {
   id: string; partner_id: string; category_slug: string; listing_type: ListingType; transaction_type: TransactionType;
   name: string; description: string | null; images: string[]; icon: string; price: number | null; mrp: number | null;
   starting_price: number | null; duration_min: number | null; includes: string[];
-  attributes: { material?: string; dimensions?: string; variants?: string[]; installation?: boolean; delivery?: string };
+  attributes: { material?: string; dimensions?: string; variants?: string[]; installation?: boolean; delivery?: string; brand?: string; colour?: string; weight?: string; assembly?: boolean };
   packages: EventPackage[]; service_modes: ServiceMode[]; home_service_fee: number; rating: number;
   review_count: number; service_area: string | null; created_at: string;
+  /** Furniture stock (null = not tracked). */
+  stock_qty?: number | null; low_stock_threshold?: number; sku?: string | null;
   partner?: Pick<MpPartner, "id" | "name" | "slug" | "icon" | "rating" | "distance_km" | "partner_type"> | null;
 };
 

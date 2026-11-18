@@ -105,7 +105,7 @@ function AppointmentRow({ b, staff, onDone, expanded = false }: { b: any; staff:
       <button className="flex w-full flex-wrap items-center gap-3 text-left" onClick={() => setShow(s => !s)} aria-expanded={show}>
         <div className="w-24 shrink-0"><div className="text-sm font-bold">{fmtDate(b.booking_date)}</div><div className="text-xs text-muted-foreground">{fmtTime(b.start_time) || "Time to confirm"}</div></div>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-semibold">{b.customer_name ?? "Customer"} · {b.appointment_type ?? (b.details?.store_visit ? "Showroom Visit" : "Booking")}</div>
+          <div className="truncate text-sm font-semibold">{b.customer_name || "Customer"} · {b.appointment_type ?? (b.details?.store_visit ? "Showroom Visit" : "Booking")}</div>
           <div className="truncate text-xs text-muted-foreground">{b.listing?.name ?? "General"} · {b.booking_code}{b.staff?.name ? ` · ${b.staff.name}` : ""}</div>
         </div>
         <span className="flex items-center gap-1 text-xs text-muted-foreground">{atCustomer ? <MapPin className="h-3.5 w-3.5" /> : <Store className="h-3.5 w-3.5" />}{atCustomer ? "Customer's place" : "At business"}</span>
@@ -114,7 +114,7 @@ function AppointmentRow({ b, staff, onDone, expanded = false }: { b: any; staff:
       {show && (
         <div className="mt-3 space-y-3 border-t border-border pt-3 text-sm">
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-            <div><div className="text-xs text-muted-foreground">Customer</div><div className="flex items-center gap-1"><User2 className="h-3.5 w-3.5" />{b.customer_name ?? "Customer"} · {b.customer_phone ?? "—"}</div></div>
+            <div><div className="text-xs text-muted-foreground">Customer</div><div className="flex items-center gap-1"><User2 className="h-3.5 w-3.5" />{b.customer_name || "Customer"} · {b.customer_phone ?? "—"}</div></div>
             <div><div className="text-xs text-muted-foreground">Location</div><div>{atCustomer ? (b.address?.line ?? "Customer's address") : "Your business location"}</div></div>
             <div><div className="text-xs text-muted-foreground">Amount · payment</div><div>{b.amount > 0 ? `${inr(Number(b.amount) + Number(b.fee ?? 0))} · ${String(b.payment_status ?? "UNPAID").toLowerCase().replace("_", " ")}` : "Free"}</div></div>
             <div><div className="text-xs text-muted-foreground">Professional</div><div>{b.staff?.name ?? "Unassigned"}</div></div>
@@ -139,7 +139,7 @@ function CalendarGrid({ rows, range, span, onOpen }: { rows: any[]; range: { fro
     return list.length === 0 ? <Empty title="Nothing booked on this day" /> : (
       <div className="divide-y divide-border rounded-xl border border-border bg-card">{list.map(b => (
         <button key={b.id} onClick={() => onOpen(b.id)} className="flex w-full items-center gap-3 p-3 text-left text-sm hover:bg-secondary/40">
-          <span className="w-20 font-semibold tabular-nums">{fmtTime(b.start_time) || "—"}</span><span className="min-w-0 flex-1 truncate">{b.customer_name ?? "Customer"} · {b.appointment_type ?? b.listing?.name}</span><StatusBadge s={b.appointment_status} />
+          <span className="w-20 font-semibold tabular-nums">{fmtTime(b.start_time) || "—"}</span><span className="min-w-0 flex-1 truncate">{b.customer_name || "Customer"} · {b.appointment_type ?? b.listing?.name}</span><StatusBadge s={b.appointment_status} />
         </button>))}</div>
     );
   }
@@ -156,7 +156,7 @@ function CalendarGrid({ rows, range, span, onOpen }: { rows: any[]; range: { fro
               <div className="space-y-1">
                 {list.slice(0, span === "week" ? 8 : 3).map(b => (
                   <button key={b.id} onClick={() => onOpen(b.id)} className="block w-full truncate rounded-md bg-secondary px-1.5 py-1 text-left text-[11px] hover:bg-secondary/70">
-                    <b>{fmtTime(b.start_time)}</b> {b.customer_name ?? "Customer"}
+                    <b>{fmtTime(b.start_time)}</b> {b.customer_name || "Customer"}
                     <span className={`ml-1 inline-block h-1.5 w-1.5 rounded-full ${b.appointment_status === "PENDING" ? "bg-saffron" : b.appointment_status === "COMPLETED" ? "bg-leaf" : ["CANCELLED", "REJECTED", "NO_SHOW"].includes(b.appointment_status) ? "bg-destructive" : "bg-primary"}`} />
                   </button>
                 ))}
