@@ -24,20 +24,20 @@ const rememberOrigin = (slug: string) => { try { sessionStorage.setItem(`qk_expl
  * Shop category bar: one row that scrolls sideways on phones (and on any
  * screen where the categories don't fit), so new categories always have room.
  * Every column is the same width — the width the longest one-line name needs —
- * so all icons are equal squares and every name stays on one line.
+ * so all icons are equal 44px squares (under half an inch) and every name stays on one line.
  */
 export function ShopCategoryStrip({ term = "" }: { term?: string }) {
   const cats = useQuery({ queryKey: ["mp-cats"], queryFn: () => listMpCategoriesFn(), staleTime: 5 * 60_000 });
   const q = term.trim().toLowerCase();
   const categories = sectionCategories((cats.data?.categories ?? []) as MpCategory[], "shop").filter(c => !q || c.name.toLowerCase().includes(q));
-  const row = "grid w-max min-w-full grid-flow-col auto-cols-[minmax(64px,1fr)] gap-x-2 sm:auto-cols-[minmax(84px,1fr)] sm:gap-x-3";
-  if (cats.isLoading) return <div className="-mx-4 overflow-hidden px-4"><div className={row}>{Array.from({ length: 9 }).map((_, i) => <div key={i} className="mx-auto aspect-square w-full max-w-[84px] animate-pulse rounded-2xl bg-secondary" />)}</div></div>;
+  const row = "grid w-max min-w-full grid-flow-col auto-cols-[minmax(60px,1fr)] gap-x-2 sm:auto-cols-[minmax(72px,1fr)] sm:gap-x-3";
+  if (cats.isLoading) return <div className="-mx-4 overflow-hidden px-4"><div className={row}>{Array.from({ length: 9 }).map((_, i) => <div key={i} className="mx-auto h-11 w-11 animate-pulse rounded-xl bg-secondary" />)}</div></div>;
   return (
     <div className="-mx-4 overflow-x-auto overscroll-x-contain px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <nav aria-label="Shop categories" className={row}>
         {categories.map((c, i) => (
           <Link key={c.slug} to="/explore/$slug" params={{ slug: c.slug }} onClick={() => rememberOrigin(c.slug)} className="flex min-w-0 flex-col items-center gap-1 text-center">
-            <span className={`grid aspect-square w-full max-w-[84px] place-items-center rounded-2xl text-2xl sm:text-3xl ${TINTS[i % TINTS.length]}`}>{c.icon}</span>
+            <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl text-xl ${TINTS[i % TINTS.length]}`}>{c.icon}</span>
             <span className="whitespace-nowrap px-0.5 text-[11px] font-semibold leading-tight text-foreground sm:text-xs">{c.name}</span>
           </Link>
         ))}

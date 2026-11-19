@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { checkServiceability, locateByCoords } from "@/lib/serviceability.functions";
 import { createUnserviceableRequestFn } from "@/lib/unserviceable.functions";
 import { deliveryWindow } from "@/lib/serviceability";
+import { AddressSummary } from "@/components/AddressSummary";
 import { useLocation, buildLocationQuery, useAuth, ADDRESS_LABELS, addressZone, type SavedLocation } from "@/lib/store";
 
 export type LocationPickerVariant = "chip" | "button";
@@ -471,21 +472,6 @@ function LocationPickerClient({
                 )}
               </div>
 
-              {query.trim() && (
-                <button
-                  type="button"
-                  onClick={useCurrentLocation}
-                  disabled={locating}
-                  className="flex w-full items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2.5 text-left hover:bg-primary/10 disabled:opacity-60"
-                >
-                  {locating ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <LocateFixed className="h-4 w-4 text-primary" />}
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold text-primary">{locating ? "Detecting your location..." : "Detect my location automatically"}</span>
-                    <span className="block text-xs text-muted-foreground">Use GPS instead of typing the address</span>
-                  </span>
-                </button>
-              )}
-
               {denied ? (
                 <div className="space-y-2 rounded-xl border border-border bg-card p-3 text-sm text-foreground">
                   <div className="flex items-start gap-2">
@@ -547,21 +533,7 @@ function LocationPickerClient({
                           onClick={() => selectSaved(addr)}
                           className="flex min-w-0 flex-1 items-start gap-3 text-left"
                         >
-                          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                          <span className="min-w-0 flex-1">
-                            <span className="flex flex-wrap items-center gap-1.5">
-                              {addr.label && (
-                                <span className="rounded-md bg-secondary px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide">
-                                  {addr.label}
-                                </span>
-                              )}
-                              <span className="truncate text-sm font-semibold">{addr.area}</span>
-                              <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${addressZone(addr) === "quick" ? "bg-leaf/15 text-leaf" : "bg-muted text-muted-foreground"}`}>
-                                {addressZone(addr) === "quick" ? "Quick available" : "Standard only"}
-                              </span>
-                            </span>
-                            <span className="block truncate text-xs text-muted-foreground">{addr.query}</span>
-                          </span>
+                          <AddressSummary label={addr.label} area={addr.area} address={addr.query} zone={addressZone(addr)} />
                         </button>
                         <div className="flex items-center gap-1">
                           {active && <Check className="h-4 w-4 shrink-0 text-primary" />}

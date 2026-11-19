@@ -106,7 +106,8 @@ function ExplorePage() {
 
   return (
     <div className="min-h-screen bg-background pb-28">
-      <PageTop title={cat?.name ?? "Explore"} back="/categories" returnTo={origin} />
+      {/* Back returns to wherever the shopper opened this from (Home or Categories); Home when unknown. */}
+      <PageTop title={cat?.name ?? "Explore"} back="/" returnTo={origin} />
       <div className="mx-auto max-w-2xl space-y-4 px-4 py-4 lg:max-w-5xl">
         <div className="flex gap-2">
           <label className="flex flex-1 items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">

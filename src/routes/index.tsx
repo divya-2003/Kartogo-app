@@ -211,12 +211,15 @@ function Index() {
             /* row: delivery time + wallet + profile */
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
               <div className="min-w-0">
+                {/* The delivery time shows only where Quick delivery is available. */}
                 {location && (
                   <>
-                    <div className="flex items-center gap-1.5 font-display text-lg font-extrabold leading-tight tracking-tight text-foreground sm:text-xl">
-                      <Zap className="h-5 w-5 shrink-0 fill-saffron text-saffron" />
-                      <span className="min-w-0 truncate">Delivery in {deliveryWindow(location.etaMinutes)}</span>
-                    </div>
+                    {quickAvailable && (
+                      <div className="flex items-center gap-1.5 font-display text-lg font-extrabold leading-tight tracking-tight text-foreground sm:text-xl">
+                        <Zap className="h-5 w-5 shrink-0 fill-saffron text-saffron" />
+                        <span className="min-w-0 truncate">Delivery in {deliveryWindow(location.etaMinutes)}</span>
+                      </div>
+                    )}
                     <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-leaf/10 px-2 py-0.5 text-[11px] font-bold text-leaf">
                       <CheckCircle2 className="h-3 w-3 shrink-0" /> Delivery available
                     </div>
@@ -246,7 +249,7 @@ function Index() {
             /* slim delivery line under the sections for signed-out shoppers: location, then the delivery time below it on the left */
             <div className="mt-1 flex flex-col items-start gap-1">
               <div className="w-full min-w-0 max-w-[260px]"><LocationPicker /></div>
-              {location && (
+              {location && quickAvailable && (
                 <span className="flex items-center gap-1 pl-1 text-xs font-extrabold text-foreground">
                   <Zap className="h-3.5 w-3.5 shrink-0 fill-saffron text-saffron" /> {deliveryWindow(location.etaMinutes)}
                 </span>

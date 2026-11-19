@@ -1,6 +1,5 @@
-import { Link } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { Menu, Home, LayoutGrid, ShoppingBag, Package, Heart } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { enterCustomerMode as markCustomerMode, leaveCustomerMode } from "@/lib/portal-mode";
 
@@ -15,17 +14,9 @@ export function useLeaveCustomerMode() {
   useEffect(() => { leaveCustomerMode(); }, []);
 }
 
-const CUSTOMER_LINKS = [
-  { to: "/", label: "Shop home", icon: Home },
-  { to: "/categories", label: "Categories", icon: LayoutGrid },
-  { to: "/cart", label: "Cart", icon: ShoppingBag },
-  { to: "/orders", label: "My orders", icon: Package },
-  { to: "/wishlist", label: "Wishlist", icon: Heart },
-] as const;
-
 /**
  * Three-line menu button for partner portals (seller, delivery). The side menu
- * holds the portal's own pages plus a "Shop as a customer" section.
+ * holds only the portal's own pages.
  */
 export function PartnerMenu({ title, children, closeKey }: { title: string; children: (close: () => void) => ReactNode; closeKey?: string }) {
   const [open, setOpen] = useState(false);
@@ -48,21 +39,6 @@ export function PartnerMenu({ title, children, closeKey }: { title: string; chil
         </SheetHeader>
         <div className="max-h-[calc(100dvh-5rem)] space-y-5 overflow-y-auto p-3">
           <div>{children(close)}</div>
-          <div>
-            <div className="mb-1.5 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Shop as a customer</div>
-            <nav className="flex flex-col gap-1">
-              {CUSTOMER_LINKS.map((l) => (
-                <Link
-                  key={l.to}
-                  to={l.to}
-                  onClick={() => { enterCustomerMode(); close(); }}
-                  className="flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold hover:bg-secondary"
-                >
-                  <l.icon className="h-4 w-4" /> {l.label}
-                </Link>
-              ))}
-            </nav>
-          </div>
         </div>
       </SheetContent>
     </Sheet>

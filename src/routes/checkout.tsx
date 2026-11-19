@@ -3,8 +3,9 @@ import { useState, useEffect, useMemo } from "react";
 import { Header } from "@/components/Header";
 import { locationHasQuick } from "@/lib/delivery-tier";
 import { LocationPicker } from "@/components/LocationPicker";
+import { AddressSummary } from "@/components/AddressSummary";
 import { Button } from "@/components/ui/button";
-import { useAuth, useCart, useCatalog, useOrders, useLocation, useWallet, buildLocationQuery, type SavedLocation } from "@/lib/store";
+import { useAuth, useCart, useCatalog, useOrders, useLocation, useWallet, buildLocationQuery, addressZone, type SavedLocation } from "@/lib/store";
 import { ingestOrderFn } from "@/lib/recommendations.functions";
 import { clearRecommendationCartProductIds, customerEventService, getRecommendationCartProductIds } from "@/lib/recommendations.tracking";
 import { formatINR } from "@/lib/data";
@@ -57,7 +58,7 @@ function CheckoutPage() {
   const storeTotal = storeLines.reduce((s, i) => s + (i.listing?.price ?? 0) * i.qty, 0);
   const [storeDate, setStoreDate] = useState(() => ymd(new Date(Date.now() + 86400000)));
   const { place } = useOrders();
-  const { location, savedAddresses, deliveryAddresses, removeDeliveryAddress, removeSavedAddress, updateSavedAddress } = useLocation();
+  const { location, setLocation, savedAddresses, deliveryAddresses, removeDeliveryAddress, removeSavedAddress, updateSavedAddress } = useLocation();
   const { balance: walletBalance, refresh: refreshWallet } = useWallet();
   const nav = useNavigate();
 
@@ -118,6 +119,8 @@ function CheckoutPage() {
           id: `location:${location.query}`,
           kind: "location" as const,
           label: location.area,
+          chip: savedAddresses.find(a => a.query.toLowerCase() === location.query.toLowerCase())?.label ?? location.label ?? null,
+          zone: addressZone(location) as "quick" | "standard" | null,
           name: userName,
           address: location.query || location.area,
           removableId: location.query,
@@ -136,6 +139,8 @@ function CheckoutPage() {
         id: `delivery:${addr.id}`,
         kind: "delivery" as const,
         label: addr.label,
+        chip: null as string | null,
+        zone: null as "quick" | "standard" | null,
         // Always show the current profile name so a name change reflects on every
         // saved address, not the possibly-stale name captured when it was added.
         name: userName,
@@ -154,6 +159,8 @@ function CheckoutPage() {
         id: `location:${addr.query}`,
         kind: "location" as const,
         label: addr.area,
+        chip: addr.label ?? null,
+        zone: addressZone(addr) as "quick" | "standard" | null,
         name: userName,
         address: addr.query || addr.area,
         removableId: addr.query,
@@ -162,6 +169,15 @@ function CheckoutPage() {
     return [...currentOption, ...normalizedDelivery, ...savedLocationOptions];
   }, [location, deliveryAddresses, savedAddresses, userName]);
 
+
+  // Picking a saved address here works exactly like picking it in the location
+  // sheet: it becomes the delivery location, so Quick / Standard follow it.
+  const chooseAddress = (opt: { id: string; kind: "location" | "delivery"; removableId: string }) => {
+    setSelectedId(opt.id);
+    if (opt.kind !== "location") return;
+    const saved = savedAddresses.find(a => a.query.toLowerCase() === opt.removableId.toLowerCase());
+    if (saved && saved.query !== location?.query) setLocation(saved);
+  };
 
   // Follow the location sheet: switching location switches the delivery address.
   useEffect(() => {
@@ -433,17 +449,9 @@ function CheckoutPage() {
 
                     {/* Collapsed: selected address only */}
                     {selectedAddress && (
-                      <div className="flex items-start gap-3 rounded-xl border border-primary bg-primary/5 p-3">
-                        <div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground">
-                          <MapPin className="h-4 w-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold">{selectedAddress.label}</span>
-                            <span className="text-xs text-muted-foreground">{selectedAddress.name}</span>
-                          </div>
-                          <div className="text-sm text-muted-foreground">{selectedAddress.address}</div>
-                        </div>
+                      <div className="flex items-center gap-3 rounded-xl border border-primary bg-primary/5 p-3">
+                        <AddressSummary label={selectedAddress.chip} area={selectedAddress.label} address={selectedAddress.address} zone={selectedAddress.zone} />
+                        <Check className="h-4 w-4 shrink-0 text-primary" />
                       </div>
                     )}
 
@@ -574,14 +582,11 @@ function CheckoutPage() {
                               {addressOptions.map(opt => (
                                 <li key={opt.id}>
                                   <button
-                                    onClick={() => { setSelectedId(opt.id); setEditLocationId(null); setShowPicker(false); }}
-                                    className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition ${opt.id === selectedId ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}
+                                    onClick={() => { chooseAddress(opt); setEditLocationId(null); setShowPicker(false); }}
+                                    className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition ${opt.id === selectedId ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40"}`}
                                   >
-                                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                                    <span className="min-w-0">
-                                      <span className="block text-sm font-bold">{opt.label}</span>
-                                      <span className="block text-xs text-muted-foreground">{opt.address}</span>
-                                    </span>
+                                    <AddressSummary label={opt.chip} area={opt.label} address={opt.address} zone={opt.zone} />
+                                    {opt.id === selectedId && <Check className="h-4 w-4 shrink-0 text-primary" />}
                                   </button>
                                 </li>
                               ))}
@@ -599,20 +604,12 @@ function CheckoutPage() {
                             return (
                               <li
                                 key={addr.id}
-                                className={`flex items-start gap-3 rounded-xl border p-3 transition ${active ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}
+                                className={`flex items-center gap-3 rounded-xl border p-3 transition ${active ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40"}`}
                               >
-                                <button onClick={() => { setSelectedId(addr.id); setShowPicker(false); }} className="flex flex-1 items-start gap-3 text-left">
-                                  <div className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg ${active ? "bg-primary text-primary-foreground" : "bg-secondary"}`}>
-                                    {active ? <Check className="h-4 w-4" /> : <MapPin className="h-4 w-4" />}
-                                  </div>
-                                  <div className="min-w-0">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-sm font-bold">{addr.label}</span>
-                                      <span className="text-xs text-muted-foreground">{addr.name}</span>
-                                    </div>
-                                    <div className="text-sm text-muted-foreground">{addr.address}</div>
-                                  </div>
+                                <button onClick={() => { chooseAddress(addr); setShowPicker(false); }} className="flex min-w-0 flex-1 items-start gap-3 text-left">
+                                  <AddressSummary label={addr.chip} area={addr.label} address={addr.address} zone={addr.zone} />
                                 </button>
+                                {active && <Check className="h-4 w-4 shrink-0 text-primary" />}
                                 {addr.kind === "location" && (
                                   <button
                                     onClick={() => startEditLocation(addr.removableId)}

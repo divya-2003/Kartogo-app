@@ -33,7 +33,7 @@ function StorePage() {
 
   return (
     <div className="min-h-screen bg-background pb-28">
-      <PageTop title={p.name} back="/categories" />
+      <PageTop title={p.name} back="/" />
       <div className="mx-auto max-w-2xl space-y-5 px-4 py-4 lg:max-w-5xl">
         <div className="relative rounded-3xl border border-border bg-card p-4 shadow-pop">
           <div className="flex gap-4">

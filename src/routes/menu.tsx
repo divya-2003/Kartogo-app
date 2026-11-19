@@ -108,7 +108,7 @@ function MenuPage() {
               <h2 className="font-display text-xl font-extrabold">Account</h2>
               <p className="mt-1 text-sm text-muted-foreground">Log in to get exclusive offers</p>
             </div>
-            <Link to="/login" search={{ redirect: "/menu" }} className="inline-flex h-11 shrink-0 items-center justify-center rounded-md bg-primary px-6 font-bold text-primary-foreground shadow-pop">
+            <Link to="/login" className="inline-flex h-11 shrink-0 items-center justify-center rounded-md bg-primary px-6 font-bold text-primary-foreground shadow-pop">
               Log In
             </Link>
           </section>
