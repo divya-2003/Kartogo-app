@@ -144,3 +144,12 @@
 - [x] Partner Studio (furniture seller + service provider dashboards, appointment engine, enquiries, admin view) per uploaded spec
 - [ ] Verify the admin Partner Studio page signed in — needs the admin passcode
 - [x] Assign 9849078098 to Comfort Furniture House and verify Studio login
+
+## Nov 19 batch
+- [x] Profile "Log In" lands on the Home page of that login
+- [x] Remove "Shop as a customer" from every portal menu
+- [x] Remove the "Detect my location automatically" box under the address search
+- [x] Home category icons ≤ half an inch
+- [x] Checkout addresses look like saved addresses (label, Quick available / Standard only); picking one switches Quick/Standard
+- [x] Back from a store/category opened on Home returns to Home
+- [x] Home delivery minutes only where Quick delivery reaches
