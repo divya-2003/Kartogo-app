@@ -342,7 +342,9 @@ function LocationPickerClient({
               </h2>
               <p className="text-xs text-muted-foreground">
                 {pending
-                  ? `${pending.area} · delivery in ${deliveryWindow(pending.etaMinutes)}`
+                  ? (addressZone({ serviceable: true, etaMinutes: pending.etaMinutes, quick: pending.quick, query: pending.query, area: pending.area }) === "quick"
+                    ? `${pending.area} · delivery in ${deliveryWindow(pending.etaMinutes)}`
+                    : `${pending.area} · Standard delivery`)
                   : "We'll check if we deliver to your area."}
               </p>
             </div>

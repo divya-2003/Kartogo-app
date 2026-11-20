@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { MapPin, Search, ShoppingBag, Loader2, XCircle, Send } from "lucide-react";
 import { checkServiceability } from "@/lib/serviceability.functions";
-import { useLocation } from "@/lib/store";
+import { useLocation, addressZone } from "@/lib/store";
 import { toast } from "sonner";
 
 export function LocationGate() {
@@ -32,7 +32,9 @@ export function LocationGate() {
           etaMinutes: result.etaMinutes ?? undefined,
           quick: result.quick,
         });
-        toast.success(result.reason);
+        // Minutes are only promised where Quick delivery reaches.
+        const quickHere = addressZone({ serviceable: true, etaMinutes: result.etaMinutes ?? undefined, quick: result.quick, query: query.trim(), area: result.area ?? query.trim() }) === "quick";
+        toast.success(quickHere ? result.reason : `Great news — we deliver to ${result.area ?? "your area"}!`);
       } else {
         setDenied({ reason: result.reason, pincode: result.pincode ?? null });
       }
