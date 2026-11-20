@@ -189,7 +189,9 @@ function LocationPickerClient({
       baseQuery: pending.query,
       label: profile,
     });
-    toast.success(`Delivering to ${pending.area} in ${deliveryWindow(pending.etaMinutes)}`);
+    // Minutes are only promised where Quick delivery reaches.
+    const quickHere = addressZone({ serviceable: true, etaMinutes: pending.etaMinutes, quick: pending.quick, query: pending.query, area: pending.area }) === "quick";
+    toast.success(quickHere ? `Delivering to ${pending.area} in ${deliveryWindow(pending.etaMinutes)}` : `Delivering to ${pending.area}`);
     setOpen(false);
   };
 
