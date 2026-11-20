@@ -153,3 +153,4 @@
 - [x] Checkout addresses look like saved addresses (label, Quick available / Standard only); picking one switches Quick/Standard
 - [x] Back from a store/category opened on Home returns to Home
 - [x] Home delivery minutes only where Quick delivery reaches
+- [x] Remove the "Customer app" buttons from the admin "Open other portals" page

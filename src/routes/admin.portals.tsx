@@ -1,8 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { enterCustomerMode } from "@/lib/portal-mode";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Boxes, Bike, ShoppingBag, ExternalLink, Printer } from "lucide-react";
+import { Boxes, Bike, ExternalLink, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { listPortalTargetsFn, openPortalAsAdminFn, type PortalTargets } from "@/lib/admin-portal.functions";
 
@@ -27,18 +26,11 @@ function PortalsPage() {
       .catch(() => toast.error("Could not load the portals list"));
   }, []);
 
-  // Any portal session left on this device would bounce the customer app
-  // straight back to that portal, so clear them before opening the shop.
+  // Clear any other portal session on this device before opening the chosen one.
   const clearPortalSessions = () => {
     for (const k of ["qk_delivery_token", "qk_delivery_driver", "qk_supplier_token", "qk_supplier", "qk_printer_token", "qk_printer"]) {
       try { localStorage.removeItem(k); } catch { /* noop */ }
     }
-  };
-
-  const openCustomer = (to: "/" | "/categories") => {
-    clearPortalSessions();
-    enterCustomerMode();
-    nav({ to });
   };
 
   const open = async (role: "supplier" | "delivery" | "printer", refId: string) => {
@@ -110,14 +102,6 @@ function PortalsPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-border bg-card p-4">
-        <h2 className="flex items-center gap-2 font-display text-lg font-bold"><ShoppingBag className="h-5 w-5 text-primary" /> Customer app</h2>
-        <p className="mt-1 text-xs text-muted-foreground">Opening the shop signs this device out of any supplier or delivery portal session.</p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => openCustomer("/")}><ExternalLink /> Open customer home</Button>
-          <Button variant="outline" onClick={() => openCustomer("/categories")}><ExternalLink /> Markets & categories</Button>
-        </div>
-      </section>
     </div>
   );
 }
