@@ -33,3 +33,5 @@
 - Signed-in carts are saved per phone on the server and merged with the device's guest cart on login (larger quantity wins), so logout empties the device without losing the account's cart.
 - Food dishes live per kitchen in the database and are managed from the kitchen portal; the static food list only supplies kitchen details and a fallback, and order prices are re-read from the database.
 - Partner Studio (furniture sellers and service providers) reuses the signed supplier token with a studio:<partnerId> vendor ref; every Studio server function re-resolves the partner from the token and its supplier_phone and checks the business kind server-side, so sellers only ever reach their own business and allowed sections.
+- Admin server functions authorize with requireActiveAdmin or requireAdminPermission (admin-session.server), never the token signature alone, so disabling a sub-admin takes effect on the next request.
+- Seller-triggered customer notifications use fixed wording and only reach customers who already contacted that business; seller-typed text is shown inside the app, never pushed.

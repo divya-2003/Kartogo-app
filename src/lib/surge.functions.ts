@@ -93,8 +93,7 @@ export const setSurgeConfigFn = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    await (await import("./admin-session.server")).requireActiveAdmin(data.adminToken);
 
     const { data: row, error } = await supabaseAdmin
       .from("surge_config")

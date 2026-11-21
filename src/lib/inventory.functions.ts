@@ -313,13 +313,20 @@ export const listInventoryTransactionsFn = createServerFn({ method: "POST" })
     limit: Math.min(500, Math.max(20, Math.floor(Number(d?.limit) || 100))),
   }))
   .handler(async ({ data }) => {
-    await authorize(data.adminToken, data.supplierToken);
+    const actor = await authorize(data.adminToken, data.supplierToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (data.productId) await assertCanTouch(actor, data.productId);
+    // Suppliers only ever see stock history for products in their own
+    // categories: read a wider window, then keep their rows only.
+    const scoped = actor.kind === "supplier" && !data.productId;
     let q = supabaseAdmin.from("inventory_transactions").select("*")
-      .order("created_at", { ascending: false }).limit(data.limit);
+      .order("created_at", { ascending: false }).limit(scoped ? data.limit * 5 : data.limit);
     if (data.productId) q = q.eq("product_id", data.productId);
     const { data: rows } = await q;
-    return { transactions: rows ?? [] };
+    if (!scoped) return { transactions: rows ?? [] };
+    const cats = await productCategories();
+    const mine = new Set(actor.categories ?? []);
+    return { transactions: (rows ?? []).filter((r) => mine.has(cats[r.product_id as string] ?? "")).slice(0, data.limit) };
   });
 
 // --------------------------------------------------------- purchase orders
@@ -328,12 +335,18 @@ export const listPurchaseOrdersFn = createServerFn({ method: "POST" })
     adminToken: str(d?.adminToken, 500), supplierToken: str(d?.supplierToken, 500),
   }))
   .handler(async ({ data }) => {
-    await authorize(data.adminToken, data.supplierToken);
+    const actor = await authorize(data.adminToken, data.supplierToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const [{ data: orders }, { data: lines }] = await Promise.all([
-      supabaseAdmin.from("purchase_orders").select("*").order("created_at", { ascending: false }).limit(200),
-      supabaseAdmin.from("purchase_order_items").select("*"),
-    ]);
+    const { data: allOrders } = await supabaseAdmin.from("purchase_orders").select("*").order("created_at", { ascending: false }).limit(200);
+    let orders = allOrders ?? [];
+    if (actor.kind === "supplier") {
+      // Suppliers only see purchase orders whose every item is in their categories.
+      const owned = await supplierOwnedPurchaseOrders(actor, orders.map((o) => o.id as string));
+      orders = orders.filter((o) => owned.has(o.id as string));
+    }
+    const poIds = orders.map((o) => o.id as string);
+    const { data: lines } = await supabaseAdmin.from("purchase_order_items").select("*")
+      .in("purchase_order_id", poIds.length ? poIds : ["00000000-0000-0000-0000-000000000000"]);
     const byPo = new Map<string, typeof lines>();
     for (const l of lines ?? []) {
       const k = l.purchase_order_id as string;

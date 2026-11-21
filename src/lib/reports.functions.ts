@@ -142,8 +142,7 @@ export type SalesDataset = {
 export const getSalesDatasetFn = createServerFn({ method: "POST" })
   .inputValidator((data: { adminToken: string }) => ({ adminToken: String(data?.adminToken ?? "") }))
   .handler(async ({ data }) => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    await (await import("./admin-session.server")).requireActiveAdmin(data.adminToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { CATALOG, PRODUCT_CATEGORY } = await import("./server-catalog.server");
 
@@ -268,8 +267,7 @@ export type DailyDataset = {
 export const getDailySummaryFn = createServerFn({ method: "POST" })
   .inputValidator((data: { adminToken: string }) => ({ adminToken: String(data?.adminToken ?? "") }))
   .handler(async ({ data }) => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    await (await import("./admin-session.server")).requireActiveAdmin(data.adminToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { CATALOG, PRODUCT_CATEGORY } = await import("./server-catalog.server");
 
@@ -366,8 +364,7 @@ export type ProductRow = {
 export const getProductAnalyticsFn = createServerFn({ method: "POST" })
   .inputValidator((data: { adminToken: string }) => ({ adminToken: String(data?.adminToken ?? "") }))
   .handler(async ({ data }) => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    await (await import("./admin-session.server")).requireActiveAdmin(data.adminToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { CATALOG, PRODUCT_CATEGORY } = await import("./server-catalog.server");
 
@@ -453,8 +450,7 @@ export type VendorRow = {
 export const getVendorReportFn = createServerFn({ method: "POST" })
   .inputValidator((data: { adminToken: string }) => ({ adminToken: String(data?.adminToken ?? "") }))
   .handler(async ({ data }) => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    await (await import("./admin-session.server")).requireActiveAdmin(data.adminToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { CATALOG, PRODUCT_CATEGORY } = await import("./server-catalog.server");
     const catById: Record<string, string> = {};
@@ -525,8 +521,7 @@ export type RiderRow = {
 export const getRiderReportFn = createServerFn({ method: "POST" })
   .inputValidator((data: { adminToken: string }) => ({ adminToken: String(data?.adminToken ?? "") }))
   .handler(async ({ data }) => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    await (await import("./admin-session.server")).requireActiveAdmin(data.adminToken);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const [ordersRes, driversRes, reviewsRes] = await Promise.all([

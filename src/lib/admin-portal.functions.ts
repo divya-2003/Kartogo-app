@@ -13,8 +13,8 @@ export type PortalTargets = {
 const tokenSchema = z.string().min(1).max(800);
 
 async function requireAdmin(token: string) {
-  const { verifyAdminToken } = await import("./auth-tokens.server");
-  if (!verifyAdminToken(token)) throw new Error("Admin authorization required");
+  // Checks the admin account is still active, not just the token signature.
+  await (await import("./admin-session.server")).requireAdminPermission(token, "sub_admins");
 }
 
 export const listPortalTargetsFn = createServerFn({ method: "POST" })

@@ -10,10 +10,25 @@ async function sha(text: string): Promise<string> {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 40);
 }
 
+/** True when the token is a valid customer, seller, rider, printer or kitchen session. */
+async function hasSignedInAccount(token: string | undefined): Promise<boolean> {
+  if (!token) return false;
+  const t = await import("./auth-tokens.server");
+  try {
+    return !!(
+      t.verifyCustomerToken(token) || t.verifySupplierToken(token) || t.verifyDeliveryToken(token) ||
+      t.verifyPrinterToken(token) || t.verifyKitchenToken(token)
+    );
+  } catch {
+    return false;
+  }
+}
+
 export const translateUiFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({
     lang: z.string().refine(c => LANGUAGE_CODES.includes(c) && c !== "en"),
     texts: z.array(z.string().max(400)).min(1).max(60),
+    token: z.string().max(1200).optional(),
   }).parse(d))
   .handler(async ({ data }): Promise<{ translations: Record<string, string>; error?: string }> => {
     const texts = Array.from(new Set(data.texts.map(t => t.trim()).filter(isTranslatableText)));
@@ -33,6 +48,10 @@ export const translateUiFn = createServerFn({ method: "POST" })
       if (hit != null) out[t] = hit; else missing.push({ text: t, hash: hashes[i] });
     });
     if (missing.length === 0) return { translations: out };
+
+    // Saved translations are free for everyone, but asking the AI for new
+    // ones (which costs credits) needs a signed-in Kartogo account.
+    if (!(await hasSignedInAccount(data.token))) return { translations: out };
 
     const language = LANGUAGES.find(l => l.code === data.lang)!;
     try {

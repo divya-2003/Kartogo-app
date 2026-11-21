@@ -25,6 +25,8 @@ async function authorizeOrderParty(
     if ((order as { delivery_boy_id?: string | null }).delivery_boy_id !== driver.driverId) {
       throw new Error("This order isn't assigned to you");
     }
+    // A rider blocked by the admin loses chat and call access immediately.
+    await (await import("./driver-access.server")).assertDriverActive(driver.driverId);
     return { role: "driver", id: driver.driverId, order };
   }
   const customer = verifyCustomerToken(token);

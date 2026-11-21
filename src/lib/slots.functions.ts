@@ -62,8 +62,7 @@ export const saveDeliverySlotFn = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin access required");
+    await (await import("./admin-session.server")).requireActiveAdmin(data.adminToken);
     if (!data.label) throw new Error("Give the slot a name customers will understand");
 
     const row = {
@@ -93,8 +92,7 @@ export const deleteDeliverySlotFn = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin access required");
+    await (await import("./admin-session.server")).requireActiveAdmin(data.adminToken);
     if (!data.id) throw new Error("Missing slot");
     const { error } = await supabaseAdmin.from("delivery_slots").delete().eq("id", data.id);
     if (error) {

@@ -63,8 +63,7 @@ export const setRefundConfigFn = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    await (await import("./admin-session.server")).requireActiveAdmin(data.adminToken);
 
     const { error } = await supabaseAdmin
       .from("refund_config")
@@ -86,8 +85,7 @@ export const listRefundAuditLogFn = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    await (await import("./admin-session.server")).requireActiveAdmin(data.adminToken);
 
     const { data: rows, error } = await supabaseAdmin
       .from("refund_audit_log")

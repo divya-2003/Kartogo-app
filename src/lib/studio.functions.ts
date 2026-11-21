@@ -386,8 +386,10 @@ export const appointmentActionFn = createServerFn({ method: "POST" })
       const msgs: Partial<Record<string, [string, string]>> = {
         CONFIRMED: ["BOOKING_CONFIRMED", `${label}${ref} is confirmed.`],
         RESCHEDULED: ["BOOKING_RESCHEDULED", `${label}${ref} moved to ${data.date} at ${data.time}.`],
-        REJECTED: ["BOOKING_CANCELLED", `${label}${ref} couldn't be accepted by the seller.${data.note ? ` ${data.note}` : ""}`],
-        CANCELLED: ["BOOKING_CANCELLED", `${label}${ref} has been cancelled by the seller.${data.note ? ` ${data.note}` : ""}`],
+        // Fixed wording only: the seller's own note stays in the booking history
+        // and is never forwarded inside a notification.
+        REJECTED: ["BOOKING_CANCELLED", `${label}${ref} couldn't be accepted by the seller.`],
+        CANCELLED: ["BOOKING_CANCELLED", `${label}${ref} has been cancelled by the seller.`],
         COMPLETED: ["BOOKING_COMPLETED", `${label}${ref} is complete. Thanks for visiting!`],
       };
       const m = msgs[status];
@@ -441,7 +443,20 @@ export const createSellerAppointmentFn = createServerFn({ method: "POST" })
         await d.from("mp_enquiries").update({ status: "CONVERTED", booking_id: ins.id, updated_at: new Date().toISOString() }).eq("id", data.enquiryId);
         await d.from("mp_enquiry_events").insert({ enquiry_id: data.enquiryId, actor: "SELLER", kind: "CONVERTED", message: `${data.appointmentType} booked for ${data.date} at ${data.time}` });
       }
-      await notifyCustomer(phone, { type: "BOOKING_CONFIRMED", refId: ins.id, body: `${data.appointmentType} with ${partner.name} is confirmed for ${data.date} at ${data.time}.` });
+      // Only notify people who already reached out to this business (an enquiry
+      // or an earlier booking), so a seller can't message arbitrary numbers.
+      // The wording is fixed; the seller's typed text is never forwarded.
+      let knownCustomer = !!data.enquiryId;
+      if (!knownCustomer) {
+        const [{ count: priorBookings }, { count: priorEnquiries }] = await Promise.all([
+          d.from("mp_bookings").select("id", { count: "exact", head: true }).eq("partner_id", partner.id).eq("customer_phone", phone).neq("id", ins.id),
+          d.from("mp_enquiries").select("id", { count: "exact", head: true }).eq("partner_id", partner.id).eq("customer_phone", phone),
+        ]);
+        knownCustomer = (priorBookings ?? 0) > 0 || (priorEnquiries ?? 0) > 0;
+      }
+      if (knownCustomer) {
+        await notifyCustomer(phone, { type: "BOOKING_CONFIRMED", refId: ins.id, body: `Your appointment with ${partner.name} is confirmed for ${data.date} at ${data.time}.` });
+      }
       return { id: ins.id as string, code: ins.booking_code as string };
     });
   });
@@ -514,13 +529,21 @@ export const respondEnquiryFn = createServerFn({ method: "POST" })
     const { requireStudio, studioResult, StudioError, notifyCustomer } = await import("./studio.server");
     return studioResult(async () => {
       const { partner, d } = await requireStudio(data.token, { partnerId: data.partnerId, page: "enquiries", write: true });
-      const { data: e } = await d.from("mp_enquiries").select("id,customer_phone,status,listing:mp_listings(name)").eq("id", data.id).eq("partner_id", partner.id).maybeSingle();
+      const { data: e } = await d.from("mp_enquiries").select("id,customer_phone,status,listing_id,listing:mp_listings(name)").eq("id", data.id).eq("partner_id", partner.id).maybeSingle();
       if (!e) throw new StudioError("Enquiry not found.");
       if (!data.message && !data.status) throw new StudioError("Write a reply or choose a status.");
       const status = data.status ?? (data.message ? "RESPONDED" : e.status);
       if (data.message) {
         await d.from("mp_enquiry_events").insert({ enquiry_id: e.id, actor: "SELLER", kind: "MESSAGE", message: data.message });
-        await notifyCustomer(e.customer_phone, { type: "ENQUIRY_REPLY", refId: `${e.id}:${Date.now()}`.slice(0, 60), body: `${partner.name}: ${data.message}`.slice(0, 280) });
+        // The notification uses fixed wording; the reply itself is read inside
+        // the app on the product page, so sellers can't push arbitrary text.
+        const about = (e as { listing?: { name?: string } | null }).listing?.name;
+        await notifyCustomer(e.customer_phone, {
+          type: "ENQUIRY_REPLY",
+          refId: `${e.id}:${Date.now()}`.slice(0, 60),
+          body: `${partner.name} replied to your enquiry${about ? ` about ${about}` : ""}. Open Kartogo to read it.`.slice(0, 280),
+          path: e.listing_id ? `/item/${e.listing_id}` : undefined,
+        });
       }
       if (status !== e.status) await d.from("mp_enquiry_events").insert({ enquiry_id: e.id, actor: "SELLER", kind: "STATUS", message: `Status changed to ${status.replace("_", " ").toLowerCase()}` });
       await d.from("mp_enquiries").update({ status, updated_at: new Date().toISOString() }).eq("id", e.id);

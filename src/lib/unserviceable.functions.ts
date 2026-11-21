@@ -89,8 +89,7 @@ export const createUnserviceableRequestFn = createServerFn({ method: "POST" })
 export const listUnserviceableRequestsFn = createServerFn({ method: "POST" })
   .inputValidator((data: { adminToken: string }) => ({ adminToken: String(data?.adminToken ?? "") }))
   .handler(async ({ data }) => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    await (await import("./admin-session.server")).requireAdminPermission(data.adminToken, "requests");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
       .from("unserviceable_requests")
@@ -119,8 +118,7 @@ export const updateUnserviceableStatusFn = createServerFn({ method: "POST" })
     status: z.enum(["pending", "reviewed", "closed"]).parse(data?.status),
   }))
   .handler(async ({ data }) => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    await (await import("./admin-session.server")).requireAdminPermission(data.adminToken, "requests");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("unserviceable_requests")

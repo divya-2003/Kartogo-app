@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { Truck, Wrench, Ruler, Layers, Minus, Plus, CalendarClock, Store, MapPin, MessageSquare, Home } from "lucide-react";
 import { getListingFn, createBookingFn } from "@/lib/marketplace.functions";
-import { appointmentOptionsFn, createEnquiryFn } from "@/lib/studio.functions";
+import { appointmentOptionsFn, createEnquiryFn, myEnquiriesFn } from "@/lib/studio.functions";
 import { CUSTOMER_LOCATION_TYPES, stockState } from "@/lib/studio";
 import { Rating, Thumb, FavButton, EmptyState, PageTop } from "@/components/marketplace/Cards";
 import { AddressField, DatePicker, nextDays } from "@/components/marketplace/AddressField";
@@ -56,6 +56,12 @@ function ItemPage() {
   const [asking, setAsking] = useState(false);
   const [question, setQuestion] = useState("");
   const [sending, setSending] = useState(false);
+  // The shopper's own questions about this item and the seller's replies.
+  const myQuestions = useQuery({
+    queryKey: ["my-enquiries", id, customerToken],
+    queryFn: () => myEnquiriesFn({ data: { token: customerToken!, listingId: id } }),
+    enabled: !!customerToken,
+  });
 
   if (isLoading) return <div className="min-h-screen bg-background"><PageTop title="Loading…" /><div className="mx-auto mt-4 h-72 max-w-2xl animate-pulse rounded-2xl bg-secondary" /></div>;
   if (!data) return <div className="min-h-screen bg-background"><PageTop title="Not found" /><div className="mx-auto max-w-2xl p-4"><EmptyState title="This item isn't available" /></div></div>;
@@ -111,6 +117,7 @@ function ItemPage() {
     if (!r.ok) return void toast.error(r.error);
     toast.success("Enquiry sent. The seller will reply soon.");
     setQuestion(""); setAsking(false);
+    myQuestions.refetch();
   };
 
   return (
@@ -156,11 +163,27 @@ function ItemPage() {
                 <button onClick={() => setAsking(false)} className="h-10 flex-1 rounded-xl border border-border text-sm font-bold">Cancel</button>
                 <button disabled={sending} onClick={sendQuestion} className="h-10 flex-1 rounded-xl bg-primary text-sm font-bold text-primary-foreground disabled:opacity-50">{sending ? "Sending…" : "Send enquiry"}</button>
               </div>
-              <p className="text-[11px] text-muted-foreground">The seller replies through a Kartogo notification. Your number stays private.</p>
+              <p className="text-[11px] text-muted-foreground">You'll get a notification when the seller replies, and can read the reply here. Your number stays private.</p>
             </div>
           ) : (
             <button onClick={() => { if (!customerToken) { toast("Please login to ask the seller"); nav({ to: "/login", search: { redirect: `/item/${l.id}` } }); return; } setAsking(true); }} className="flex w-full items-center justify-center gap-1.5 rounded-2xl border border-border bg-card p-3 text-sm font-bold text-primary"><MessageSquare className="h-4 w-4" />Ask the seller</button>
           ))}
+          {isFurniture && (myQuestions.data?.length ?? 0) > 0 && (
+            <div className="space-y-2 rounded-2xl border border-border bg-card p-3">
+              <div className="flex items-center gap-1.5 text-sm font-bold"><MessageSquare className="h-4 w-4" />Your questions</div>
+              {myQuestions.data!.map((q: { id: string; events: { actor: string; message: string; created_at: string }[] }) => (
+                <div key={q.id} className="space-y-1.5 border-t border-border pt-2 first:border-t-0 first:pt-0">
+                  {q.events.map((ev, i) => (
+                    <div key={i} className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${ev.actor === "SELLER" ? "bg-secondary text-foreground" : "ml-auto bg-primary/10 text-foreground"}`}>
+                      <div className="text-[10px] font-bold uppercase text-muted-foreground">{ev.actor === "SELLER" ? l.partner.name : "You"}</div>
+                      <div className="whitespace-pre-wrap break-words">{ev.message}</div>
+                    </div>
+                  ))}
+                  {!q.events.some((ev) => ev.actor === "SELLER") && <div className="text-xs text-muted-foreground">Waiting for the seller to reply.</div>}
+                </div>
+              ))}
+            </div>
+          )}
 
           {checkout && (
             <div className="space-y-3 rounded-2xl border border-border bg-card p-4">

@@ -82,8 +82,7 @@ export const getRecommendationSettingsFn = createServerFn({ method: "POST" })
 export const saveRecommendationSettingsFn = createServerFn({ method: "POST" })
   .inputValidator(validateSettingsInput)
   .handler(async ({ data }) => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    await (await import("./admin-session.server")).requireActiveAdmin(data.adminToken);
     const { saveSettings } = await import("./recommendations-operations.server");
     return saveSettings(data.settings);
   });
@@ -91,8 +90,7 @@ export const saveRecommendationSettingsFn = createServerFn({ method: "POST" })
 export const rebuildRecommendationsFn = createServerFn({ method: "POST" })
   .inputValidator((data: { adminToken?: string }) => ({ adminToken: cleanString(data?.adminToken, 800) }))
   .handler(async ({ data }) => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    await (await import("./admin-session.server")).requireActiveAdmin(data.adminToken);
     const { rebuildAll } = await import("./recommendations-operations.server");
     return rebuildAll();
   });

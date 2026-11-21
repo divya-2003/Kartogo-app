@@ -122,8 +122,7 @@ export const confirmWalletTopupFn = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    await (await import("./admin-session.server")).requireActiveAdmin(data.adminToken);
     if (!data.topupId) throw new Error("Top-up id required");
 
     const { data: row } = await supabaseAdmin
@@ -169,8 +168,7 @@ export const confirmWalletTopupFn = createServerFn({ method: "POST" })
 export const listPendingTopupsFn = createServerFn({ method: "POST" })
   .inputValidator((data: { adminToken?: string }) => ({ adminToken: data?.adminToken ? String(data.adminToken) : "" }))
   .handler(async ({ data }) => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) return { topups: [] as (TopupRow & { phone: string })[] };
+    if (!(await (await import("./admin-session.server")).isActiveAdmin(data.adminToken))) return { topups: [] as (TopupRow & { phone: string })[] };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows } = await supabaseAdmin
       .from("wallet_topups")

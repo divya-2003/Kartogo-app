@@ -23,6 +23,20 @@ function tooNoisy(target: object): boolean {
   return n > MAX_CHANGES;
 }
 
+/** Any signed-in session on this device; the server only translates new text for signed-in people. */
+function sessionToken(): string | undefined {
+  for (const key of ["qk_customer_token", "qk_supplier_token", "qk_delivery_token", "qk_printer_token", "qk_kitchen_token"]) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw || raw === "null") continue;
+      let v: unknown = raw;
+      try { v = JSON.parse(raw); } catch { /* raw (unquoted) token */ }
+      if (typeof v === "string" && v.length > 10) return v;
+    } catch { /* storage unavailable */ }
+  }
+  return undefined;
+}
+
 function readCache(lang: string): Record<string, string> {
   try { return JSON.parse(localStorage.getItem(`qk_tr_${lang}`) || "{}") as Record<string, string>; } catch { return {}; }
 }
@@ -151,7 +165,7 @@ function startEngine(lang: string): Engine {
     batch.forEach(k => { pending.delete(k); inflight.add(k); });
     if (batch.length === 0) return;
     try {
-      const res = await translateUiFn({ data: { lang, texts: batch } });
+      const res = await translateUiFn({ data: { lang, texts: batch, token: sessionToken() } });
       if (stopped) return;
       Object.entries(res.translations).forEach(([k, v]) => deliver(k, v));
       writeCache(lang, cache);

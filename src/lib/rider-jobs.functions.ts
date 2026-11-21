@@ -133,8 +133,7 @@ export const adminServiceOrdersFn = createServerFn({ method: "POST" })
 export const adminCancelServiceOrderFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: z.string(), id: z.string().uuid() }).parse(d))
   .handler(async ({ data }) => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.token)) return { ok: false };
+    if (!(await (await import("./admin-session.server")).isActiveAdmin(data.token))) return { ok: false };
     const d = await db();
     const { data: row } = await d.from("service_orders").update({ status: "CANCELLED" }).eq("id", data.id).not("status", "in", "(DELIVERED,COMPLETED,CANCELLED)").select("id,kind,order_code,customer_phone").maybeSingle();
     if (row?.customer_phone) {

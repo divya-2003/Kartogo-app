@@ -294,8 +294,7 @@ const ADMIN_STATUSES = ["BOOKING_REQUESTED", "PROVIDER_CONFIRMED", "PROFESSIONAL
 export const adminListBookingsFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: z.string().optional() }).parse(d))
   .handler(async ({ data }) => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.token)) return [];
+    if (!(await (await import("./admin-session.server")).isActiveAdmin(data.token))) return [];
     const s = await db();
     const { data: rows } = await s.from("mp_bookings").select(BOOKING_SELECT).order("created_at", { ascending: false }).limit(200);
     return rows ?? [];
@@ -307,8 +306,7 @@ export const adminUpdateBookingFn = createServerFn({ method: "POST" })
     quoteAmount: z.number().min(0).max(10_000_000).optional(), quoteNote: z.string().max(500).optional(),
   }).parse(d))
   .handler(async ({ data }) => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.token)) return { ok: false };
+    if (!(await (await import("./admin-session.server")).isActiveAdmin(data.token))) return { ok: false };
     const s = await db();
     const patch: Record<string, unknown> = { status: data.status, updated_at: new Date().toISOString() };
     if (data.quoteAmount != null) { patch.quote_amount = data.quoteAmount; patch.amount = data.quoteAmount; }

@@ -73,3 +73,20 @@ export async function recordAdminSessionEvent(token: string, action: "login" | "
     details: path ? { path: path.slice(0, 160) } : {},
   });
 }
+
+/** True only for a token whose admin account is still active right now. */
+export async function isActiveAdmin(token: string | null | undefined): Promise<boolean> {
+  if (!token) return false;
+  return (await resolveAccess(token)).valid;
+}
+
+/**
+ * Throws unless the token belongs to an admin whose account is still active.
+ * A signature alone is not enough: disabled or removed sub-admins are refused
+ * on every request. Returns the actor id.
+ */
+export async function requireActiveAdmin(token: string | null | undefined): Promise<string> {
+  const access = token ? await resolveAccess(token) : null;
+  if (!access?.valid) throw new Error("Admin authorization required");
+  return access.userId ?? "main-admin";
+}

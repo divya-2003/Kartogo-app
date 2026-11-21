@@ -84,6 +84,8 @@ export const getDriverRatingSummaryFn = createServerFn({ method: "POST" })
     const { verifyDeliveryToken } = await import("./auth-tokens.server");
     const s = verifyDeliveryToken(data.deliveryToken);
     if (!s) throw new Error("Please log in again");
+    // Riders whose access the admin turned off can no longer read their data.
+    await (await import("./driver-access.server")).assertDriverActive(s.driverId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows } = await supabaseAdmin
       .from("driver_ratings").select("rating, comment, created_at, order_id")

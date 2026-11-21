@@ -117,8 +117,7 @@ export const adminLinkPartnerPhoneFn = createServerFn({ method: "POST" })
     token: z.string(), partnerId: z.string().uuid(), phone: z.string().regex(/^\d{10}$/).nullable(),
   }).parse(d))
   .handler(async ({ data }) => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.token)) return { ok: false };
+    if (!(await (await import("./admin-session.server")).isActiveAdmin(data.token))) return { ok: false };
     const d = await db();
     await d.from("mp_partners").update({ supplier_phone: data.phone }).eq("id", data.partnerId);
     return { ok: true };

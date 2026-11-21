@@ -16,10 +16,9 @@ export type DriverAvailabilityRow = {
 export const listDriverAvailabilityFn = createServerFn({ method: "POST" })
   .inputValidator((data: { adminToken?: string }) => ({ adminToken: String(data?.adminToken ?? "") }))
   .handler(async ({ data }): Promise<DriverAvailabilityRow[]> => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
     // Not an admin (missing / expired token): return nothing instead of
     // throwing, so non-admin surfaces just render an empty roster.
-    if (!verifyAdminToken(data.adminToken)) return [];
+    if (!(await (await import("./admin-session.server")).isActiveAdmin(data.adminToken))) return [];
     const { listRoster } = await import("./driver-roster.server");
     return listRoster();
   });
@@ -33,8 +32,7 @@ export const setDriverAvailabilityFn = createServerFn({ method: "POST" })
     active: !!data?.active,
   }))
   .handler(async ({ data }) => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    await (await import("./admin-session.server")).requireActiveAdmin(data.adminToken);
     const { findRosterDriverById } = await import("./driver-roster.server");
     const driver = await findRosterDriverById(data.driverId);
     if (!driver) throw new Error("Unknown delivery partner");
@@ -79,8 +77,7 @@ export const addDeliveryPartnerFn = createServerFn({ method: "POST" })
     return { adminToken: String(data?.adminToken ?? ""), name, phone, shiftType, shiftStart, shiftEnd, active: data?.active !== false };
   })
   .handler(async ({ data }) => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    await (await import("./admin-session.server")).requireActiveAdmin(data.adminToken);
     const { listRoster, driverIdForPhone } = await import("./driver-roster.server");
 
     const roster = await listRoster();
@@ -130,8 +127,7 @@ export const updateDeliveryPartnerFn = createServerFn({ method: "POST" })
     shiftEnd: String(data?.shiftEnd ?? "").slice(0, 10),
   }))
   .handler(async ({ data }) => {
-    const { verifyAdminToken } = await import("./auth-tokens.server");
-    if (!verifyAdminToken(data.adminToken)) throw new Error("Admin authorization required");
+    await (await import("./admin-session.server")).requireActiveAdmin(data.adminToken);
     const { findRosterDriverById } = await import("./driver-roster.server");
     const driver = await findRosterDriverById(data.driverId);
     if (!driver) throw new Error("Unknown delivery partner");
