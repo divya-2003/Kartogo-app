@@ -8,6 +8,7 @@ import { Heart, Star, ChevronLeft, ChevronRight, Search, Share2, Package, Packag
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ProductShareDialog } from "@/components/ProductShareDialog";
 import { SellerCard, ExpiryLine } from "@/components/SellerCard";
+import { useRestockNotify, RestockSnackbar } from "@/components/RestockNotify";
 
 /** Swipeable image gallery: scroll-snap strip with dots and arrows. */
 function ProductGallery({ images, name, emoji, className = "" }: { images: string[]; name: string; emoji: string; className?: string }) {
@@ -161,6 +162,7 @@ function ProductPage() {
   const { products: allProducts } = useCatalog();
   useEffect(() => { if (p) track.trackProductView(p.id, p.category); }, [p, track]);
   const [shareOpen, setShareOpen] = useState(false);
+  const restock = useRestockNotify({ id, name: p?.name ?? "", category: p?.category ?? "", returnTo: `/product/${id}` });
   const addAll = useMemo(() => together
     .map(r => allProducts.find(x => x.id === r.productId))
     .filter((x): x is NonNullable<typeof x> => Boolean(x && x.stock > 0)), [together, allProducts]);
@@ -431,11 +433,11 @@ function ProductPage() {
               </div>
             ) : (
               <button
-                disabled={p.stock <= 0}
-                onClick={handleAdd}
-                className="rounded-xl bg-primary px-8 py-3 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
+                disabled={p.stock <= 0 && restock.busy}
+                onClick={p.stock <= 0 ? () => void restock.notify() : handleAdd}
+                className="rounded-xl bg-primary px-8 py-3 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
               >
-                {p.stock <= 0 ? "Out of stock" : "Add to Cart"}
+                {p.stock <= 0 ? (restock.busy ? "Please wait…" : "Notify Me") : "Add to Cart"}
               </button>
             )}
             <Link
@@ -533,8 +535,11 @@ function ProductPage() {
         <AiAlsoLike productId={p.id} className="col-span-2 rounded-2xl bg-card p-5 shadow-pop" />
       </div>
 
+      <RestockSnackbar open={restock.open} className="fixed bottom-6 left-1/2 hidden w-[min(92vw,520px)] -translate-x-1/2 lg:block" />
+
       {/* ---------- Sticky bottom action bar (mobile & tablet only) ---------- */}
       <div className="above-bnav fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
+        <RestockSnackbar open={restock.open} className="absolute inset-x-3 bottom-full mb-2" />
         <div className="mx-auto flex max-w-3xl items-center gap-3">
           <Link
             to="/cart"
@@ -570,11 +575,11 @@ function ProductPage() {
             </div>
           ) : (
             <button
-              disabled={p.stock <= 0}
-              onClick={handleAdd}
-              className="flex-1 rounded-xl bg-primary py-3.5 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
+              disabled={p.stock <= 0 && restock.busy}
+              onClick={p.stock <= 0 ? () => void restock.notify() : handleAdd}
+              className="flex-1 rounded-xl bg-primary py-3.5 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
             >
-              {p.stock <= 0 ? "Out of stock" : "Add to Cart"}
+              {p.stock <= 0 ? (restock.busy ? "Please wait…" : "Notify Me") : "Add to Cart"}
             </button>
           )}
         </div>

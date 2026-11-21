@@ -9,6 +9,7 @@ import { CUSTOMER_LOCATION_TYPES, stockState } from "@/lib/studio";
 import { Rating, Thumb, FavButton, EmptyState, PageTop } from "@/components/marketplace/Cards";
 import { AddressField, DatePicker, nextDays } from "@/components/marketplace/AddressField";
 import { useAuth } from "@/lib/store";
+import { useRestockNotify, RestockSnackbar } from "@/components/RestockNotify";
 import { formatINR } from "@/lib/data";
 import type { MpListing } from "@/lib/marketplace";
 
@@ -37,6 +38,7 @@ function ItemPage() {
   const { data, isLoading } = useQuery({ queryKey: ["mp-listing", id], queryFn: () => getListingFn({ data: { id } }) });
   const [variant, setVariant] = useState<string | null>(null);
   const [qty, setQty] = useState(1);
+  const restock = useRestockNotify({ id: `mp:${id}`, name: data?.listing?.name ?? "", category: data?.listing?.category_slug ?? "", returnTo: `/item/${id}` });
   const [install, setInstall] = useState(true);
   const [date, setDate] = useState(nextDays(3)[2].iso);
   const [address, setAddress] = useState<{ line: string; landmark?: string }>({ line: "" });
@@ -232,6 +234,7 @@ function ItemPage() {
         </div>
       </div>
       <div className="above-bnav fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 p-3 backdrop-blur">
+        <RestockSnackbar open={restock.open} className="absolute inset-x-3 bottom-full mx-auto mb-2 max-w-2xl" />
         <div className="mx-auto flex max-w-2xl gap-2">
           {visit ? (
             <>
@@ -245,9 +248,15 @@ function ItemPage() {
                   <Store className="h-4 w-4" /> Visit store
                 </button>
               )}
-              <button disabled={busy || (l.stock_qty != null && l.stock_qty <= 0)} onClick={buy} className="h-12 flex-1 rounded-xl bg-primary font-bold text-primary-foreground disabled:opacity-50">
-                {l.stock_qty != null && l.stock_qty <= 0 ? "Out of stock" : busy ? "Placing order…" : checkout ? "Place order" : "Buy Now"}
-              </button>
+              {l.stock_qty != null && l.stock_qty <= 0 ? (
+                <button disabled={restock.busy} onClick={() => void restock.notify()} className="h-12 flex-1 rounded-xl bg-primary font-bold text-primary-foreground disabled:opacity-50">
+                  {restock.busy ? "Please wait…" : "Notify Me"}
+                </button>
+              ) : (
+                <button disabled={busy} onClick={buy} className="h-12 flex-1 rounded-xl bg-primary font-bold text-primary-foreground disabled:opacity-50">
+                  {busy ? "Placing order…" : checkout ? "Place order" : "Buy Now"}
+                </button>
+              )}
             </>
           )}
         </div>

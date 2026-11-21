@@ -257,11 +257,6 @@ function Index() {
             </div>
           )}
 
-          {section === "shop" && quickAvailable && (
-            <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-saffron/15 px-3 py-1 text-xs font-bold text-foreground">
-              <Zap className="h-3.5 w-3.5 shrink-0 fill-saffron text-saffron" /> Quick delivery available — look for the Quick tag
-            </div>
-          )}
         </div>
       </div>
 
