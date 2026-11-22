@@ -172,7 +172,7 @@ export function ProductCard({ p, bestseller, recommendationType, onProductOpen, 
               disabled={notifying || notified}
               className="inline-flex min-w-0 items-center gap-1 rounded-lg border border-saffron bg-saffron/15 px-2.5 py-1.5 text-left text-xs font-bold leading-tight text-foreground transition hover:bg-saffron/30 disabled:opacity-70"
             >
-              <BellRing className="h-3 w-3 shrink-0" /> {notified ? "WILL BE NOTIFIED" : notifying ? "…" : "NOTIFY ME"}
+              <BellRing className="h-3 w-3 shrink-0" /> {notified ? "We will" : notifying ? "…" : "NOTIFY ME"}
             </button>
           ) : inCart ? (
             /* Compact quantity stepper: − count + */

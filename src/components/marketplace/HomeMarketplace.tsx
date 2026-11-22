@@ -30,15 +30,15 @@ export function ShopCategoryStrip({ term = "" }: { term?: string }) {
   const cats = useQuery({ queryKey: ["mp-cats"], queryFn: () => listMpCategoriesFn(), staleTime: 5 * 60_000 });
   const q = term.trim().toLowerCase();
   const categories = sectionCategories((cats.data?.categories ?? []) as MpCategory[], "shop").filter(c => !q || c.name.toLowerCase().includes(q));
-  const row = "grid w-max grid-flow-col auto-cols-[64px] gap-x-3 sm:auto-cols-[76px] sm:gap-x-3.5";
-  if (cats.isLoading) return <div className="-mx-4 overflow-hidden px-4"><div className={row}>{Array.from({ length: 9 }).map((_, i) => <div key={i} className="h-16 w-16 animate-pulse rounded-2xl bg-secondary sm:h-[76px] sm:w-[76px]" />)}</div></div>;
+  const row = "grid w-full grid-flow-col auto-cols-fr gap-x-1 sm:gap-x-3";
+  if (cats.isLoading) return <div className="overflow-hidden"><div className={row}>{Array.from({ length: 9 }).map((_, i) => <div key={i} className="h-16 w-16 mx-auto aspect-square w-full max-w-[76px] animate-pulse rounded-2xl bg-secondary" />)}</div></div>;
   return (
-    <div className="-mx-4 overflow-x-auto overscroll-x-contain px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="overflow-hidden pb-1">
       <nav aria-label="Shop categories" className={row}>
         {categories.map((c, i) => (
           <Link key={c.slug} to="/explore/$slug" params={{ slug: c.slug }} onClick={() => rememberOrigin(c.slug)} className="flex min-w-0 flex-col items-center gap-1.5 text-center">
-            <span className={`grid h-16 w-16 shrink-0 place-items-center rounded-2xl text-3xl sm:h-[76px] sm:w-[76px] sm:text-4xl ${TINTS[i % TINTS.length]}`}>{c.icon}</span>
-            <span className="w-full text-[12px] font-semibold leading-tight text-foreground sm:text-[13px]">{c.name}</span>
+            <span className={`grid aspect-square w-full max-w-[76px] shrink-0 place-items-center rounded-xl text-xl min-[400px]:text-2xl sm:rounded-2xl sm:text-4xl ${TINTS[i % TINTS.length]}`}>{c.icon}</span>
+            <span className="w-full break-words text-[9px] font-semibold leading-tight text-foreground min-[400px]:text-[10px] sm:text-[13px]">{c.name}</span>
           </Link>
         ))}
       </nav>
