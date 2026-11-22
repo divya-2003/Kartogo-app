@@ -5,6 +5,7 @@ import { useCatalog } from "@/lib/store";
 import { CATEGORIES, formatINR, type Product } from "@/lib/data";
 import { ItemEditor } from "@/components/ItemEditor";
 import { toast } from "sonner";
+import { filterInventory, type StockFilter } from "@/lib/inventory-filter";
 
 export const Route = createFileRoute("/admin/inventory")({ component: InventoryAdmin });
 
@@ -14,17 +15,24 @@ function InventoryAdmin() {
   const { products: allProducts, setPrice, setStock, upsert } = useCatalog();
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<Product | null>(null);
+  const [stockFilter, setStockFilter] = useState<StockFilter>("all");
+  const [minStock, setMinStock] = useState("");
+  const [maxStock, setMaxStock] = useState("");
+  const [sort, setSort] = useState<"default" | "stock-asc" | "stock-desc">("default");
 
   // Search across name, unit and category so the admin can jump straight to an
   // item instead of scrolling the whole catalogue.
-  const products = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    if (!term) return allProducts;
-    return allProducts.filter(p => {
-      const cat = CATEGORIES.find(c => c.slug === p.category)?.name ?? p.category;
-      return `${p.name} ${p.unit} ${cat}`.toLowerCase().includes(term);
-    });
-  }, [allProducts, q]);
+  const products = useMemo(
+    () => filterInventory(allProducts, { q, stockFilter, min: minStock, max: maxStock, sort }, slug => CATEGORIES.find(c => c.slug === slug)?.name ?? slug),
+    [allProducts, q, stockFilter, minStock, maxStock, sort],
+  );
+  const counts = useMemo(() => ({
+    all: allProducts.length,
+    out: allProducts.filter(p => p.stock <= 0).length,
+    low: allProducts.filter(p => p.stock > 0 && p.stock <= 5).length,
+    ok: allProducts.filter(p => p.stock > 5).length,
+  }), [allProducts]);
+  const filtersOn = !!q || stockFilter !== "all" || !!minStock || !!maxStock;
 
   return (
     <div className="space-y-5">
@@ -61,6 +69,42 @@ function InventoryAdmin() {
         <span className="text-xs font-semibold text-muted-foreground">{products.length} of {allProducts.length} items</span>
       </div>
 
+      {/* Stock filters: quick chips, a stock-number range and sorting, side by side */}
+      <div className="flex flex-wrap items-center gap-2">
+        {([
+          ["all", "All", counts.all],
+          ["out", "Out of stock", counts.out],
+          ["low", "Low (1–5)", counts.low],
+          ["ok", "In stock (6+)", counts.ok],
+        ] as const).map(([key, label, n]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setStockFilter(key)}
+            aria-pressed={stockFilter === key}
+            className={`rounded-full border px-3 py-1.5 text-xs font-bold transition ${stockFilter === key ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:bg-secondary"}`}
+          >
+            {label} <span className="opacity-75">({n})</span>
+          </button>
+        ))}
+        <div className="flex items-center gap-1.5 rounded-xl border border-input bg-background px-2 py-1 text-xs font-semibold text-muted-foreground">
+          Stock
+          <input type="number" min={0} inputMode="numeric" value={minStock} onChange={e => setMinStock(e.target.value)} placeholder="min" aria-label="Minimum stock" className="w-16 rounded-md border border-input bg-background px-1.5 py-1 text-foreground outline-none focus:ring-2 focus:ring-ring" />
+          to
+          <input type="number" min={0} inputMode="numeric" value={maxStock} onChange={e => setMaxStock(e.target.value)} placeholder="max" aria-label="Maximum stock" className="w-16 rounded-md border border-input bg-background px-1.5 py-1 text-foreground outline-none focus:ring-2 focus:ring-ring" />
+        </div>
+        <select value={sort} onChange={e => setSort(e.target.value as typeof sort)} aria-label="Sort by stock" className="rounded-xl border border-input bg-background px-2 py-1.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-ring">
+          <option value="default">Sort: default</option>
+          <option value="stock-asc">Stock: low to high</option>
+          <option value="stock-desc">Stock: high to low</option>
+        </select>
+        {filtersOn && (
+          <button type="button" onClick={() => { setQ(""); setStockFilter("all"); setMinStock(""); setMaxStock(""); }} className="rounded-full px-3 py-1.5 text-xs font-bold text-primary hover:bg-secondary">
+            Clear filters
+          </button>
+        )}
+      </div>
+
       {editing && (
         <ItemEditor
           product={editing}
@@ -73,7 +117,7 @@ function InventoryAdmin() {
 
       {products.length === 0 && (
         <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">
-          No products match "{q}".
+          No products match these filters.
         </div>
       )}
       {/* Desktop / laptop: table */}

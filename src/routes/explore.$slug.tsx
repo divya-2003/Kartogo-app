@@ -107,8 +107,8 @@ function ExplorePage() {
   return (
     <div className="min-h-screen bg-background pb-28">
       {/* Back returns to wherever the shopper opened this from (Home or Categories); Home when unknown. */}
-      <PageTop title={cat?.name ?? "Explore"} back="/" returnTo={origin} />
-      <div className="mx-auto max-w-2xl space-y-4 px-4 py-4 lg:max-w-5xl">
+      <PageTop title={cat?.name ?? "Explore"} back="/" returnTo={origin} wide />
+      <div className="mx-auto max-w-7xl space-y-4 px-4 py-4 md:px-6 lg:px-8">
         <div className="flex gap-2">
           <label className="flex flex-1 items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
             <Search className="h-4 w-4 text-muted-foreground" />
@@ -145,19 +145,19 @@ function ExplorePage() {
             )}
             {topPicks.length > 0 && (
               <section>
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">{topPicks.map(t => <TopPick key={t.key} rank={t.rank}>{t.el}</TopPick>)}</div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">{topPicks.map(t => <TopPick key={t.key} rank={t.rank}>{t.el}</TopPick>)}</div>
               </section>
             )}
             {restProducts.length > 0 && (
               <section>
                 <h2 className="mb-2 font-display text-base font-bold">Delivered fast</h2>
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">{restProducts.slice(0, 40).map(p => <ProductCard key={p.id} p={p} />)}</div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">{restProducts.slice(0, 40).map(p => <ProductCard key={p.id} p={p} />)}</div>
               </section>
             )}
             {restListings.length > 0 ? (
               <section>
                 {(restProducts.length > 0 || topPicks.length > 0) && <h2 className="mb-2 font-display text-base font-bold">{restProducts.length > 0 ? "More from local stores" : "More products"}</h2>}
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">{restListings.map(l => <ListingCard key={l.id} l={l} />)}</div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">{restListings.map(l => <ListingCard key={l.id} l={l} />)}</div>
               </section>
             ) : legacyProducts.length === 0 && shown.length === 0 && (
               <EmptyState title="Nothing here yet" body={q || filter !== "all" ? "Try a different search or filter." : "New partners are joining soon."} />

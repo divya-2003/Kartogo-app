@@ -186,7 +186,7 @@ export function EmptyState({ title, body, children }: { title: string; body?: st
   );
 }
 
-export function PageTop({ title, back = "/", returnTo }: { title: string; back?: string; returnTo?: string | null }) {
+export function PageTop({ title, back = "/", returnTo, wide = false }: { title: string; back?: string; returnTo?: string | null; /** Match full-width pages (category listings). */ wide?: boolean }) {
   const router = useRouter();
   const nav = useNavigate();
   // Single-tap back: use the router's own history so one click always moves.
@@ -200,7 +200,7 @@ export function PageTop({ title, back = "/", returnTo }: { title: string; back?:
   };
   return (
     <div className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
-      <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3 lg:max-w-5xl">
+      <div className={`mx-auto flex items-center gap-3 px-4 py-3 ${wide ? "max-w-7xl md:px-6 lg:px-8" : "max-w-2xl lg:max-w-5xl"}`}>
         <button type="button" onClick={goBack} aria-label="Back"
           className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border hover:bg-secondary">
           <span aria-hidden className="text-lg leading-none">‹</span>

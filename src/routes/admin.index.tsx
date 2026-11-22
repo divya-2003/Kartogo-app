@@ -105,6 +105,9 @@ function Dashboard() {
   const monthlyRevenue = monthRevenueOrders.reduce((s, o) => s + o.total, 0);
   const yearlyRevenue = yearRevenueOrders.reduce((s, o) => s + o.total, 0);
   const lowStock = products.filter(p => p.stock > 0 && p.stock <= 5);
+  const outOfStock = products.filter(p => p.stock <= 0);
+  // Sold-out items lead the alert list, then the ones running low (fewest first).
+  const stockAlerts = [...outOfStock, ...[...lowStock].sort((a, b) => a.stock - b.stock)];
   const pending = orders.filter(o => o.status !== "delivered" && o.status !== "cancelled");
 
 
@@ -125,7 +128,7 @@ function Dashboard() {
         <Stat icon={<IndianRupee className="h-5 w-5" />} label="Today's revenue" value={formatINR(revenue)} onClick={() => setOpenPeriod("today")} />
         <Stat icon={<ShoppingBag className="h-5 w-5" />} label="Today's orders" value={String(todays.length)} />
         <Stat icon={<Truck className="h-5 w-5" />} label="Pending orders" value={String(pending.length)} accent />
-        <Stat icon={<AlertTriangle className="h-5 w-5" />} label="Low stock" value={String(lowStock.length)} warn />
+        <Stat icon={<AlertTriangle className="h-5 w-5" />} label="Out of stock · Low stock" value={`${outOfStock.length} · ${lowStock.length}`} warn />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -236,17 +239,23 @@ function Dashboard() {
 
         <section className="rounded-2xl border border-border bg-card p-5">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-display text-lg font-bold">Low stock alerts</h2>
+            <h2 className="font-display text-lg font-bold">Stock alerts</h2>
             <Link to="/admin/inventory" className="text-xs font-semibold text-primary">Manage</Link>
           </div>
-          {lowStock.length === 0 ? (
+          <div className="mb-2 flex flex-wrap gap-2 text-xs font-semibold">
+            <span className="rounded-md bg-destructive/15 px-2 py-0.5 text-destructive">{outOfStock.length} out of stock</span>
+            <span className="rounded-md bg-saffron/30 px-2 py-0.5">{lowStock.length} running low</span>
+          </div>
+          {stockAlerts.length === 0 ? (
             <div className="text-sm text-muted-foreground">All items well-stocked. ✨</div>
           ) : (
-            <ul className="divide-y divide-border">
-              {lowStock.map(p => (
-                <li key={p.id} className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-2"><span className="text-xl">{p.emoji}</span><span className="font-semibold">{p.name}</span></div>
-                  <span className="rounded-md bg-saffron/30 px-2 py-0.5 text-xs font-bold">{p.stock} left</span>
+            <ul className="max-h-96 divide-y divide-border overflow-y-auto">
+              {stockAlerts.map(p => (
+                <li key={p.id} className="flex items-center justify-between gap-3 py-2">
+                  <div className="flex min-w-0 items-center gap-2"><span className="shrink-0 text-xl">{p.emoji}</span><span className="truncate font-semibold">{p.name}</span></div>
+                  {p.stock <= 0
+                    ? <span className="shrink-0 rounded-md bg-destructive/15 px-2 py-0.5 text-xs font-bold text-destructive">Out of stock</span>
+                    : <span className="shrink-0 rounded-md bg-saffron/30 px-2 py-0.5 text-xs font-bold">{p.stock} left</span>}
                 </li>
               ))}
             </ul>

@@ -43,7 +43,7 @@ function CategoryPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <div className="mx-auto max-w-7xl px-4 py-8 md:px-6">
+      <div className="mx-auto max-w-7xl px-4 py-6 md:px-6 lg:px-8">
         <nav className="mb-3 text-sm text-muted-foreground"><Link to="/" className="hover:text-primary">Home</Link> / <span className="text-foreground">{cat.name}</span></nav>
         <div className="mb-6 flex items-center gap-4">
           <div className={`grid h-16 w-16 place-items-center rounded-2xl ${cat.tint} text-3xl`}>{cat.emoji}</div>
@@ -55,7 +55,7 @@ function CategoryPage() {
         {list.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-muted-foreground">No items in this category yet.</div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {list.map(p => <TopPick key={p.id} rank={rankOf.get(p.id)}><ProductCard p={p} /></TopPick>)}
           </div>
         )}

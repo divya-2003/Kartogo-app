@@ -1,10 +1,14 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { useCart, useCatalog, useAuth, useWishlist } from "@/lib/store";
-import { formatINR, PRODUCTS } from "@/lib/data";
-import { isQuickProduct } from "@/lib/delivery-tier";
+import { useCart, useCatalog, useAuth, useWishlist, useLocation } from "@/lib/store";
+import { formatINR, PRODUCTS, CATEGORIES } from "@/lib/data";
+import { isQuickProduct, locationHasQuick } from "@/lib/delivery-tier";
 import { getProductRatingsFn } from "@/lib/reviews.functions";
-import { Heart, Star, ChevronLeft, ChevronRight, Search, Share2, Package, PackageCheck, Info, Timer, ShoppingCart, Minus, Plus } from "lucide-react";
+import { Heart, Star, ChevronLeft, ChevronRight, Search, Share2, Package, PackageCheck, Info, Timer, ShoppingCart, Minus, Plus, ArrowDown, MapPin, Truck, Store } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { LocationPicker } from "@/components/LocationPicker";
+import { deliveryWindow } from "@/lib/serviceability";
+import { getProductSellerFn } from "@/lib/product-seller.functions";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ProductShareDialog } from "@/components/ProductShareDialog";
 import { SellerCard, ExpiryLine } from "@/components/SellerCard";
@@ -162,6 +166,12 @@ function ProductPage() {
   const { products: allProducts } = useCatalog();
   useEffect(() => { if (p) track.trackProductView(p.id, p.category); }, [p, track]);
   const [shareOpen, setShareOpen] = useState(false);
+  const { location } = useLocation();
+  const { data: seller } = useQuery({
+    queryKey: ["product-seller", id],
+    queryFn: () => getProductSellerFn({ data: { productId: id } }),
+    staleTime: 5 * 60_000,
+  });
   const restock = useRestockNotify({ id, name: p?.name ?? "", category: p?.category ?? "", returnTo: `/product/${id}` });
   const addAll = useMemo(() => together
     .map(r => allProducts.find(x => x.id === r.productId))
@@ -193,7 +203,21 @@ function ProductPage() {
     track.trackAddToCart(p.id);
   };
 
+  const handleBuyNow = () => {
+    if (!inCart) handleAdd();
+    nav({ to: user ? "/checkout" : "/cart" });
+  };
+
   const off = p.mrp && p.mrp > p.price ? p.mrp - p.price : 0;
+  const offPct = p.mrp && off > 0 ? Math.round((off / p.mrp) * 100) : 0;
+  const categoryName = CATEGORIES.find(c => c.slug === p.category)?.name ?? p.category.replace(/-/g, " ");
+  const deliveryLine = !location
+    ? "Set your location to see delivery time"
+    : location.serviceable === false
+      ? "We don't deliver to this location yet"
+      : isQuickProduct(p) && locationHasQuick(location)
+        ? `Delivery in ${deliveryWindow(location.etaMinutes)}`
+        : "Same day delivery";
 
   return (
     <div className="min-h-screen bg-secondary/40 pb-28 lg:pb-10">
@@ -325,11 +349,6 @@ function ProductPage() {
           <ExpiryLine date={p.expiryDate} />
           {p.stock <= 0 && <div className="mt-2 text-sm font-bold text-destructive">Out of stock</div>}
           {lowStock && <div className="mt-2 inline-flex rounded-lg bg-saffron/20 px-2.5 py-1 text-sm font-extrabold text-foreground">Only {p.stock} left — order soon</div>}
-          <nav className="mt-3 text-xs text-muted-foreground">
-            <Link to="/" className="hover:text-primary">Home</Link> /{" "}
-            <Link to="/category/$slug" params={{ slug: p.category }} className="hover:text-primary">{p.category}</Link> /{" "}
-            <span className="text-foreground">{p.name}</span>
-          </nav>
         </div>
 
         <SellerCard productId={p.id} className="mt-3" />
@@ -345,174 +364,177 @@ function ProductPage() {
         <AiAlsoLike productId={p.id} className="mt-3 rounded-2xl bg-card p-4 shadow-pop" />
       </div>
 
-      {/* ---------- Desktop (laptop) layout: two-column ---------- */}
-      <div className="mx-auto hidden max-w-6xl gap-6 px-6 pt-6 lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
-        {/* Left: image panel */}
-        <div className="relative self-start overflow-hidden rounded-3xl bg-card shadow-pop">
-          <div className="aspect-square w-full p-6">
-            <ProductGallery images={gallery} name={p.name} emoji={p.emoji} className="h-full w-full" />
-          </div>
-          <button
-            onClick={() => window.history.back()}
-            aria-label="Go back"
-            className="absolute left-4 top-4 grid h-10 w-10 place-items-center rounded-full border border-border bg-card shadow-pop"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <div className="absolute right-4 top-4 flex items-center gap-2">
-            <Link
-              to="/search"
-              search={{ q: "" }}
-              aria-label="Search products"
-              className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card shadow-pop"
-            >
-              <Search className="h-5 w-5" />
-            </Link>
-            <button
-              onClick={() => setShareOpen(true)}
-              aria-label="Share product"
-              className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card shadow-pop"
-            >
-              <Share2 className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
+      {/* ---------- Desktop (laptop) layout: breadcrumb, image grid left, buying panel right ---------- */}
+      <div className="mx-auto hidden max-w-7xl px-6 pt-4 lg:block">
+        <nav aria-label="Breadcrumb" className="truncate text-sm text-muted-foreground">
+          <Link to="/" className="hover:text-primary">Home</Link> /{" "}
+          <Link to="/category/$slug" params={{ slug: p.category }} className="hover:text-primary">{categoryName}</Link> /{" "}
+          <span className="text-foreground">{p.name}</span>
+        </nav>
 
-        {/* Right: details */}
-        <div className="min-w-0 self-start rounded-3xl bg-card p-6 shadow-pop">
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            {ratingSummary.count > 0 ? (
-              <span className="inline-flex items-center gap-1 rounded-lg bg-leaf/10 px-2 py-0.5 font-bold text-leaf">
-                <Star className="h-3.5 w-3.5 fill-leaf text-leaf" />
-                {ratingSummary.average.toFixed(1)}
-                <span className="font-semibold text-muted-foreground">({ratingSummary.count})</span>
-              </span>
+        <div className="mt-4 grid grid-cols-[minmax(0,7fr)_minmax(0,6fr)] gap-6">
+          {/* Left: every photo at once in a two-column grid */}
+          <div className="relative self-start">
+            {gallery.length === 0 ? (
+              <div className="grid aspect-[4/3] place-items-center rounded-2xl bg-card shadow-pop"><div className="text-[10rem]">{p.emoji}</div></div>
             ) : (
-              <span className="rounded-lg bg-secondary px-2 py-0.5 text-xs font-semibold text-muted-foreground">New</span>
+              <div className="grid grid-cols-2 gap-3">
+                {gallery.map((src, i) => (
+                  <div key={i} className={`overflow-hidden rounded-2xl bg-card shadow-pop ${gallery.length === 1 ? "col-span-2 aspect-[4/3]" : "aspect-[3/4]"}`}>
+                    <img src={src} alt={`${p.name} — image ${i + 1}`} width={768} height={1024} loading={i < 2 ? "eager" : "lazy"} className="h-full w-full object-contain p-3" draggable={false} />
+                  </div>
+                ))}
+              </div>
             )}
-            <span className="text-muted-foreground">|</span>
-            <span className="font-semibold text-muted-foreground">15 mins</span>
+            <button
+              onClick={() => window.history.back()}
+              aria-label="Go back"
+              className="absolute left-3 top-3 grid h-10 w-10 place-items-center rounded-full border border-border bg-card shadow-pop"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <div className="absolute right-3 top-3 flex flex-col gap-2">
+              <button
+                onClick={handleWishlist}
+                aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
+                aria-pressed={wished}
+                className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card shadow-pop"
+              >
+                <Heart className={`h-5 w-5 ${wished ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+              </button>
+              <button
+                onClick={() => setShareOpen(true)}
+                aria-label="Share product"
+                className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card shadow-pop"
+              >
+                <Share2 className="h-5 w-5" />
+              </button>
+            </div>
           </div>
 
-          <h1 className="mt-2 font-display text-3xl font-extrabold leading-snug">{p.name}</h1>
-          <div className="mt-1 text-sm text-muted-foreground">Net quantity: {p.unit}</div>
+          {/* Right: name, price, delivery details and buttons */}
+          <div className="sticky top-4 min-w-0 self-start space-y-4">
+            <div>
+              <h1 className="font-display text-2xl font-bold leading-snug">{p.name}</h1>
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-sm">
+                {ratingSummary.count > 0 ? (
+                  <span className="inline-flex items-center gap-1 rounded-lg bg-leaf/10 px-2 py-0.5 font-bold text-leaf">
+                    <Star className="h-3.5 w-3.5 fill-leaf text-leaf" />
+                    {ratingSummary.average.toFixed(1)}
+                    <span className="font-semibold text-muted-foreground">({ratingSummary.count})</span>
+                  </span>
+                ) : (
+                  <span className="rounded-lg bg-secondary px-2 py-0.5 text-xs font-semibold text-muted-foreground">New</span>
+                )}
+                <span className="text-muted-foreground">Net quantity: {p.unit}</span>
+              </div>
+              <div className="mt-3 flex flex-wrap items-baseline gap-3">
+                {offPct > 0 && <span className="inline-flex items-center font-display text-3xl font-extrabold text-leaf"><ArrowDown className="h-6 w-6" />{offPct}%</span>}
+                {p.mrp && p.mrp > p.price && <span className="font-display text-2xl text-muted-foreground line-through">{formatINR(p.mrp)}</span>}
+                <span className="font-display text-3xl font-extrabold">{formatINR(p.price)}</span>
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground">Inclusive of all taxes{off > 0 ? ` · You save ${formatINR(off)}` : ""}</div>
+              {p.stock <= 0 && <div className="mt-2 text-sm font-bold text-destructive">Out of stock</div>}
+              {lowStock && <div className="mt-2 inline-flex rounded-lg bg-saffron/20 px-2.5 py-1 text-sm font-extrabold text-foreground">Only {p.stock} left — order soon</div>}
+            </div>
 
-          <div className="mt-4 inline-flex items-center rounded-xl bg-leaf px-4 py-2 font-display text-2xl font-extrabold text-primary-foreground">
-            {formatINR(p.price)}
-          </div>
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-            {p.mrp && p.mrp > p.price && (
-              <>
-                <span className="text-muted-foreground">MRP <span className="line-through">{formatINR(p.mrp)}</span></span>
-                <span className="text-muted-foreground">(incl. of all taxes)</span>
-                <span className="font-bold text-leaf">{formatINR(off)} OFF</span>
-              </>
-            )}
-          </div>
+            <section aria-label="Delivery details" className="space-y-2">
+              <h2 className="font-display text-lg font-bold">Delivery details</h2>
+              <div className="rounded-xl bg-card p-3 shadow-pop">
+                <div className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground"><MapPin className="h-3.5 w-3.5" /> Deliver to</div>
+                <LocationPicker variant="chip" />
+              </div>
+              <div className="flex items-center gap-3 rounded-xl bg-card p-3 text-sm shadow-pop">
+                <Truck className="h-5 w-5 shrink-0 text-muted-foreground" />
+                <span>{deliveryLine}</span>
+              </div>
+              {seller && (
+                <div className="flex items-center gap-3 rounded-xl bg-card p-3 text-sm shadow-pop">
+                  <Store className="h-5 w-5 shrink-0 text-muted-foreground" />
+                  <div className="min-w-0">
+                    <div className="truncate">Seller: <span className="font-semibold">{seller.sellerName}</span></div>
+                    <div className="truncate text-xs text-muted-foreground">{seller.sellerType}</div>
+                  </div>
+                </div>
+              )}
+            </section>
 
-          {/* Actions row: side by side */}
-          <div className="mt-5 flex flex-wrap items-center gap-3">
-            {inCart ? (
-              <div className="flex items-center justify-between gap-2 rounded-xl bg-primary px-2 py-1 text-primary-foreground">
-                <button
-                  aria-label="Decrease quantity"
-                  onClick={() => setQty(p.id, inCart.qty - 1)}
-                  className="grid h-11 w-12 place-items-center rounded-lg hover:bg-primary/80"
-                >
-                  <Minus className="h-5 w-5" />
-                </button>
-                <span className="min-w-8 text-center font-display text-lg font-extrabold">{inCart.qty}</span>
-                <button
-                  aria-label="Increase quantity"
-                  disabled={inCart.qty >= Math.min(p.maxPerOrder || Infinity, p.stock)}
-                  onClick={() => setQty(p.id, inCart.qty + 1)}
-                  className="grid h-11 w-12 place-items-center rounded-lg hover:bg-primary/80 disabled:opacity-50"
-                >
-                  <Plus className="h-5 w-5" />
+            {/* Buttons side by side */}
+            {p.stock <= 0 ? (
+              <button
+                disabled={restock.busy}
+                onClick={() => void restock.notify()}
+                className="w-full rounded-xl bg-primary py-3.5 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+              >
+                {restock.busy ? "Please wait…" : "Notify Me"}
+              </button>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {inCart ? (
+                  <div className="flex items-center justify-between rounded-xl border border-border bg-card px-2 py-1">
+                    <button aria-label="Decrease quantity" onClick={() => setQty(p.id, inCart.qty - 1)} className="grid h-11 w-12 place-items-center rounded-lg hover:bg-secondary">
+                      <Minus className="h-5 w-5" />
+                    </button>
+                    <span className="font-display text-lg font-extrabold">{inCart.qty}</span>
+                    <button
+                      aria-label="Increase quantity"
+                      disabled={inCart.qty >= Math.min(p.maxPerOrder || Infinity, p.stock)}
+                      onClick={() => setQty(p.id, inCart.qty + 1)}
+                      className="grid h-11 w-12 place-items-center rounded-lg hover:bg-secondary disabled:opacity-50"
+                    >
+                      <Plus className="h-5 w-5" />
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={handleAdd} className="rounded-xl border border-border bg-card py-3.5 font-display text-base font-bold hover:bg-secondary">
+                    Add to cart
+                  </button>
+                )}
+                <button onClick={handleBuyNow} className="rounded-xl bg-primary py-2 font-display text-base font-extrabold leading-tight text-primary-foreground hover:bg-primary/90">
+                  Buy now
+                  <span className="block text-xs font-semibold opacity-90">at {formatINR(p.price)}</span>
                 </button>
               </div>
-            ) : (
-              <button
-                disabled={p.stock <= 0 && restock.busy}
-                onClick={p.stock <= 0 ? () => void restock.notify() : handleAdd}
-                className="rounded-xl bg-primary px-8 py-3 font-display text-base font-extrabold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
-              >
-                {p.stock <= 0 ? (restock.busy ? "Please wait…" : "Notify Me") : "Add to Cart"}
-              </button>
             )}
-            <Link
-              to="/cart"
-              className="relative inline-flex items-center gap-2 rounded-xl border border-border px-5 py-3 font-bold"
-            >
-              <ShoppingCart className="h-5 w-5" /> View cart
-              {count > 0 && (
-                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[11px] font-bold text-primary-foreground">
-                  {count}
-                </span>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center gap-2 rounded-xl bg-card p-3 shadow-pop">
+                <PackageCheck className="h-5 w-5 shrink-0 text-primary" />
+                <div className="text-xs font-semibold text-muted-foreground">Easy returns &amp; refunds</div>
+              </div>
+              <div className="flex items-center gap-2 rounded-xl bg-card p-3 shadow-pop">
+                <Timer className="h-5 w-5 shrink-0 text-primary" />
+                <div className="text-xs font-semibold text-muted-foreground">{isQuickProduct(p) ? "Superfast delivery" : "Same day delivery"}</div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl bg-card p-4 shadow-pop">
+              <h2 className="font-display text-lg font-bold">Product details</h2>
+              <p className="mt-2 text-sm text-muted-foreground">{p.description}</p>
+              {!!p.maxPerOrder && (
+                <div className="mt-2 text-sm font-semibold text-muted-foreground">Max {p.maxPerOrder} per order</div>
               )}
-            </Link>
-            <button
-              onClick={handleWishlist}
-              aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
-              aria-pressed={wished}
-              className="grid h-12 w-12 place-items-center rounded-xl border border-border bg-card shadow-pop"
-            >
-              <Heart className={`h-5 w-5 ${wished ? "fill-primary text-primary" : "text-muted-foreground"}`} />
-            </button>
-            <Link
-              to="/category/$slug"
-              params={{ slug: p.category }}
-              aria-label={`More in ${p.category}`}
-              className="grid h-12 w-12 place-items-center rounded-xl border border-border bg-card shadow-pop"
-            >
-              <Package className="h-5 w-5 text-muted-foreground" />
-            </Link>
-          </div>
-
-          <Link
-            to="/category/$slug"
-            params={{ slug: p.category }}
-            className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-3"
-          >
-            <span className="flex min-w-0 items-center gap-2">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-secondary text-lg">{p.emoji}</span>
-              <span className="min-w-0 truncate font-bold">View all {p.category.replace(/-/g, " ")} products</span>
-            </span>
-            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-          </Link>
-
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <div className="flex flex-col items-center gap-1 rounded-2xl bg-secondary/60 p-4 text-center">
-              <PackageCheck className="h-7 w-7 text-primary" />
-              <div className="text-xs font-semibold text-muted-foreground">Easy returns &amp; refunds</div>
+              <ExpiryLine date={p.expiryDate} />
+              <Link
+                to="/category/$slug"
+                params={{ slug: p.category }}
+                className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-2.5"
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-secondary text-base">{p.emoji}</span>
+                  <span className="min-w-0 truncate text-sm font-bold">View all {categoryName} products</span>
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+              </Link>
             </div>
-            <div className="flex flex-col items-center gap-1 rounded-2xl bg-secondary/60 p-4 text-center">
-              <Timer className="h-7 w-7 text-primary" />
-              <div className="text-xs font-semibold text-muted-foreground">{isQuickProduct(p) ? "Superfast delivery" : "Same day delivery"}</div>
-            </div>
-          </div>
 
-          <div className="mt-4">
-            <h2 className="font-display text-lg font-extrabold">Product details</h2>
-            <p className="mt-2 text-sm text-muted-foreground">{p.description}</p>
-            {!!p.maxPerOrder && (
-              <div className="mt-2 text-sm font-semibold text-muted-foreground">Max {p.maxPerOrder} per order</div>
-            )}
-            <ExpiryLine date={p.expiryDate} />
-            {p.stock <= 0 && <div className="mt-2 text-sm font-bold text-destructive">Out of stock</div>}
-            {lowStock && <div className="mt-2 inline-flex rounded-lg bg-saffron/20 px-2.5 py-1 text-sm font-extrabold text-foreground">Only {p.stock} left — order soon</div>}
-            <nav className="mt-3 text-xs text-muted-foreground">
-              <Link to="/" className="hover:text-primary">Home</Link> /{" "}
-              <Link to="/category/$slug" params={{ slug: p.category }} className="hover:text-primary">{p.category}</Link> /{" "}
-              <span className="text-foreground">{p.name}</span>
-            </nav>
+            <SellerCard productId={p.id} />
           </div>
-          <SellerCard productId={p.id} className="mt-4 border border-border shadow-none" />
         </div>
 
         {/* FBT full width on desktop */}
         {addAll.length > 0 && (
-          <div className="col-span-2 rounded-2xl bg-card p-5 shadow-pop">
+          <div className="mt-6 rounded-2xl bg-card p-5 shadow-pop">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="min-w-0">
                 <h2 className="font-display text-lg font-extrabold">Frequently bought together</h2>
@@ -532,7 +554,7 @@ function ProductPage() {
           </div>
         )}
 
-        <AiAlsoLike productId={p.id} className="col-span-2 rounded-2xl bg-card p-5 shadow-pop" />
+        <AiAlsoLike productId={p.id} className="mt-6 rounded-2xl bg-card p-5 shadow-pop" />
       </div>
 
       <RestockSnackbar open={restock.open} className="fixed bottom-6 left-1/2 hidden w-[min(92vw,520px)] -translate-x-1/2 lg:block" />

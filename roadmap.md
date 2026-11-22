@@ -154,3 +154,10 @@
 - [x] Back from a store/category opened on Home returns to Home
 - [x] Home delivery minutes only where Quick delivery reaches
 - [x] Remove the "Customer app" buttons from the admin "Open other portals" page
+
+## Nov 21 batch
+- [x] Sold-out card button reads "WILL BE NOTIFIED" at the same size
+- [x] Remove product page path text on phone and tablet
+- [x] Laptop product page: path on top, photo grid left, price/delivery/seller and Add to cart + Buy now right
+- [x] Admin dashboard shows sold-out items with low stock; inventory filters by stock number
+- [x] Category pages use the full page width on every screen size

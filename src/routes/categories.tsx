@@ -52,7 +52,7 @@ function CategoriesPage() {
     <div className="min-h-screen bg-background pb-24">
       {/* Top bar */}
       <div className="sticky top-0 z-40 border-b border-border bg-background">
-        <div className="mx-auto max-w-2xl px-4 py-3 lg:max-w-7xl lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 py-3 md:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <Link to="/" aria-label="Back" className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border hover:bg-secondary">
               <ChevronLeft className="h-5 w-5" />
@@ -76,7 +76,7 @@ function CategoriesPage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-2xl px-4 py-5 lg:max-w-7xl lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-5 md:px-6 lg:px-8">
         <MarketplaceCategoryGroups term={term} />
 
         {/* Partnered markets */}
