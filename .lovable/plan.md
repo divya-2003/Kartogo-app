@@ -17,50 +17,55 @@
 
 ## Schema conflicts / deviations to note
 - **Edge Functions:** this project's rules forbid new Supabase Edge Functions (TanStack Start). The two "functions" will be server functions (`createServerFn`) — same security, no extra infrastructure.
-- **Consent:** must be added; customers without consent are never listed. Existing customers start as not consented.
+- **Consent:** added as `whatsapp_marketing_opt_in` / `whatsapp_marketing_opt_in_at`; `notification_preferences.promotional_offers` is NOT reused (push consent). Existing customers stay opted out.
+- **Audience:** customers who have never submitted an order. Any `app_orders` row (placed, packed, out_for_delivery, delivered or cancelled) excludes them, matched by normalised phone (`app_orders.customer_phone` = `customers.phone`; app_orders has no customer id column).
+- **24-hour eligibility (assumption):** customer account created more than 24 hours ago, so brand-new sign-ups mid-checkout are not messaged.
 - **Daily limit day boundary:** India time (Asia/Kolkata), midnight reset.
 - **Assumption:** each customer receives this promo once (sent or skipped removes them from the queue). Can add a re-eligibility window later.
 
 ## Execution order
 
 ### 1. Database migration (new)
-- `customers`: add `whatsapp_marketing_consent boolean not null default false`, `whatsapp_consent_at timestamptz`, `promo_sent_at timestamptz`, `promo_skipped boolean not null default false`, `promo_skipped_at timestamptz`, `promo_sent_by text`, `promo_product_id text`.
+- `customers`: add `whatsapp_marketing_opt_in boolean not null default false`, `whatsapp_marketing_opt_in_at timestamptz`, `promo_sent_at timestamptz`, `promo_skipped boolean not null default false`, `promo_skipped_at timestamptz`, `promo_sent_by text`, `promo_product_id text`.
 - Partial index on `promo_sent_at` (for the daily count) and on consent + not sent + not skipped (for the queue).
 - SQL function `claim_whatsapp_promo(p_customer uuid, p_admin text, p_product text)` (SECURITY DEFINER):
   - `pg_advisory_xact_lock(hashtext('kartogo_whatsapp_promo'))` — serializes simultaneous admins.
   - Lock the customer row `FOR UPDATE`; fail if not consented, already sent, or skipped (duplicate prevention).
   - Count `promo_sent_at` within today (IST); fail with "Daily limit of 25 reached" if ≥ 25.
-  - Set `promo_sent_at = now()`, `promo_sent_by`, `promo_product_id`; return remaining count.
-- SQL function `skip_whatsapp_promo(p_customer uuid, p_admin text)` — same lock, sets `promo_skipped`; does not count toward the limit.
+  - Re-check no order exists for the phone and product is still active.
+  - Set `promo_sent_at = now()`, `promo_sent_by`, `promo_product_id`, and insert the `admin_audit_log` row (customer id, admin id, product id, campaign `whatsapp_recommendation`, action `sent`, timestamp) in the same transaction; return remaining count.
+- SQL function `skip_whatsapp_promo(p_customer uuid, p_admin text)` — same lock, sets `promo_skipped` + `promo_skipped_at` and writes the `skipped` audit row in the same transaction; does not count toward the limit.
 - `REVOKE EXECUTE ... FROM public, anon, authenticated`; `GRANT` only to `service_role`. No new RLS policies opening `customers`; existing locked-down access unchanged.
 
 ### 2. Permission (modify)
 - `src/lib/admin-access.shared.ts`: new permission `whatsapp_promos`, path `/admin/whatsapp-recommendations`. Main admin has it automatically; sub-admins only if granted on the Sub-admins page.
 
 ### 3. Server functions (new) — `src/lib/whatsapp-promo.functions.ts` + helper `src/lib/whatsapp-promo.server.ts`
-- `listPendingPromosFn(adminToken)`: `requireAdminPermission(..., "whatsapp_promos")`; returns consented, not sent, not skipped customers with ≥1 delivered order, their order count, last order date, the recommended active product (name, price, image, URL), and today's sent count / remaining of 25.
-- `markPromoSentFn(adminToken, customerId, productId)`: calls `claim_whatsapp_promo`; writes `admin_audit_log`.
-- `skipPromoFn(adminToken, customerId)`: calls `skip_whatsapp_promo`; writes audit.
+- All functions call `requireActiveAdmin` + `requireAdminPermission(..., "whatsapp_promos")`; no public route exposes customer data.
+- `listPendingPromosFn(adminToken)`: opted-in, not sent, not skipped, account older than 24h, zero orders, valid WhatsApp number; returns the suggested product plus a short list of alternative active products, and today's sent count / remaining of 25.
+- Suggestion order: `customer_product_preferences` / `customer_replenishment_predictions` / Buy Again logic (reads customer_events where no orders exist) → most-bought category → best-selling active product.
+- `markPromoSentFn(adminToken, customerId, productId)`: calls `claim_whatsapp_promo` (audit written inside it).
+- `skipPromoFn(adminToken, customerId)`: calls `skip_whatsapp_promo`.
 - Phone numbers are returned only to authorised admins (needed for the chat link).
 
 ### 4. Message + link helper (new) — `src/lib/whatsapp-link.ts` (browser-safe)
-- Normalise phone to E.164 digits without "+" (reuse existing phone normaliser, India default).
-- Personalised text: "Hi {first name}, based on your Kartogo orders we think you'll like {product} at ₹{price}. Order here: {product URL}". Name trimmed/sanitised; text URL-encoded.
+- Normalise phone to E.164 digits with country code, no "+" (reuse existing phone normaliser, India default). Invalid or missing numbers return null: no link is built and the customer is listed as "invalid number" with only Skip available.
+- Personalised text: "Hi {first name}, we think you'll like {product} at ₹{price}. Order here: {product URL}". Name trimmed/sanitised; text URL-encoded.
 - Link: `https://wa.me/<digits>?text=<encoded>` — free Click-to-Chat, no WhatsApp Cloud API.
 
 ### 5. Admin page (new) — `src/routes/admin.whatsapp-recommendations.tsx`, nav entry in `src/routes/admin.tsx`
 - Header: "Sent today: X / 25" counter.
-- List cards: customer name, masked phone, order count, recommended product photo/price, editable message preview.
-- Buttons side by side: **Open WhatsApp** (opens link in new tab), **Mark as Sent**, **Skip**.
+- List cards: customer name, masked phone, product picker (suggested product preselected, admin can change it), message preview that updates with the chosen product.
+- Buttons side by side: **Open WhatsApp** (opens link in new tab; never marks as sent), **Mark as Sent**, **Skip**.
 - Mark as Sent disabled at 25; server error message shown if another admin used the last slot; list refreshes after each action.
 - Uses existing admin layout, cards, buttons and toast.
 
 ### 6. Consent capture (new, minimal)
-- One toggle "Get offers on WhatsApp" in the customer's existing notification preferences area on Profile, saved through a server function that checks the customer session and sets consent + timestamp. No other customer page changes.
+- One toggle "Get offers on WhatsApp" (off by default) in the customer's existing notification preferences area on Profile, saved through a server function that checks the customer session and sets consent + timestamp. No other customer page changes.
 
 ### 7. Tests (new)
 - `whatsapp-link.test.ts`: phone normalisation, encoding, URL format.
-- Rule tests: 25th send succeeds, 26th fails; two simultaneous claims for the last slot → exactly one succeeds; same customer marked twice → second fails; skipped customer cannot be sent; non-consented customer excluded; deleted/out-of-stock product never recommended.
+- Rule tests: non-opted-in excluded; account under 24h excluded; customer with any order (including cancelled) excluded; invalid number gets no link; deleted/out-of-stock product never suggested and rejected on send; admin-changed product saved and audited; opening WhatsApp leaves status unchanged; sent/skip write audit rows; 25th send succeeds, 26th fails (IST day); 5 parallel claims for the last 2 slots → exactly 2 succeed; same customer marked twice → second fails.
 - Browser check: sub-admin without permission is refused; full admin opens page, marks one sent and one skipped; test data cleaned.
 
 ## Impact on existing features
