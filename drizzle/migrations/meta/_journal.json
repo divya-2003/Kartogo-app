@@ -92,6 +92,13 @@
       "when": 1794568649572,
       "tag": "0012_partner_studio_appointment_engine",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1795410522168,
+      "tag": "0013_whatsapp_recommendations",
+      "breakpoints": true
     }
   ]
 }

@@ -687,12 +687,16 @@ export type Database = {
           id: string
           name: string
           phone: string
+          promo_sent_at: string | null
+          promo_skipped: boolean
           referral_code: string | null
           referral_rewarded: boolean
           referred_by: string | null
           saved_addresses: Json
           updated_at: string
           user_id: string | null
+          whatsapp_marketing_opt_in: boolean
+          whatsapp_marketing_opt_in_at: string | null
         }
         Insert: {
           address?: string | null
@@ -701,12 +705,16 @@ export type Database = {
           id?: string
           name?: string
           phone: string
+          promo_sent_at?: string | null
+          promo_skipped?: boolean
           referral_code?: string | null
           referral_rewarded?: boolean
           referred_by?: string | null
           saved_addresses?: Json
           updated_at?: string
           user_id?: string | null
+          whatsapp_marketing_opt_in?: boolean
+          whatsapp_marketing_opt_in_at?: string | null
         }
         Update: {
           address?: string | null
@@ -715,12 +723,16 @@ export type Database = {
           id?: string
           name?: string
           phone?: string
+          promo_sent_at?: string | null
+          promo_skipped?: boolean
           referral_code?: string | null
           referral_rewarded?: boolean
           referred_by?: string | null
           saved_addresses?: Json
           updated_at?: string
           user_id?: string | null
+          whatsapp_marketing_opt_in?: boolean
+          whatsapp_marketing_opt_in_at?: string | null
         }
         Relationships: []
       }
@@ -3721,6 +3733,15 @@ export type Database = {
         Args: { p_driver: string; p_orders: string[]; p_stops: Json }
         Returns: string
       }
+      claim_whatsapp_promo: {
+        Args: {
+          p_admin: string
+          p_customer: string
+          p_limit?: number
+          p_product: string
+        }
+        Returns: number
+      }
       commit_inventory: {
         Args: { p_actor?: string; p_order_id: string }
         Returns: undefined
@@ -3756,6 +3777,12 @@ export type Database = {
         Args: { p_actor?: string; p_items: Json; p_order_id: string }
         Returns: Json
       }
+      skip_whatsapp_promo: {
+        Args: { p_admin: string; p_customer: string }
+        Returns: number
+      }
+      wa_phone_key: { Args: { p: string }; Returns: string }
+      wa_promo_sent_today: { Args: never; Returns: number }
     }
     Enums: {
       assignment_status:
