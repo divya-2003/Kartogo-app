@@ -3781,8 +3781,22 @@ export type Database = {
         Args: { p_admin: string; p_customer: string }
         Returns: number
       }
+      wa_customer_has_order: { Args: { p_customer: string }; Returns: boolean }
+      wa_pending_customers: {
+        Args: { p_offset?: number; p_take?: number }
+        Returns: {
+          created_at: string
+          id: string
+          name: string
+          phone: string
+        }[]
+      }
       wa_phone_key: { Args: { p: string }; Returns: string }
       wa_promo_sent_today: { Args: never; Returns: number }
+      wa_set_consent: {
+        Args: { p_opt_in: boolean; p_phone: string }
+        Returns: boolean
+      }
     }
     Enums: {
       assignment_status:
