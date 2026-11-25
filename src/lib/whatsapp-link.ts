@@ -1,4 +1,5 @@
 import { toE164, validatePhoneNumber } from "./phone";
+import { parsePhoneNumberFromString } from "libphonenumber-js/max";
 import { productShareUrl, PUBLIC_APP_ORIGIN } from "./share-link";
 
 export const WHATSAPP_DAILY_LIMIT = 25;
@@ -7,7 +8,7 @@ export const WHATSAPP_CAMPAIGN = "registered_not_ordered";
 /** The shared legacy normalizer is deliberately followed by strict validation. */
 export function whatsappPhone(raw: string): string | null {
   const number = toE164(raw);
-  return number && validatePhoneNumber(number) ? number.slice(1) : null;
+  return number && validatePhoneNumber(number) && parsePhoneNumberFromString(number)?.isValid() ? number.slice(1) : null;
 }
 
 export function whatsappMessage(name: string, productName: string, productId: string): string {
