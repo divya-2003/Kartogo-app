@@ -1,9 +1,9 @@
 # Roadmap
 
 ## WhatsApp Recommendations — Registered but Not Ordered
-- [ ] Complete consent, atomic sent/skip transactions, audit and eligibility queries
-- [ ] Add permission-gated admin page and customer opt-in/withdrawal settings
-- [ ] Test eligibility, concurrent daily limit, duplicate prevention and signed-in workflows
+- [x] Complete consent, atomic sent/skip transactions, audit and eligibility queries
+- [x] Add permission-gated admin page and customer opt-in/withdrawal settings
+- [x] Test eligibility, concurrent daily limit, duplicate prevention and signed-in workflows
 
 ## Multi-stop trips and customer fixes
 - [x] Implement persisted pickup-before-drop trips with safe side-by-side store batching
