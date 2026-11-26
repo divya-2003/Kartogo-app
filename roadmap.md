@@ -1,5 +1,11 @@
 # Roadmap
 
+## Reference opening and Home experience
+- [ ] Preserve branded splash and add a short white service introduction
+- [ ] Adapt blue tabs, location/search controls and dynamic horizontal categories
+- [ ] Reuse live catalog and service sections, floating cart and delivery benefit
+- [ ] Connect Home / Categories / Buy Again / Offers navigation and verify layouts/flows
+
 ## WhatsApp Recommendations — Registered but Not Ordered
 - [x] Complete consent, atomic sent/skip transactions, audit and eligibility queries
 - [x] Add permission-gated admin page and customer opt-in/withdrawal settings
