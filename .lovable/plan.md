@@ -26,20 +26,20 @@ Track work in `roadmap.md`; server boundaries in `AGENTS.md`. Create `src/lib/wh
 
 Reuse the existing phone library for international country-code numbers and documented legacy Indian ten-digit storage; reject missing/invalid/ambiguous numbers, never guess foreign countries. Strip formatting/plus only after validation. Fully encode the supplied welcome/product/URL/sign-off message into `https://wa.me/<international_digits>?text=...`, using existing `productShareUrl`/public origin. Admin edits in WhatsApp.
 
-### 2. Reuse and strengthen database foundations
+### 2. Database corrections, not duplication
 
-One idempotent migration in `supabase/migrations/`, applied verbatim with the migration tool. No duplicate columns/tables; existing audit metadata holds campaign details.
+One idempotent `supabase/migrations/` migration, applied verbatim with the migration tool. No duplicate columns/tables; product/campaign/admin details go in existing audit metadata.
 
-Review/update only needed objects:
-- `wa_phone_key` / `wa_customer_has_order`: canonical current/historical matching, no empty-number matches, exclusion for every saved order regardless of final status.
-- `wa_pending_customers`: consistent consent+timestamp, age ≥24 hours, unsent/unskipped, valid record, no order; stable searchable pagination. Canonical identities already processed must not reappear via another record.
-- `wa_promo_sent_today`: count `promo_sent_at` in `[Asia/Kolkata midnight, next midnight)`.
-- `claim_whatsapp_promo`: retain transaction advisory lock and customer row lock; recheck eligibility/product/duplicates/count inside transaction. Enforce **25**, never a caller-adjustable limit. Set server timestamp and insert audit together; audit failure rolls everything back. Strict server phone validation precedes RPC.
-- `skip_whatsapp_promo`: locked duplicate-safe skip/audit; no sent increment. Permit a safely identified unsuitable/test customer to be skipped without allowing it to be contacted.
-- `wa_set_consent`: caller-scoped consent/timestamp and withdrawal, serialized with campaign row mutation. Preserve unchanged opt-in timestamp; record fresh explicit opt-in; withdrawal immediately prevents later eligibility checks.
-- `guard_wa_customer_fields`: preserve rejection of client-written campaign status/forged consent and compatibility with existing profile saves.
+Reuse/strengthen:
+- `wa_phone_key` / `wa_customer_has_order`: current/historical canonical matching, no empty matches; every saved order excludes.
+- `wa_pending_customers`: consent+timestamp, age≥24h, valid record, no order, unsent/unskipped; stable search/pagination, deduplicate already-processed phone identities.
+- `wa_promo_sent_today`: `[India midnight,next midnight)` from `promo_sent_at`.
+- `claim_whatsapp_promo`: advisory transaction and customer-row locks; recheck eligibility/product/duplicates/count; fixed 25 regardless of caller limit. Server timestamp plus audit commit atomically or roll back together. Strict phone validation before RPC.
+- `skip_whatsapp_promo`: duplicate-safe locked skip/audit, no sent increment; safely identified test/unsuitable customers may be skipped, never contacted.
+- `wa_set_consent`: verified customer only, timestamp on explicit opt-in, preserve unchanged timestamp; immediate withdrawal serialized with status mutation.
+- `guard_wa_customer_fields`: preserve protection from forged client consent/status and compatibility with profile saves.
 
-Retain indexes; add only justified missing ones. Service-role-only campaign RPCs, revoked public/customer execution, preserved RLS; verified admin supplies audit actor.
+Retain indexes; add only justified missing indexes. Service-role-only campaign RPCs, revoke public/customer execution, preserve RLS/isolation. Audit actor comes from verified admin.
 
 ### 3. Add the dedicated admin permission
 
