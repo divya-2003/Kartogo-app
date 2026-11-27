@@ -6,17 +6,16 @@
 
 Reuse existing authentication/tables/recommendations/admin design/TanStack server functions. No paid APIs, automated/bulk sending, Edge Functions, extra infrastructure, sample production data or unrelated changes.
 
-## Verified existing foundations and conflicts
+## Verified existing foundations/conflicts
 
-- `customers` already has all four requested consent/status fields, with correct defaults. All 20 customers are opted out; none sent/skipped. No backfill or duplicate columns. The old plan's missing-field claims are obsolete.
-- Use `customers.id` for campaign identity. `user_id` is nullable. Existing signed customer sessions resolve profiles by verified phone. `app_orders` has no customer/user UUID; `wa_customer_has_order` matches current and historical numbers via `mobile_number_changes`/`user_id`.
-- Order insertion is `placed` after validation; failures roll back. Lifecycle: placed, packed, out_for_delivery, delivered, cancelled. Every saved matching order excludes the customer, including cancelled/refunded orders. Carts, reservations and unsaved checkouts do not count.
-- All eight WhatsApp SQL helpers/guard and queue/sent indexes already exist. Claim/skip already lock and audit atomically. Reuse/strengthen rather than recreate.
-- Seven `catalog_items` currently meet active conditions. Existing recommendation catalog fallback includes bundled products and omits expiry: campaign ranking must strictly filter live products.
-- Product/category preferences, Buy Again, replenishment and popularity exist. Never-ordered customers usually have no purchase history; do not invent it.
-- Active-admin permission helpers and sub-admin editor exist; WhatsApp permission/navigation do not. Profile Settings links to `/notifications`, currently push-only.
-- `admin_audit_log` supports needed metadata; campaign writes must remain transactional, not best-effort `recordAudit`. Customers/audit have RLS, campaign mutation RPCs are service-role-only, and a trigger guards WhatsApp fields.
-- Reuse `share-link.ts` and the existing phone library; campaign validation must avoid permissive global phone fallbacks.
+- All four requested WhatsApp fields/defaults already exist in `customers`. All 20 customers are opted out; none sent/skipped. No backfill/duplicate columns; old missing-field claims are obsolete.
+- Campaign ID is `customers.id`; `user_id` nullable. Signed customer sessions resolve verified phone. `app_orders` has no customer UUID; existing order helper matches current/historical phones via `mobile_number_changes`/`user_id`.
+- Validated orders insert as placed; failures roll back. Lifecycle: placed/packed/out_for_delivery/delivered/cancelled. Every saved order excludes, even cancelled/refunded; carts/reservations/unsaved checkouts do not.
+- WhatsApp SQL helpers/guard and queue/sent indexes exist. Claim/skip already lock/audit atomically; reuse them.
+- Seven active database products currently exist. Shared recommendation catalog includes bundled fallback and omits expiry; strictly filter campaign products. Product/category preferences, Buy Again/replenishment/popularity exist; never-ordered customers usually lack purchase history.
+- Active-admin helpers/sub-admin editor exist; WhatsApp permission/navigation absent. Profile Settings links `/notifications`, currently push-only.
+- Existing audit schema suffices; campaign audit must be transactional, not best-effort. Customer/audit RLS, service-role-only mutation RPCs and WhatsApp field guard exist.
+- Reuse `share-link.ts` and phone library, avoiding permissive validation fallbacks.
 
 ## Implementation in execution order
 
