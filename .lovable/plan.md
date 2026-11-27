@@ -71,13 +71,13 @@ Create `src/routes/admin.whatsapp-recommendations.tsx`; add **Customer Growth �
 
 Summary: **Messages Sent Today: X / 25**, Daily Limit 25, Pending Recommendations, Skipped Customers. Refresh after successful changes, on focus and across India midnight.
 
-Table: name, phone, signup date, product dropdown, actions. Search/pagination/loading/empty/error/retry states; preserve selections. Responsive presentation; actions side by side.
+Table: name, phone, signup date, product dropdown, actions. Search/pagination/loading/empty/error/retry states; retain selections. Responsive; actions side by side.
 
 - **Open in WhatsApp**: open freshly validated link in new tab/app, handle blocked popups; never remove customer, mark sent or count an opening.
 - **Mark as Sent**: confirmation after manual sending, secure revalidation and atomic write. Only successful database confirmation removes row, refreshes counter and shows success. Failure keeps row and shows error.
 - **Skip**: confirmation and atomic skip/audit; remove only on success, increment skipped total, never sent count.
 
-At 25 block opening/sent confirmation; keep Skip available. Include requested short manual-send instructions and invalid-number/missing-product/limit warnings. No redesign of existing dashboard.
+At 25 block opening/sent confirmation; keep Skip available. Include requested short manual-send instructions and invalid-number/missing-product/limit warnings. Keep existing dashboard.
 
 ## Required testing and acceptance
 
@@ -93,8 +93,8 @@ Add/run focused tests and relevant regressions for every requested scenario:
 
 Verify signed-in opt-in → eligibility → product override → WhatsApp destination/message → explicit sent → database/audit/UI read-back, plus Skip/withdrawal. Use isolated fixtures, clean only test records, and test concurrency without consuming real campaign slots. Check mobile/tablet/laptop including 870px, popup handling and runtime errors.
 
-Click-to-Chat cannot verify delivery/read status. Inspect destination/message without unwanted sends; sending remains manual. Limit applies to 25 confirmed records, not independent WhatsApp activity.
+Delivery/read status is unverifiable; sends remain manual. Limit: 25 confirmed records, not independent WhatsApp activity.
 
 ## Completion
 
-Deliver tested module and state real-device limitations accurately. No paid setup/new credentials. Save verified implementation; publishing separate. No application/database changes before approval.
+Deliver tested module; disclose device limitations. No paid setup. Save after checks; publish separately. No app/database edits before approval.
