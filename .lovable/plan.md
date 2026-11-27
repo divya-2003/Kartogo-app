@@ -17,7 +17,7 @@ Reuse existing authentication/tables/recommendations/admin design/TanStack serve
 - Existing audit schema suffices; campaign audit must be transactional, not best-effort. Customer/audit RLS, service-role-only mutation RPCs and WhatsApp field guard exist.
 - Reuse `share-link.ts` and phone library, avoiding permissive validation fallbacks.
 
-## Implementation in execution order
+## Execution order
 
 ### 1. Independent helpers
 
