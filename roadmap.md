@@ -4,7 +4,7 @@
 - [ ] Preserve branded splash and add a short white service introduction
 - [ ] Adapt blue tabs, location/search controls and dynamic horizontal categories
 - [ ] Reuse live catalog and service sections, floating cart and delivery benefit
-- [ ] Connect Home / Categories / Buy Again / Offers navigation and verify layouts/flows
+- [ ] Preserve existing customer navigation and verify phone, tablet and laptop layouts/flows
 
 ## WhatsApp Recommendations — Registered but Not Ordered
 - [x] Complete consent, atomic sent/skip transactions, audit and eligibility queries

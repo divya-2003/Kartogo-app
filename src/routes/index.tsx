@@ -9,7 +9,7 @@ import { HomeMarketplace } from "@/components/marketplace/HomeMarketplace";
 import { SectionBar, type SectionId } from "@/components/marketplace/SectionBar";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Zap, Search, Wallet, User2, Heart, ShoppingBag, Ticket, CheckCircle2, Printer } from "lucide-react";
+import { Zap, Search, Wallet, User2, Heart, ShoppingBag, Ticket, Printer, ArrowRight, X } from "lucide-react";
 import { deliveryWindow } from "@/lib/serviceability";
 import { LocationPicker } from "@/components/LocationPicker";
 import { AutoLocationGate } from "@/components/AutoLocationGate";
@@ -19,7 +19,9 @@ import { useRecommendationBundle, useCustomerTracking } from "@/hooks/use-recomm
 import { formatINR } from "@/lib/data";
 import { useCatalog, useAuth, useLocation, useCart, useWallet } from "@/lib/store";
 import { COUPONS as PROMO_COUPONS } from "@/lib/promo";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { HomeCategoryStrip, HomeRestaurants } from "@/components/HomeDiscovery";
+import wordmark from "@/assets/kartogo-wordmark-transparent.png.asset.json";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter";
 import { isQuickProduct, locationHasQuick } from "@/lib/delivery-tier";
 
@@ -39,10 +41,10 @@ export const Route = createFileRoute("/")({
   component: Index,
   head: () => ({
     meta: [
-      { title: "Kartogo — Groceries, Food & Essentials Delivered Fast in Ongole" },
-      { name: "description", content: "Order groceries, snacks, homemade pickles, tiffin batter and daily essentials on Kartogo with 15-minute quick delivery or scheduled slots across Ongole, Andhra Pradesh." },
-      { property: "og:title", content: "Kartogo — Groceries, Food & Essentials Delivered Fast in Ongole" },
-      { property: "og:description", content: "Order groceries, snacks, homemade pickles, tiffin batter and daily essentials on Kartogo with 15-minute quick delivery or scheduled slots across Ongole, Andhra Pradesh." },
+      { title: "Kartogo — Your Neighbourhood Marketplace in Ongole" },
+      { name: "description", content: "Shop groceries, fashion and electronics, order restaurant food and book health, beauty, home services and events with Kartogo in Ongole." },
+      { property: "og:title", content: "Kartogo — Your Neighbourhood Marketplace in Ongole" },
+      { property: "og:description", content: "Shop groceries, fashion and electronics, order restaurant food and book health, beauty, home services and events with Kartogo in Ongole." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -74,6 +76,7 @@ function Index() {
   const { products: catalogProducts } = useCatalog();
   const categoriesQuery = useQuery({ queryKey: ["mp-cats"], queryFn: () => listMpCategoriesFn(), staleTime: 5 * 60_000 });
   const products = catalogProducts.filter(p => catalogProductInShop(p, (categoriesQuery.data?.categories ?? []) as MpCategory[]));
+  const [benefitDismissed, setBenefitDismissed] = useState(false);
   const [section, setSection] = useState<SectionId>("shop");
   useEffect(() => {
     const saved = sessionStorage.getItem("qk_home_section");
@@ -127,257 +130,90 @@ function Index() {
     return true;
   });
   const showQuickFlag = quickAvailable;
-  const bestsellerIds = new Set(tierProducts.slice(0, 10).map(p => p.id));
-  const dealProduct = tierProducts.find(p => p.mrp && p.mrp > p.price) ?? tierProducts[0];
-
-
-  // Recommendation rails, then the full product list — a product shows up in
-  // only one place on the page (Deal Zone, one rail, or the product list).
   const byId = new Map(tierProducts.map(p => [p.id, p]));
-  const railShown = new Set<string>();
-  if (dealProduct) railShown.add(dealProduct.id);
+  const displayed = new Set<string>();
   const pickRail = <T extends { productId: string }>(items: T[]) => {
-    const out: T[] = [];
+    const selected: T[] = [];
     for (const r of items) {
       const p = byId.get(r.productId);
-      if (!p || p.stock <= 0 || railShown.has(r.productId)) continue;
-      railShown.add(r.productId);
-      out.push(r);
-      if (out.length >= 8) break;
+      if (!p || p.stock <= 0 || displayed.has(p.id)) continue;
+      displayed.add(p.id);
+      selected.push(r);
+      if (selected.length === 8) break;
     }
-    return out;
+    return selected;
   };
   const rails = [
-    { title: "Reorder", subtitle: "Your regulars and past favourites, ready to add again.", items: pickRail([...bundle.replenishment, ...bundle.buyAgain]) },
-    { title: "Recommended for you", subtitle: "Picked from what you browse and buy.", items: pickRail(bundle.personalized) },
-    { title: "Frequently bought together", subtitle: "Shoppers usually add these alongside your picks.", items: pickRail(bundle.frequentlyBoughtTogether) },
-    { title: "Popular near you", subtitle: "Trending with Ongole shoppers this week.", items: pickRail(bundle.popular) },
+    { title: "Recommended for you", items: pickRail(bundle.personalized) },
+    { title: "Popular near you", items: pickRail(bundle.popular) },
+    { title: "Buy again", items: pickRail([...bundle.replenishment, ...bundle.buyAgain]) },
   ];
-  const remainingProducts = tierProducts.filter(p => !railShown.has(p.id));
-
-
-  // Category "Deal Zone" tiles, modelled on the reference grid.
-  const tiles = [
-    { slug: "snacks", title: "Snacks & More", note: "Starting @ ₹14", emoji: "🍿", tint: "bg-saffron/15" },
-    { slug: "instant-food", title: "Instant Food", note: "Starting @ ₹14", emoji: "🍜", tint: "bg-primary/10" },
-    { slug: "pickles", title: "Pickles & More", note: "Starting @ ₹150", emoji: "🥒", tint: "bg-leaf/15" },
-    { slug: "pooja", title: "Pooja Items", note: "Starting @ ₹35", emoji: "🪔", tint: "bg-saffron/25" },
+  const takeProducts = (predicate: (p: typeof tierProducts[number]) => boolean) => {
+    const result = tierProducts.filter(p => !displayed.has(p.id) && p.stock > 0 && predicate(p)).slice(0, 8);
+    result.forEach(p => displayed.add(p.id));
+    return result;
+  };
+  const groups = [
+    { title: "Best deals", products: takeProducts(p => !!p.mrp && p.mrp > p.price) },
+    { title: "Grocery essentials", products: takeProducts(p => isQuickProduct(p)) },
+    { title: "Fashion", products: takeProducts(p => ["clothes", "fashion", "clothing"].includes(p.category)) },
+    { title: "Electronics & mobiles", products: takeProducts(p => ["electronics", "mobiles", "mobile"].includes(p.category)) },
+    { title: "More to explore", products: tierProducts.filter(p => !displayed.has(p.id)) },
   ];
-
-  // Search band. Signed-out shoppers get a store-style row like the reference:
-  // search, wishlist and bag side by side, plus a small account button.
-  const searchBand = (
-    <div className="sticky top-0 z-30 bg-background shadow-sm">
-      <div className="mx-auto max-w-2xl px-4 lg:max-w-7xl lg:px-8">
-        <div className={`flex items-center gap-2 pb-4 ${user ? "pt-3" : "pt-4"}`}>
-          {/* search — opens the full Trending / search page */}
-          <Link to={(section === "rides" ? "/rides" : section === "food" ? "/food" : "/search") as never} search={(section === "rides" || section === "food" ? {} : { q: "", section }) as never} className="block min-w-0 flex-1">
-            <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 shadow-pop">
-              <Search className="h-5 w-5 shrink-0 text-muted-foreground" />
-              <span className="w-full truncate text-left text-sm text-muted-foreground">
-                {section === "rides" ? "Where do you want to go?" : `Search for "${typedTerm}"`}
-              </span>
-            </div>
-          </Link>
-          {!user && (
-            <div className="flex shrink-0 items-center gap-1">
-              <Link to="/login" search={{ redirect: "/wishlist" }} aria-label="Wishlist" className="grid h-11 w-10 place-items-center rounded-xl text-foreground hover:bg-secondary">
-                <Heart className="h-6 w-6" />
-              </Link>
-              <Link to="/cart" aria-label={`Cart, ${count} item${count === 1 ? "" : "s"}`} className="relative grid h-11 w-10 place-items-center rounded-xl text-foreground hover:bg-secondary">
-                <ShoppingBag className="h-6 w-6" />
-                {count > 0 && <span className="absolute right-0.5 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] font-extrabold text-destructive-foreground">{count}</span>}
-              </Link>
-              <Link to="/menu" aria-label="Login or register" className="grid h-11 w-10 place-items-center rounded-xl text-foreground hover:bg-secondary">
-                <User2 className="h-6 w-6" />
-              </Link>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+  const categories = (categoriesQuery.data?.categories ?? []) as MpCategory[];
+  const offer = COUPONS[0];
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="home-experience min-h-screen bg-card pb-24">
       <AutoLocationGate />
-      <h1 className="sr-only">Kartogo — Ongole's 15-minute neighbourhood store</h1>
-      {!user && searchBand}
-      {/* The top area scrolls naturally; only the search remains sticky. */}
-      <div className="bg-gradient-to-b from-saffron/20 to-background">
-
-        <div className={`mx-auto max-w-2xl px-4 lg:max-w-7xl lg:px-8 ${user ? "pt-4" : "pt-0"}`}>
-          {user ? (
-            /* row: delivery time + wallet + profile */
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-              <div className="min-w-0">
-                {/* The delivery time shows only where Quick delivery is available. */}
-                {location && (
-                  <>
-                    {quickAvailable && (
-                      <div className="flex items-center gap-1.5 font-display text-lg font-extrabold leading-tight tracking-tight text-foreground sm:text-xl">
-                        <Zap className="h-5 w-5 shrink-0 fill-saffron text-saffron" />
-                        <span className="min-w-0 truncate">Delivery in {deliveryWindow(location.etaMinutes)}</span>
-                      </div>
-                    )}
-                    <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-leaf/10 px-2 py-0.5 text-[11px] font-bold text-leaf">
-                      <CheckCircle2 className="h-3 w-3 shrink-0" /> Delivery available
-                    </div>
-                  </>
-                )}
-                <div className="mt-0.5 w-full max-w-[220px]">
-                  <LocationPicker />
-                </div>
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <Link to="/menu" aria-label="Kartogo Cash wallet" className="flex items-center gap-1 rounded-xl bg-card px-3 py-2 text-sm font-bold shadow-pop">
-                  <Wallet className="h-4 w-4 shrink-0 text-primary" /> {formatINR(balance)}
-                </Link>
-                <Link to="/wishlist" aria-label="Wishlist" className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-card shadow-pop">
-                  <Heart className="h-5 w-5 shrink-0 text-primary" />
-                </Link>
-                <Link to="/menu" aria-label="Account" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-card shadow-pop">
-                  <User2 className="h-5 w-5 shrink-0" />
-                </Link>
-              </div>
-            </div>
-          ) : null}
-
+      <header className="bg-brand-navy text-brand-on-navy">
+        <div className="mx-auto max-w-7xl px-3 pb-2 pt-4 sm:px-6 lg:px-8">
+          <h1 className="mb-3"><img src={wordmark.url} alt="Kartogo" className="h-7 w-auto object-contain sm:h-9" /></h1>
           <SectionBar value={section} onChange={next => { sessionStorage.setItem("qk_home_section", next); setSection(next); }} />
-
-          {!user && (
-            /* slim delivery line under the sections for signed-out shoppers: location, then the delivery time below it on the left */
-            <div className="mt-1 flex flex-col items-start gap-1">
-              <div className="w-full min-w-0 max-w-[260px]"><LocationPicker /></div>
-              {location && quickAvailable && (
-                <span className="flex items-center gap-1 pl-1 text-xs font-extrabold text-foreground">
-                  <Zap className="h-3.5 w-3.5 shrink-0 fill-saffron text-saffron" /> {deliveryWindow(location.etaMinutes)}
-                </span>
-              )}
-            </div>
-          )}
-
+        </div>
+      </header>
+      <div className="bg-background">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-3 sm:px-6 lg:px-8">
+          <div className="min-w-0 flex-1"><div className="max-w-[260px]"><LocationPicker /></div>
+            {location && quickAvailable && <div className="mt-1 flex items-center gap-1 text-xs font-bold sm:text-sm"><Zap className="h-3.5 w-3.5 fill-saffron text-saffron" />Delivery in {deliveryWindow(location.etaMinutes)}</div>}
+          </div>
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+            {user && <Button asChild variant="ghost" size="natural" className="h-10 gap-1 rounded-full bg-card px-2 text-xs"><Link to="/menu" aria-label="Kartogo Cash wallet"><Wallet className="h-4 w-4 text-primary" /><span className="hidden sm:inline">{formatINR(balance)}</span></Link></Button>}
+            <Button asChild variant="ghost" size="icon" className="rounded-full bg-card"><Link to={user ? "/wishlist" : "/login"} search={user ? {} : { redirect: "/wishlist" }} aria-label="Wishlist"><Heart className="h-5 w-5" /></Link></Button>
+            <Button asChild variant="ghost" size="icon" className="relative rounded-full bg-card"><Link to="/cart" aria-label={`Cart, ${count} items`}><ShoppingBag className="h-5 w-5" />{count > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] text-primary-foreground">{count}</span>}</Link></Button>
+            <Button asChild variant="ghost" size="icon" className="rounded-full bg-card"><Link to="/menu" aria-label="Account"><User2 className="h-5 w-5" /></Link></Button>
+          </div>
         </div>
       </div>
-
-      {user && searchBand}
-
-      <div className={`mx-auto max-w-2xl px-4 pb-56 lg:max-w-7xl lg:px-8 ${user ? "" : "pt-2"}`}>
+      <div className="sticky top-0 z-30 bg-background">
+        <div className="mx-auto max-w-7xl px-3 pb-3 pt-1 sm:px-6 lg:px-8">
+          <Link to={section === "food" ? "/food" : section === "rides" ? "/rides" : "/search"} search={section === "food" || section === "rides" ? {} : { q: "", section }} className="flex items-center gap-3 rounded-full border border-border bg-card px-4 py-3 shadow-sm" aria-label="Search Kartogo">
+            <Search className="h-5 w-5 shrink-0 text-muted-foreground" /><span className="truncate text-sm text-muted-foreground">Search for "{typedTerm}"</span>
+          </Link>
+        </div>
+      </div>
+      <div className="bg-background"><div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8"><HomeCategoryStrip categories={categories} /></div></div>
+      <main className="mx-auto max-w-7xl px-3 pb-24 sm:px-6 lg:px-8">
         {section === "food" ? <FoodExperience embedded /> : section === "rides" ? <RidesExperience embedded /> : section !== "shop" ? <HomeMarketplace section={section} /> : <>
-        {/* ---------- Categories + store listings (catalog duplicates hidden) ---------- */}
-        <HomeMarketplace section="shop" hideNames={tierProducts.map(p => p.name)} />
-
-        {/* ---------- Deal tiles grid ---------- */}
-        <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {/* Big deal-zone card */}
-          {dealProduct && <Link to="/product/$id" params={{ id: dealProduct.id }} className="row-span-2 flex flex-col overflow-hidden rounded-3xl border border-border bg-card p-3 shadow-pop">
-            <div className="font-display text-lg font-extrabold">Deal Zone</div>
-            <div className="my-2 grid flex-1 place-items-center">
-              {dealProduct.image ? (
-                <img src={dealProduct.image} alt={dealProduct.name} loading="lazy" className="h-32 w-32 rounded-2xl object-cover" />
-              ) : (
-                <div className="text-6xl">{dealProduct.emoji}</div>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {dealProduct.mrp && <span className="text-sm text-muted-foreground line-through">{formatINR(dealProduct.mrp)}</span>}
-              <span className="font-display text-xl font-extrabold text-primary">{formatINR(dealProduct.price)}</span>
-            </div>
-          </Link>}
-
-          {tiles.map(t => (
-            <Link
-              key={t.slug}
-              to="/category/$slug"
-              params={{ slug: t.slug }}
-              className={`relative flex flex-col justify-between overflow-hidden rounded-3xl border border-border p-3 shadow-pop ${t.tint}`}
-            >
-              <div className="font-display text-sm font-extrabold leading-tight">{t.title}</div>
-              <div className="mt-1 flex items-end justify-between">
-                <span className="rounded-full bg-card/80 px-2 py-0.5 text-[11px] font-bold text-foreground">{t.note}</span>
-                <span className="text-3xl">{t.emoji}</span>
-              </div>
-            </Link>
-          ))}
-
-        </div>
-
-        {/* ---------- Coupons & offers ---------- */}
-        <div className="mt-6">
-          <h2 className="font-display text-xl font-extrabold">Coupons & offers</h2>
-          <div className="mt-3 flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {COUPONS.map(c => (
-              <div key={c.code} className="flex w-40 shrink-0 flex-col items-center gap-1 rounded-2xl border border-leaf/30 bg-leaf/10 p-3 text-center">
-                <Ticket className="h-5 w-5 text-leaf" />
-                <div className="text-[11px] font-bold uppercase text-muted-foreground">Flat</div>
-                <div className="font-display text-lg font-extrabold text-foreground">{c.flat}</div>
-                <div className="rounded-full bg-card px-2 py-0.5 text-[11px] font-semibold">{c.above}</div>
-                <div className="text-[11px] font-bold tracking-wide text-primary">Code: {c.code}</div>
-
-              </div>
-            ))}
-          </div>
-        </div>
-
-
-        {/* ---------- Personalised recommendations (real behaviour, never mock) ---------- */}
-        {rails.map(r => (
-          <RecommendationRow key={r.title} title={r.title} subtitle={r.subtitle} items={r.items} quickBadgeFor={p => showQuickFlag && isQuickProduct(p)} />
-        ))}
-
-        {/* ---------- Every Shop product, listed exactly once ---------- */}
-        {remainingProducts.length > 0 && (
-          <div className="mt-6">
-            <h2 className="font-display text-xl font-extrabold">{rails.some(r => r.items.length) ? "More to explore" : "All products"}</h2>
-            <p className="text-sm text-muted-foreground">
-              {showQuickFlag ? "Quick items arrive in minutes; the rest come by Standard delivery today." : "Delivered by Standard delivery today."}
-            </p>
-            <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
-              {remainingProducts.map(p => <ProductCard key={p.id} p={p} bestseller={bestsellerIds.has(p.id)} quickBadge={showQuickFlag && isQuickProduct(p)} />)}
-            </div>
-          </div>
-        )}
-
-        <Link to="/print" className="mt-5 flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-pop"><Printer className="h-5 w-5 text-primary" /><span className="flex-1 text-sm font-bold">Kartogo Print Store</span></Link>
+          {offer && <Link to="/cart" className="mt-4 flex items-center justify-between gap-4 rounded-lg bg-sec-food/20 px-5 py-5 text-foreground sm:py-7"><div><p className="text-xs font-semibold text-muted-foreground">Kartogo offers</p><h2 className="mt-1 font-display text-xl font-extrabold sm:text-2xl">{offer.flat} {offer.above}</h2><p className="mt-2 text-xs font-bold text-primary">Use {offer.code}</p></div><Ticket className="h-10 w-10 shrink-0 text-primary" /></Link>}
+          {rails.map(r => <RecommendationRow key={r.title} title={r.title} items={r.items} horizontal quickBadgeFor={p => showQuickFlag && isQuickProduct(p)} />)}
+          {groups.map(g => g.products.length > 0 && <section key={g.title} className="mt-7"><div className="mb-3 flex items-center justify-between"><h2 className="font-display text-xl font-extrabold">{g.title}</h2><Link to="/categories" className="flex items-center gap-1 text-xs font-bold text-primary">View all <ArrowRight className="h-4 w-4" /></Link></div><div className="home-rail">{g.products.map(p => <ProductCard key={p.id} p={p} quickBadge={showQuickFlag && isQuickProduct(p)} />)}</div></section>)}
+          <HomeRestaurants />
+          <HomeMarketplace section="shop" preview hideNames={tierProducts.map(p => p.name)} />
+          <HomeMarketplace section="health" preview />
+          <HomeMarketplace section="beauty" preview />
+          <HomeMarketplace section="home" preview />
+          <HomeMarketplace section="events" preview />
+          <section className="mt-6"><h2 className="mb-3 font-display text-xl font-extrabold">Coupons & offers</h2><div className="home-rail">{COUPONS.map(c => <Link to="/cart" key={c.code} className="rounded-lg border border-leaf/20 bg-leaf/10 p-4"><Ticket className="mb-2 h-5 w-5 text-leaf" /><div className="font-bold">{c.flat}</div><div className="mt-1 text-xs text-muted-foreground">{c.above}</div><div className="mt-3 text-xs font-bold text-primary">{c.code}</div></Link>)}</div></section>
+          <Button asChild variant="outline" className="mt-6"><Link to="/print"><Printer className="h-4 w-4" />Kartogo Print Store</Link></Button>
         </>}
-
-
-
-
-      </div>
-
-      {/* ---------- Floating free-delivery + cart bar ---------- */}
-      {section === "shop" && <div className="pointer-events-none fixed inset-x-0 bottom-[72px] z-40 px-4">
-        <div className="mx-auto flex max-w-2xl items-stretch gap-2 lg:max-w-7xl">
-          <div className="pointer-events-auto flex flex-1 items-center gap-3 rounded-2xl bg-ink px-4 py-3 text-background shadow-pop">
-            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-background/10">
-              <Zap className="h-4 w-4 text-saffron" />
-            </div>
-            <div className="min-w-0">
-              <div className="truncate text-sm font-bold">
-                {subtotal >= 199 ? "Free delivery unlocked 🎉" : "Unlock free delivery"}
-              </div>
-              <div className="truncate text-xs opacity-80">
-                {subtotal >= 199 ? "Applied to this order" : `Shop for ${formatINR(199 - subtotal)} more`}
-              </div>
-            </div>
-          </div>
-
-          {count > 0 && (
-            <Link
-              to="/cart"
-              className="pointer-events-auto flex shrink-0 items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-primary-foreground shadow-pop hover:bg-primary/90"
-            >
-              <ShoppingBag className="h-5 w-5" />
-              <div className="leading-tight">
-                <div className="text-sm font-bold">Cart</div>
-                <div className="text-xs opacity-90">{count} item{count > 1 ? "s" : ""}</div>
-              </div>
-            </Link>
-          )}
+      </main>
+      {section !== "food" && <div className="pointer-events-none fixed inset-x-0 bottom-[calc(72px+env(safe-area-inset-bottom))] z-40 px-3">
+        <div className="mx-auto flex max-w-xl flex-col items-center gap-2">
+          {count > 0 && <Button asChild className="pointer-events-auto h-12 rounded-full px-6 shadow-pop"><Link to="/cart"><ShoppingBag className="h-5 w-5" /><span>View cart · {count} item{count === 1 ? "" : "s"}</span><ArrowRight className="h-5 w-5" /></Link></Button>}
+          {section === "shop" && count > 0 && !benefitDismissed && <div className="pointer-events-auto flex w-full items-center gap-3 rounded-full border border-border bg-card px-4 py-2 shadow-sm"><Zap className="h-5 w-5 shrink-0 text-primary" /><p className="flex-1 text-xs font-semibold">{subtotal >= 199 ? "Free grocery delivery unlocked" : `Shop for ${formatINR(199 - subtotal)} more to unlock free grocery delivery`}</p><Button size="icon" variant="ghost" aria-label="Dismiss delivery offer" onClick={() => setBenefitDismissed(true)} className="h-8 w-8 shrink-0 rounded-full"><X className="h-4 w-4" /></Button></div>}
         </div>
-      </div>
-      }
+      </div>}
     </div>
   );
 }

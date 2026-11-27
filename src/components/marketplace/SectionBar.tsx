@@ -58,14 +58,13 @@ export function SectionBar({ value, onChange }: { value: SectionId; onChange: (v
   return (
     <div className="mt-3">
       <div className="flex w-full gap-1 pb-2 pt-1 sm:gap-2 lg:gap-3" role="tablist">
-        {SECTIONS.map(s => {
+        {SECTIONS.filter(s => s.id !== "rides").map(s => {
           const c = CARD[s.id];
           const active = value === s.id;
           return (
-            <Button variant="ghost" size="natural" key={s.id} type="button" role="tab" aria-selected={active} aria-label={s.label} onClick={() => onChange(s.id)}
-              className={`flex h-10 min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-px rounded-xl px-1 shadow-pop transition-colors sm:h-12 sm:flex-row sm:gap-1.5 sm:rounded-full sm:px-3 lg:h-14 lg:gap-2 ${c.cls} ${active ? "ring-2 ring-foreground/80 ring-offset-2 ring-offset-background" : "opacity-80 hover:opacity-100"}`}>
-              <span className="shrink-0 text-sm leading-none sm:text-lg lg:text-2xl">{s.icon}</span>
-              <span className="max-w-full truncate font-display text-[9.5px] font-extrabold leading-tight min-[400px]:text-[10px] sm:text-sm lg:text-base">{c.title}</span>
+            <Button variant="ghost" size="natural" key={s.id} type="button" role="tab" aria-selected={active} aria-label={c.title} onClick={() => onChange(s.id)}
+              className={`flex h-10 min-w-0 flex-1 basis-0 items-center justify-center rounded-full px-1 transition-colors sm:h-12 sm:px-3 lg:h-14 ${active ? "bg-card text-brand-navy shadow-sm hover:bg-card hover:text-brand-navy" : "bg-brand-on-navy/15 text-brand-on-navy hover:bg-brand-on-navy/25 hover:text-brand-on-navy"}`}>
+              <span className="max-w-full font-display text-[10px] font-bold leading-tight min-[400px]:text-xs sm:text-sm lg:text-base">{c.title}</span>
             </Button>
           );
         })}

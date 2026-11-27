@@ -119,6 +119,16 @@
 }
 
 /* ---------- Launch splash animations ---------- */
+@keyframes service-intro {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-service-intro { animation: service-intro 350ms ease-out both; }
+.home-rail { display: grid; grid-auto-flow: column; grid-auto-columns: 168px; gap: 12px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
+.home-rail::-webkit-scrollbar { display: none; }
+@media (min-width: 768px) { .home-rail { grid-auto-columns: 220px; gap: 16px; } }
+.home-experience { letter-spacing: 0; }
+.home-experience .font-display, .home-experience h1, .home-experience h2, .home-experience h3 { letter-spacing: 0; }
 @keyframes splash-pop {
   0%   { opacity: 0; transform: scale(0.6) rotate(-8deg); }
   60%  { opacity: 1; transform: scale(1.08) rotate(2deg); }
@@ -145,7 +155,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-splash-pop, .animate-splash-rise, .animate-splash-ride, .animate-splash-loader {
+  .animate-service-intro, .animate-splash-pop, .animate-splash-rise, .animate-splash-ride, .animate-splash-loader {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }

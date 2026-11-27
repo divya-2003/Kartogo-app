@@ -20,6 +20,7 @@ export function RecommendationRow({
   items,
   limit = 8,
   compact,
+  horizontal = false,
   quickBadgeFor,
 }: {
   title?: string;
@@ -27,6 +28,7 @@ export function RecommendationRow({
   items: Recommendation[];
   limit?: number;
   compact?: boolean;
+  horizontal?: boolean;
   /** Shows the Quick tag on items that can arrive by Quick delivery. */
   quickBadgeFor?: (p: { category: string }) => boolean;
 }) {
@@ -49,7 +51,7 @@ export function RecommendationRow({
     <section className="mt-6">
       {title ? <h2 className="font-display text-xl font-extrabold">{title}</h2> : null}
       {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}
-      <div className={`mt-3 grid gap-3 ${compact ? "grid-cols-2 md:grid-cols-4" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-5"}`}>
+      <div className={horizontal ? "home-rail mt-3" : `mt-3 grid gap-3 ${compact ? "grid-cols-2 md:grid-cols-4" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-5"}`}>
         {resolved.map(({ rec, product }) => (
           <div key={`${rec.type}-${rec.productId}`} onClickCapture={() => onClick(rec)}>
             <ProductCard p={product} recommendationType={rec.type} tag={recommendationTag(rec.type)} quickBadge={quickBadgeFor?.(product)} />
