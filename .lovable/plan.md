@@ -40,11 +40,9 @@ Reuse/strengthen:
 
 Retain indexes; add only justified missing indexes. Service-role-only campaign RPCs, revoke public/customer execution, preserve RLS/isolation. Audit actor comes from verified admin.
 
-### 3. Add the dedicated admin permission
+### 3. Admin permission
 
-Modify `src/lib/admin-access.shared.ts`: `whatsapp_promos` and `/admin/whatsapp-recommendations` mapping. Founder access uses existing super-admin logic; sub-admins need explicit grants.
-
-Every admin operation uses `requireAdminPermission(token, 'whatsapp_promos')`, including active status through the `requireActiveAdmin` resolver. Never trust cached UI permissions or signatures alone.
+Add `whatsapp_promos` and `/admin/whatsapp-recommendations` mapping in `src/lib/admin-access.shared.ts`. Founder uses existing super-admin access; sub-admins require explicit grants. Every operation calls `requireAdminPermission`, including active-status validation through the existing `requireActiveAdmin` resolver; never trust UI permissions/signatures alone.
 
 ### 4. Secure server functions and ranking
 
