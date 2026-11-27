@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Bell, BellRing, ExternalLink, RefreshCw, Send } from "lucide-react";
 import { useAuth } from "@/lib/store";
-import { WhatsappConsent } from "@/components/WhatsappConsent";
 import { deviceName, enablePush, platform, pushConfigured } from "@/lib/firebase-push";
 import {
   getNotificationPrefsFn,
@@ -239,7 +238,6 @@ function NotificationSettingsPage() {
             </label>
           ))}
         </div>
-        <WhatsappConsent token={customerToken} />
       </div>
     </div>
   );

@@ -1,16 +1,5 @@
 # Roadmap
 
-## Reference opening and Home experience
-- [ ] Preserve branded splash and add a short white service introduction
-- [ ] Adapt blue tabs, location/search controls and dynamic horizontal categories
-- [ ] Reuse live catalog and service sections, floating cart and delivery benefit
-- [ ] Preserve existing customer navigation and verify phone, tablet and laptop layouts/flows
-
-## WhatsApp Recommendations — Registered but Not Ordered
-- [x] Complete consent, atomic sent/skip transactions, audit and eligibility queries
-- [x] Add permission-gated admin page and customer opt-in/withdrawal settings
-- [x] Test eligibility, concurrent daily limit, duplicate prevention and signed-in workflows
-
 ## Multi-stop trips and customer fixes
 - [x] Implement persisted pickup-before-drop trips with safe side-by-side store batching
 - [x] Connect automatic dispatch and rider stop actions

@@ -16,7 +16,6 @@ export const ADMIN_FEATURES = [
   { key: "promos", label: "Promo codes & surge" },
   { key: "requests", label: "Customer requests" },
   { key: "customers", label: "Customer activity" },
-  { key: "whatsapp_promos", label: "WhatsApp Recommendations" },
   { key: "sales", label: "Sales dataset" },
   { key: "reports", label: "Business reports" },
   { key: "recommendations", label: "Recommendations" },
@@ -41,7 +40,6 @@ export function permissionForAdminPath(path: string): AdminPermission {
   if (path.startsWith("/admin/print")) return "print";
   if (path.startsWith("/admin/partners") || path.startsWith("/admin/partner-applications") || path.startsWith("/admin/category-picks") || path.startsWith("/admin/studio")) return "partners";
   if (path.startsWith("/admin/customers")) return "customers";
-  if (path.startsWith("/admin/whatsapp-recommendations")) return "whatsapp_promos";
   if (path.startsWith("/admin/combos")) return "combos";
   if (path.startsWith("/admin/promos") || path.startsWith("/admin/surge")) return "promos";
   if (path.startsWith("/admin/unserviceable")) return "requests";

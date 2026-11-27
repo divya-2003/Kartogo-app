@@ -78,7 +78,6 @@ import { Route as AdminStudioRouteImport } from './routes/admin.studio'
 import { Route as AdminSubAdminsRouteImport } from './routes/admin.sub-admins'
 import { Route as AdminSurgeRouteImport } from './routes/admin.surge'
 import { Route as AdminUnserviceableRouteImport } from './routes/admin.unserviceable'
-import { Route as AdminWhatsappRecommendationsRouteImport } from './routes/admin.whatsapp-recommendations'
 import { Route as AdminWimsRouteImport } from './routes/admin.wims'
 import { Route as BookingIdRouteImport } from './routes/booking.$id'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
@@ -465,12 +464,6 @@ const AdminUnserviceableRoute = AdminUnserviceableRouteImport.update({
   path: '/unserviceable',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminWhatsappRecommendationsRoute =
-  AdminWhatsappRecommendationsRouteImport.update({
-    id: '/whatsapp-recommendations',
-    path: '/whatsapp-recommendations',
-    getParentRoute: () => AdminRoute,
-  } as any)
 const AdminWimsRoute = AdminWimsRouteImport.update({
   id: '/wims',
   path: '/wims',
@@ -742,7 +735,6 @@ export interface FileRoutesByFullPath {
   '/admin/sub-admins': typeof AdminSubAdminsRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
-  '/admin/whatsapp-recommendations': typeof AdminWhatsappRecommendationsRoute
   '/admin/wims': typeof AdminWimsRoute
   '/booking/$id': typeof BookingIdRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -850,7 +842,6 @@ export interface FileRoutesByTo {
   '/admin/sub-admins': typeof AdminSubAdminsRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
-  '/admin/whatsapp-recommendations': typeof AdminWhatsappRecommendationsRoute
   '/admin/wims': typeof AdminWimsRoute
   '/booking/$id': typeof BookingIdRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -961,7 +952,6 @@ export interface FileRoutesById {
   '/admin/sub-admins': typeof AdminSubAdminsRoute
   '/admin/surge': typeof AdminSurgeRoute
   '/admin/unserviceable': typeof AdminUnserviceableRoute
-  '/admin/whatsapp-recommendations': typeof AdminWhatsappRecommendationsRoute
   '/admin/wims': typeof AdminWimsRoute
   '/booking/$id': typeof BookingIdRoute
   '/category/$slug': typeof CategorySlugRoute
@@ -1074,7 +1064,6 @@ export interface FileRouteTypes {
     | '/admin/sub-admins'
     | '/admin/surge'
     | '/admin/unserviceable'
-    | '/admin/whatsapp-recommendations'
     | '/admin/wims'
     | '/booking/$id'
     | '/category/$slug'
@@ -1182,7 +1171,6 @@ export interface FileRouteTypes {
     | '/admin/sub-admins'
     | '/admin/surge'
     | '/admin/unserviceable'
-    | '/admin/whatsapp-recommendations'
     | '/admin/wims'
     | '/booking/$id'
     | '/category/$slug'
@@ -1292,7 +1280,6 @@ export interface FileRouteTypes {
     | '/admin/sub-admins'
     | '/admin/surge'
     | '/admin/unserviceable'
-    | '/admin/whatsapp-recommendations'
     | '/admin/wims'
     | '/booking/$id'
     | '/category/$slug'
@@ -1870,13 +1857,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUnserviceableRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/whatsapp-recommendations': {
-      id: '/admin/whatsapp-recommendations'
-      path: '/whatsapp-recommendations'
-      fullPath: '/admin/whatsapp-recommendations'
-      preLoaderRoute: typeof AdminWhatsappRecommendationsRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/wims': {
       id: '/admin/wims'
       path: '/wims'
@@ -2190,7 +2170,6 @@ interface AdminRouteChildren {
   AdminSubAdminsRoute: typeof AdminSubAdminsRoute
   AdminSurgeRoute: typeof AdminSurgeRoute
   AdminUnserviceableRoute: typeof AdminUnserviceableRoute
-  AdminWhatsappRecommendationsRoute: typeof AdminWhatsappRecommendationsRoute
   AdminWimsRoute: typeof AdminWimsRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -2232,7 +2211,6 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSubAdminsRoute: AdminSubAdminsRoute,
   AdminSurgeRoute: AdminSurgeRoute,
   AdminUnserviceableRoute: AdminUnserviceableRoute,
-  AdminWhatsappRecommendationsRoute: AdminWhatsappRecommendationsRoute,
   AdminWimsRoute: AdminWimsRoute,
   AdminIndexRoute: AdminIndexRoute,
 }

@@ -1,9 +1,5 @@
 # Architecture rules
 
-- Customer Home modes reuse existing catalog and marketplace presentation; the launch intro never changes authentication or portal selection, and voice search is progressively enhanced in the browser.
-
-- Manual WhatsApp campaign state is mutated only through permission-checked server functions and database transactions that commit the audit alongside the customer status; chat-link openings never imply sending.
-
 - Persist multi-stop deliveries as transactionally claimed trips; stop completion and cancellation cleanup must preserve pickup-before-drop ordering and rider occupancy.
 - Resolve pickup stores from inventory reservation allocations, failing closed for ambiguous legacy ownership; validate multi-store road time before batching.
 - Reuse the Home location selector at checkout so saved addresses and exact delivery details share one source of truth.
