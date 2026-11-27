@@ -6,37 +6,32 @@ Add **Customer Growth → WhatsApp Recommendations** to the existing admin panel
 
 Use only free `https://wa.me/` links, existing TanStack Start server functions, existing authentication, and the existing database. No paid messaging API, automatic sending, bulk tools, Edge Functions, new infrastructure, or duplicate customer/product/order/audit tables. No unrelated portal changes.
 
-## Verified existing functionality and conflicts
+## Existing foundations verified in this inspection
 
-| Area | Verified existing state | Implementation consequence |
-|---|---|---|
-| Customers | `public.customers`: UUID `id`, nullable unique `user_id`, unique `phone`, `name`, `created_at`, saved addresses and other profile fields. Existing customer server functions authenticate signed customer tokens and resolve profiles by verified phone. | Use `customers.id` as the campaign identity. Do not require `user_id`, which is nullable, or rebuild customer authentication. |
-| Consent and promotional status | All four requested fields already exist with the requested types/defaults: `whatsapp_marketing_opt_in=false`, nullable `whatsapp_marketing_opt_in_at`, nullable `promo_sent_at`, `promo_skipped=false`. All 20 existing customers are currently opted out; none are sent or skipped. | No new consent/status columns and no consent backfill. Earlier plan statements that these fields are missing are obsolete. |
-| Existing database foundations | `wa_phone_key`, `wa_customer_has_order`, `wa_pending_customers`, `wa_promo_sent_today`, `claim_whatsapp_promo`, `skip_whatsapp_promo`, `wa_set_consent`, `guard_wa_customer_fields`; queue/sent indexes already exist. | Reuse and selectively strengthen these objects rather than recreate them. |
-| Orders | `app_orders` has `customer_phone`, not a customer UUID or user UUID. `placeOrderFn` validates checkout, charges/reserves as appropriate, and inserts `status='placed'`; failed insertion is rolled back. Current persisted statuses are delivered and cancelled; lifecycle supports placed, packed, out_for_delivery, delivered, cancelled. | Any persisted matching `app_orders` row excludes the customer, regardless of cancellation or refund. Carts, checkout attempts without a saved order, and reservations alone do not count. No order-count column. |
-| Order identity | Existing `wa_customer_has_order` matches normalized phone and historical mobile numbers from `mobile_number_changes` through `customers.user_id`. | Preserve that history-aware relationship; use permanent identity where available, verified canonical phone otherwise. Fail closed on ambiguous identities; do not add a customer foreign key to orders for this module. |
-| Products | `catalog_items` contains the requested fields; seven products currently meet the requested active conditions. | Always filter real database products by not deleted, positive stock and nonexpired date using India time. Never substitute bundled sample products. |
-| Recommendation sources | Product/category preferences and replenishment predictions are phone-keyed; existing Buy Again and popularity helpers live in `recommendations.server.ts`. Its shared catalog helper includes bundled fallback items and does not check expiry. | Reuse existing signals/ranking where suitable, but intersect every suggestion with the campaign's strict live-product set. Do not change unrelated recommendation behavior. |
-| Recommendation priority | A genuinely never-ordered customer ordinarily has no purchase-based category, Buy Again or replenishment history. | Use product interest first, most-bought category only when a valid signal exists, then best-selling active product. Missing purchase history is normal, not grounds to invent it. |
-| Admin access | `admin-session.server.ts` checks active staff and permissions; `admin-access.shared.ts` supplies feature/path permissions. Current navigation has no WhatsApp entry or Customer Growth group. | Add one permission and one group/entry; reuse the existing shell and sub-admin editor. Server permission checks remain authoritative despite cached navigation access. |
-| Consent experience | Customer Profile (`/menu`) links Settings to `/notifications`. That page currently controls push preferences, including `promotional_offers`. | Add a separate WhatsApp consent control there; leave push preferences unchanged. |
-| Audit | `admin_audit_log` already provides actor, role, action, entity, metadata and timestamp. Existing `recordAudit` is best-effort; campaign database functions already insert audit rows transactionally. | Keep campaign status and audit atomic, not a separate best-effort write. No audit schema extension is needed. |
-| Protection | Customers and audit tables have RLS enabled. Existing campaign mutation RPCs are service-role-only; a customer trigger guards WhatsApp fields. | Preserve isolation and validate all function execution grants and guarded mutation paths. |
-| Phone and links | `phone.ts` uses `libphonenumber-js`, but some helpers have permissive fallback validation. `share-link.ts` provides `productShareUrl` and the published app origin. | Reuse the existing library and product generator, adding strict campaign-specific number validation without changing global login behavior. |
+- `customers` already has all four required consent/status fields with the requested types and defaults. All 20 current customers are opted out, with no sent/skipped records. No extra columns, consent backfill or duplicate tables are needed; the previous plan's missing-field claims are obsolete.
+- Customer campaign identity is `customers.id`. `user_id` is nullable; current customer authentication resolves signed customer tokens by verified phone. `app_orders` has no customer/user UUID, only `customer_phone`. Existing `wa_customer_has_order` also checks historical mobile numbers through `mobile_number_changes` and `customers.user_id`.
+- `placeOrderFn` saves validated orders as `placed`; failed insertion is rolled back. Lifecycle: placed, packed, out_for_delivery, delivered, cancelled. Current rows are delivered/cancelled. Every persisted matching order excludes its customer, including cancelled/refunded orders. Unsaved checkout attempts, carts and reservations do not count. No order-count field is required.
+- Existing SQL: `wa_phone_key`, `wa_customer_has_order`, `wa_pending_customers`, `wa_promo_sent_today`, `claim_whatsapp_promo`, `skip_whatsapp_promo`, `wa_set_consent`, `guard_wa_customer_fields`; queue/sent indexes exist. Claim/skip already lock and write audit transactionally. Reuse and strengthen, not recreate.
+- `catalog_items` has the requested product fields; seven products currently meet the active conditions. Shared `recommendations.server.ts` catalog loading includes bundled fallback items and omits expiry checks: this campaign must strictly intersect recommendations with live active database products.
+- Product/category preferences, replenishment, Buy Again and popularity already exist. Never-ordered customers normally lack purchase-based category/replenishment history; use available interest, then valid most-bought category, then active best seller without inventing history.
+- Admin authentication/active-account permission checks exist in `admin-session.server.ts` and `admin-access.shared.ts`. Existing navigation has no WhatsApp entry or Customer Growth group. Reuse the existing shell and permission editor.
+- Profile (`/menu`) links Settings to `/notifications`; existing promotional preferences are push-only. Add separate WhatsApp consent there without changing push behavior.
+- `admin_audit_log` already supports all requested metadata. `recordAudit` is best-effort, so campaign audit must remain inside the status transaction. Customers/audit have RLS; campaign mutation RPCs are service-role-only and a trigger guards customer WhatsApp fields.
+- `share-link.ts` already generates public `/product/<id>` links. `phone.ts` already uses `libphonenumber-js`, but some helpers accept permissive fallbacks: add strict campaign validation without changing global login behavior.
 
 ## Execution order
 
 ### 1. Record scope and establish campaign rules
 
-Track the implementation and tests in `roadmap.md`; document the server-only campaign boundary in `AGENTS.md` during implementation. Keep existing authentication/session persistence, customer shopping, supplier, delivery and other admin modules intact.
+Track work/tests in `roadmap.md` and record the server-only boundary in `AGENTS.md`. Preserve all unrelated flows.
 
 Create browser-safe campaign helpers/types in `src/lib/whatsapp-promo.shared.ts` and `src/lib/whatsapp-link.ts` before their consumers. Centralize campaign name, 24-hour threshold, India timezone, fixed daily maximum 25, strict phone validation, message formatting and active-product rules.
 
-For international numbers, validate explicit country-code numbers with the existing phone library; support legacy Indian 10-digit storage only because that is the documented existing storage convention. Reject malformed or ambiguous numbers rather than guessing a foreign country. Strip formatting and `+` only after validation; encode the entire personalized message. Call `productShareUrl` with the existing public origin; do not create another product-link generator.
+Strictly validate international country-code numbers with the existing library; support documented legacy Indian 10-digit storage, but never guess foreign countries. Reject invalid/ambiguous numbers, then strip formatting/`+` and encode the full message. Reuse `productShareUrl` and the public origin.
 
 ### 2. Apply only necessary database corrections
 
-Create one idempotent migration under `supabase/migrations/` and apply its exact SQL through the migration tool. Do not add fields that already exist, extra promo metadata columns, or new tables.
+Create one idempotent migration in `supabase/migrations/`; apply exact SQL through the migration tool. No duplicate fields, extra metadata columns or new tables.
 
 Reuse/modify as needed:
 - `wa_phone_key` / `wa_customer_has_order`: retain canonical current/historical phone matching and exclusion for **every persisted order**, including cancelled/refunded rows; avoid empty-number matches.
@@ -47,11 +42,11 @@ Reuse/modify as needed:
 - `wa_set_consent`: resolve the caller's customer through the existing verified customer session, set timestamp on explicit opt-in, preserve it for unchanged consent, and withdraw immediately. Serialize with campaign mutation row locking so withdrawal and confirmation cannot overwrite each other.
 - `guard_wa_customer_fields`: preserve prevention of client-written campaign status or forged consent; review for insert/update compatibility with existing profile writes.
 
-Retain useful existing indexes; add only missing narrowly targeted indexes justified by the final queries. Keep callable campaign SQL operations restricted to `service_role`, revoke default/public/customer execution where applicable, and preserve existing RLS policies. The server authenticates the real admin and supplies its actor identity; the browser cannot choose the audit actor.
+Retain existing indexes; add only justified missing indexes. Restrict campaign RPCs to `service_role`, revoke public/customer execution, preserve RLS and derive audit actor from verified admin identity.
 
 ### 3. Add the dedicated permission
 
-Modify `src/lib/admin-access.shared.ts` with `whatsapp_promos` and `/admin/whatsapp-recommendations` mapping. Main/super admins receive access through existing super-admin logic; sub-admins require an explicit grant through the existing permission list. Test revoked/disabled accounts on every operation. Use `requireAdminPermission(token, 'whatsapp_promos')`, which already resolves active admin status through the same mechanism as `requireActiveAdmin`; do not replace this with signature-only checks or a new login system.
+Add `whatsapp_promos` and `/admin/whatsapp-recommendations` mapping in `src/lib/admin-access.shared.ts`. Existing super-admin logic grants founder access; sub-admins require explicit permission. Every operation uses `requireAdminPermission(token, 'whatsapp_promos')`, which checks active status through the same mechanism as `requireActiveAdmin`. No new authentication or signature-only checks.
 
 ### 4. Implement server functions and recommendation selection
 
@@ -65,9 +60,9 @@ Operations:
 3. **Update Promotional Status**: validated `{ token, userId, action, productId }`, where `userId` is explicitly the existing `customers.id`, not `auth.users.id`. Actions are only `sent` or `skip`; product required and validated for sent, optional for skip. Execute the transactional RPC and return confirmed counts/results. Duplicate or failed requests must not produce false success.
 4. **Read/Update WhatsApp Consent**: customer-only session authorization, no arbitrary customer ID/phone accepted from the browser; persist through existing consent fields/RPC and return confirmed consent state.
 
-Rank active products by customer product interest, then valid most-bought-category signal, then existing best-selling signals. Read existing replenishment/Buy Again signals only where applicable; never relax no-order eligibility to use them. Use deterministic ties; if no active products have sales, choose a real active product deterministically, and if none exist, disable sending with a clear empty state. Batch reads to avoid one expensive rebuild per customer.
+Rank interest → valid most-bought category → existing best sellers; reuse replenishment/Buy Again only when applicable without relaxing eligibility. Break ties deterministically. No sales: real active-product fallback; no active products: disable sending. Batch reads without per-customer rebuilds.
 
-Load privileged clients only within authorized server handlers/helpers. Never expose credentials, private tokens in URLs, unnecessary customer data or raw database errors. Call functions through `useServerFn`; do not run protected calls in a public SSR loader.
+Load privileged clients only in authorized server code; expose no credentials, tokens in URLs, extra customer data or raw database errors. Use `useServerFn`, never protected public SSR loaders.
 
 ### 5. Add separate voluntary customer consent
 
@@ -111,9 +106,9 @@ Add focused tests beside existing tests and run them, plus relevant regression t
 13. Customer consent can be granted/withdrawn only for the verified caller, persists across refresh and never changes push consent.
 14. Existing cart/login, customer settings, recommendation and admin navigation behavior remains intact.
 
-Exercise the real signed-in customer opt-in → eligible queue → product change → WhatsApp destination inspection → explicit Mark as Sent → database/audit/UI read-back, plus Skip and withdrawal. Use isolated clearly identified test fixtures, clean only those fixtures, and test concurrency transactionally without consuming real campaign slots. Check phone/tablet/laptop layouts including the current 870px viewport and browser/runtime errors.
+Verify signed-in opt-in → eligible queue → change product → inspect WhatsApp destination → confirm sent → database/audit/UI read-back, plus Skip/withdrawal. Use isolated fixtures; clean only test records and avoid consuming real slots in concurrency tests. Check phone/tablet/laptop, current 870px viewport and runtime errors.
 
-WhatsApp cannot report actual manual delivery/read status to a free Click-to-Chat workflow. Verify the correct destination and prefilled message without sending unwanted promotions; final sending remains the admin's manual action. The enforceable limit is 25 database-confirmed sent actions, as requested, not independent activity inside WhatsApp.
+Free Click-to-Chat cannot verify delivery/read status. Inspect destination/message without unwanted sends; sending remains manual. The enforced limit is 25 confirmed sent records, not independent WhatsApp activity.
 
 ## Completion
 
