@@ -1,10 +1,10 @@
 # Kartogo WhatsApp Recommendations
 
-## Outcome and boundaries
+## Outcome and scope
 
-Add **Customer Growth → WhatsApp Recommendations**, campaign **Registered but Not Ordered** (`registered_not_ordered`): register → voluntarily opt in → wait 24 hours → verify no submitted order → suggest/select product → open WhatsApp → send manually → explicitly confirm sent → atomic status/audit update → refresh daily count. Include Skip and a strict maximum of 25 confirmed messages per India calendar day.
+**Customer Growth → WhatsApp Recommendations**, campaign **Registered but Not Ordered** (`registered_not_ordered`): register → explicit consent → wait 24 hours → verify no submitted order → suggest/select product → open WhatsApp → manually send → explicitly confirm → atomic status/audit → counter refresh. Include Skip and maximum 25 confirmations per India day.
 
-Reuse existing authentication, customer/product/order/audit tables, recommendation signals, admin design and TanStack Start server functions. No paid WhatsApp API, automated/bulk sending, Edge Functions, new infrastructure, hardcoded production samples or unrelated portal changes.
+Reuse existing authentication/tables/recommendations/admin design/TanStack server functions. No paid APIs, automated/bulk sending, Edge Functions, extra infrastructure, sample production data or unrelated changes.
 
 ## Verified existing foundations and conflicts
 
@@ -20,15 +20,11 @@ Reuse existing authentication, customer/product/order/audit tables, recommendati
 
 ## Implementation in execution order
 
-### 1. Establish independent campaign helpers
+### 1. Independent helpers
 
-Track work in `roadmap.md`; record server boundaries in `AGENTS.md`.
+Track work in `roadmap.md`; server boundaries in `AGENTS.md`. Create `src/lib/whatsapp-promo.shared.ts` and `src/lib/whatsapp-link.ts` before consumers: types/constants, 24-hour/25-limit/India-time rules, strict phones and personalized messages.
 
-Create `src/lib/whatsapp-promo.shared.ts` and `src/lib/whatsapp-link.ts` before consumers: types, campaign constant, 24-hour rule, fixed 25 limit, India date boundaries, strict phone checks, message/link generation.
-
-Validate explicit international numbers with the existing phone library; support documented legacy Indian ten-digit storage, never guess foreign countries. Reject missing/invalid/ambiguous numbers. Strip spaces/hyphens/leading `+` only after validation. Generate `https://wa.me/<international_digits>?text=<fully_encoded_message>` using `productShareUrl` and the existing public origin.
-
-Use the supplied personalized welcome/product/URL/sign-off message, editable in WhatsApp.
+Reuse the existing phone library for international country-code numbers and documented legacy Indian ten-digit storage; reject missing/invalid/ambiguous numbers, never guess foreign countries. Strip formatting/plus only after validation. Fully encode the supplied welcome/product/URL/sign-off message into `https://wa.me/<international_digits>?text=...`, using existing `productShareUrl`/public origin. Admin edits in WhatsApp.
 
 ### 2. Reuse and strengthen database foundations
 
@@ -51,21 +47,17 @@ Modify `src/lib/admin-access.shared.ts`: `whatsapp_promos` and `/admin/whatsapp-
 
 Every admin operation uses `requireAdminPermission(token, 'whatsapp_promos')`, including active status through the `requireActiveAdmin` resolver. Never trust cached UI permissions or signatures alone.
 
-### 4. Add secure server functions and recommendation orchestration
+### 4. Secure server functions and ranking
 
-Create:
-- `src/lib/whatsapp-promo.server.ts`: server-only querying, ranking, summaries and transactional RPC calls.
-- `src/lib/whatsapp-promo.functions.ts`: validated `createServerFn` wrappers.
+Create `src/lib/whatsapp-promo.server.ts` (server-only queries/ranking/RPCs) and `src/lib/whatsapp-promo.functions.ts` (validated `createServerFn` wrappers):
+- **Fetch pending**: authorized queue/search/pagination, exact pending/skipped/sent totals, active dropdown choices. Return only customer ID/name/phone/signup and recommended product ID/name/URL. Screen phones before final pagination/counts; bounded scans must not truncate at 500. Product search/pagination reaches the entire active catalog.
+- **Prepare chat**: fresh eligibility/consent/phone/product/limit checks; return personalized link, never change status/counters.
+- **Update status**: `{ token, userId, action, productId }`; `userId` means `customers.id`, not auth identity. Only sent/skip; active product required for sent, optional for skip. Atomic RPC returns confirmed counts; reject unauthorized/duplicate requests.
+- **Read/update consent**: verify existing customer token, resolve own record only, persist consent/timestamp/withdrawal and return confirmed state. No frontend-selected customer identity.
 
-Operations:
-1. **Fetch Pending Recommendations**: authenticate/authorize; apply all eligibility rules server-side; return customer ID/name/phone/signup date and suggested product ID/name/public URL only. Include exact pending/skipped totals, sent count and active product choices with only needed fields. Search/pagination must apply strict phone validation before final page/count; scan in bounded batches rather than truncate at 500. Searchable product pagination makes the entire active catalog selectable.
-2. **Prepare WhatsApp chat**: freshly revalidate consent, eligibility, number, product and remaining limit; return personalized link. Never mutate sent/skipped or counters. Handle stale selections and withdrawn consent.
-3. **Update Promotional Status**: validate `{ token, userId, action, productId }`; document `userId` as `customers.id`, not `auth.users.id`. Only `sent`/`skip`; active selected product required for sent, optional for skip. Invoke atomic RPC and return confirmed results/counts; reject duplicates and unauthorized inputs.
-4. **Read/Update WhatsApp Consent**: verify existing customer token, resolve own record only; never accept another customer ID/phone from browser. Return confirmed saved consent state.
+Ranking: product interest → valid most-bought category → existing best sellers. Reuse Buy Again/replenishment only if applicable, never relax no-order eligibility. Strict live filter: not deleted, stock>0, expiry null or ≥India today. Deterministic real-product fallback if no sales; disable sending if no active products. Batch signals, no per-customer rebuilds/sample fallback.
 
-Ranking: customer product interest → valid most-bought category → existing best-selling active products. Reuse replenishment/Buy Again only when applicable; never weaken no-order eligibility. Strict active condition: `is_deleted=false AND stock>0 AND (expiry_date IS NULL OR expiry_date>=India_today)`. Deterministic ties; if no sales, choose a real active fallback; if no products, disable sending. Batch existing signals; avoid per-customer rebuilds or sample fallback.
-
-Authorized server-only privileged clients; no credential/token/customer-data leaks or raw errors. Use `useServerFn`, not protected public SSR loaders.
+Privileged clients stay in authorized server code; no credential/token leaks or unnecessary customer data/raw errors. Use `useServerFn`, not protected public SSR loaders.
 
 ### 5. Add explicit customer consent
 
@@ -108,4 +100,4 @@ Click-to-Chat cannot verify delivery/read status. Inspect destination/message wi
 
 ## Completion
 
-Deliver the independent module with test results and accurately stated real-device limitations. No paid channel or new credentials needed. Save implementation after verification; publishing is separate. Until plan approval, no application/database changes are made.
+Deliver tested module and state real-device limitations accurately. No paid setup/new credentials. Save verified implementation; publishing separate. No application/database changes before approval.
