@@ -16,6 +16,7 @@ export const ADMIN_FEATURES = [
   { key: "promos", label: "Promo codes & surge" },
   { key: "requests", label: "Customer requests" },
   { key: "customers", label: "Customer activity" },
+  { key: "whatsapp_promos", label: "WhatsApp Recommendations" },
   { key: "sales", label: "Sales dataset" },
   { key: "reports", label: "Business reports" },
   { key: "recommendations", label: "Recommendations" },
@@ -27,6 +28,7 @@ export type AdminPermission = (typeof ADMIN_FEATURES)[number]["key"];
 
 export function permissionForAdminPath(path: string): AdminPermission {
   if (path === "/admin") return "dashboard";
+  if (path.startsWith("/admin/whatsapp-recommendations")) return "whatsapp_promos";
   if (path.startsWith("/admin/inventory")) return "inventory";
   if (path.startsWith("/admin/wims")) return "warehouse";
   if (path.startsWith("/admin/ai")) return "ai";

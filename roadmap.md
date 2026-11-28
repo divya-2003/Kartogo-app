@@ -1,5 +1,10 @@
 # Roadmap
 
+## WhatsApp Recommendations
+- [ ] Secure existing campaign database helpers and add dedicated admin permission
+- [ ] Build manual WhatsApp queue, product selection, confirmed sent/skip and separate customer consent
+- [ ] Verify eligibility, authorization, India-day limit, concurrency and signed-in UI flows
+
 ## Multi-stop trips and customer fixes
 - [x] Implement persisted pickup-before-drop trips with safe side-by-side store batching
 - [x] Connect automatic dispatch and rider stop actions

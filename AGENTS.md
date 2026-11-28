@@ -1,5 +1,7 @@
 # Architecture rules
 
+- WhatsApp campaigns use existing signed sessions and service-only transactional SQL for status plus audit; click-to-chat preparation is read-only, so opening WhatsApp can never count as a sent message.
+
 - Persist multi-stop deliveries as transactionally claimed trips; stop completion and cancellation cleanup must preserve pickup-before-drop ordering and rider occupancy.
 - Resolve pickup stores from inventory reservation allocations, failing closed for ambiguous legacy ownership; validate multi-store road time before batching.
 - Reuse the Home location selector at checkout so saved addresses and exact delivery details share one source of truth.

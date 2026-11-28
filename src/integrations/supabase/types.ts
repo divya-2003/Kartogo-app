@@ -3781,6 +3781,7 @@ export type Database = {
         Args: { p_admin: string; p_customer: string }
         Returns: number
       }
+      wa_campaign_eligible: { Args: { p_customer: string }; Returns: boolean }
       wa_customer_has_order: { Args: { p_customer: string }; Returns: boolean }
       wa_pending_customers: {
         Args: { p_offset?: number; p_take?: number }

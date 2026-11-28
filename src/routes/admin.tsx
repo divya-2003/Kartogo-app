@@ -84,6 +84,7 @@ const NAV = [
   { to: "/admin/partner-applications", label: "Partner applications", icon: Store, permission: "partners" },
   { to: "/admin/category-picks", label: "Category top picks", icon: Star, permission: "partners" },
   { to: "/admin/customers", label: "Customers", icon: UsersRound, permission: "customers" },
+  { to: "/admin/whatsapp-recommendations", label: "WhatsApp Recommendations", icon: BellRing, permission: "whatsapp_promos" },
   { to: "/admin/combos", label: "Combo bundles", icon: Package, permission: "combos" },
   
   { to: "/admin/promos", label: "Promo codes", icon: BadgeIndianRupee, permission: "promos" },
@@ -158,6 +159,8 @@ function AdminLayout() {
         const active = isActive(n.to);
         const badge = n.to === "/admin/cancellations" && unseenCancellations > 0 ? unseenCancellations : null;
         return (
+          <div key={n.to}>
+          {n.to === "/admin/whatsapp-recommendations" && <div className="px-3 pb-1 pt-3 text-xs font-semibold uppercase text-muted-foreground">Customer Growth</div>}
           <Link
             key={n.to}
             to={n.to}
@@ -172,6 +175,7 @@ function AdminLayout() {
               <span className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold ${active ? "bg-primary-foreground text-primary" : "bg-destructive text-destructive-foreground"}`}>{badge}</span>
             )}
           </Link>
+          </div>
         );
       })}
     </nav>
